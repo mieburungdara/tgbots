@@ -1,0 +1,3 @@
+<?php
+// Fungsi bantuan lainnya
+?>
