@@ -1,10 +1,27 @@
 <?php
 session_start();
 require_once __DIR__ . '/../core/database.php';
+require_once __DIR__ . '/../core/helpers.php';
 
 $pdo = get_db_connection();
 if (!$pdo) {
-    die("Koneksi database gagal. Periksa file log untuk detailnya.");
+    die("Koneksi database gagal. Pastikan file `config.php` sudah benar. Periksa file log server untuk detailnya.");
+}
+
+// Cek apakah tabel sudah dibuat
+try {
+    $tables_exist = check_tables_exist($pdo);
+} catch (PDOException $e) {
+    die("Error saat memeriksa database: " . $e->getMessage());
+}
+
+if (!$tables_exist) {
+    $setup_error_message = "<strong>Database belum di-setup!</strong><br>" .
+        "Tabel yang diperlukan (`bots`, `chats`, `messages`) tidak ditemukan.<br><br>" .
+        "Silakan impor file <code>setup.sql</code> ke database Anda melalui phpMyAdmin atau alat database lainnya untuk membuat tabel-tabel tersebut.";
+
+    include __DIR__ . '/../core/templates/setup_error.php';
+    exit;
 }
 
 // Ambil daftar bot untuk dropdown
