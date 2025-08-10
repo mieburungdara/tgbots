@@ -1,0 +1,10 @@
+<?php
+// Salin file ini ke config.php dan isi nilainya.
+
+// Konfigurasi Database
+define('DB_HOST', 'localhost');
+define('DB_USER', 'root');
+define('DB_PASS', '');
+define('DB_NAME', 'telegram_dashboard');
+
+?>
