@@ -8,14 +8,14 @@ ini_set('error_log', __DIR__ . '/webhook_debug.log');
 require_once __DIR__ . '/core/database.php';
 require_once __DIR__ . '/core/TelegramAPI.php';
 
-// --- 1. Validasi bot_id dari URL ---
-if (!isset($_GET['bot_id']) || !filter_var($_GET['bot_id'], FILTER_VALIDATE_INT)) {
+// --- 1. Validasi ID Bot Telegram dari URL ---
+if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
     http_response_code(400); // Bad Request
-    error_log("Webhook Error: bot_id tidak valid atau tidak ada.");
-    echo "Error: bot_id tidak valid.";
+    error_log("Webhook Error: ID bot dari URL tidak valid atau tidak ada.");
+    echo "Error: ID bot tidak valid.";
     exit;
 }
-$bot_id = (int)$_GET['bot_id'];
+$telegram_bot_id = $_GET['id'];
 
 // --- 2. Dapatkan koneksi database dan token bot ---
 $pdo = get_db_connection();
@@ -25,17 +25,19 @@ if (!$pdo) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
-$stmt->execute([$bot_id]);
+// Cari bot berdasarkan ID bot dari token, bukan ID internal
+$stmt = $pdo->prepare("SELECT id, token FROM bots WHERE token LIKE ?");
+$stmt->execute(["{$telegram_bot_id}:%"]);
 $bot = $stmt->fetch();
 
 if (!$bot) {
     http_response_code(404); // Not Found
-    error_log("Webhook Error: Bot dengan ID {$bot_id} tidak ditemukan.");
+    error_log("Webhook Error: Bot dengan ID Telegram {$telegram_bot_id} tidak ditemukan.");
     echo "Error: Bot tidak ditemukan.";
     exit;
 }
 $bot_token = $bot['token'];
+$internal_bot_id = $bot['id']; // ID internal untuk foreign key
 
 // --- 3. Baca dan proses input dari Telegram ---
 $update_json = file_get_contents('php://input');
@@ -68,14 +70,14 @@ try {
 
     // --- 4. Cari atau buat entri di tabel 'chats' ---
     $stmt = $pdo->prepare("SELECT id FROM chats WHERE bot_id = ? AND chat_id = ?");
-    $stmt->execute([$bot_id, $chat_id_from_telegram]);
+    $stmt->execute([$internal_bot_id, $chat_id_from_telegram]);
     $chat = $stmt->fetch();
 
     if ($chat) {
         $internal_chat_id = $chat['id'];
     } else {
         $stmt = $pdo->prepare("INSERT INTO chats (bot_id, chat_id, first_name, username) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$bot_id, $chat_id_from_telegram, $first_name, $username]);
+        $stmt->execute([$internal_bot_id, $chat_id_from_telegram, $first_name, $username]);
         $internal_chat_id = $pdo->lastInsertId();
     }
 
