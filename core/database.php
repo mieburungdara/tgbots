@@ -36,3 +36,26 @@ function get_db_connection() {
         return null;
     }
 }
+
+/**
+ * Menjalankan skrip setup database dari file setup.sql.
+ *
+ * @param PDO $pdo Objek koneksi PDO.
+ * @return bool True jika berhasil, false jika gagal.
+ */
+function setup_database(PDO $pdo): bool {
+    $sql_file = __DIR__ . '/../setup.sql';
+    if (!file_exists($sql_file)) {
+        error_log("Error: file setup.sql tidak ditemukan.");
+        return false;
+    }
+
+    try {
+        $sql = file_get_contents($sql_file);
+        $pdo->exec($sql);
+        return true;
+    } catch (PDOException $e) {
+        error_log("Gagal menjalankan setup database: " . $e->getMessage());
+        return false;
+    }
+}

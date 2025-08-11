@@ -16,12 +16,21 @@ try {
 }
 
 if (!$tables_exist) {
-    $setup_error_message = "<strong>Database belum di-setup!</strong><br>" .
-        "Tabel yang diperlukan (`bots`, `chats`, `messages`) tidak ditemukan.<br><br>" .
-        "Silakan impor file <code>setup.sql</code> ke database Anda melalui phpMyAdmin atau alat database lainnya untuk membuat tabel-tabel tersebut.";
+    // Tabel tidak ada, coba jalankan setup otomatis
+    $setup_success = setup_database($pdo);
+    if ($setup_success) {
+        // Setup berhasil, muat ulang halaman untuk melanjutkan
+        header("Location: " . $_SERVER['REQUEST_URI']);
+        exit;
+    } else {
+        // Setup gagal, tampilkan pesan error
+        $setup_error_message = "<strong>Gagal melakukan setup database secara otomatis!</strong><br>" .
+            "Pastikan kredensial database di `config.php` sudah benar dan server database berjalan.<br><br>" .
+            "Anda juga bisa mencoba mengimpor file <code>setup.sql</code> secara manual.";
 
-    include __DIR__ . '/../core/templates/setup_error.php';
-    exit;
+        include __DIR__ . '/../core/templates/setup_error.php';
+        exit;
+    }
 }
 
 // Ambil daftar bot untuk dropdown
