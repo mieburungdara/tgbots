@@ -59,3 +59,30 @@ function setup_database(PDO $pdo): bool {
         return false;
     }
 }
+
+/**
+ * Memastikan tabel untuk melacak migrasi sudah ada di database.
+ * Jika belum ada, tabel akan dibuat.
+ *
+ * @param PDO $pdo Objek koneksi PDO.
+ * @return void
+ */
+function ensure_migrations_table_exists(PDO $pdo): void {
+    try {
+        // Query untuk membuat tabel jika belum ada
+        $sql = "
+        CREATE TABLE IF NOT EXISTS `migrations` (
+          `id` int(11) NOT NULL AUTO_INCREMENT,
+          `migration_file` varchar(255) NOT NULL,
+          `executed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          PRIMARY KEY (`id`),
+          UNIQUE KEY `migration_file` (`migration_file`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        ";
+        $pdo->exec($sql);
+    } catch (PDOException $e) {
+        // Jika terjadi error, catat dan hentikan eksekusi
+        error_log("Gagal membuat tabel migrasi: " . $e->getMessage());
+        die("Fatal Error: Tidak dapat membuat tabel migrasi. Periksa log server.");
+    }
+}

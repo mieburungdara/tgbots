@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.4.0] - 2025-08-10
+
+### Ditambahkan
+- Sistem migrasi database untuk pembaruan skema yang aman di `admin/settings.php`.
+- Halaman Pengaturan baru (`admin/settings.php`) di panel admin.
+- Direktori `migrations/` untuk menyimpan file-file pembaruan database.
+- Tautan "Pengaturan" di navigasi utama panel admin.
+
+### Diubah
+- Logika pembuatan tabel `members` dipindahkan dari `setup.sql` ke file migrasi pertama. `setup.sql` sekarang hanya berisi skema dasar awal.
+
 ## [1.3.0] - 2025-08-10
 
 ### Ditambahkan
