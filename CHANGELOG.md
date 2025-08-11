@@ -2,8 +2,20 @@
 
 ## [1.9.0] - 2025-08-10
 
+
+### Diubah
+- **Struktur Database**: Merombak skema database untuk mendukung relasi many-to-many antara pengguna dan bot.
+  - Tabel `chats` diubah namanya menjadi `users` dan kolomnya disesuaikan untuk informasi pengguna yang lebih lengkap (`last_name`, `language_code`).
+  - Tabel `bots` diperkaya dengan kolom `username` dan `first_name` untuk data bot yang lebih detail.
+- **Relasi Pengguna-Bot**: Menghapus relasi langsung dari `users` ke `bots` (sebelumnya `chats` ke `bots`).
+
+### Ditambahkan
+- **Tabel `rel_user_bot`**: Tabel baru untuk mengelola hubungan antara `users` dan `bots`, memungkinkan satu pengguna terhubung ke banyak bot dan sebaliknya. Tabel ini juga mencatat status blokir dan waktu interaksi terakhir.
+- **File Migrasi Baru**: Menambahkan skrip migrasi (`migrations/002_restructure_schema.sql`) untuk menerapkan perubahan ini pada instalasi yang sudah ada.
+=======
 ### Diperbaiki
 - Bug kritis di mana token login tidak disimpan untuk pengguna yang sudah ada (yang berinteraksi dengan bot sebelum sistem member ditambahkan). Sistem sekarang memastikan setiap pengguna memiliki record member sebelum memproses pesan.
+
 
 ## [1.8.0] - 2025-08-10
 
