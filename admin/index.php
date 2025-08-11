@@ -145,6 +145,7 @@ if ($selected_telegram_bot_id) {
                     <?php endif; ?>
                 </tbody>
             </table>
+            <?php endif; ?>
         <?php else: ?>
             <p>Silakan pilih bot untuk melihat percakapannya.</p>
         <?php endif; ?>
