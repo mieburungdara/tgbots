@@ -134,10 +134,10 @@ function get_sort_link($column, $current_sort, $current_order) {
                     <tr>
                         <td><?= htmlspecialchars($user['id']) ?></td>
                         <td><?= htmlspecialchars($user['telegram_id']) ?></td>
-                        <td><?= htmlspecialchars($user['first_name']) ?></td>
-                        <td><?= htmlspecialchars($user['last_name']) ?></td>
-                        <td>@<?= htmlspecialchars($user['username']) ?></td>
-                        <td><?= htmlspecialchars($user['language_code']) ?></td>
+                        <td><?= htmlspecialchars($user['first_name'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($user['last_name'] ?? '') ?></td>
+                        <td>@<?= htmlspecialchars($user['username'] ?? '') ?></td>
+                        <td><?= htmlspecialchars($user['language_code'] ?? '') ?></td>
                         <td><?= htmlspecialchars($user['created_at']) ?></td>
                         <td colspan="2">
                             <?php
