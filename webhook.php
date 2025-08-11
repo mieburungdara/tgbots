@@ -67,30 +67,44 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
 try {
     $pdo->beginTransaction();
 
-    // --- 4. Cari atau buat entri di tabel 'chats' ---
-    $stmt = $pdo->prepare("SELECT id FROM chats WHERE bot_id = ? AND chat_id = ?");
-    $stmt->execute([$internal_bot_id, $chat_id_from_telegram]);
-    $chat = $stmt->fetch();
+    // --- 4. Cari atau buat pengguna di tabel 'users' ---
+    $stmt = $pdo->prepare("SELECT id FROM users WHERE telegram_id = ?");
+    $stmt->execute([$chat_id_from_telegram]);
+    $user = $stmt->fetch();
 
-    if ($chat) {
-        $internal_chat_id = $chat['id'];
+    if ($user) {
+        $internal_user_id = $user['id'];
     } else {
-        $stmt = $pdo->prepare("INSERT INTO chats (bot_id, chat_id, first_name, username) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$internal_bot_id, $chat_id_from_telegram, $first_name, $username]);
-        $internal_chat_id = $pdo->lastInsertId();
-        app_log("Chat baru dibuat untuk chat_id: {$chat_id_from_telegram}, user: {$first_name}", 'bot');
-
-        // --- Tambahan: Buat entri member jika belum ada ---
-        $stmt = $pdo->prepare("INSERT INTO members (chat_id) VALUES (?)");
-        $stmt->execute([$internal_chat_id]);
-        app_log("Member baru dibuat untuk chat_id: {$chat_id_from_telegram}", 'bot');
+        // Pengguna tidak ada, buat baru
+        $stmt = $pdo->prepare("INSERT INTO users (telegram_id, first_name, username) VALUES (?, ?, ?)");
+        $stmt->execute([$chat_id_from_telegram, $first_name, $username]);
+        $internal_user_id = $pdo->lastInsertId();
+        app_log("Pengguna baru dibuat: telegram_id: {$chat_id_from_telegram}, user: {$first_name}", 'bot');
     }
 
-    // --- 5. Simpan pesan ke tabel 'messages' ---
+    // --- 5. Pastikan relasi user-bot ada ---
+    $stmt = $pdo->prepare("SELECT id FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
+    $stmt->execute([$internal_user_id, $internal_bot_id]);
+    if (!$stmt->fetch()) {
+        $stmt = $pdo->prepare("INSERT INTO rel_user_bot (user_id, bot_id) VALUES (?, ?)");
+        $stmt->execute([$internal_user_id, $internal_bot_id]);
+        app_log("Relasi baru dibuat antara user_id: {$internal_user_id} dan bot_id: {$internal_bot_id}", 'bot');
+    }
+
+    // --- 6. Pastikan entri member ada (untuk fitur login) ---
+    $stmt = $pdo->prepare("SELECT id FROM members WHERE user_id = ?");
+    $stmt->execute([$internal_user_id]);
+    if (!$stmt->fetch()) {
+        $stmt = $pdo->prepare("INSERT INTO members (user_id) VALUES (?)");
+        $stmt->execute([$internal_user_id]);
+        app_log("Member baru dibuat untuk user_id: {$internal_user_id}", 'bot');
+    }
+
+    // --- 7. Simpan pesan ke tabel 'messages' ---
     $stmt = $pdo->prepare(
-        "INSERT INTO messages (chat_id, telegram_message_id, text, direction, telegram_timestamp) VALUES (?, ?, ?, 'incoming', ?)"
+        "INSERT INTO messages (user_id, bot_id, telegram_message_id, text, direction, telegram_timestamp) VALUES (?, ?, ?, ?, 'incoming', ?)"
     );
-    $stmt->execute([$internal_chat_id, $telegram_message_id, $text, $message_date]);
+    $stmt->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $text, $message_date]);
 
     $pdo->commit();
 
@@ -102,7 +116,7 @@ try {
 }
 
 
-// --- 6. Handle perintah ---
+// --- 8. Handle perintah ---
 $telegram_api = new TelegramAPI($bot_token);
 
 if ($text === '/start') {
@@ -124,11 +138,11 @@ if ($text === '/start') {
         $login_token = bin2hex(random_bytes(32));
         $token_creation_time = date('Y-m-d H:i:s');
 
-        // Simpan token ke database
-        $stmt = $pdo->prepare("UPDATE members SET login_token = ?, token_created_at = ?, token_used = 0 WHERE chat_id = ?");
-        $stmt->execute([$login_token, $token_creation_time, $internal_chat_id]);
+        // Simpan token ke database menggunakan user_id
+        $stmt = $pdo->prepare("UPDATE members SET login_token = ?, token_created_at = ?, token_used = 0 WHERE user_id = ?");
+        $stmt->execute([$login_token, $token_creation_time, $internal_user_id]);
 
-        app_log("Token login berhasil dibuat untuk chat_id: {$chat_id_from_telegram}", 'bot');
+        app_log("Token login berhasil dibuat untuk user_id: {$internal_user_id}", 'bot');
 
         // Buat link login
         $login_link = rtrim(BASE_URL, '/') . '/member/index.php?token=' . $login_token;
