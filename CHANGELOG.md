@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.8.0] - 2025-08-10
+
+### Ditambahkan
+- Pencatatan log untuk proses pembuatan token login via perintah `/login`. Keberhasilan dan kegagalan (termasuk error database) sekarang dicatat di log `bot` dan `database`.
+
 ## [1.7.0] - 2025-08-10
 
 ### Ditambahkan
