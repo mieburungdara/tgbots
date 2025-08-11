@@ -78,6 +78,44 @@ class TelegramAPI {
         return $this->apiRequest('sendMediaGroup', $data);
     }
 
+    // --- Metode untuk mengirim berbagai jenis media ---
+
+    public function sendPhoto($chat_id, $photo, $caption = null) {
+        $data = ['chat_id' => $chat_id, 'photo' => $photo];
+        if ($caption) $data['caption'] = $caption;
+        return $this->apiRequest('sendPhoto', $data);
+    }
+
+    public function sendVideo($chat_id, $video, $caption = null) {
+        $data = ['chat_id' => $chat_id, 'video' => $video];
+        if ($caption) $data['caption'] = $caption;
+        return $this->apiRequest('sendVideo', $data);
+    }
+
+    public function sendAudio($chat_id, $audio, $caption = null) {
+        $data = ['chat_id' => $chat_id, 'audio' => $audio];
+        if ($caption) $data['caption'] = $caption;
+        return $this->apiRequest('sendAudio', $data);
+    }
+
+    public function sendDocument($chat_id, $document, $caption = null) {
+        $data = ['chat_id' => $chat_id, 'document' => $document];
+        if ($caption) $data['caption'] = $caption;
+        return $this->apiRequest('sendDocument', $data);
+    }
+
+    public function sendAnimation($chat_id, $animation, $caption = null) {
+        $data = ['chat_id' => $chat_id, 'animation' => $animation];
+        if ($caption) $data['caption'] = $caption;
+        return $this->apiRequest('sendAnimation', $data);
+    }
+
+    public function sendVoice($chat_id, $voice, $caption = null) {
+        $data = ['chat_id' => $chat_id, 'voice' => $voice];
+        if ($caption) $data['caption'] = $caption;
+        return $this->apiRequest('sendVoice', $data);
+    }
+
     /**
      * Mengatur URL webhook untuk menerima update.
      *
