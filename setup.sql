@@ -84,6 +84,19 @@ CREATE TABLE `messages` (
   CONSTRAINT `messages_ibfk_2` FOREIGN KEY (`bot_id`) REFERENCES `bots` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
+-- Tabel untuk menyimpan informasi member (untuk fitur login panel)
+DROP TABLE IF EXISTS `members`;
+CREATE TABLE `members` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL COMMENT 'Referensi ke tabel users',
+  `login_token` varchar(255) DEFAULT NULL,
+  `token_created_at` timestamp NULL DEFAULT NULL,
+  `token_used` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  CONSTRAINT `members_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 -- PERHATIAN:
 -- Skrip ini hanya untuk setup awal.
 -- Untuk pembaruan skema database selanjutnya, silakan buat file migrasi baru

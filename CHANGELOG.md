@@ -3,10 +3,11 @@
 ## [2.0.0] - 2025-08-10
 
 ### Diubah (Perubahan Besar / Breaking Change)
-- **Struktur Database**: Merombak total skema database untuk mendukung relasi many-to-many antara pengguna dan bot, serta memperbaiki model data untuk pelacakan pesan yang akurat.
+- **Struktur Database**: Merombak total skema database untuk mendukung relasi many-to-many antara pengguna dan bot, serta memperbaiki model data untuk pelacakan pesan dan member yang akurat.
   - Tabel `chats` diubah namanya menjadi `users` dan kolomnya disesuaikan untuk informasi pengguna yang lebih lengkap (`last_name`, `language_code`).
   - Tabel `bots` diperkaya dengan kolom `username` dan `first_name`.
-  - **Penting**: Tabel `messages` sekarang memiliki kolom `bot_id` untuk secara eksplisit menautkan setiap pesan ke bot yang relevan. Ini memperbaiki kekurangan pada desain sebelumnya dan sangat penting untuk fungsionalitas percakapan yang benar.
+  - Tabel `messages` sekarang memiliki kolom `bot_id` untuk menautkan setiap pesan ke bot yang relevan.
+  - Tabel `members` diperbarui untuk menautkan ke `users(id)` (sebelumnya `chats(id)`), menyelaraskannya dengan skema baru.
 
 ### Ditambahkan
 - **Tabel `rel_user_bot`**: Tabel baru untuk mengelola hubungan antara `users` dan `bots`, memungkinkan satu pengguna terhubung ke banyak bot dan sebaliknya. Tabel ini juga mencatat status blokir dan waktu interaksi terakhir.
