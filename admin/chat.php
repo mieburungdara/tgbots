@@ -8,17 +8,26 @@ if (!$pdo) {
     die("Koneksi database gagal.");
 }
 
-$bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
+$telegram_bot_id = isset($_GET['bot_id']) ? (string)$_GET['bot_id'] : '';
 $telegram_chat_id = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
 
-if (!$bot_id || !$telegram_chat_id) {
+if (empty($telegram_bot_id) || !$telegram_chat_id) {
     header("Location: index.php");
     exit;
 }
 
-// Ambil id internal dari tabel chats
+// Cari ID internal bot berdasarkan ID bot telegram
+$stmt = $pdo->prepare("SELECT id FROM bots WHERE token LIKE ?");
+$stmt->execute([$telegram_bot_id . ':%']);
+$internal_bot_id = $stmt->fetchColumn();
+
+if (!$internal_bot_id) {
+    die("Bot tidak ditemukan.");
+}
+
+// Ambil id internal dari tabel chats menggunakan ID bot internal
 $stmt = $pdo->prepare("SELECT id FROM chats WHERE bot_id = ? AND chat_id = ?");
-$stmt->execute([$bot_id, $telegram_chat_id]);
+$stmt->execute([$internal_bot_id, $telegram_chat_id]);
 $chat_internal_id = $stmt->fetchColumn();
 
 if (!$chat_internal_id) {
@@ -53,7 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
             }
         }
         // Redirect untuk mencegah resubmit dan menampilkan pesan baru
-        header("Location: chat.php?bot_id=" . $bot_id . "&chat_id=" . $telegram_chat_id);
+        header("Location: chat.php?bot_id=" . $telegram_bot_id . "&chat_id=" . $telegram_chat_id);
         exit;
     }
 }
@@ -98,7 +107,7 @@ $messages = $stmt->fetchAll();
 <body>
     <div class="container">
         <header>
-            <nav><a href="index.php?bot_id=<?= $chat_info['bot_id'] ?>">&larr; Kembali ke Daftar Percakapan</a></nav>
+            <nav><a href="index.php?bot_id=<?= $telegram_bot_id ?>">&larr; Kembali ke Daftar Percakapan</a></nav>
             <h1>Chat dengan <?= htmlspecialchars($chat_info['first_name']) ?> (@<?= htmlspecialchars($chat_info['username']) ?>)</h1>
         </header>
         <div class="chat-window">
@@ -111,7 +120,7 @@ $messages = $stmt->fetchAll();
             </div>
         </div>
         <div class="reply-form">
-            <form action="chat.php?bot_id=<?= $bot_id ?>&chat_id=<?= $telegram_chat_id ?>" method="post">
+            <form action="chat.php?bot_id=<?= $telegram_bot_id ?>&chat_id=<?= $telegram_chat_id ?>" method="post">
                 <textarea name="reply_text" rows="3" placeholder="Ketik balasan Anda..." required></textarea>
                 <button type="submit" name="reply_message">Kirim</button>
             </form>
