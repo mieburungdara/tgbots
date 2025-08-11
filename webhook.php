@@ -218,7 +218,7 @@ if ($text_for_command === '/start') {
     $reply_text = "Selamat datang! Silakan kirim pesan Anda, dan admin kami akan segera merespons.";
     $telegram_api->sendMessage($chat_id_from_telegram, $reply_text);
     app_log("Perintah /start dieksekusi untuk chat_id: {$chat_id_from_telegram}", 'bot');
-} elseif ($text === '/login') {
+} elseif ($text_for_command === '/login') {
     app_log("Perintah /login diterima dari chat_id: {$chat_id_from_telegram}", 'bot');
 
     // Pastikan BASE_URL sudah didefinisikan di config.php
