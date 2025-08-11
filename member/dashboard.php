@@ -2,7 +2,7 @@
 session_start();
 
 // Jika belum login, redirect ke halaman login
-if (!isset($_SESSION['member_chat_id'])) {
+if (!isset($_SESSION['member_user_id'])) {
     header("Location: index.php");
     exit;
 }
@@ -11,13 +11,13 @@ require_once __DIR__ . '/../core/database.php';
 
 $pdo = get_db_connection();
 
-// Ambil informasi member dari tabel chats
-$stmt = $pdo->prepare("SELECT * FROM chats WHERE id = ?");
-$stmt->execute([$_SESSION['member_chat_id']]);
-$chat_info = $stmt->fetch();
+// Ambil informasi pengguna dari tabel users
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->execute([$_SESSION['member_user_id']]);
+$user_info = $stmt->fetch();
 
-if (!$chat_info) {
-    // Jika data chat tidak ditemukan, hancurkan session dan redirect
+if (!$user_info) {
+    // Jika data pengguna tidak ditemukan, hancurkan session dan redirect
     session_destroy();
     header("Location: index.php");
     exit;
@@ -50,21 +50,21 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 </head>
 <body>
     <div class="dashboard-container">
-        <h1>Selamat Datang, <?php echo htmlspecialchars($chat_info['first_name']); ?>!</h1>
+        <h1>Selamat Datang, <?= htmlspecialchars($user_info['first_name'] ?? '') ?>!</h1>
 
         <h2>Informasi Akun Anda</h2>
         <div class="info-grid">
             <strong>First Name:</strong>
-            <span><?php echo htmlspecialchars($chat_info['first_name']); ?></span>
+            <span><?= htmlspecialchars($user_info['first_name'] ?? '') ?></span>
 
             <strong>Username:</strong>
-            <span><?php echo htmlspecialchars($chat_info['username'] ?? 'Tidak ada'); ?></span>
+            <span>@<?= htmlspecialchars($user_info['username'] ?? 'Tidak ada') ?></span>
 
-            <strong>Chat ID:</strong>
-            <span><?php echo htmlspecialchars($chat_info['chat_id']); ?></span>
+            <strong>Telegram ID:</strong>
+            <span><?= htmlspecialchars($user_info['telegram_id']) ?></span>
 
             <strong>Terdaftar pada:</strong>
-            <span><?php echo htmlspecialchars(date('d F Y H:i', strtotime($chat_info['created_at']))); ?></span>
+            <span><?= htmlspecialchars(date('d F Y H:i', strtotime($user_info['created_at']))) ?></span>
         </div>
 
         <a href="?action=logout" class="logout-link">Logout</a>
