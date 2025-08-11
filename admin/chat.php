@@ -8,10 +8,21 @@ if (!$pdo) {
     die("Koneksi database gagal.");
 }
 
-$chat_id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
-if (!$chat_id) {
+$bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
+$telegram_chat_id = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
+
+if (!$bot_id || !$telegram_chat_id) {
     header("Location: index.php");
     exit;
+}
+
+// Ambil id internal dari tabel chats
+$stmt = $pdo->prepare("SELECT id FROM chats WHERE bot_id = ? AND chat_id = ?");
+$stmt->execute([$bot_id, $telegram_chat_id]);
+$chat_internal_id = $stmt->fetchColumn();
+
+if (!$chat_internal_id) {
+    die("Chat tidak ditemukan.");
 }
 
 // Handle pengiriman balasan
@@ -25,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
              JOIN bots b ON c.bot_id = b.id
              WHERE c.id = ?"
         );
-        $stmt->execute([$chat_id]);
+        $stmt->execute([$chat_internal_id]);
         $target = $stmt->fetch();
 
         if ($target) {
@@ -38,18 +49,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
                     "INSERT INTO messages (chat_id, telegram_message_id, text, direction, telegram_timestamp)
                      VALUES (?, ?, ?, 'outgoing', NOW())"
                 );
-                $stmt->execute([$chat_id, $result['result']['message_id'], $reply_text]);
+                $stmt->execute([$chat_internal_id, $result['result']['message_id'], $reply_text]);
             }
         }
         // Redirect untuk mencegah resubmit dan menampilkan pesan baru
-        header("Location: chat.php?id=" . $chat_id);
+        header("Location: chat.php?bot_id=" . $bot_id . "&chat_id=" . $telegram_chat_id);
         exit;
     }
 }
 
 // Ambil detail chat dan semua pesan
 $stmt = $pdo->prepare("SELECT * FROM chats WHERE id = ?");
-$stmt->execute([$chat_id]);
+$stmt->execute([$chat_internal_id]);
 $chat_info = $stmt->fetch();
 
 if (!$chat_info) {
@@ -57,7 +68,7 @@ if (!$chat_info) {
 }
 
 $stmt = $pdo->prepare("SELECT * FROM messages WHERE chat_id = ? ORDER BY telegram_timestamp ASC");
-$stmt->execute([$chat_id]);
+$stmt->execute([$chat_internal_id]);
 $messages = $stmt->fetchAll();
 
 ?>
@@ -100,7 +111,7 @@ $messages = $stmt->fetchAll();
             </div>
         </div>
         <div class="reply-form">
-            <form action="chat.php?id=<?= $chat_id ?>" method="post">
+            <form action="chat.php?bot_id=<?= $bot_id ?>&chat_id=<?= $telegram_chat_id ?>" method="post">
                 <textarea name="reply_text" rows="3" placeholder="Ketik balasan Anda..." required></textarea>
                 <button type="submit" name="reply_message">Kirim</button>
             </form>
