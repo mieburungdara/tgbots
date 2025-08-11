@@ -1,3 +1,18 @@
+-- Changelog Database
+--
+-- Versi 2 (YYYY-MM-DD):
+-- - Merombak struktur tabel untuk mendukung relasi many-to-many antara pengguna dan bot.
+-- - Mengganti nama tabel `chats` menjadi `users` untuk kejelasan.
+-- - Menambahkan kolom `last_name` dan `language_code` ke tabel `users`.
+-- - Menghapus kolom `bot_id` dari tabel `users`.
+-- - Menambahkan kolom `username` dan `first_name` ke tabel `bots`.
+-- - Membuat tabel baru `rel_user_bot` untuk mengelola hubungan antara pengguna dan bot,
+--   lengkap dengan status `is_blocked` dan `last_interaction_at`.
+-- - Memperbarui foreign key di tabel `messages` untuk menunjuk ke `users`.
+--
+-- Versi 1 (Initial setup):
+-- - Pembuatan awal tabel `bots`, `chats`, `messages`.
+
 -- Skrip untuk membuat tabel database.
 -- Sesuai instruksi, skrip ini akan menghapus tabel yang ada terlebih dahulu (jika ada)
 -- dan membuatnya kembali dari awal.
@@ -5,45 +20,65 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- Tabel untuk menyimpan informasi bot
+-- Hapus tabel dalam urutan yang benar untuk menghindari masalah foreign key
+DROP TABLE IF EXISTS `messages`;
+DROP TABLE IF EXISTS `rel_user_bot`;
+DROP TABLE IF EXISTS `users`;
+DROP TABLE IF EXISTS `chats`; -- Hapus juga tabel lama jika ada
 DROP TABLE IF EXISTS `bots`;
+
+-- Tabel untuk menyimpan informasi bot
 CREATE TABLE `bots` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL COMMENT 'Nama bot untuk identifikasi di admin panel',
   `token` varchar(255) NOT NULL COMMENT 'Token API dari BotFather',
+  `username` varchar(255) DEFAULT NULL COMMENT 'Username bot (@namabot)',
+  `first_name` varchar(255) DEFAULT NULL COMMENT 'Nama depan bot',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   UNIQUE KEY `token` (`token`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
--- Tabel untuk menyimpan informasi chat/pengguna yang berinteraksi dengan bot
-DROP TABLE IF EXISTS `chats`;
-CREATE TABLE `chats` (
+-- Tabel untuk menyimpan informasi pengguna yang berinteraksi dengan bot
+CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `bot_id` int(11) NOT NULL,
-  `chat_id` bigint(20) NOT NULL COMMENT 'Chat ID unik dari Telegram',
+  `telegram_id` bigint(20) NOT NULL COMMENT 'User ID unik dari Telegram',
   `first_name` varchar(255) DEFAULT NULL,
+  `last_name` varchar(255) DEFAULT NULL,
   `username` varchar(255) DEFAULT NULL,
+  `language_code` varchar(10) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  UNIQUE KEY `bot_chat` (`bot_id`, `chat_id`),
+  UNIQUE KEY `telegram_id` (`telegram_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Tabel untuk relasi antara pengguna dan bot
+CREATE TABLE `rel_user_bot` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `bot_id` int(11) NOT NULL,
+  `is_blocked` tinyint(1) NOT NULL DEFAULT '0' COMMENT '0: tidak diblokir, 1: diblokir',
+  `last_interaction_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_bot_unique` (`user_id`,`bot_id`),
+  KEY `user_id` (`user_id`),
   KEY `bot_id` (`bot_id`),
-  CONSTRAINT `chats_ibfk_1` FOREIGN KEY (`bot_id`) REFERENCES `bots` (`id`) ON DELETE CASCADE
+  CONSTRAINT `rel_user_bot_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `rel_user_bot_ibfk_2` FOREIGN KEY (`bot_id`) REFERENCES `bots` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- Tabel untuk menyimpan semua pesan
-DROP TABLE IF EXISTS `messages`;
 CREATE TABLE `messages` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `chat_id` int(11) NOT NULL COMMENT 'Referensi ke tabel chats',
+  `user_id` int(11) NOT NULL COMMENT 'Referensi ke tabel users',
   `telegram_message_id` bigint(20) NOT NULL COMMENT 'Message ID dari Telegram',
   `text` text,
   `direction` enum('incoming','outgoing') NOT NULL COMMENT 'incoming: dari user, outgoing: dari admin',
   `telegram_timestamp` datetime NOT NULL COMMENT 'Waktu kirim pesan dari Telegram',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `chat_id` (`chat_id`),
-  CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`chat_id`) REFERENCES `chats` (`id`) ON DELETE CASCADE
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `messages_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- PERHATIAN:
