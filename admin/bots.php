@@ -73,6 +73,8 @@ $bots = $pdo->query("SELECT id, name, created_at FROM bots ORDER BY created_at D
         input[type="text"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; }
         button { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; }
         button:hover { background-color: #0056b3; }
+        .btn-edit { display: inline-block; padding: 5px 10px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; }
+        .btn-edit:hover { background-color: #218838; }
         .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; }
         .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
@@ -111,12 +113,13 @@ $bots = $pdo->query("SELECT id, name, created_at FROM bots ORDER BY created_at D
                     <th>ID</th>
                     <th>Nama</th>
                     <th>Tanggal Dibuat</th>
+                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($bots)): ?>
                     <tr>
-                        <td colspan="3">Belum ada bot yang ditambahkan.</td>
+                        <td colspan="4">Belum ada bot yang ditambahkan.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($bots as $bot): ?>
@@ -124,6 +127,9 @@ $bots = $pdo->query("SELECT id, name, created_at FROM bots ORDER BY created_at D
                             <td><?= htmlspecialchars($bot['id']) ?></td>
                             <td><?= htmlspecialchars($bot['name']) ?></td>
                             <td><?= htmlspecialchars($bot['created_at']) ?></td>
+                            <td>
+                                <a href="edit_bot.php?id=<?= htmlspecialchars($bot['id']) ?>" class="btn-edit">Edit</a>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>

@@ -54,4 +54,32 @@ class TelegramAPI {
         ];
         return $this->apiRequest('sendMessage', $data);
     }
+
+    /**
+     * Mengatur URL webhook untuk menerima update.
+     *
+     * @param string $url URL webhook.
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function setWebhook($url) {
+        return $this->apiRequest('setWebhook', ['url' => $url]);
+    }
+
+    /**
+     * Mendapatkan informasi webhook saat ini.
+     *
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function getWebhookInfo() {
+        return $this->apiRequest('getWebhookInfo');
+    }
+
+    /**
+     * Menghapus webhook yang sudah ter-set.
+     *
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function deleteWebhook() {
+        return $this->apiRequest('deleteWebhook');
+    }
 }
