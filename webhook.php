@@ -79,6 +79,10 @@ try {
         $stmt = $pdo->prepare("INSERT INTO chats (bot_id, chat_id, first_name, username) VALUES (?, ?, ?, ?)");
         $stmt->execute([$internal_bot_id, $chat_id_from_telegram, $first_name, $username]);
         $internal_chat_id = $pdo->lastInsertId();
+
+        // --- Tambahan: Buat entri member jika belum ada ---
+        $stmt = $pdo->prepare("INSERT INTO members (chat_id) VALUES (?)");
+        $stmt->execute([$internal_chat_id]);
     }
 
     // --- 5. Simpan pesan ke tabel 'messages' ---
@@ -97,12 +101,26 @@ try {
 }
 
 
-// --- 6. Handle perintah /start ---
+// --- 6. Handle perintah ---
+$telegram_api = new TelegramAPI($bot_token);
+
 if ($text === '/start') {
-    $telegram_api = new TelegramAPI($bot_token);
     $reply_text = "Selamat datang! Silakan kirim pesan Anda, dan admin kami akan segera merespons.";
     $telegram_api->sendMessage($chat_id_from_telegram, $reply_text);
+} elseif ($text === '/login') {
+    // Buat token login unik
+    $login_token = bin2hex(random_bytes(16));
+    $token_creation_time = date('Y-m-d H:i:s');
+
+    // Simpan token ke database, set token_used menjadi 0 setiap kali token baru dibuat
+    $stmt = $pdo->prepare("UPDATE members SET login_token = ?, token_created_at = ?, token_used = 0 WHERE chat_id = ?");
+    $stmt->execute([$login_token, $token_creation_time, $internal_chat_id]);
+
+    // Kirim token ke pengguna
+    $reply_text = "Token login Anda adalah: `{$login_token}`\n\nToken ini hanya berlaku untuk satu kali login. Gunakan token ini untuk masuk ke panel member.";
+    $telegram_api->sendMessage($chat_id_from_telegram, $reply_text, 'Markdown');
 }
+
 
 // Beri respons OK ke Telegram untuk menandakan update sudah diterima.
 http_response_code(200);
