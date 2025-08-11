@@ -4,4 +4,5 @@
 4. selalu perbaharui CHANGELOG.md setiap ada pembaharuan
 5. menggunakan bahasa indonesia
 6. proyek digunakan di shared hosting
+7. selalu tambahkan changelog pada `setup.sql` agar dapat memantau perubahan database jika terdapat update terkait database atau table agar mudah untuk dipantau
    
