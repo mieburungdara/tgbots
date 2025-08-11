@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bot'])) {
 }
 
 // Ambil daftar bot yang ada
-$bots = $pdo->query("SELECT id, name, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
+$bots = $pdo->query("SELECT id, name, token, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
 
 ?>
 <!DOCTYPE html>
@@ -123,12 +123,16 @@ $bots = $pdo->query("SELECT id, name, created_at FROM bots ORDER BY created_at D
                     </tr>
                 <?php else: ?>
                     <?php foreach ($bots as $bot): ?>
+                        <?php
+                            // Ekstrak ID bot dari token
+                            $telegram_bot_id = explode(':', $bot['token'])[0];
+                        ?>
                         <tr>
-                            <td><?= htmlspecialchars($bot['id']) ?></td>
+                            <td><?= htmlspecialchars($telegram_bot_id) // Tampilkan ID dari token ?></td>
                             <td><?= htmlspecialchars($bot['name']) ?></td>
                             <td><?= htmlspecialchars($bot['created_at']) ?></td>
                             <td>
-                                <a href="edit_bot.php?id=<?= htmlspecialchars($bot['id']) ?>" class="btn-edit">Edit</a>
+                                <a href="edit_bot.php?id=<?= htmlspecialchars($telegram_bot_id) ?>" class="btn-edit">Edit</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
