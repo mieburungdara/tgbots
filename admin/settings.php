@@ -95,7 +95,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         <nav>
             <a href="index.php">Percakapan</a> |
             <a href="bots.php">Kelola Bot</a> |
-            <a href="settings.php" class="active">Pengaturan</a>
+            <a href="settings.php" class="active">Pengaturan</a> |
+            <a href="logs.php">Logs</a>
         </nav>
 
         <h1>Pengaturan Aplikasi</h1>

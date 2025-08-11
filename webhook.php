@@ -1,17 +1,14 @@
 <?php
 
-// Aktifkan logging error untuk debugging
-ini_set('log_errors', 1);
-ini_set('error_log', __DIR__ . '/webhook_debug.log');
-
 // Sertakan file-file yang diperlukan
 require_once __DIR__ . '/core/database.php';
 require_once __DIR__ . '/core/TelegramAPI.php';
+require_once __DIR__ . '/core/helpers.php';
 
 // --- 1. Validasi ID Bot Telegram dari URL ---
 if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
     http_response_code(400); // Bad Request
-    error_log("Webhook Error: ID bot dari URL tidak valid atau tidak ada.");
+    app_log("Webhook Error: ID bot dari URL tidak valid atau tidak ada.", 'bot');
     echo "Error: ID bot tidak valid.";
     exit;
 }
@@ -21,7 +18,7 @@ $telegram_bot_id = $_GET['id'];
 $pdo = get_db_connection();
 if (!$pdo) {
     http_response_code(500); // Internal Server Error
-    error_log("Webhook Error: Gagal terhubung ke database.");
+    // Pesan ini sudah dicatat di dalam get_db_connection()
     exit;
 }
 
@@ -32,7 +29,7 @@ $bot = $stmt->fetch();
 
 if (!$bot) {
     http_response_code(404); // Not Found
-    error_log("Webhook Error: Bot dengan ID Telegram {$telegram_bot_id} tidak ditemukan.");
+    app_log("Webhook Error: Bot dengan ID Telegram {$telegram_bot_id} tidak ditemukan.", 'bot');
     echo "Error: Bot tidak ditemukan.";
     exit;
 }
@@ -50,10 +47,12 @@ if (!$update) {
 
 // Fokus pada 'message' untuk saat ini.
 if (!isset($update['message'])) {
+    // Bisa jadi callback_query atau tipe lain, abaikan untuk saat ini.
     exit;
 }
 
 $message = $update['message'];
+app_log("Pesan diterima dari chat_id: {$message['chat']['id']}", 'bot');
 
 // Ekstrak data penting dari pesan
 $telegram_message_id = $message['message_id'];
@@ -79,10 +78,12 @@ try {
         $stmt = $pdo->prepare("INSERT INTO chats (bot_id, chat_id, first_name, username) VALUES (?, ?, ?, ?)");
         $stmt->execute([$internal_bot_id, $chat_id_from_telegram, $first_name, $username]);
         $internal_chat_id = $pdo->lastInsertId();
+        app_log("Chat baru dibuat untuk chat_id: {$chat_id_from_telegram}, user: {$first_name}", 'bot');
 
         // --- Tambahan: Buat entri member jika belum ada ---
         $stmt = $pdo->prepare("INSERT INTO members (chat_id) VALUES (?)");
         $stmt->execute([$internal_chat_id]);
+        app_log("Member baru dibuat untuk chat_id: {$chat_id_from_telegram}", 'bot');
     }
 
     // --- 5. Simpan pesan ke tabel 'messages' ---
@@ -95,7 +96,7 @@ try {
 
 } catch (Exception $e) {
     $pdo->rollBack();
-    error_log("Database Error: " . $e->getMessage());
+    app_log("Database Error saat proses pesan: " . $e->getMessage(), 'database');
     http_response_code(500);
     exit;
 }
@@ -107,10 +108,11 @@ $telegram_api = new TelegramAPI($bot_token);
 if ($text === '/start') {
     $reply_text = "Selamat datang! Silakan kirim pesan Anda, dan admin kami akan segera merespons.";
     $telegram_api->sendMessage($chat_id_from_telegram, $reply_text);
+    app_log("Perintah /start dieksekusi untuk chat_id: {$chat_id_from_telegram}", 'bot');
 } elseif ($text === '/login') {
     // Pastikan BASE_URL sudah didefinisikan di config.php
     if (!defined('BASE_URL') || empty(BASE_URL)) {
-        error_log("Webhook Error: BASE_URL tidak terdefinisi di config.php. Tidak dapat membuat link login.");
+        app_log("Webhook Error: BASE_URL tidak terdefinisi di config.php.", 'error');
         $telegram_api->sendMessage($chat_id_from_telegram, "Maaf, terjadi kesalahan teknis. Tidak dapat membuat link login saat ini.");
         exit;
     }

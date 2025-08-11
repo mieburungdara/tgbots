@@ -29,10 +29,11 @@ class TelegramAPI {
         curl_setopt($ch, CURLOPT_POST, true);
 
         $result = curl_exec($ch);
+        $curl_error = curl_error($ch);
         curl_close($ch);
 
         if ($result === false) {
-            error_log("cURL Error: " . curl_error($ch));
+            app_log("Telegram API cURL Error: " . $curl_error, 'bot');
             return false;
         }
 

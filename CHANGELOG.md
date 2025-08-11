@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.6.0] - 2025-08-10
+
+### Ditambahkan
+- Sistem logging terpusat dengan file log terpisah untuk kategori yang berbeda (misalnya, `bot`, `database`, `app`).
+- Halaman penampil log baru di `admin/logs.php` untuk melihat, menyaring, dan membersihkan log.
+- Tautan "Logs" di navigasi utama panel admin.
+
+### Diubah
+- Semua panggilan `error_log` di seluruh aplikasi telah diganti dengan fungsi `app_log` yang baru untuk memastikan semua pesan dicatat secara terpusat.
+
 ## [1.5.0] - 2025-08-10
 
 ### Diubah

@@ -92,7 +92,8 @@ if ($selected_telegram_bot_id) {
         <nav>
             <a href="index.php" class="active">Percakapan</a> |
             <a href="bots.php">Kelola Bot</a> |
-            <a href="settings.php">Pengaturan</a>
+            <a href="settings.php">Pengaturan</a> |
+            <a href="logs.php">Logs</a>
         </nav>
 
         <h1>Daftar Percakapan</h1>

@@ -23,3 +23,24 @@ function check_tables_exist(PDO $pdo) {
     }
     return true;
 }
+
+/**
+ * Mencatat pesan ke file log yang ditentukan.
+ *
+ * @param string $message Pesan yang akan dicatat.
+ * @param string $level Tipe log (misal: 'database', 'bot', 'error'). Ini akan menjadi nama file log.
+ * @return void
+ */
+function app_log(string $message, string $level = 'app'): void {
+    $log_dir = __DIR__ . '/../logs';
+    if (!is_dir($log_dir)) {
+        mkdir($log_dir, 0755, true);
+    }
+
+    $log_file = $log_dir . '/' . $level . '.log';
+    $timestamp = date('Y-m-d H:i:s');
+    $formatted_message = "[{$timestamp}] " . $message . PHP_EOL;
+
+    // Gunakan FILE_APPEND untuk menambahkan ke file, dan LOCK_EX untuk mencegah penulisan bersamaan.
+    file_put_contents($log_file, $formatted_message, FILE_APPEND | LOCK_EX);
+}
