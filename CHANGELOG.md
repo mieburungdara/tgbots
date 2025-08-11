@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0] - 2025-08-10
+
+### Ditambahkan
+- Halaman panel member baru di direktori `/member` yang dapat diakses dengan token sekali pakai.
+- Perintah `/login` pada bot untuk menghasilkan token login bagi member.
+- Pendaftaran member otomatis saat pengguna pertama kali berinteraksi dengan bot.
+- Tabel `members` baru di database untuk menyimpan informasi terkait member dan token login.
+
 ## [1.2.0] - 2025-08-10
 
 ### Ditambahkan
