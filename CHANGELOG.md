@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.9.0] - 2025-08-10
+
+### Diperbaiki
+- Bug kritis di mana token login tidak disimpan untuk pengguna yang sudah ada (yang berinteraksi dengan bot sebelum sistem member ditambahkan). Sistem sekarang memastikan setiap pengguna memiliki record member sebelum memproses pesan.
+
 ## [1.8.0] - 2025-08-10
 
 ### Ditambahkan

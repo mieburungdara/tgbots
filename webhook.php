@@ -79,11 +79,15 @@ try {
         $stmt->execute([$internal_bot_id, $chat_id_from_telegram, $first_name, $username]);
         $internal_chat_id = $pdo->lastInsertId();
         app_log("Chat baru dibuat untuk chat_id: {$chat_id_from_telegram}, user: {$first_name}", 'bot');
+    }
 
-        // --- Tambahan: Buat entri member jika belum ada ---
+    // --- 4.5. Pastikan entri member ada (untuk pengguna lama & baru) ---
+    $stmt = $pdo->prepare("SELECT id FROM members WHERE chat_id = ?");
+    $stmt->execute([$internal_chat_id]);
+    if (!$stmt->fetch()) {
         $stmt = $pdo->prepare("INSERT INTO members (chat_id) VALUES (?)");
         $stmt->execute([$internal_chat_id]);
-        app_log("Member baru dibuat untuk chat_id: {$chat_id_from_telegram}", 'bot');
+        app_log("Member record dibuat untuk pengguna lama/baru. chat_id: {$internal_chat_id}", 'bot');
     }
 
     // --- 5. Simpan pesan ke tabel 'messages' ---
