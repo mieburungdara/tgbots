@@ -93,7 +93,12 @@ unset($_SESSION['status_message']);
     <div class="container">
         <nav>
             <a href="index.php">Percakapan</a> |
-            <a href="bots.php" class="active">Kelola Bot</a>
+            <a href="bots.php" class="active">Kelola Bot</a> |
+            <a href="users.php">Pengguna</a> |
+            <a href="roles.php">Manajemen Peran</a> |
+            <a href="media_logs.php">Log Media</a> |
+            <a href="settings.php">Pengaturan</a> |
+            <a href="logs.php">Logs</a>
         </nav>
 
         <h1>Edit Bot: <?= htmlspecialchars($bot['name']) ?></h1>

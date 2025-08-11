@@ -98,6 +98,8 @@ function get_sort_link($column, $current_sort, $current_order) {
             <a href="index.php">Percakapan</a> |
             <a href="bots.php">Kelola Bot</a> |
             <a href="users.php" class="active">Pengguna</a> |
+            <a href="roles.php">Manajemen Peran</a> |
+            <a href="media_logs.php">Log Media</a> |
             <a href="settings.php">Pengaturan</a> |
             <a href="logs.php">Logs</a>
         </nav>

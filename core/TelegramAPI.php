@@ -64,6 +64,21 @@ class TelegramAPI {
     }
 
     /**
+     * Mengirim sekelompok foto atau video sebagai album.
+     *
+     * @param int|string $chat_id ID dari chat tujuan.
+     * @param string $media JSON-encoded array of InputMediaPhoto and InputMediaVideo.
+     * @return mixed Hasil dari API Telegram, atau false jika gagal.
+     */
+    public function sendMediaGroup($chat_id, $media) {
+        $data = [
+            'chat_id' => $chat_id,
+            'media' => $media,
+        ];
+        return $this->apiRequest('sendMediaGroup', $data);
+    }
+
+    /**
      * Mengatur URL webhook untuk menerima update.
      *
      * @param string $url URL webhook.
