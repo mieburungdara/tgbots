@@ -44,14 +44,21 @@ class TelegramAPI {
      *
      * @param int|string $chat_id ID dari chat tujuan.
      * @param string $text Teks pesan yang akan dikirim.
+     * @param string|null $parse_mode Mode parsing: 'Markdown', 'HTML', atau null.
+     * @param string|null $reply_markup Keyboard inline atau kustom dalam format JSON.
      * @return mixed Hasil dari API Telegram, atau false jika gagal.
      */
-    public function sendMessage($chat_id, $text) {
+    public function sendMessage($chat_id, $text, $parse_mode = null, $reply_markup = null) {
         $data = [
             'chat_id' => $chat_id,
             'text' => $text,
-            'parse_mode' => 'HTML' // Bisa juga 'Markdown' atau biarkan kosong
         ];
+        if ($parse_mode) {
+            $data['parse_mode'] = $parse_mode;
+        }
+        if ($reply_markup) {
+            $data['reply_markup'] = $reply_markup;
+        }
         return $this->apiRequest('sendMessage', $data);
     }
 
