@@ -39,12 +39,19 @@ try {
         throw new Exception("Tidak ada pengguna dengan peran admin yang ditemukan.");
     }
 
-    // 3. Ambil file media untuk grup
+    // 3. Ambil file media untuk grup, gabungkan dengan info pengirim
     $is_single = strpos($group_id, 'single_') === 0;
     $db_id = $is_single ? (int)substr($group_id, 7) : $group_id;
+
+    $base_sql = "
+        SELECT mf.file_id, mf.type, mf.caption, mf.created_at, mf.file_size,
+               u.first_name, u.username, u.telegram_id
+        FROM media_files mf
+        LEFT JOIN users u ON mf.user_id = u.telegram_id
+    ";
     $sql = $is_single
-        ? "SELECT file_id, type, caption FROM media_files WHERE id = ?"
-        : "SELECT file_id, type, caption FROM media_files WHERE media_group_id = ? ORDER BY id ASC";
+        ? $base_sql . " WHERE mf.id = ?"
+        : $base_sql . " WHERE mf.media_group_id = ? ORDER BY mf.id ASC";
 
     $media_stmt = $pdo->prepare($sql);
     $media_stmt->execute([$db_id]);
@@ -54,7 +61,19 @@ try {
         throw new Exception("File media tidak ditemukan untuk grup ini.");
     }
 
-    // 4. Kirim media ke setiap admin
+    // 4. Buat caption informasi
+    $sender_info = $media_files[0]; // Info pengirim sama untuk semua item dalam grup
+    $file_size_kb = $sender_info['file_size'] ? round($sender_info['file_size'] / 1024, 2) . ' KB' : 'N/A';
+    $info_caption = "
+--- ℹ️ Info Media ---
+Pengirim: " . htmlspecialchars($sender_info['first_name']) . ($sender_info['username'] ? " (@" . htmlspecialchars($sender_info['username']) . ")" : "") . "
+ID Pengirim: `{$sender_info['telegram_id']}`
+Waktu Kirim: {$sender_info['created_at']}
+Ukuran File: {$file_size_kb}
+--------------------
+";
+
+    // 5. Kirim media ke setiap admin
     $api = new TelegramAPI($bot_token);
     $success_count = 0;
     $total_admins = count($admin_ids);
@@ -67,9 +86,13 @@ try {
             $first = true;
             foreach ($media_files as $file) {
                 $media_item = ['type' => strtolower($file['type']), 'media' => $file['file_id']];
-                // Hanya caption pertama yang akan ditampilkan di media group
-                if ($first && !empty($file['caption'])) {
-                    $media_item['caption'] = $file['caption'];
+                if ($first) {
+                    $full_caption = $info_caption;
+                    if (!empty($file['caption'])) {
+                        $full_caption .= "\n" . $file['caption'];
+                    }
+                    $media_item['caption'] = $full_caption;
+                    $media_item['parse_mode'] = 'Markdown';
                     $first = false;
                 }
                 $media_group[] = $media_item;
@@ -78,11 +101,15 @@ try {
         } else {
             // Kirim sebagai media tunggal
             $file = $media_files[0];
+            $full_caption = $info_caption;
+            if (!empty($file['caption'])) {
+                $full_caption .= "\n" . $file['caption'];
+            }
+
             $type = ucfirst(strtolower($file['type']));
-            $method_name = "send" . $type; // e.g., sendPhoto, sendVideo
+            $method_name = "send" . $type;
             if (method_exists($api, $method_name)) {
-                // Untuk API send<Type>, parameter ke-3 adalah caption.
-                $result = $api->$method_name($admin_chat_id, $file['file_id'], $file['caption']);
+                $result = $api->$method_name($admin_chat_id, $file['file_id'], $full_caption);
             }
         }
         if ($result && ($result['ok'] ?? false)) {
