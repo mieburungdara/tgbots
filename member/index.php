@@ -2,12 +2,13 @@
 session_start();
 
 // Jika sudah login, redirect ke dashboard
-if (isset($_SESSION['member_chat_id'])) {
+if (isset($_SESSION['member_user_id'])) {
     header("Location: dashboard.php");
     exit;
 }
 
 require_once __DIR__ . '/../core/database.php';
+require_once __DIR__ . '/../core/helpers.php'; // Pastikan helpers di-include untuk app_log
 
 $error_message = '';
 $token_from_url = isset($_GET['token']) ? trim($_GET['token']) : '';
@@ -27,10 +28,10 @@ function process_login_token($token, $pdo) {
         $stmt = $pdo->prepare("UPDATE members SET token_used = 1, login_token = NULL WHERE id = ?");
         $stmt->execute([$member['id']]);
 
-        // Simpan informasi member di session
-        $_SESSION['member_chat_id'] = $member['chat_id'];
+        // Simpan informasi member di session menggunakan user_id
+        $_SESSION['member_user_id'] = $member['user_id'];
 
-        app_log("Login member berhasil: chat_id = {$member['chat_id']}", 'member');
+        app_log("Login member berhasil: user_id = {$member['user_id']}", 'member');
 
         // Redirect ke dashboard
         header("Location: dashboard.php");
