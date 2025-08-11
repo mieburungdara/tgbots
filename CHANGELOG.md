@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.7.0] - 2025-08-10
+
+### Ditambahkan
+- Pencatatan log untuk setiap upaya login member (berhasil atau gagal) ke dalam file `logs/member.log`. Ini meningkatkan kemampuan untuk memantau dan men-debug proses login member.
+
 ## [1.6.0] - 2025-08-10
 
 ### Ditambahkan

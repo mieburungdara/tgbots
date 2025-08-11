@@ -14,6 +14,7 @@ $token_from_url = isset($_GET['token']) ? trim($_GET['token']) : '';
 
 function process_login_token($token, $pdo) {
     if (empty($token)) {
+        app_log("Upaya login gagal: Token tidak diberikan.", 'member');
         return "Silakan masukkan token Anda.";
     }
 
@@ -29,10 +30,13 @@ function process_login_token($token, $pdo) {
         // Simpan informasi member di session
         $_SESSION['member_chat_id'] = $member['chat_id'];
 
+        app_log("Login member berhasil: chat_id = {$member['chat_id']}", 'member');
+
         // Redirect ke dashboard
         header("Location: dashboard.php");
         exit;
     } else {
+        app_log("Upaya login gagal: Token tidak valid atau sudah digunakan. Token: {$token}", 'member');
         return "Token tidak valid, sudah digunakan, atau kedaluwarsa.";
     }
 }
