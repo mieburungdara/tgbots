@@ -39,13 +39,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
         // Kirim pesan ke ID telegram pengguna
         $result = $telegram_api->sendMessage($user_info['telegram_id'], $reply_text);
 
-        // Simpan pesan keluar ke database dengan user_id dan bot_id
+        // Simpan pesan keluar ke database dengan user_id, bot_id, dan raw_data
         if ($result && $result['ok']) {
+            $raw_data_json = json_encode($result['result']);
             $stmt = $pdo->prepare(
-                "INSERT INTO messages (user_id, bot_id, telegram_message_id, text, direction, telegram_timestamp)
-                 VALUES (?, ?, ?, ?, 'outgoing', NOW())"
+                "INSERT INTO messages (user_id, bot_id, telegram_message_id, text, raw_data, direction, telegram_timestamp)
+                 VALUES (?, ?, ?, ?, ?, 'outgoing', NOW())"
             );
-            $stmt->execute([$user_id, $bot_id, $result['result']['message_id'], $reply_text]);
+            $stmt->execute([$user_id, $bot_id, $result['result']['message_id'], $reply_text, $raw_data_json]);
         }
         // Redirect untuk mencegah resubmit dan menampilkan pesan baru
         header("Location: chat.php?user_id=" . $user_id . "&bot_id=" . $bot_id);
@@ -83,6 +84,10 @@ $telegram_bot_id = explode(':', $bot_info['token'])[0];
         button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; float: right; margin-top: 10px; }
         nav { margin-bottom: 10px; }
         nav a { text-decoration: none; color: #007bff; }
+        .message-meta { font-size: 0.8em; color: #888; margin-top: 5px; text-align: right; }
+        .json-toggle { color: #007bff; cursor: pointer; text-decoration: none; }
+        .json-toggle:hover { text-decoration: underline; }
+        .raw-json { display: none; margin-top: 10px; padding: 10px; background-color: #2d2d2d; color: #f1f1f1; border-radius: 5px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -96,6 +101,12 @@ $telegram_bot_id = explode(':', $bot_info['token'])[0];
                 <?php foreach ($messages as $message): ?>
                     <div class="message <?= $message['direction'] ?>">
                         <?= nl2br(htmlspecialchars($message['text'])) ?>
+                        <?php if (!empty($message['raw_data'])): ?>
+                            <div class="message-meta">
+                                <span class="json-toggle" onclick="toggleJson(this)">Tampilkan JSON</span>
+                            </div>
+                            <pre class="raw-json"><?= htmlspecialchars(json_encode(json_decode($message['raw_data']), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?></pre>
+                        <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
             </div>
@@ -107,5 +118,17 @@ $telegram_bot_id = explode(':', $bot_info['token'])[0];
             </form>
         </div>
     </div>
+    <script>
+        function toggleJson(element) {
+            const pre = element.closest('.message').querySelector('.raw-json');
+            if (pre.style.display === 'none' || pre.style.display === '') {
+                pre.style.display = 'block';
+                element.textContent = 'Sembunyikan JSON';
+            } else {
+                pre.style.display = 'none';
+                element.textContent = 'Tampilkan JSON';
+            }
+        }
+    </script>
 </body>
 </html>
