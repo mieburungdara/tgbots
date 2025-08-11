@@ -54,10 +54,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
     }
 }
 
-// Ambil semua pesan untuk user dan bot ini
-$stmt = $pdo->prepare("SELECT * FROM messages WHERE user_id = ? AND bot_id = ? ORDER BY telegram_timestamp ASC");
+// Ambil semua pesan untuk user dan bot ini, gabungkan dengan data media jika ada
+$sql = "
+    SELECT
+        m.*,
+        mf.type as media_type,
+        mf.file_name as media_file_name,
+        mf.id as media_id,
+        mf.media_group_id
+    FROM messages m
+    LEFT JOIN media_files mf ON m.telegram_message_id = mf.message_id
+    WHERE m.user_id = ? AND m.bot_id = ?
+    ORDER BY m.created_at ASC
+";
+$stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id, $bot_id]);
-$messages = $stmt->fetchAll();
+$messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Dapatkan ID bot telegram dari token untuk link "kembali"
 $telegram_bot_id = explode(':', $bot_info['token'])[0];
@@ -88,6 +100,10 @@ $telegram_bot_id = explode(':', $bot_info['token'])[0];
         .json-toggle { color: #007bff; cursor: pointer; text-decoration: none; }
         .json-toggle:hover { text-decoration: underline; }
         .raw-json { display: none; margin-top: 10px; padding: 10px; background-color: #2d2d2d; color: #f1f1f1; border-radius: 5px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
+        .media-display { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .media-icon { font-size: 1.8em; }
+        .caption { margin-top: 5px; font-style: italic; }
+        .message-meta .btn-forward { font-size: 0.9em; padding: 2px 8px; background-color: #17a2b8; color: white; border: none; border-radius: 3px; cursor: pointer; margin-right: 10px; }
     </style>
 </head>
 <body>
@@ -100,9 +116,38 @@ $telegram_bot_id = explode(':', $bot_info['token'])[0];
             <div class="message-container">
                 <?php foreach ($messages as $message): ?>
                     <div class="message <?= $message['direction'] ?>">
-                        <?= nl2br(htmlspecialchars($message['text'])) ?>
+
+                        <?php if ($message['media_type']): // This is a media message ?>
+                            <div class="media-display">
+                                <span class="media-icon">
+                                    <?php
+                                        $icons = ['photo' => '🖼️', 'video' => '🎬', 'audio' => '🎵', 'voice' => '🎤', 'document' => '📄', 'animation' => '✨', 'video_note' => '📹'];
+                                        echo $icons[$message['media_type']] ?? '❔';
+                                    ?>
+                                </span>
+                                <span class="media-info">
+                                    <strong><?= htmlspecialchars(ucfirst($message['media_type'])) ?></strong>
+                                    <?php if ($message['media_file_name']): ?>
+                                        <br><small><?= htmlspecialchars($message['media_file_name']) ?></small>
+                                    <?php endif; ?>
+                                </span>
+                            </div>
+                            <?php if (!empty($message['text'])): // Display caption if it exists ?>
+                                <p class="caption"><?= nl2br(htmlspecialchars($message['text'])) ?></p>
+                            <?php endif; ?>
+                        <?php else: // This is a standard text message ?>
+                            <?= nl2br(htmlspecialchars($message['text'])) ?>
+                        <?php endif; ?>
+
                         <?php if (!empty($message['raw_data'])): ?>
                             <div class="message-meta">
+                                <?php if ($message['direction'] === 'incoming' && $message['media_type']): ?>
+                                    <button class="btn-forward"
+                                            data-group-id="<?= htmlspecialchars($message['media_group_id'] ?? 'single_' . $message['media_id']) ?>"
+                                            data-bot-id="<?= htmlspecialchars($message['bot_id']) ?>">
+                                        Teruskan
+                                    </button>
+                                <?php endif; ?>
                                 <span class="json-toggle" onclick="toggleJson(this)">Tampilkan JSON</span>
                             </div>
                             <pre class="raw-json"><?= htmlspecialchars(json_encode(json_decode($message['raw_data']), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?></pre>
@@ -129,6 +174,47 @@ $telegram_bot_id = explode(':', $bot_info['token'])[0];
                 element.textContent = 'Tampilkan JSON';
             }
         }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.btn-forward').forEach(button => {
+                button.addEventListener('click', async function() {
+                    const groupId = this.dataset.groupId;
+                    const botId = this.dataset.botId;
+
+                    if (!confirm('Anda yakin ingin meneruskan media ini ke semua admin?')) {
+                        return;
+                    }
+
+                    const originalText = this.textContent;
+                    this.textContent = 'Mengirim...';
+                    this.disabled = true;
+
+                    const formData = new FormData();
+                    formData.append('group_id', groupId);
+                    formData.append('bot_id', botId);
+
+                    try {
+                        const response = await fetch('forward_manager.php', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        const result = await response.json();
+                        if (!response.ok) {
+                            throw new Error(result.message || 'Server error');
+                        }
+
+                        alert('Hasil: ' + result.message);
+
+                    } catch (error) {
+                        alert('Gagal melakukan permintaan: ' + error.message);
+                    } finally {
+                        this.textContent = originalText;
+                        this.disabled = false;
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>
