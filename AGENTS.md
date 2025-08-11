@@ -1,4 +1,5 @@
 1. tidak perlu melakukan pengujian
+2. menggunakan bahasa pemprograman PHP
 4. selalu perbaharui CHANGELOG.md setiap ada pembaharuan, perubahan dan perbaikan.
 5. menggunakan bahasa indonesia
 6. proyek digunakan di shared hosting
