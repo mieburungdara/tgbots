@@ -7,6 +7,6 @@ ALTER TABLE `members`
   DROP FOREIGN KEY `members_ibfk_1`,
   CHANGE `chat_id` `user_id` INT(11) NOT NULL COMMENT 'Referensi ke tabel users',
   ADD UNIQUE KEY `user_id` (`user_id`),
-  ADD CONSTRAINT `members_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+  ADD CONSTRAINT `fk_members_user_id` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
 
 SET FOREIGN_KEY_CHECKS = 1;
