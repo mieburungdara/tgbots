@@ -71,6 +71,43 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id, $bot_id]);
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+// Kelompokkan pesan berdasarkan media_group_id
+$grouped_messages = [];
+$processed_message_ids = []; // Lacak ID pesan yang sudah masuk ke dalam grup
+
+foreach ($messages as $message) {
+    // Jika pesan ini sudah diproses sebagai bagian dari grup, lewati
+    if (in_array($message['id'], $processed_message_ids)) {
+        continue;
+    }
+
+    // Jika pesan memiliki media_group_id, cari semua anggota grupnya
+    if (!empty($message['media_group_id'])) {
+        $current_group_id = $message['media_group_id'];
+        $group = [
+            'type' => 'media_group',
+            'items' => [],
+            'direction' => $message['direction'], // Arah grup sama dengan pesan pertama
+            'bot_id' => $message['bot_id'],
+            'media_group_id' => $current_group_id
+        ];
+
+        // Iterasi ulang untuk menemukan semua item dalam grup ini
+        foreach ($messages as $item) {
+            if (($item['media_group_id'] ?? null) === $current_group_id) {
+                $group['items'][] = $item;
+                $processed_message_ids[] = $item['id']; // Tandai sebagai sudah diproses
+            }
+        }
+        $grouped_messages[] = $group;
+    } else {
+        // Jika tidak punya grup, ini adalah pesan tunggal
+        $message['type'] = 'single';
+        $grouped_messages[] = $message;
+    }
+}
+
+
 // Dapatkan ID bot telegram dari token untuk link "kembali"
 $telegram_bot_id = explode(':', $bot_info['token'])[0];
 
@@ -104,6 +141,8 @@ $telegram_bot_id = explode(':', $bot_info['token'])[0];
         .media-icon { font-size: 1.8em; }
         .caption { margin-top: 5px; font-style: italic; }
         .message-meta .btn-forward { font-size: 0.9em; padding: 2px 8px; background-color: #17a2b8; color: white; border: none; border-radius: 3px; cursor: pointer; margin-right: 10px; }
+        .media-group-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 5px; }
+        .media-group-item { text-align: center; }
     </style>
 </head>
 <body>
@@ -114,43 +153,73 @@ $telegram_bot_id = explode(':', $bot_info['token'])[0];
         </header>
         <div class="chat-window">
             <div class="message-container">
-                <?php foreach ($messages as $message): ?>
-                    <div class="message <?= $message['direction'] ?>">
-
-                        <?php if ($message['media_type']): // This is a media message ?>
-                            <div class="media-display">
-                                <span class="media-icon">
-                                    <?php
-                                        $icons = ['photo' => '🖼️', 'video' => '🎬', 'audio' => '🎵', 'voice' => '🎤', 'document' => '📄', 'animation' => '✨', 'video_note' => '📹'];
-                                        echo $icons[$message['media_type']] ?? '❔';
-                                    ?>
-                                </span>
-                                <span class="media-info">
-                                    <strong><?= htmlspecialchars(ucfirst($message['media_type'])) ?></strong>
-                                    <?php if ($message['media_file_name']): ?>
-                                        <br><small><?= htmlspecialchars($message['media_file_name']) ?></small>
-                                    <?php endif; ?>
-                                </span>
+                <?php foreach ($grouped_messages as $item): ?>
+                    <div class="message <?= $item['direction'] ?>">
+                        <?php if ($item['type'] === 'media_group'): // Render a media group ?>
+                            <div class="media-group-container">
+                                <?php foreach ($item['items'] as $media_item): ?>
+                                    <div class="media-group-item">
+                                        <span class="media-icon">
+                                            <?php
+                                                $icons = ['photo' => '🖼️', 'video' => '🎬', 'audio' => '🎵', 'voice' => '🎤', 'document' => '📄', 'animation' => '✨', 'video_note' => '📹'];
+                                                echo $icons[$media_item['media_type']] ?? '❔';
+                                            ?>
+                                        </span>
+                                        <div><small><?= htmlspecialchars($media_item['media_type']) ?></small></div>
+                                    </div>
+                                <?php endforeach; ?>
                             </div>
-                            <?php if (!empty($message['text'])): // Display caption if it exists ?>
-                                <p class="caption"><?= nl2br(htmlspecialchars($message['text'])) ?></p>
+                            <?php
+                                // Show the caption from the first item in the group
+                                $first_item_caption = $item['items'][0]['text'] ?? null;
+                                if ($first_item_caption):
+                            ?>
+                                <p class="caption"><?= nl2br(htmlspecialchars($first_item_caption)) ?></p>
                             <?php endif; ?>
-                        <?php else: // This is a standard text message ?>
-                            <?= nl2br(htmlspecialchars($message['text'])) ?>
-                        <?php endif; ?>
-
-                        <?php if (!empty($message['raw_data'])): ?>
                             <div class="message-meta">
-                                <?php if ($message['direction'] === 'incoming' && $message['media_type']): ?>
-                                    <button class="btn-forward"
-                                            data-group-id="<?= htmlspecialchars($message['media_group_id'] ?? 'single_' . $message['media_id']) ?>"
-                                            data-bot-id="<?= htmlspecialchars($message['bot_id']) ?>">
-                                        Teruskan
-                                    </button>
-                                <?php endif; ?>
+                                <button class="btn-forward"
+                                        data-group-id="<?= htmlspecialchars($item['media_group_id']) ?>"
+                                        data-bot-id="<?= htmlspecialchars($item['bot_id']) ?>">
+                                    Teruskan Grup
+                                </button>
                                 <span class="json-toggle" onclick="toggleJson(this)">Tampilkan JSON</span>
                             </div>
-                            <pre class="raw-json"><?= htmlspecialchars(json_encode(json_decode($message['raw_data']), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?></pre>
+                            <pre class="raw-json"><?= htmlspecialchars(json_encode(array_column($item['items'], 'raw_data'), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?></pre>
+
+                        <?php else: // Render a single message (text or single media) ?>
+                            <?php if ($item['media_type']): ?>
+                                <div class="media-display">
+                                    <span class="media-icon">
+                                        <?php
+                                            $icons = ['photo' => '🖼️', 'video' => '🎬', 'audio' => '🎵', 'voice' => '🎤', 'document' => '📄', 'animation' => '✨', 'video_note' => '📹'];
+                                            echo $icons[$item['media_type']] ?? '❔';
+                                        ?>
+                                    </span>
+                                    <span class="media-info">
+                                        <strong><?= htmlspecialchars(ucfirst($item['media_type'])) ?></strong>
+                                        <?= $item['media_file_name'] ? '<br><small>' . htmlspecialchars($item['media_file_name']) . '</small>' : '' ?>
+                                    </span>
+                                </div>
+                                <?php if (!empty($item['text'])): ?>
+                                    <p class="caption"><?= nl2br(htmlspecialchars($item['text'])) ?></p>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <?= nl2br(htmlspecialchars($item['text'])) ?>
+                            <?php endif; ?>
+
+                            <?php if (!empty($item['raw_data'])): ?>
+                                <div class="message-meta">
+                                    <?php if ($item['direction'] === 'incoming' && $item['media_type']): ?>
+                                        <button class="btn-forward"
+                                                data-group-id="<?= htmlspecialchars('single_' . $item['media_id']) ?>"
+                                                data-bot-id="<?= htmlspecialchars($item['bot_id']) ?>">
+                                            Teruskan
+                                        </button>
+                                    <?php endif; ?>
+                                    <span class="json-toggle" onclick="toggleJson(this)">Tampilkan JSON</span>
+                                </div>
+                                <pre class="raw-json"><?= htmlspecialchars(json_encode(json_decode($item['raw_data']), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?></pre>
+                            <?php endif; ?>
                         <?php endif; ?>
                     </div>
                 <?php endforeach; ?>
