@@ -1,5 +1,11 @@
 # Changelog
 
+## [2.1.0] - 2025-08-10
+
+### Ditambahkan
+- **Penerimaan Media**: Bot sekarang dapat menerima berbagai jenis media (foto, video, audio, suara, dokumen, animasi, dan catatan video).
+- **Penyimpanan Metadata Media**: Semua metadata dari file media yang diterima (seperti ID file, ukuran, durasi, caption, dll.) sekarang disimpan ke dalam tabel database baru bernama `media_files`.
+
 ## [2.0.0] - 2025-08-10
 
 ### Diubah (Perubahan Besar / Breaking Change)
