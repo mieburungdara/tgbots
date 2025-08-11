@@ -106,6 +106,98 @@ try {
     );
     $stmt->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $text, $message_date]);
 
+    // --- Tambahan: Cek dan simpan file media ---
+    try {
+        $media_type = null;
+        $media_data = [];
+
+        // Daftar jenis media yang akan diperiksa, sesuai dengan ENUM di database
+        $media_keys = ['photo', 'video', 'audio', 'voice', 'document', 'video_note', 'animation'];
+
+        foreach ($media_keys as $key) {
+            if (isset($message[$key])) {
+                $media_type = $key;
+                $media_info = $message[$key];
+
+                // Untuk foto, ambil resolusi tertinggi (elemen terakhir dalam array)
+                if ($media_type === 'photo') {
+                    $media_info = end($message['photo']);
+                }
+
+                // Ekstrak data umum dari objek media
+                $media_data['file_id'] = $media_info['file_id'];
+                $media_data['file_unique_id'] = $media_info['file_unique_id'];
+                $media_data['file_size'] = $media_info['file_size'] ?? null;
+                $media_data['width'] = $media_info['width'] ?? null;
+                $media_data['height'] = $media_info['height'] ?? null;
+                $media_data['duration'] = $media_info['duration'] ?? null;
+                $media_data['mime_type'] = $media_info['mime_type'] ?? null;
+                $media_data['file_name'] = $media_info['file_name'] ?? null;
+                $media_data['performer'] = $media_info['performer'] ?? null;
+                $media_data['title'] = $media_info['title'] ?? null;
+                $media_data['is_animated'] = $media_info['is_animated'] ?? ($media_type === 'animation');
+
+                // Khusus untuk video_note, 'length' adalah width & height
+                if ($media_type === 'video_note' && isset($media_info['length'])) {
+                    $media_data['width'] = $media_info['length'];
+                    $media_data['height'] = $media_info['length'];
+                }
+
+                // Ekstrak data dari objek pesan utama
+                $media_data['caption'] = $message['caption'] ?? null;
+                $media_data['caption_entities'] = isset($message['caption_entities']) ? json_encode($message['caption_entities']) : null;
+                $media_data['user_id'] = $message['from']['id'];
+                $media_data['chat_id'] = $message['chat']['id'];
+                $media_data['message_id'] = $message['message_id'];
+                $media_data['has_spoiler'] = $message['has_media_spoiler'] ?? false;
+
+                break; // Hentikan loop setelah menemukan media pertama
+            }
+        }
+
+        if ($media_type !== null) {
+            $sql = "INSERT INTO media_files (
+                        file_id, file_unique_id, type, file_size, width, height, duration,
+                        mime_type, file_name, caption, caption_entities, user_id, chat_id,
+                        message_id, performer, title, has_spoiler, is_animated
+                    ) VALUES (
+                        :file_id, :file_unique_id, :type, :file_size, :width, :height, :duration,
+                        :mime_type, :file_name, :caption, :caption_entities, :user_id, :chat_id,
+                        :message_id, :performer, :title, :has_spoiler, :is_animated
+                    )";
+
+            $stmt_media = $pdo->prepare($sql);
+
+            $stmt_media->execute([
+                ':file_id' => $media_data['file_id'],
+                ':file_unique_id' => $media_data['file_unique_id'],
+                ':type' => $media_type,
+                ':file_size' => $media_data['file_size'],
+                ':width' => $media_data['width'],
+                ':height' => $media_data['height'],
+                ':duration' => $media_data['duration'],
+                ':mime_type' => $media_data['mime_type'],
+                ':file_name' => $media_data['file_name'],
+                ':caption' => $media_data['caption'],
+                ':caption_entities' => $media_data['caption_entities'],
+                ':user_id' => $media_data['user_id'],
+                ':chat_id' => $media_data['chat_id'],
+                ':message_id' => $media_data['message_id'],
+                ':performer' => $media_data['performer'],
+                ':title' => $media_data['title'],
+                ':has_spoiler' => $media_data['has_spoiler'] ? 1 : 0,
+                ':is_animated' => $media_data['is_animated'] ? 1 : 0,
+            ]);
+
+            app_log("Media {$media_type} dari chat_id: {$media_data['chat_id']} disimpan.", 'bot');
+        }
+    } catch (Exception $media_exception) {
+        // Jika penyimpanan media gagal, catat errornya tapi jangan gagalkan seluruh transaksi
+        // karena pesan utama sudah berhasil disimpan.
+        app_log("Gagal menyimpan media: " . $media_exception->getMessage(), 'database');
+    }
+    // --- Akhir dari tambahan ---
+
     $pdo->commit();
 
 } catch (Exception $e) {
