@@ -36,167 +36,169 @@ if (!$bot) {
 $bot_token = $bot['token'];
 $internal_bot_id = $bot['id']; // ID internal untuk foreign key
 
+// Ambil pengaturan untuk bot ini
+$stmt_settings = $pdo->prepare("SELECT setting_key, setting_value FROM bot_settings WHERE bot_id = ?");
+$stmt_settings->execute([$internal_bot_id]);
+$bot_settings_raw = $stmt_settings->fetchAll(PDO::FETCH_KEY_PAIR);
+
+// Tetapkan pengaturan default jika tidak ada di database
+$settings = [
+    'save_text_messages'    => $bot_settings_raw['save_text_messages'] ?? '1',
+    'save_media_messages'   => $bot_settings_raw['save_media_messages'] ?? '1',
+    'save_callback_queries' => $bot_settings_raw['save_callback_queries'] ?? '0',
+    'save_edited_messages'  => $bot_settings_raw['save_edited_messages'] ?? '0',
+];
+
 // --- 3. Baca dan proses input dari Telegram ---
 $update_json = file_get_contents('php://input');
 $update = json_decode($update_json, true);
 
 if (!$update) {
-    // Jika tidak ada update, keluar dengan tenang.
+    exit; // Keluar jika tidak ada update
+}
+
+// --- 4. Tentukan Jenis Update & Periksa Pengaturan ---
+$update_type = null;
+$message_context = null;
+$setting_to_check = null;
+$is_media = false;
+
+if (isset($update['message'])) {
+    $update_type = 'message';
+    $message_context = $update['message'];
+    $media_keys = ['photo', 'video', 'audio', 'voice', 'document', 'animation', 'video_note'];
+    foreach ($media_keys as $key) {
+        if (isset($message_context[$key])) {
+            $is_media = true;
+            break;
+        }
+    }
+    $setting_to_check = $is_media ? 'save_media_messages' : 'save_text_messages';
+} elseif (isset($update['edited_message'])) {
+    $update_type = 'edited_message';
+    $message_context = $update['edited_message'];
+    $setting_to_check = 'save_edited_messages';
+} elseif (isset($update['callback_query'])) {
+    $update_type = 'callback_query';
+    $message_context = $update['callback_query']['message'];
+    $message_context['from'] = $update['callback_query']['from']; // User yang klik
+    $message_context['text'] = "Callback: " . ($update['callback_query']['data'] ?? ''); // Simpan data callback
+    $message_context['date'] = time(); // Waktu saat tombol diklik
+    $setting_to_check = 'save_callback_queries';
+}
+
+// Jika jenis update tidak didukung atau dinonaktifkan oleh admin, keluar.
+if ($setting_to_check === null || empty($settings[$setting_to_check])) {
+    http_response_code(200); // Balas OK ke Telegram tapi tidak melakukan apa-apa
     exit;
 }
 
-// Fokus pada 'message' untuk saat ini.
-if (!isset($update['message'])) {
-    // Bisa jadi callback_query atau tipe lain, abaikan untuk saat ini.
-    exit;
-}
+// --- 5. Ekstrak dan Proses Data ---
+app_log("Update '{$update_type}' diterima dari chat_id: {$message_context['chat']['id']}", 'bot');
 
-$message = $update['message'];
-app_log("Pesan diterima dari chat_id: {$message['chat']['id']}", 'bot');
-
-// Ekstrak data penting dari pesan
-$telegram_message_id = $message['message_id'];
-$chat_id_from_telegram = $message['chat']['id'];
-$first_name = $message['from']['first_name'] ?? '';
-$username = $message['from']['username'] ?? null;
-$text = $message['text'] ?? ''; // Bisa jadi kosong jika media
-$timestamp = $message['date'];
+// Ekstrak data penting dari konteks pesan
+$telegram_message_id = $message_context['message_id'];
+$chat_id_from_telegram = $message_context['chat']['id'];
+$user_id_from_telegram = $message_context['from']['id'];
+$first_name = $message_context['from']['first_name'] ?? '';
+$username = $message_context['from']['username'] ?? null;
+$text_content = $message_context['text'] ?? ($message_context['caption'] ?? '');
+$timestamp = $message_context['date'];
 $message_date = date('Y-m-d H:i:s', $timestamp);
 
 
 try {
     $pdo->beginTransaction();
 
-    // --- 4. Cari atau buat pengguna di tabel 'users' ---
+    // --- Cari atau buat pengguna di tabel 'users' ---
     $stmt = $pdo->prepare("SELECT id FROM users WHERE telegram_id = ?");
-    $stmt->execute([$chat_id_from_telegram]);
+    $stmt->execute([$user_id_from_telegram]);
     $user = $stmt->fetch();
 
     if ($user) {
         $internal_user_id = $user['id'];
     } else {
-        // Pengguna tidak ada, buat baru
         $stmt = $pdo->prepare("INSERT INTO users (telegram_id, first_name, username) VALUES (?, ?, ?)");
-        $stmt->execute([$chat_id_from_telegram, $first_name, $username]);
+        $stmt->execute([$user_id_from_telegram, $first_name, $username]);
         $internal_user_id = $pdo->lastInsertId();
-        app_log("Pengguna baru dibuat: telegram_id: {$chat_id_from_telegram}, user: {$first_name}", 'bot');
+        app_log("Pengguna baru dibuat: telegram_id: {$user_id_from_telegram}, user: {$first_name}", 'bot');
     }
 
-    // --- 5. Pastikan relasi user-bot ada ---
+    // --- Pastikan relasi user-bot dan entri member ada ---
     $stmt = $pdo->prepare("SELECT id FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
     $stmt->execute([$internal_user_id, $internal_bot_id]);
     if (!$stmt->fetch()) {
         $stmt = $pdo->prepare("INSERT INTO rel_user_bot (user_id, bot_id) VALUES (?, ?)");
         $stmt->execute([$internal_user_id, $internal_bot_id]);
-        app_log("Relasi baru dibuat antara user_id: {$internal_user_id} dan bot_id: {$internal_bot_id}", 'bot');
     }
-
-    // --- 6. Pastikan entri member ada (untuk fitur login) ---
     $stmt = $pdo->prepare("SELECT id FROM members WHERE user_id = ?");
     $stmt->execute([$internal_user_id]);
     if (!$stmt->fetch()) {
         $stmt = $pdo->prepare("INSERT INTO members (user_id) VALUES (?)");
         $stmt->execute([$internal_user_id]);
-        app_log("Member baru dibuat untuk user_id: {$internal_user_id}", 'bot');
     }
 
-    // --- 7. Simpan pesan ke tabel 'messages' ---
+    // --- Simpan pesan ke tabel 'messages' (termasuk raw_data) ---
     $stmt = $pdo->prepare(
-        "INSERT INTO messages (user_id, bot_id, telegram_message_id, text, direction, telegram_timestamp) VALUES (?, ?, ?, ?, 'incoming', ?)"
+        "INSERT INTO messages (user_id, bot_id, telegram_message_id, text, raw_data, direction, telegram_timestamp) VALUES (?, ?, ?, ?, ?, 'incoming', ?)"
     );
-    $stmt->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $text, $message_date]);
+    $stmt->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $text_content, $update_json, $message_date]);
 
-    // --- Tambahan: Cek dan simpan file media ---
-    try {
-        $media_type = null;
-        $media_data = [];
+    // --- Simpan file media jika ada ---
+    if ($is_media && isset($update['message'])) { // Pastikan ini adalah pesan media asli
+        try {
+            $media_type = null;
+            $media_info = null;
 
-        // Daftar jenis media yang akan diperiksa, sesuai dengan ENUM di database
-        $media_keys = ['photo', 'video', 'audio', 'voice', 'document', 'video_note', 'animation'];
-
-        foreach ($media_keys as $key) {
-            if (isset($message[$key])) {
-                $media_type = $key;
-                $media_info = $message[$key];
-
-                // Untuk foto, ambil resolusi tertinggi (elemen terakhir dalam array)
-                if ($media_type === 'photo') {
-                    $media_info = end($message['photo']);
+            $media_keys = ['photo', 'video', 'audio', 'voice', 'document', 'video_note', 'animation'];
+            foreach ($media_keys as $key) {
+                if (isset($update['message'][$key])) {
+                    $media_type = $key;
+                    $media_info = ($key === 'photo') ? end($update['message']['photo']) : $update['message'][$key];
+                    break;
                 }
-
-                // Ekstrak data umum dari objek media
-                $media_data['file_id'] = $media_info['file_id'];
-                $media_data['file_unique_id'] = $media_info['file_unique_id'];
-                $media_data['file_size'] = $media_info['file_size'] ?? null;
-                $media_data['width'] = $media_info['width'] ?? null;
-                $media_data['height'] = $media_info['height'] ?? null;
-                $media_data['duration'] = $media_info['duration'] ?? null;
-                $media_data['mime_type'] = $media_info['mime_type'] ?? null;
-                $media_data['file_name'] = $media_info['file_name'] ?? null;
-                $media_data['performer'] = $media_info['performer'] ?? null;
-                $media_data['title'] = $media_info['title'] ?? null;
-                $media_data['is_animated'] = $media_info['is_animated'] ?? ($media_type === 'animation');
-
-                // Khusus untuk video_note, 'length' adalah width & height
-                if ($media_type === 'video_note' && isset($media_info['length'])) {
-                    $media_data['width'] = $media_info['length'];
-                    $media_data['height'] = $media_info['length'];
-                }
-
-                // Ekstrak data dari objek pesan utama
-                $media_data['caption'] = $message['caption'] ?? null;
-                $media_data['caption_entities'] = isset($message['caption_entities']) ? json_encode($message['caption_entities']) : null;
-                $media_data['user_id'] = $message['from']['id'];
-                $media_data['chat_id'] = $message['chat']['id'];
-                $media_data['message_id'] = $message['message_id'];
-                $media_data['has_spoiler'] = $message['has_media_spoiler'] ?? false;
-
-                break; // Hentikan loop setelah menemukan media pertama
             }
+
+            if ($media_type && $media_info) {
+                $sql = "INSERT INTO media_files (
+                            file_id, file_unique_id, type, file_size, width, height, duration,
+                            mime_type, file_name, caption, caption_entities, user_id, chat_id,
+                            message_id, performer, title, has_spoiler, is_animated
+                        ) VALUES (
+                            :file_id, :file_unique_id, :type, :file_size, :width, :height, :duration,
+                            :mime_type, :file_name, :caption, :caption_entities, :user_id, :chat_id,
+                            :message_id, :performer, :title, :has_spoiler, :is_animated
+                        )";
+
+                $stmt_media = $pdo->prepare($sql);
+
+                $stmt_media->execute([
+                    ':file_id' => $media_info['file_id'],
+                    ':file_unique_id' => $media_info['file_unique_id'],
+                    ':type' => $media_type,
+                    ':file_size' => $media_info['file_size'] ?? null,
+                    ':width' => $media_info['width'] ?? ($media_type === 'video_note' ? ($media_info['length'] ?? null) : null),
+                    ':height' => $media_info['height'] ?? ($media_type === 'video_note' ? ($media_info['length'] ?? null) : null),
+                    ':duration' => $media_info['duration'] ?? null,
+                    ':mime_type' => $media_info['mime_type'] ?? null,
+                    ':file_name' => $media_info['file_name'] ?? null,
+                    ':caption' => $update['message']['caption'] ?? null,
+                    ':caption_entities' => isset($update['message']['caption_entities']) ? json_encode($update['message']['caption_entities']) : null,
+                    ':user_id' => $update['message']['from']['id'],
+                    ':chat_id' => $update['message']['chat']['id'],
+                    ':message_id' => $update['message']['message_id'],
+                    ':performer' => $media_info['performer'] ?? null,
+                    ':title' => $media_info['title'] ?? null,
+                    ':has_spoiler' => $update['message']['has_media_spoiler'] ?? false,
+                    ':is_animated' => $media_info['is_animated'] ?? ($media_type === 'animation'),
+                ]);
+
+                app_log("Media {$media_type} dari chat_id: {$update['message']['chat']['id']} disimpan ke media_files.", 'bot');
+            }
+        } catch (Exception $media_exception) {
+            app_log("Gagal menyimpan detail media: " . $media_exception->getMessage(), 'database');
         }
-
-        if ($media_type !== null) {
-            $sql = "INSERT INTO media_files (
-                        file_id, file_unique_id, type, file_size, width, height, duration,
-                        mime_type, file_name, caption, caption_entities, user_id, chat_id,
-                        message_id, performer, title, has_spoiler, is_animated
-                    ) VALUES (
-                        :file_id, :file_unique_id, :type, :file_size, :width, :height, :duration,
-                        :mime_type, :file_name, :caption, :caption_entities, :user_id, :chat_id,
-                        :message_id, :performer, :title, :has_spoiler, :is_animated
-                    )";
-
-            $stmt_media = $pdo->prepare($sql);
-
-            $stmt_media->execute([
-                ':file_id' => $media_data['file_id'],
-                ':file_unique_id' => $media_data['file_unique_id'],
-                ':type' => $media_type,
-                ':file_size' => $media_data['file_size'],
-                ':width' => $media_data['width'],
-                ':height' => $media_data['height'],
-                ':duration' => $media_data['duration'],
-                ':mime_type' => $media_data['mime_type'],
-                ':file_name' => $media_data['file_name'],
-                ':caption' => $media_data['caption'],
-                ':caption_entities' => $media_data['caption_entities'],
-                ':user_id' => $media_data['user_id'],
-                ':chat_id' => $media_data['chat_id'],
-                ':message_id' => $media_data['message_id'],
-                ':performer' => $media_data['performer'],
-                ':title' => $media_data['title'],
-                ':has_spoiler' => $media_data['has_spoiler'] ? 1 : 0,
-                ':is_animated' => $media_data['is_animated'] ? 1 : 0,
-            ]);
-
-            app_log("Media {$media_type} dari chat_id: {$media_data['chat_id']} disimpan.", 'bot');
-        }
-    } catch (Exception $media_exception) {
-        // Jika penyimpanan media gagal, catat errornya tapi jangan gagalkan seluruh transaksi
-        // karena pesan utama sudah berhasil disimpan.
-        app_log("Gagal menyimpan media: " . $media_exception->getMessage(), 'database');
     }
-    // --- Akhir dari tambahan ---
 
     $pdo->commit();
 
@@ -210,8 +212,9 @@ try {
 
 // --- 8. Handle perintah ---
 $telegram_api = new TelegramAPI($bot_token);
+$text_for_command = $update['message']['text'] ?? ''; // Perintah hanya dari pesan baru
 
-if ($text === '/start') {
+if ($text_for_command === '/start') {
     $reply_text = "Selamat datang! Silakan kirim pesan Anda, dan admin kami akan segera merespons.";
     $telegram_api->sendMessage($chat_id_from_telegram, $reply_text);
     app_log("Perintah /start dieksekusi untuk chat_id: {$chat_id_from_telegram}", 'bot');

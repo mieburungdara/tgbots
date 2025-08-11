@@ -1,5 +1,9 @@
 -- Changelog Database
 --
+-- Versi 4 (2025-08-11):
+-- - Menambahkan kolom `raw_data` ke tabel `messages` untuk menyimpan JSON mentah.
+-- - Menambahkan tabel `bot_settings` untuk pengaturan per bot.
+--
 -- Versi 3 (2025-08-10):
 -- - Menambahkan tabel `media_files` untuk menyimpan informasi media.
 --
@@ -24,6 +28,7 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- Hapus tabel dalam urutan yang benar untuk menghindari masalah foreign key
+DROP TABLE IF EXISTS `bot_settings`;
 DROP TABLE IF EXISTS `media_files`;
 DROP TABLE IF EXISTS `messages`;
 DROP TABLE IF EXISTS `rel_user_bot`;
@@ -78,6 +83,7 @@ CREATE TABLE `messages` (
   `bot_id` int(11) NOT NULL COMMENT 'Referensi ke tabel bots',
   `telegram_message_id` bigint(20) NOT NULL COMMENT 'Message ID dari Telegram',
   `text` text,
+  `raw_data` JSON NULL COMMENT 'Objek JSON mentah dari Telegram',
   `direction` enum('incoming','outgoing') NOT NULL COMMENT 'incoming: dari user, outgoing: dari admin',
   `telegram_timestamp` datetime NOT NULL COMMENT 'Waktu kirim pesan dari Telegram',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -135,6 +141,18 @@ CREATE TABLE `media_files` (
   KEY `user_id` (`user_id`),
   KEY `chat_id` (`chat_id`),
   KEY `type` (`type`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- Tabel untuk menyimpan pengaturan spesifik per bot
+CREATE TABLE `bot_settings` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `bot_id` int(11) NOT NULL,
+  `setting_key` varchar(100) NOT NULL,
+  `setting_value` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `bot_setting_unique` (`bot_id`, `setting_key`),
+  KEY `bot_id` (`bot_id`),
+  CONSTRAINT `bot_settings_ibfk_1` FOREIGN KEY (`bot_id`) REFERENCES `bots` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- PERHATIAN:
