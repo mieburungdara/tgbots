@@ -10,7 +10,7 @@
 - Metode baru (`setWebhook`, `getWebhookInfo`, `deleteWebhook`) di kelas `TelegramAPI`.
 
 ### Diubah
-- Struktur URL untuk halaman percakapan (`chat.php`) diubah dari `?id=` menjadi `?bot_id=&chat_id=`. Ini membuat URL lebih deskriptif dan memastikan bahwa setiap percakapan dapat diidentifikasi secara unik hanya dengan ID bot dan ID pengguna Telegram.
+- Struktur URL untuk halaman percakapan (`chat.php`) telah disempurnakan untuk menggunakan ID Bot asli dari Telegram (bagian numerik dari token) sebagai parameter `bot_id`, bukan ID internal database. Perubahan ini membuat URL lebih konsisten dengan bagian lain dari aplikasi dan lebih mudah dibagikan.
 
 ### Diperbaiki
 - URL untuk halaman edit bot dan untuk endpoint webhook sekarang menggunakan ID Bot Telegram asli (misalnya 7715036030) untuk identifikasi yang unik dan dinamis, bukan ID database internal. Ini meningkatkan keandalan dan konsistensi.
