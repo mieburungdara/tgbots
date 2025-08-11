@@ -44,7 +44,7 @@ if ($selected_bot_id) {
     // Ambil semua chat untuk bot yang dipilih
     // Di-join dengan messages untuk mendapatkan pesan terakhir (opsional, untuk penyempurnaan nanti)
     $stmt = $pdo->prepare(
-        "SELECT c.id, c.first_name, c.username,
+        "SELECT c.id, c.chat_id, c.first_name, c.username,
         (SELECT text FROM messages WHERE chat_id = c.id ORDER BY id DESC LIMIT 1) as last_message,
         (SELECT telegram_timestamp FROM messages WHERE chat_id = c.id ORDER BY id DESC LIMIT 1) as last_message_time
         FROM chats c
@@ -122,7 +122,7 @@ if ($selected_bot_id) {
                         <?php foreach ($chats as $chat): ?>
                             <tr>
                                 <td>
-                                    <a href="chat.php?id=<?= $chat['id'] ?>">
+                                    <a href="chat.php?bot_id=<?= $selected_bot_id ?>&chat_id=<?= $chat['chat_id'] ?>">
                                         <?= htmlspecialchars($chat['first_name']) ?>
                                     </a>
                                 </td>

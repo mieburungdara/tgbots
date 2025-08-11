@@ -9,6 +9,9 @@
 - Penggunaan AJAX dan modal untuk menampilkan hasil aksi webhook tanpa me-refresh halaman.
 - Metode baru (`setWebhook`, `getWebhookInfo`, `deleteWebhook`) di kelas `TelegramAPI`.
 
+### Diubah
+- Struktur URL untuk halaman percakapan (`chat.php`) diubah dari `?id=` menjadi `?bot_id=&chat_id=`. Ini membuat URL lebih deskriptif dan memastikan bahwa setiap percakapan dapat diidentifikasi secara unik hanya dengan ID bot dan ID pengguna Telegram.
+
 ### Diperbaiki
 - URL untuk halaman edit bot dan untuk endpoint webhook sekarang menggunakan ID Bot Telegram asli (misalnya 7715036030) untuk identifikasi yang unik dan dinamis, bukan ID database internal. Ini meningkatkan keandalan dan konsistensi.
 
