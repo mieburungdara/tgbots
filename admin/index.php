@@ -48,17 +48,26 @@ if ($selected_telegram_bot_id) {
     $internal_bot_id = $stmt->fetchColumn();
 
     if ($internal_bot_id) {
-        // Ambil semua chat untuk bot yang dipilih
+        // Ambil semua percakapan untuk bot yang dipilih menggunakan skema baru
         $stmt = $pdo->prepare(
-            "SELECT c.id, c.chat_id, c.first_name, c.username,
-            (SELECT text FROM messages WHERE chat_id = c.id ORDER BY id DESC LIMIT 1) as last_message,
-            (SELECT telegram_timestamp FROM messages WHERE chat_id = c.id ORDER BY id DESC LIMIT 1) as last_message_time
-            FROM chats c
-            WHERE c.bot_id = ?
+            "SELECT
+                u.id as user_internal_id,
+                u.telegram_id,
+                u.first_name,
+                u.username,
+                (SELECT text FROM messages
+                 WHERE user_id = u.id AND bot_id = r.bot_id
+                 ORDER BY id DESC LIMIT 1) as last_message,
+                (SELECT telegram_timestamp FROM messages
+                 WHERE user_id = u.id AND bot_id = r.bot_id
+                 ORDER BY id DESC LIMIT 1) as last_message_time
+            FROM users u
+            JOIN rel_user_bot r ON u.id = r.user_id
+            WHERE r.bot_id = ?
             ORDER BY last_message_time DESC"
         );
         $stmt->execute([$internal_bot_id]);
-        $chats = $stmt->fetchAll();
+        $conversations = $stmt->fetchAll();
     }
 }
 
@@ -92,6 +101,7 @@ if ($selected_telegram_bot_id) {
         <nav>
             <a href="index.php" class="active">Percakapan</a> |
             <a href="bots.php">Kelola Bot</a> |
+            <a href="users.php">Pengguna</a> |
             <a href="settings.php">Pengaturan</a> |
             <a href="logs.php">Logs</a>
         </nav>
@@ -127,21 +137,21 @@ if ($selected_telegram_bot_id) {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if (empty($chats)): ?>
+                        <?php if (empty($conversations)): ?>
                             <tr>
                                 <td colspan="4">Belum ada percakapan untuk bot ini.</td>
                             </tr>
                         <?php else: ?>
-                            <?php foreach ($chats as $chat): ?>
+                            <?php foreach ($conversations as $conv): ?>
                                 <tr>
                                     <td>
-                                        <a href="chat.php?bot_id=<?= $selected_telegram_bot_id ?>&chat_id=<?= $chat['chat_id'] ?>">
-                                            <?= htmlspecialchars($chat['first_name']) ?>
+                                        <a href="chat.php?user_id=<?= $conv['user_internal_id'] ?>&bot_id=<?= $internal_bot_id ?>">
+                                            <?= htmlspecialchars($conv['first_name']) ?>
                                         </a>
                                     </td>
-                                    <td>@<?= htmlspecialchars($chat['username']) ?></td>
-                                <td class="last-message"><?= htmlspecialchars(mb_strimwidth($chat['last_message'], 0, 50, "...")) ?></td>
-                                <td><?= htmlspecialchars($chat['last_message_time']) ?></td>
+                                    <td>@<?= htmlspecialchars($conv['username']) ?></td>
+                                <td class="last-message"><?= htmlspecialchars(mb_strimwidth($conv['last_message'], 0, 50, "...")) ?></td>
+                                <td><?= htmlspecialchars($conv['last_message_time']) ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>

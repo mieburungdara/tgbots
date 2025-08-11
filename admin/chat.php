@@ -8,77 +8,58 @@ if (!$pdo) {
     die("Koneksi database gagal.");
 }
 
-$telegram_bot_id = isset($_GET['bot_id']) ? (string)$_GET['bot_id'] : '';
-$telegram_chat_id = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
+// Menggunakan ID internal dari database, bukan ID telegram
+$user_id = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
+$bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
 
-if (empty($telegram_bot_id) || !$telegram_chat_id) {
+if (!$user_id || !$bot_id) {
     header("Location: index.php");
     exit;
 }
 
-// Cari ID internal bot berdasarkan ID bot telegram
-$stmt = $pdo->prepare("SELECT id FROM bots WHERE token LIKE ?");
-$stmt->execute([$telegram_bot_id . ':%']);
-$internal_bot_id = $stmt->fetchColumn();
+// Ambil info pengguna
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt->execute([$user_id]);
+$user_info = $stmt->fetch();
 
-if (!$internal_bot_id) {
-    die("Bot tidak ditemukan.");
-}
+// Ambil info bot
+$stmt = $pdo->prepare("SELECT * FROM bots WHERE id = ?");
+$stmt->execute([$bot_id]);
+$bot_info = $stmt->fetch();
 
-// Ambil id internal dari tabel chats menggunakan ID bot internal
-$stmt = $pdo->prepare("SELECT id FROM chats WHERE bot_id = ? AND chat_id = ?");
-$stmt->execute([$internal_bot_id, $telegram_chat_id]);
-$chat_internal_id = $stmt->fetchColumn();
-
-if (!$chat_internal_id) {
-    die("Chat tidak ditemukan.");
+if (!$user_info || !$bot_info) {
+    die("Pengguna atau bot tidak ditemukan.");
 }
 
 // Handle pengiriman balasan
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
     $reply_text = trim($_POST['reply_text']);
     if (!empty($reply_text)) {
-        // Ambil info bot dan chat untuk mengirim pesan
-        $stmt = $pdo->prepare(
-            "SELECT c.chat_id AS telegram_chat_id, b.token
-             FROM chats c
-             JOIN bots b ON c.bot_id = b.id
-             WHERE c.id = ?"
-        );
-        $stmt->execute([$chat_internal_id]);
-        $target = $stmt->fetch();
+        $telegram_api = new TelegramAPI($bot_info['token']);
+        // Kirim pesan ke ID telegram pengguna
+        $result = $telegram_api->sendMessage($user_info['telegram_id'], $reply_text);
 
-        if ($target) {
-            $telegram_api = new TelegramAPI($target['token']);
-            $result = $telegram_api->sendMessage($target['telegram_chat_id'], $reply_text);
-
-            // Simpan pesan keluar ke database
-            if ($result && $result['ok']) {
-                $stmt = $pdo->prepare(
-                    "INSERT INTO messages (chat_id, telegram_message_id, text, direction, telegram_timestamp)
-                     VALUES (?, ?, ?, 'outgoing', NOW())"
-                );
-                $stmt->execute([$chat_internal_id, $result['result']['message_id'], $reply_text]);
-            }
+        // Simpan pesan keluar ke database dengan user_id dan bot_id
+        if ($result && $result['ok']) {
+            $stmt = $pdo->prepare(
+                "INSERT INTO messages (user_id, bot_id, telegram_message_id, text, direction, telegram_timestamp)
+                 VALUES (?, ?, ?, ?, 'outgoing', NOW())"
+            );
+            $stmt->execute([$user_id, $bot_id, $result['result']['message_id'], $reply_text]);
         }
         // Redirect untuk mencegah resubmit dan menampilkan pesan baru
-        header("Location: chat.php?bot_id=" . $telegram_bot_id . "&chat_id=" . $telegram_chat_id);
+        header("Location: chat.php?user_id=" . $user_id . "&bot_id=" . $bot_id);
         exit;
     }
 }
 
-// Ambil detail chat dan semua pesan
-$stmt = $pdo->prepare("SELECT * FROM chats WHERE id = ?");
-$stmt->execute([$chat_internal_id]);
-$chat_info = $stmt->fetch();
-
-if (!$chat_info) {
-    die("Chat tidak ditemukan.");
-}
-
-$stmt = $pdo->prepare("SELECT * FROM messages WHERE chat_id = ? ORDER BY telegram_timestamp ASC");
-$stmt->execute([$chat_internal_id]);
+// Ambil semua pesan untuk user dan bot ini
+$stmt = $pdo->prepare("SELECT * FROM messages WHERE user_id = ? AND bot_id = ? ORDER BY telegram_timestamp ASC");
+$stmt->execute([$user_id, $bot_id]);
 $messages = $stmt->fetchAll();
+
+// Dapatkan ID bot telegram dari token untuk link "kembali"
+$telegram_bot_id = explode(':', $bot_info['token'])[0];
 
 ?>
 <!DOCTYPE html>
@@ -86,7 +67,7 @@ $messages = $stmt->fetchAll();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat dengan <?= htmlspecialchars($chat_info['first_name']) ?> - Admin Panel</title>
+    <title>Chat dengan <?= htmlspecialchars($user_info['first_name']) ?> - Admin Panel</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f4f6f8; color: #333; }
         .container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; height: 100vh; }
@@ -108,7 +89,7 @@ $messages = $stmt->fetchAll();
     <div class="container">
         <header>
             <nav><a href="index.php?bot_id=<?= $telegram_bot_id ?>">&larr; Kembali ke Daftar Percakapan</a></nav>
-            <h1>Chat dengan <?= htmlspecialchars($chat_info['first_name']) ?> (@<?= htmlspecialchars($chat_info['username']) ?>)</h1>
+            <h1>Chat dengan <?= htmlspecialchars($user_info['first_name']) ?> (@<?= htmlspecialchars($user_info['username']) ?>) di Bot <?= htmlspecialchars($bot_info['name']) ?></h1>
         </header>
         <div class="chat-window">
             <div class="message-container">
@@ -120,7 +101,7 @@ $messages = $stmt->fetchAll();
             </div>
         </div>
         <div class="reply-form">
-            <form action="chat.php?bot_id=<?= $telegram_bot_id ?>&chat_id=<?= $telegram_chat_id ?>" method="post">
+            <form action="chat.php?user_id=<?= $user_id ?>&bot_id=<?= $bot_id ?>" method="post">
                 <textarea name="reply_text" rows="3" placeholder="Ketik balasan Anda..." required></textarea>
                 <button type="submit" name="reply_message">Kirim</button>
             </form>
