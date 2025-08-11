@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.5.0] - 2025-08-10
+
+### Diubah
+- Perintah `/login` sekarang mengirimkan tombol login dengan URL langsung ke panel member, bukan hanya token teks.
+- Halaman login member sekarang dapat secara otomatis memproses token dari URL untuk login yang lebih mulus.
+- Token login sekarang dihapus dari database setelah digunakan untuk meningkatkan keamanan.
+
+### Ditambahkan
+- Opsi konfigurasi `BASE_URL` di `config.php.example` untuk menentukan URL dasar aplikasi.
+- Penanganan error di `webhook.php` jika `BASE_URL` tidak diatur.
+
 ## [1.4.0] - 2025-08-10
 
 ### Ditambahkan

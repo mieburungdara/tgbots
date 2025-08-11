@@ -7,4 +7,8 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'telegram_dashboard');
 
+// URL dasar aplikasi (akhiri dengan /)
+// Contoh: define('BASE_URL', 'https://mydomain.com/tgbots/');
+define('BASE_URL', '');
+
 ?>
