@@ -7,16 +7,16 @@ $pdo = get_db_connection();
 $bot = null;
 $error = null;
 
-// Validasi bot ID dari URL
+// Validasi ID Bot Telegram dari URL
 if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
     header("Location: bots.php");
     exit;
 }
-$bot_id = (int)$_GET['id'];
+$telegram_bot_id = $_GET['id'];
 
-// Ambil data bot dari database
-$stmt = $pdo->prepare("SELECT id, name, token, created_at FROM bots WHERE id = ?");
-$stmt->execute([$bot_id]);
+// Ambil data bot dari database menggunakan ID bot dari token
+$stmt = $pdo->prepare("SELECT id, name, token, created_at FROM bots WHERE token LIKE ?");
+$stmt->execute(["{$telegram_bot_id}:%"]);
 $bot = $stmt->fetch();
 
 // Jika bot tidak ditemukan, kembali ke halaman daftar bot
@@ -74,7 +74,7 @@ if (!$bot) {
 
         <div class="bot-info">
             <h2>Informasi Bot</h2>
-            <p><strong>ID:</strong> <?= htmlspecialchars($bot['id']) ?></p>
+            <p><strong>ID Telegram:</strong> <?= htmlspecialchars($telegram_bot_id) ?></p>
             <p><strong>Nama:</strong> <?= htmlspecialchars($bot['name']) ?></p>
             <p><strong>Token:</strong> <code><?= substr(htmlspecialchars($bot['token']), 0, 15) ?>...</code></p>
             <p><strong>Dibuat pada:</strong> <?= htmlspecialchars($bot['created_at']) ?></p>
@@ -82,9 +82,9 @@ if (!$bot) {
 
         <div class="actions">
             <h2>Manajemen Webhook</h2>
-            <button class="set-webhook" data-bot-id="<?= $bot['id'] ?>">Set Webhook</button>
-            <button class="check-webhook" data-bot-id="<?= $bot['id'] ?>">Check Webhook</button>
-            <button class="delete-webhook" data-bot-id="<?= $bot['id'] ?>">Delete Webhook</button>
+            <button class="set-webhook" data-bot-id="<?= $bot['id'] // Gunakan ID internal untuk AJAX ?>">Set Webhook</button>
+            <button class="check-webhook" data-bot-id="<?= $bot['id'] // Gunakan ID internal untuk AJAX ?>">Check Webhook</button>
+            <button class="delete-webhook" data-bot-id="<?= $bot['id'] // Gunakan ID internal untuk AJAX ?>">Delete Webhook</button>
         </div>
 
     </div>
@@ -105,14 +105,12 @@ if (!$bot) {
             const modalBody = document.getElementById('modal-body');
             const span = document.getElementsByClassName('close')[0];
 
-            // Fungsi untuk menampilkan modal
             function showModal(title, content) {
                 modalTitle.textContent = title;
                 modalBody.textContent = content;
                 modal.style.display = 'block';
             }
 
-            // Fungsi untuk menutup modal
             span.onclick = function() {
                 modal.style.display = 'none';
             }
@@ -122,7 +120,6 @@ if (!$bot) {
                 }
             }
 
-            // Fungsi untuk menangani aksi webhook
             async function handleWebhookAction(action, botId) {
                 let confirmation = true;
                 if (action === 'delete') {
@@ -149,6 +146,9 @@ if (!$bot) {
                     }
 
                     const result = await response.json();
+                    if (result.status === 'error') {
+                        throw new Error(result.data);
+                    }
                     const formattedResult = JSON.stringify(result.data, null, 2);
                     showModal('Hasil ' + action, formattedResult);
 
@@ -157,16 +157,12 @@ if (!$bot) {
                 }
             }
 
-            document.querySelector('.set-webhook').addEventListener('click', function() {
-                handleWebhookAction('set', this.dataset.botId);
-            });
-
-            document.querySelector('.check-webhook').addEventListener('click', function() {
-                handleWebhookAction('check', this.dataset.botId);
-            });
-
-            document.querySelector('.delete-webhook').addEventListener('click', function() {
-                handleWebhookAction('delete', this.dataset.botId);
+            document.querySelectorAll('.set-webhook, .check-webhook, .delete-webhook').forEach(button => {
+                button.addEventListener('click', function() {
+                    const action = this.classList.contains('set-webhook') ? 'set' :
+                                   this.classList.contains('check-webhook') ? 'check' : 'delete';
+                    handleWebhookAction(action, this.dataset.botId);
+                });
             });
         });
     </script>
