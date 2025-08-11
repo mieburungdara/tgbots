@@ -200,6 +200,45 @@ try {
         }
     }
 
+    // --- Handle perintah ---
+    $telegram_api = new TelegramAPI($bot_token);
+    // Perintah hanya dieksekusi jika itu adalah pesan teks baru
+    if (isset($update['message']['text'])) {
+        $text_for_command = $update['message']['text'];
+
+        if ($text_for_command === '/start') {
+            $reply_text = "Selamat datang! Silakan kirim pesan Anda, dan admin kami akan segera merespons.";
+            $telegram_api->sendMessage($chat_id_from_telegram, $reply_text);
+            app_log("Perintah /start dieksekusi untuk chat_id: {$chat_id_from_telegram}", 'bot');
+        } elseif ($text_for_command === '/login') {
+            app_log("Perintah /login diterima dari chat_id: {$chat_id_from_telegram}", 'bot');
+
+            if (!defined('BASE_URL') || empty(BASE_URL)) {
+                app_log("Pembuatan token gagal: BASE_URL tidak terdefinisi. Chat ID: {$chat_id_from_telegram}", 'error');
+                $telegram_api->sendMessage($chat_id_from_telegram, "Maaf, terjadi kesalahan teknis (ERR:CFG01). Tidak dapat membuat link login saat ini.");
+            } else {
+                try {
+                    $login_token = bin2hex(random_bytes(32));
+                    $token_creation_time = date('Y-m-d H:i:s');
+
+                    $stmt = $pdo->prepare("UPDATE members SET login_token = ?, token_created_at = ?, token_used = 0 WHERE user_id = ?");
+                    $stmt->execute([$login_token, $token_creation_time, $internal_user_id]);
+
+                    app_log("Token login berhasil dibuat untuk user_id: {$internal_user_id}", 'bot');
+
+                    $login_link = rtrim(BASE_URL, '/') . '/member/index.php?token=' . $login_token;
+                    $reply_text = "Klik tombol di bawah ini untuk masuk ke Panel Member Anda.\n\nTombol ini hanya dapat digunakan satu kali.";
+                    $keyboard = ['inline_keyboard' => [[['text' => 'Login ke Panel Member', 'url' => $login_link]]]];
+                    $telegram_api->sendMessage($chat_id_from_telegram, $reply_text, null, json_encode($keyboard));
+
+                } catch (Exception $e) {
+                    app_log("Pembuatan token gagal (DB Error): " . $e->getMessage() . ". Chat ID: {$chat_id_from_telegram}", 'database');
+                    $telegram_api->sendMessage($chat_id_from_telegram, "Maaf, terjadi kesalahan teknis (ERR:DB01). Gagal membuat token login.");
+                }
+            }
+        }
+    }
+
     $pdo->commit();
 
 } catch (Exception $e) {
@@ -210,53 +249,6 @@ try {
 }
 
 
-// --- 8. Handle perintah ---
-$telegram_api = new TelegramAPI($bot_token);
-$text_for_command = $update['message']['text'] ?? ''; // Perintah hanya dari pesan baru
-
-if ($text_for_command === '/start') {
-    $reply_text = "Selamat datang! Silakan kirim pesan Anda, dan admin kami akan segera merespons.";
-    $telegram_api->sendMessage($chat_id_from_telegram, $reply_text);
-    app_log("Perintah /start dieksekusi untuk chat_id: {$chat_id_from_telegram}", 'bot');
-} elseif ($text_for_command === '/login') {
-    app_log("Perintah /login diterima dari chat_id: {$chat_id_from_telegram}", 'bot');
-
-    // Pastikan BASE_URL sudah didefinisikan di config.php
-    if (!defined('BASE_URL') || empty(BASE_URL)) {
-        app_log("Pembuatan token gagal: BASE_URL tidak terdefinisi. Chat ID: {$chat_id_from_telegram}", 'error');
-        $telegram_api->sendMessage($chat_id_from_telegram, "Maaf, terjadi kesalahan teknis (ERR:CFG01). Tidak dapat membuat link login saat ini.");
-        exit;
-    }
-
-    try {
-        // Buat token login unik
-        $login_token = bin2hex(random_bytes(32));
-        $token_creation_time = date('Y-m-d H:i:s');
-
-        // Simpan token ke database menggunakan user_id
-        $stmt = $pdo->prepare("UPDATE members SET login_token = ?, token_created_at = ?, token_used = 0 WHERE user_id = ?");
-        $stmt->execute([$login_token, $token_creation_time, $internal_user_id]);
-
-        app_log("Token login berhasil dibuat untuk user_id: {$internal_user_id}", 'bot');
-
-        // Buat link login
-        $login_link = rtrim(BASE_URL, '/') . '/member/index.php?token=' . $login_token;
-
-        // Kirim link ke pengguna
-        $reply_text = "Klik tombol di bawah ini untuk masuk ke Panel Member Anda.\n\nTombol ini hanya dapat digunakan satu kali.";
-        $keyboard = [
-            'inline_keyboard' => [
-                [['text' => 'Login ke Panel Member', 'url' => $login_link]]
-            ]
-        ];
-        $telegram_api->sendMessage($chat_id_from_telegram, $reply_text, null, json_encode($keyboard));
-
-    } catch (Exception $e) {
-        app_log("Pembuatan token gagal (DB Error): " . $e->getMessage() . ". Chat ID: {$chat_id_from_telegram}", 'database');
-        $telegram_api->sendMessage($chat_id_from_telegram, "Maaf, terjadi kesalahan teknis (ERR:DB01). Gagal membuat token login.");
-        exit;
-    }
-}
 
 
 // Beri respons OK ke Telegram untuk menandakan update sudah diterima.
