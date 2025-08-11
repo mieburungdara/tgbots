@@ -118,10 +118,23 @@ try {
     if ($user) {
         $internal_user_id = $user['id'];
     } else {
-        $stmt = $pdo->prepare("INSERT INTO users (telegram_id, first_name, username) VALUES (?, ?, ?)");
-        $stmt->execute([$user_id_from_telegram, $first_name, $username]);
+        $stmt = $pdo->prepare("INSERT INTO users (telegram_id, first_name, username, role) VALUES (?, ?, ?, ?)");
+        // Berikan peran admin jika ID cocok dengan SUPER_ADMIN, jika tidak 'user'
+        $initial_role = (defined('SUPER_ADMIN_TELEGRAM_ID') && (string)$user_id_from_telegram === (string)SUPER_ADMIN_TELEGRAM_ID) ? 'admin' : 'user';
+        $stmt->execute([$user_id_from_telegram, $first_name, $username, $initial_role]);
         $internal_user_id = $pdo->lastInsertId();
-        app_log("Pengguna baru dibuat: telegram_id: {$user_id_from_telegram}, user: {$first_name}", 'bot');
+        app_log("Pengguna baru dibuat: telegram_id: {$user_id_from_telegram}, user: {$first_name}, peran: {$initial_role}", 'bot');
+    }
+
+    // --- Bootstrap Super Admin untuk pengguna yang sudah ada ---
+    if (defined('SUPER_ADMIN_TELEGRAM_ID') && !empty(SUPER_ADMIN_TELEGRAM_ID) && (string)$user_id_from_telegram === (string)SUPER_ADMIN_TELEGRAM_ID) {
+        $stmt_role = $pdo->prepare("SELECT role FROM users WHERE id = ?");
+        $stmt_role->execute([$internal_user_id]);
+        if ($stmt_role->fetchColumn() !== 'admin') {
+            $stmt_update_role = $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = ?");
+            $stmt_update_role->execute([$internal_user_id]);
+            app_log("Peran admin diberikan kepada super admin yang sudah ada: {$user_id_from_telegram}", 'bot');
+        }
     }
 
     // --- Pastikan relasi user-bot dan entri member ada ---
@@ -163,11 +176,11 @@ try {
                 $sql = "INSERT INTO media_files (
                             file_id, file_unique_id, type, file_size, width, height, duration,
                             mime_type, file_name, caption, caption_entities, user_id, chat_id,
-                            message_id, performer, title, has_spoiler, is_animated
+                            message_id, media_group_id, performer, title, has_spoiler, is_animated
                         ) VALUES (
                             :file_id, :file_unique_id, :type, :file_size, :width, :height, :duration,
                             :mime_type, :file_name, :caption, :caption_entities, :user_id, :chat_id,
-                            :message_id, :performer, :title, :has_spoiler, :is_animated
+                            :message_id, :media_group_id, :performer, :title, :has_spoiler, :is_animated
                         )";
 
                 $stmt_media = $pdo->prepare($sql);
@@ -187,6 +200,7 @@ try {
                     ':user_id' => $update['message']['from']['id'],
                     ':chat_id' => $update['message']['chat']['id'],
                     ':message_id' => $update['message']['message_id'],
+                    ':media_group_id' => $update['message']['media_group_id'] ?? null,
                     ':performer' => $media_info['performer'] ?? null,
                     ':title' => $media_info['title'] ?? null,
                     ':has_spoiler' => $update['message']['has_media_spoiler'] ?? false,

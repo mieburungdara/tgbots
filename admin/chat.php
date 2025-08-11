@@ -93,7 +93,7 @@ $telegram_bot_id = explode(':', $bot_info['token'])[0];
 <body>
     <div class="container">
         <header>
-            <nav><a href="index.php?bot_id=<?= $telegram_bot_id ?>">&larr; Kembali ke Daftar Percakapan</a></nav>
+            <nav><a href="index.php?bot_id=<?= $telegram_bot_id ?>">&larr; Kembali ke Daftar Percakapan</a> | <a href="roles.php">Manajemen Peran</a> | <a href="media_logs.php">Log Media</a></nav>
             <h1>Chat dengan <?= htmlspecialchars($user_info['first_name']) ?> (@<?= htmlspecialchars($user_info['username']) ?>) di Bot <?= htmlspecialchars($bot_info['name']) ?></h1>
         </header>
         <div class="chat-window">
