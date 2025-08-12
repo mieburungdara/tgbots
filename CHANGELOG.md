@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.1.2] - 2025-08-11
+
+### Diubah
+- **Struktur Tabel `media_files`**: Menghapus kolom `file_unique_id` dan *unique constraint*-nya dari tabel `media_files` berdasarkan permintaan pengguna untuk menyederhanakan skema. Penanganan duplikat media sekarang tidak lagi dikelola di level database.
+
 ## [2.1.1] - 2025-08-11
 
 ### Diperbaiki
