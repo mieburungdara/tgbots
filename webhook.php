@@ -5,6 +5,9 @@ require_once __DIR__ . '/core/database.php';
 require_once __DIR__ . '/core/TelegramAPI.php';
 require_once __DIR__ . '/core/helpers.php';
 
+// Seluruh logika webhook dibungkus dalam blok try-catch untuk menangani semua kemungkinan error.
+try {
+
 // --- 1. Validasi ID Bot Telegram dari URL ---
 if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
     http_response_code(400); // Bad Request
@@ -114,7 +117,7 @@ $timestamp = $message_context['date'] ?? time();
 $message_date = date('Y-m-d H:i:s', $timestamp);
 
 
-try {
+    // --- Mulai Transaksi Database ---
     $pdo->beginTransaction();
 
     // --- Cari atau buat pengguna, dapatkan data lengkap termasuk state dan saldo ---
@@ -130,19 +133,15 @@ try {
     if ($current_user) {
         $internal_user_id = $current_user['id'];
     } else {
-        // Buat pengguna baru jika tidak ditemukan
         $initial_role = (defined('SUPER_ADMIN_TELEGRAM_ID') && (string)$user_id_from_telegram === (string)SUPER_ADMIN_TELEGRAM_ID) ? 'admin' : 'user';
         $stmt_insert = $pdo->prepare("INSERT INTO users (telegram_id, first_name, username, role) VALUES (?, ?, ?, ?)");
         $stmt_insert->execute([$user_id_from_telegram, $first_name, $username, $initial_role]);
         $internal_user_id = $pdo->lastInsertId();
-
-        // Ambil kembali data pengguna yang baru dibuat
         $stmt_user->execute([$internal_bot_id, $user_id_from_telegram]);
         $current_user = $stmt_user->fetch();
         app_log("Pengguna baru dibuat: telegram_id: {$user_id_from_telegram}, user: {$first_name}, peran: {$initial_role}", 'bot');
     }
 
-    // --- Bootstrap Super Admin, pastikan relasi user-bot dan entri member ada ---
     if ($current_user) {
         if (defined('SUPER_ADMIN_TELEGRAM_ID') && !empty(SUPER_ADMIN_TELEGRAM_ID) && (string)$user_id_from_telegram === (string)SUPER_ADMIN_TELEGRAM_ID) {
             if ($current_user['role'] !== 'admin') {
@@ -151,16 +150,13 @@ try {
                 app_log("Peran admin diberikan kepada super admin: {$user_id_from_telegram}", 'bot');
             }
         }
-        // Pastikan relasi user-bot ada (jika tidak ada, state akan null)
         $stmt_rel_check = $pdo->prepare("SELECT state FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
         $stmt_rel_check->execute([$internal_user_id, $internal_bot_id]);
         if ($stmt_rel_check->fetch() === false) {
              $pdo->prepare("INSERT INTO rel_user_bot (user_id, bot_id) VALUES (?, ?)")->execute([$internal_user_id, $internal_bot_id]);
-             // Refresh user data to get the new relation row
              $stmt_user->execute([$internal_bot_id, $user_id_from_telegram]);
              $current_user = $stmt_user->fetch();
         }
-        // Pastikan entri member ada
         $stmt_member = $pdo->prepare("SELECT id FROM members WHERE user_id = ?");
         $stmt_member->execute([$internal_user_id]);
         if (!$stmt_member->fetch()) {
@@ -168,7 +164,7 @@ try {
         }
     }
 
-    // --- Simpan pesan ke tabel 'messages' ---
+    // Simpan pesan ke tabel 'messages'
     $pdo->prepare("INSERT INTO messages (user_id, bot_id, telegram_message_id, text, raw_data, direction, telegram_timestamp) VALUES (?, ?, ?, ?, ?, 'incoming', ?)")
         ->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $text_content, $update_json, $message_date]);
 
@@ -372,16 +368,27 @@ try {
 
     $pdo->commit();
 
-} catch (Exception $e) {
-    $pdo->rollBack();
-    app_log("Database Error saat proses pesan: " . $e->getMessage(), 'database');
+    // Beri respons OK ke Telegram untuk menandakan update sudah diterima.
+    http_response_code(200);
+    echo "OK";
+
+} catch (Throwable $e) {
+    // Jika terjadi error di mana pun, tangkap di sini.
+    // Rollback transaksi jika sedang berjalan.
+    if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+
+    // Catat error fatal ke log.
+    $error_message = sprintf(
+        "Fatal Webhook Error: %s in %s on line %d",
+        $e->getMessage(),
+        $e->getFile(),
+        $e->getLine()
+    );
+    app_log($error_message, 'error');
+
+    // Beri respons 500 ke Telegram.
     http_response_code(500);
-    exit;
+    echo "Internal Server Error";
 }
-
-
-
-
-// Beri respons OK ke Telegram untuk menandakan update sudah diterima.
-http_response_code(200);
-echo "OK";
