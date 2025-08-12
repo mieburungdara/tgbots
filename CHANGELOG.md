@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.3.1] - 2025-08-11
+
+### Diubah
+- **Pesan Perintah /start**: Memperbarui pesan selamat datang untuk perintah `/start` menjadi lebih informatif dan menarik. Pesan baru ini mencakup daftar perintah utama yang tersedia bagi pengguna, lengkap dengan emoji dan instruksi singkat.
+
 ## [2.3.0] - 2025-08-11
 
 ### Ditambahkan
