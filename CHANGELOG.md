@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.2.0] - 2025-08-11
+
+### Diubah
+- **Alur Perintah `/sell`**: Proses penjualan konten dirombak total menjadi lebih intuitif.
+  - Penjual sekarang hanya perlu me-reply media (foto/video/album) dengan perintah `/sell`.
+  - Bot akan secara otomatis menggunakan caption dari media tersebut sebagai deskripsi produk.
+  - Alur multi-langkah yang lama (meminta media, lalu deskripsi) telah dihapus, membuat proses penjualan lebih cepat dan sederhana.
+
 ## [2.1.2] - 2025-08-11
 
 ### Diubah
