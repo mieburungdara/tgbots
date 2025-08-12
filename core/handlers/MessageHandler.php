@@ -1,6 +1,7 @@
 <?php
 
 require_once __DIR__ . '/../database/PackageRepository.php';
+require_once __DIR__ . '/../database/SaleRepository.php';
 require_once __DIR__ . '/../database/MediaFileRepository.php'; // Assuming this exists
 
 class MessageHandler
