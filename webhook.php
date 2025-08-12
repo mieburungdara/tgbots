@@ -145,8 +145,13 @@ try {
             }
         }
         // Pastikan relasi user-bot ada (jika tidak ada, state akan null)
-        if ($current_user['state'] === null) {
-            $pdo->prepare("INSERT INTO rel_user_bot (user_id, bot_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE user_id=user_id")->execute([$internal_user_id, $internal_bot_id]);
+        $stmt_rel_check = $pdo->prepare("SELECT state FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
+        $stmt_rel_check->execute([$internal_user_id, $internal_bot_id]);
+        if ($stmt_rel_check->fetch() === false) {
+             $pdo->prepare("INSERT INTO rel_user_bot (user_id, bot_id) VALUES (?, ?)")->execute([$internal_user_id, $internal_bot_id]);
+             // Refresh user data to get the new relation row
+             $stmt_user->execute([$internal_bot_id, $user_id_from_telegram]);
+             $current_user = $stmt_user->fetch();
         }
         // Pastikan entri member ada
         $stmt_member = $pdo->prepare("SELECT id FROM members WHERE user_id = ?");
@@ -165,13 +170,14 @@ try {
     // ===============================================================
     $telegram_api = new TelegramAPI($bot_token);
 
-    // Fungsi helper untuk mengubah state pengguna
     function setUserState($pdo, $user_id, $bot_id, $state, $context = null) {
         $stmt = $pdo->prepare("UPDATE rel_user_bot SET state = ?, state_context = ? WHERE user_id = ? AND bot_id = ?");
         $stmt->execute([$state, $context ? json_encode($context) : null, $user_id, $bot_id]);
     }
 
-    // 1. HANDLE STATE-BASED CONVERSATION (PRIORITAS TERTINGGI)
+    $update_handled = false;
+
+    // 1. HANDLE STATE-BASED CONVERSATION
     if ($current_user['state'] !== null && $update_type === 'message' && isset($message_context['text'])) {
         $text = $message_context['text'];
         $state_context = json_decode($current_user['state_context'] ?? '{}', true);
@@ -179,61 +185,65 @@ try {
         if ($text === '/cancel') {
             setUserState($pdo, $internal_user_id, $internal_bot_id, null, null);
             $telegram_api->sendMessage($chat_id_from_telegram, "Operasi dibatalkan.");
-            $pdo->commit(); exit;
-        }
-
-        switch ($current_user['state']) {
-            case 'awaiting_price':
-                if (is_numeric($text) && $text > 0) {
-                    $price = (float)$text;
+            $update_handled = true;
+        } else {
+            switch ($current_user['state']) {
+                case 'awaiting_price':
+                    if (is_numeric($text) && $text >= 0) {
+                        $price = (float)$text;
+                        $package_id = $state_context['package_id'];
+                        $pdo->prepare("UPDATE media_packages SET price = ?, status = 'available' WHERE id = ? AND seller_user_id = ?")->execute([$price, $package_id, $internal_user_id]);
+                        setUserState($pdo, $internal_user_id, $internal_bot_id, null, null);
+                        $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan. Paket media Anda dengan ID #{$package_id} sekarang tersedia untuk dijual.");
+                    } else {
+                        $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Harga tidak valid. Harap masukkan angka saja (contoh: 50000).");
+                    }
+                    $update_handled = true;
+                    break;
+                case 'awaiting_description':
                     $package_id = $state_context['package_id'];
-                    $pdo->prepare("UPDATE media_packages SET price = ?, status = 'available' WHERE id = ? AND seller_user_id = ?")->execute([$price, $package_id, $internal_user_id]);
-                    setUserState($pdo, $internal_user_id, $internal_bot_id, null, null);
-                    $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan. Paket media Anda dengan ID #{$package_id} sekarang tersedia untuk dijual.");
-                } else {
-                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Harga tidak valid. Harap masukkan angka saja (contoh: 50000).");
-                }
-                $pdo->commit(); exit;
-
-            case 'awaiting_description':
-                $package_id = $state_context['package_id'];
-                $pdo->prepare("UPDATE media_packages SET description = ? WHERE id = ? AND seller_user_id = ?")->execute([$text, $package_id, $internal_user_id]);
-                setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_price', ['package_id' => $package_id]);
-                $telegram_api->sendMessage($chat_id_from_telegram, "📝 Deskripsi disimpan. Sekarang, berapa harga untuk paket ini? (Contoh: 50000)");
-                $pdo->commit(); exit;
+                    $pdo->prepare("UPDATE media_packages SET description = ? WHERE id = ? AND seller_user_id = ?")->execute([$text, $package_id, $internal_user_id]);
+                    setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_price', ['package_id' => $package_id]);
+                    $telegram_api->sendMessage($chat_id_from_telegram, "📝 Deskripsi disimpan. Sekarang, berapa harga untuk paket ini? (Contoh: 50000)");
+                    $update_handled = true;
+                    break;
+            }
         }
     }
 
-    // 2. HANDLE MEDIA SUBMISSION (SELLER FLOW)
-    if ($is_media && isset($update['message'])) {
-        // Simpan file media (logika asli)
+    // 2. HANDLE MEDIA SUBMISSION
+    if (!$update_handled && $is_media && isset($update['message'])) {
         $media_type = null; $media_info = null;
-        $media_keys = ['photo', 'video', 'audio', 'voice', 'document', 'animation', 'video_note'];
+        $media_keys = ['photo', 'video', 'document', 'audio', 'voice', 'animation', 'video_note'];
         foreach ($media_keys as $key) { if (isset($update['message'][$key])) { $media_type = $key; $media_info = ($key === 'photo') ? end($update['message']['photo']) : $update['message'][$key]; break; } }
+
         if ($media_type && $media_info) {
             $sql = "INSERT INTO media_files (file_id, file_unique_id, type, file_size, width, height, duration, mime_type, file_name, caption, caption_entities, user_id, chat_id, message_id, media_group_id, has_spoiler) VALUES (:file_id, :file_unique_id, :type, :file_size, :width, :height, :duration, :mime_type, :file_name, :caption, :caption_entities, :user_id, :chat_id, :message_id, :media_group_id, :has_spoiler)";
             $stmt_media = $pdo->prepare($sql);
             $stmt_media->execute([':file_id' => $media_info['file_id'], ':file_unique_id' => $media_info['file_unique_id'], ':type' => $media_type, ':file_size' => $media_info['file_size'] ?? null, ':width' => $media_info['width'] ?? null, ':height' => $media_info['height'] ?? null, ':duration' => $media_info['duration'] ?? null, ':mime_type' => $media_info['mime_type'] ?? null, ':file_name' => $media_info['file_name'] ?? null, ':caption' => $update['message']['caption'] ?? null, ':caption_entities' => isset($update['message']['caption_entities']) ? json_encode($update['message']['caption_entities']) : null, ':user_id' => $user_id_from_telegram, ':chat_id' => $chat_id_from_telegram, ':message_id' => $telegram_message_id, ':media_group_id' => $update['message']['media_group_id'] ?? null, ':has_spoiler' => $update['message']['has_media_spoiler'] ?? false]);
             $last_media_insert_id = $pdo->lastInsertId();
 
-            // Logika baru untuk alur penjualan
-            if ($current_user['state'] !== 'awaiting_media') {
-                 $stmt_package = $pdo->prepare("INSERT INTO media_packages (seller_user_id, bot_id, status) VALUES (?, ?, 'pending')");
-                 $stmt_package->execute([$internal_user_id, $internal_bot_id]);
-                 $package_id = $pdo->lastInsertId();
-                 setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_media', ['package_id' => $package_id]);
-                 $telegram_api->sendMessage($chat_id_from_telegram, "📥 Media pertama diterima. Kirim lebih banyak file jika bagian dari satu paket, atau kirim /done jika selesai.");
+            $package_id = null;
+            if ($current_user['state'] === 'awaiting_media') {
+                $state_context = json_decode($current_user['state_context'] ?? '{}', true);
+                $package_id = $state_context['package_id'] ?? null;
+                $telegram_api->sendMessage($chat_id_from_telegram, "📥 Media diterima.");
+            } else {
+                $stmt_package = $pdo->prepare("INSERT INTO media_packages (seller_user_id, bot_id, status) VALUES (?, ?, 'pending')");
+                $stmt_package->execute([$internal_user_id, $internal_bot_id]);
+                $package_id = $pdo->lastInsertId();
+                setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_media', ['package_id' => $package_id]);
+                $telegram_api->sendMessage($chat_id_from_telegram, "📥 Media pertama diterima. Kirim lebih banyak file jika bagian dari satu paket, atau kirim /done jika selesai.");
             }
-            $state_context = json_decode($current_user['state_context'] ?? '{}', true);
-            if(isset($state_context['package_id'])){
-                $pdo->prepare("UPDATE media_files SET package_id = ? WHERE id = ?")->execute([$state_context['package_id'], $last_media_insert_id]);
+            if ($package_id) {
+                $pdo->prepare("UPDATE media_files SET package_id = ? WHERE id = ?")->execute([$package_id, $last_media_insert_id]);
             }
         }
-        $pdo->commit(); exit;
+        $update_handled = true;
     }
 
-    // 3. HANDLE CALLBACK QUERIES (BUYER FLOW)
-    if ($update_type === 'callback_query') {
+    // 3. HANDLE CALLBACK QUERIES
+    if (!$update_handled && $update_type === 'callback_query') {
         $callback_data = $update['callback_query']['data'];
         $callback_query_id = $update['callback_query']['id'];
 
@@ -245,40 +255,35 @@ try {
             $package = $stmt_pkg->fetch();
 
             if ($package && $current_user['balance'] >= $package['price']) {
-                // Proses transaksi
-                $new_balance = $current_user['balance'] - $package['price'];
-                $pdo->prepare("UPDATE users SET balance = ? WHERE id = ?")->execute([$new_balance, $internal_user_id]);
+                $pdo->prepare("UPDATE users SET balance = balance - ? WHERE id = ?")->execute([$package['price'], $internal_user_id]);
                 $pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?")->execute([$package['price'], $package['seller_user_id']]);
                 $pdo->prepare("UPDATE media_packages SET status = 'sold' WHERE id = ?")->execute([$package_id]);
 
-                // Kirim media
                 $stmt_files = $pdo->prepare("SELECT file_id, type, caption FROM media_files WHERE package_id = ? ORDER BY id");
                 $stmt_files->execute([$package_id]);
                 $files = $stmt_files->fetchAll();
 
-                $media_group = [];
-                foreach ($files as $file) {
-                    $media_group[] = ['type' => $file['type'], 'media' => $file['file_id']];
-                }
-                if (!empty($media_group)) {
-                    $media_group[0]['caption'] = "Terima kasih telah membeli! (ID Paket: #{$package_id})";
+                if (!empty($files)) {
+                    $media_group = [];
+                    foreach ($files as $file) { $media_group[] = ['type' => $file['type'], 'media' => $file['file_id']]; }
+                    $pkg_desc_stmt = $pdo->prepare("SELECT description FROM media_packages WHERE id = ?");
+                    $pkg_desc_stmt->execute([$package_id]);
+                    $media_group[0]['caption'] = "Terima kasih telah membeli!\n\n" . $pkg_desc_stmt->fetchColumn();
                     $telegram_api->sendMediaGroup($chat_id_from_telegram, json_encode($media_group));
                 }
-
                 $telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => 'Pembelian berhasil!']);
             } else {
                 $telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => 'Pembelian gagal. Saldo tidak cukup atau item tidak tersedia.', 'show_alert' => true]);
             }
         }
-        $pdo->commit(); exit;
+        $update_handled = true;
     }
 
     // 4. HANDLE TEXT MESSAGES (COMMANDS)
-    if ($update_type === 'message' && isset($message_context['text'])) {
+    if (!$update_handled && $update_type === 'message' && isset($message_context['text'])) {
         $text = $message_context['text'];
         $is_admin = ($current_user['role'] === 'admin');
 
-        // Perintah Admin
         if ($is_admin) {
             if (strpos($text, '/dev_addsaldo') === 0) {
                 $parts = explode(' ', $text);
@@ -286,32 +291,29 @@ try {
                     $pdo->prepare("UPDATE users SET balance = balance + ? WHERE telegram_id = ?")->execute([(float)$parts[2], $parts[1]]);
                     $telegram_api->sendMessage($chat_id_from_telegram, "✅ Saldo untuk {$parts[1]} berhasil ditambahkan sebesar {$parts[2]}.");
                 } else { $telegram_api->sendMessage($chat_id_from_telegram, "Format salah. Gunakan: /dev_addsaldo <telegram_id> <jumlah>"); }
-                $pdo->commit(); exit;
             }
             if (strpos($text, '/feature') === 0) {
                 $parts = explode(' ', $text);
-                if (count($parts) === 3 && is_numeric($parts[1]) && is_numeric($parts[2])) {
+                if (count($parts) === 3 && is_numeric($parts[1])) {
                     list(, $package_id, $channel_id) = $parts;
-                    $stmt_pkg = $pdo->prepare("SELECT p.description, p.price, f.file_id, f.type FROM media_packages p JOIN media_files f ON p.id = f.package_id WHERE p.id = ? LIMIT 1");
+                    $stmt_pkg = $pdo->prepare("SELECT p.description, p.price, f.file_id, f.type FROM media_packages p JOIN media_files f ON p.id = f.package_id WHERE p.id = ? AND p.status = 'available' LIMIT 1");
                     $stmt_pkg->execute([$package_id]);
                     $pkg_info = $stmt_pkg->fetch();
                     if($pkg_info) {
-                        $bot_username_stmt = $pdo->prepare("SELECT username FROM bots WHERE id = ?");
-                        $bot_username_stmt->execute([$internal_bot_id]);
-                        $bot_username = $bot_username_stmt->fetchColumn();
-
-                        $price_formatted = number_format($pkg_info['price'], 0, ',', '.');
-                        $caption = "✨ **Item Unggulan!** ✨\n\n{$pkg_info['description']}\n\nHarga: **Rp {$price_formatted}**";
+                        $bot_username = $pdo->query("SELECT username FROM bots WHERE id = {$internal_bot_id}")->fetchColumn();
+                        $price_formatted = "Rp " . number_format($pkg_info['price'], 0, ',', '.');
+                        $caption = "✨ **Item Unggulan!** ✨\n\n{$pkg_info['description']}\n\nHarga: **{$price_formatted}**";
                         $keyboard = ['inline_keyboard' => [[['text' => '➡️ Lihat & Beli di Bot', 'url' => "https://t.me/{$bot_username}?start=package_{$package_id}"]]]];
-                        $telegram_api->sendPhoto($channel_id, $pkg_info['file_id'], $caption, 'Markdown', json_encode($keyboard));
+                        $method = 'send' . ucfirst(strtolower($pkg_info['type']));
+                        if (method_exists($telegram_api, $method) && in_array($pkg_info['type'], ['photo', 'video', 'document', 'audio', 'animation'])) {
+                            $telegram_api->$method($channel_id, $pkg_info['file_id'], $caption, 'Markdown', json_encode($keyboard));
+                        } else { $telegram_api->sendMessage($channel_id, $caption, 'Markdown', json_encode($keyboard)); }
                         $telegram_api->sendMessage($chat_id_from_telegram, "✅ Item #{$package_id} berhasil di-feature ke channel {$channel_id}.");
-                    } else { $telegram_api->sendMessage($chat_id_from_telegram, "Item #{$package_id} tidak ditemukan."); }
+                    } else { $telegram_api->sendMessage($chat_id_from_telegram, "Item #{$package_id} tidak ditemukan atau tidak tersedia."); }
                 } else { $telegram_api->sendMessage($chat_id_from_telegram, "Format salah. Gunakan: /feature <package_id> <channel_id_atau_@username>");}
-                $pdo->commit(); exit;
             }
         }
 
-        // Perintah User
         if (strpos($text, '/start') === 0) {
             $parts = explode(' ', $text);
             if (count($parts) > 1 && strpos($parts[1], 'package_') === 0) {
@@ -320,12 +322,12 @@ try {
                 $stmt_pkg->execute([$package_id]);
                 $package = $stmt_pkg->fetch();
                 if($package && $package['status'] == 'available') {
-                    $price_formatted = number_format($package['price'], 0, ',', '.');
-                    $balance_formatted = number_format($current_user['balance'], 0, ',', '.');
-                    $reply_text = "Anda tertarik dengan item berikut:\n\n*Deskripsi:* {$package['description']}\n*Harga:* Rp {$price_formatted}\n\nSaldo Anda saat ini: Rp {$balance_formatted}.";
-                    $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang (Rp {$price_formatted})", 'callback_data' => "buy_{$package_id}"]]]];
+                    $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+                    $balance_formatted = "Rp " . number_format($current_user['balance'], 0, ',', '.');
+                    $reply_text = "Anda tertarik dengan item berikut:\n\n*Deskripsi:* {$package['description']}\n*Harga:* {$price_formatted}\n\nSaldo Anda saat ini: {$balance_formatted}.";
+                    $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang ({$price_formatted})", 'callback_data' => "buy_{$package_id}"]]]];
                     $telegram_api->sendMessage($chat_id_from_telegram, $reply_text, 'Markdown', json_encode($keyboard));
-                } else { $telegram_api->sendMessage($chat_id_from_telegram, "Maaf, item ini sudah tidak tersedia."); }
+                } else { $telegram_api->sendMessage($chat_id_from_telegram, "Maaf, item ini sudah tidak tersedia atau tidak ditemukan."); }
             } else {
                 $telegram_api->sendMessage($chat_id_from_telegram, "Selamat datang di bot marketplace! Gunakan /sell untuk mulai menjual media.");
             }
@@ -338,12 +340,11 @@ try {
                 $package_id = $state_context['package_id'];
                 setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_description', ['package_id' => $package_id]);
                 $telegram_api->sendMessage($chat_id_from_telegram, "✅ Selesai mengunggah media. Sekarang, tulis deskripsi singkat untuk paket media ini.");
-            } else { $telegram_api->sendMessage($chat_id_from_telegram, "Anda harus mengirim setidaknya satu media terlebih dahulu."); }
+            } else { $telegram_api->sendMessage($chat_id_from_telegram, "Anda harus mengirim setidaknya satu media terlebih dahulu sebelum mengirim /done."); }
         } elseif ($text === '/balance') {
-            $balance = number_format($current_user['balance'], 2, ',', '.');
-            $telegram_api->sendMessage($chat_id_from_telegram, "Saldo Anda saat ini: Rp {$balance}");
+            $balance = "Rp " . number_format($current_user['balance'], 2, ',', '.');
+            $telegram_api->sendMessage($chat_id_from_telegram, "Saldo Anda saat ini: {$balance}");
         } elseif ($text === '/login') {
-            // Logika /login yang sudah ada
             if (!defined('BASE_URL') || empty(BASE_URL)) { $telegram_api->sendMessage($chat_id_from_telegram, "Maaf, terjadi kesalahan teknis (ERR:CFG01)."); }
             else {
                 $login_token = bin2hex(random_bytes(32));
