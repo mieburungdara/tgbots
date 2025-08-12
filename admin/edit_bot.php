@@ -69,6 +69,8 @@ unset($_SESSION['status_message']);
         .actions .set-webhook:hover { background-color: #0056b3; }
         .actions .check-webhook { background-color: #17a2b8; }
         .actions .check-webhook:hover { background-color: #117a8b; }
+        .actions .test-webhook { background-color: #ffc107; color: #212529; }
+        .actions .test-webhook:hover { background-color: #e0a800; }
         .actions .delete-webhook { background-color: #dc3545; }
         .actions .delete-webhook:hover { background-color: #c82333; }
         .save-settings { background-color: #28a745; }
@@ -119,6 +121,7 @@ unset($_SESSION['status_message']);
             <h2>Manajemen Webhook</h2>
             <button class="set-webhook" data-bot-id="<?= $bot['id'] // Gunakan ID internal untuk AJAX ?>">Set Webhook</button>
             <button class="check-webhook" data-bot-id="<?= $bot['id'] // Gunakan ID internal untuk AJAX ?>">Check Webhook</button>
+            <button class="test-webhook" data-telegram-bot-id="<?= htmlspecialchars($telegram_bot_id) ?>" title="Kirim POST request kosong untuk memeriksa apakah webhook merespons 200 OK">Test Webhook (POST)</button>
             <button class="delete-webhook" data-bot-id="<?= $bot['id'] // Gunakan ID internal untuk AJAX ?>">Delete Webhook</button>
         </div>
 
@@ -191,49 +194,71 @@ unset($_SESSION['status_message']);
                 }
             }
 
+            // Handler untuk aksi webhook standar (set, check, delete)
             async function handleWebhookAction(action, botId) {
                 let confirmation = true;
                 if (action === 'delete') {
                     confirmation = confirm('Apakah Anda yakin ingin menghapus webhook untuk bot ini?');
                 }
-
-                if (!confirmation) {
-                    return;
-                }
+                if (!confirmation) return;
 
                 showModal('Hasil ' + action, 'Sedang memproses permintaan...');
-
                 try {
                     const response = await fetch('webhook_manager.php', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded',
-                        },
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                         body: `action=${action}&bot_id=${botId}`
                     });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const result = await response.json();
-                    if (result.status === 'error') {
-                        throw new Error(result.data);
-                    }
+                    if (result.status === 'error') throw new Error(result.data);
                     const formattedResult = JSON.stringify(result.data, null, 2);
                     showModal('Hasil ' + action, formattedResult);
-
                 } catch (error) {
                     showModal('Error', 'Gagal melakukan permintaan: ' + error.message);
                 }
             }
 
+            // Handler untuk tes POST webhook
+            async function handleTestWebhook(telegramBotId) {
+                // Ambil BASE_URL dari config, jika tidak ada, coba tebak dari URL saat ini
+                const baseUrl = '<?= defined('BASE_URL') && BASE_URL ? rtrim(BASE_URL, '/') : (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] ?>';
+                const webhookUrl = `${baseUrl}/webhook.php?id=${telegramBotId}`;
+
+                showModal('Hasil Test POST', `Mengirim request ke:\n${webhookUrl}\n\nMohon tunggu...`);
+
+                try {
+                    const response = await fetch(webhookUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ "update_id": 0, "message": { "text": "/test" } }) // Kirim update palsu
+                    });
+
+                    let statusText = `Status: ${response.status} ${response.statusText}`;
+                    let bodyText = await response.text();
+
+                    if(response.status === 200) {
+                        showModal('Hasil Test POST: Sukses', `${statusText}\n\nRespons Body:\n${bodyText}\n\nWebhook tampaknya merespons dengan benar (200 OK).`);
+                    } else {
+                        showModal('Hasil Test POST: Gagal', `${statusText}\n\nRespons Body:\n${bodyText}\n\nWebhook mengembalikan error.`);
+                    }
+
+                } catch (error) {
+                    showModal('Error', 'Gagal melakukan permintaan fetch: ' + error.message);
+                }
+            }
+
+            // Tambahkan event listener ke tombol-tombol
             document.querySelectorAll('.set-webhook, .check-webhook, .delete-webhook').forEach(button => {
                 button.addEventListener('click', function() {
                     const action = this.classList.contains('set-webhook') ? 'set' :
                                    this.classList.contains('check-webhook') ? 'check' : 'delete';
                     handleWebhookAction(action, this.dataset.botId);
                 });
+            });
+
+            document.querySelector('.test-webhook').addEventListener('click', function() {
+                handleTestWebhook(this.dataset.telegramBotId);
             });
         });
     </script>

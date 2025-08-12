@@ -272,7 +272,7 @@ try {
                 $pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?")->execute([$package['price'], $package['seller_user_id']]);
                 $pdo->prepare("UPDATE media_packages SET status = 'sold' WHERE id = ?")->execute([$package_id]);
 
-                $stmt_files = $pdo->prepare("SELECT file_id, type, caption FROM media_files WHERE package_id = ? ORDER BY id");
+                $stmt_files = $pdo->prepare("SELECT file_id, type FROM media_files WHERE package_id = ? ORDER BY id");
                 $stmt_files->execute([$package_id]);
                 $files = $stmt_files->fetchAll();
 
@@ -281,7 +281,8 @@ try {
                     foreach ($files as $file) { $media_group[] = ['type' => $file['type'], 'media' => $file['file_id']]; }
                     $pkg_desc_stmt = $pdo->prepare("SELECT description FROM media_packages WHERE id = ?");
                     $pkg_desc_stmt->execute([$package_id]);
-                    $media_group[0]['caption'] = "Terima kasih telah membeli!\n\n" . $pkg_desc_stmt->fetchColumn();
+                    $pkg_description = $pkg_desc_stmt->fetchColumn();
+                    $media_group[0]['caption'] = "Terima kasih telah membeli!\n\n" . $pkg_description;
                     $telegram_api->sendMediaGroup($chat_id_from_telegram, json_encode($media_group));
                 }
                 $telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => 'Pembelian berhasil!']);
