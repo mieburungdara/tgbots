@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.5.0] - 2025-08-11
+
+### Peningkatan
+- **Struktur Kode Modular**: `webhook.php` telah direfaktor secara ekstensif menjadi arsitektur yang lebih modular dan mudah dikelola.
+  - **Handlers**: Logika untuk setiap jenis pembaruan (pesan, callback query, media) telah dipisahkan ke dalam kelas-kelas `Handler` khusus (misalnya, `MessageHandler`, `CallbackQueryHandler`).
+  - **Repositories**: Logika database telah diabstraksi ke dalam kelas-kelas `Repository` (misalnya, `UserRepository`, `PackageRepository`), memisahkan query database dari logika bisnis.
+
+### Diubah
+- **File `webhook.php`**: Sekarang berfungsi sebagai *controller* atau titik masuk utama yang bersih, yang tugasnya hanya untuk menginisialisasi dan mendelegasikan pembaruan ke handler yang sesuai. Ini secara signifikan mengurangi kompleksitasnya.
+
 ## [2.4.0] - 2025-08-11
 
 ### Ditambahkan
