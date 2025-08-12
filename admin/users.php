@@ -100,7 +100,8 @@ function get_sort_link($column, $current_sort, $current_order) {
             <a href="users.php" class="active">Pengguna</a> |
             <a href="roles.php">Manajemen Peran</a> |
             <a href="media_logs.php">Log Media</a> |
-            <a href="settings.php">Pengaturan</a> |
+            <a href="channels.php">Channel</a> |
+            <a href="database.php">Database</a> |
             <a href="logs.php">Logs</a>
         </nav>
 

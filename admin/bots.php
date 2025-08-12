@@ -91,7 +91,8 @@ $bots = $pdo->query("SELECT id, name, token, created_at FROM bots ORDER BY creat
             <a href="users.php">Pengguna</a> |
             <a href="roles.php">Manajemen Peran</a> |
             <a href="media_logs.php">Log Media</a> |
-            <a href="settings.php">Pengaturan</a> |
+            <a href="channels.php">Channel</a> |
+            <a href="database.php">Database</a> |
             <a href="logs.php">Logs</a>
         </nav>
 

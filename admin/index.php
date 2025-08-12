@@ -104,7 +104,8 @@ if ($selected_telegram_bot_id) {
             <a href="users.php">Pengguna</a> |
             <a href="roles.php">Manajemen Peran</a> |
             <a href="media_logs.php">Log Media</a> |
-            <a href="settings.php">Pengaturan</a> |
+            <a href="channels.php">Channel</a> |
+            <a href="database.php">Database</a> |
             <a href="logs.php">Logs</a>
         </nav>
 

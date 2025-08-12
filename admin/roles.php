@@ -88,7 +88,8 @@ $users = $pdo->query("SELECT id, telegram_id, first_name, username, role FROM us
             <a href="users.php">Pengguna</a> |
             <a href="roles.php" class="active">Manajemen Peran</a> |
             <a href="media_logs.php">Log Media</a> |
-            <a href="settings.php">Pengaturan</a> |
+            <a href="channels.php">Channel</a> |
+            <a href="database.php">Database</a> |
             <a href="logs.php">Logs</a>
         </nav>
 

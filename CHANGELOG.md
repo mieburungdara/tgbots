@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.8.0] - 2025-08-12
+
+### Peningkatan
+- **Refactoring Panel Admin**: Merapikan dan mengorganisir ulang halaman pengaturan di panel admin untuk meningkatkan kejelasan dan kemudahan penggunaan.
+  - Halaman "Pengaturan" (`settings.php`) yang sebelumnya berisi beberapa fungsi, sekarang difokuskan hanya untuk manajemen channel dan diganti namanya menjadi `channels.php`.
+  - Fungsionalitas migrasi database dipindahkan ke halamannya sendiri yang baru, yaitu `database.php`.
+  - Menu navigasi di seluruh panel admin diperbarui untuk mencerminkan struktur baru ini, menggantikan tautan "Pengaturan" tunggal dengan tautan "Channel" dan "Database" yang lebih spesifik.
+
 ## [2.7.0] - 2025-08-12
 
 ### Ditambahkan
