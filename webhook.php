@@ -182,12 +182,25 @@ try {
         $text = $message_context['text'];
         $state_context = json_decode($current_user['state_context'] ?? '{}', true);
 
-        if ($text === '/cancel') {
+        if (strpos($text, '/cancel') === 0) {
             setUserState($pdo, $internal_user_id, $internal_bot_id, null, null);
             $telegram_api->sendMessage($chat_id_from_telegram, "Operasi dibatalkan.");
             $update_handled = true;
         } else {
             switch ($current_user['state']) {
+                case 'awaiting_media':
+                    if (strpos($text, '/done') === 0) {
+                        if (isset($state_context['package_id'])) {
+                            $package_id = $state_context['package_id'];
+                            setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_description', ['package_id' => $package_id]);
+                            $telegram_api->sendMessage($chat_id_from_telegram, "✅ Selesai mengunggah media. Sekarang, tulis deskripsi singkat untuk paket media ini.");
+                        } else {
+                            $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Terjadi kesalahan. Anda harus mengirim media terlebih dahulu. Mulai lagi dengan /sell.");
+                            setUserState($pdo, $internal_user_id, $internal_bot_id, null, null);
+                        }
+                        $update_handled = true;
+                    }
+                    break;
                 case 'awaiting_price':
                     if (is_numeric($text) && $text >= 0) {
                         $price = (float)$text;
@@ -331,20 +344,13 @@ try {
             } else {
                 $telegram_api->sendMessage($chat_id_from_telegram, "Selamat datang di bot marketplace! Gunakan /sell untuk mulai menjual media.");
             }
-        } elseif ($text === '/sell') {
+        } elseif (strpos($text, '/sell') === 0) {
             setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_media', null);
             $telegram_api->sendMessage($chat_id_from_telegram, "Silakan kirim file media (foto/video) yang ingin Anda jual. Jika lebih dari satu, kirim sebagai album. Kirim /done jika sudah selesai.");
-        } elseif ($text === '/done' && $current_user['state'] === 'awaiting_media') {
-            $state_context = json_decode($current_user['state_context'] ?? '{}', true);
-            if(isset($state_context['package_id'])) {
-                $package_id = $state_context['package_id'];
-                setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_description', ['package_id' => $package_id]);
-                $telegram_api->sendMessage($chat_id_from_telegram, "✅ Selesai mengunggah media. Sekarang, tulis deskripsi singkat untuk paket media ini.");
-            } else { $telegram_api->sendMessage($chat_id_from_telegram, "Anda harus mengirim setidaknya satu media terlebih dahulu sebelum mengirim /done."); }
-        } elseif ($text === '/balance') {
+        } elseif (strpos($text, '/balance') === 0) {
             $balance = "Rp " . number_format($current_user['balance'], 2, ',', '.');
             $telegram_api->sendMessage($chat_id_from_telegram, "Saldo Anda saat ini: {$balance}");
-        } elseif ($text === '/login') {
+        } elseif (strpos($text, '/login') === 0) {
             if (!defined('BASE_URL') || empty(BASE_URL)) { $telegram_api->sendMessage($chat_id_from_telegram, "Maaf, terjadi kesalahan teknis (ERR:CFG01)."); }
             else {
                 $login_token = bin2hex(random_bytes(32));
