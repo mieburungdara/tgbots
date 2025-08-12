@@ -155,7 +155,6 @@ class MessageHandler
 
     private function handleKontenCommand(array $parts)
     {
-        // ... This logic also uses direct PDO and can be refactored.
         $internal_user_id = $this->current_user['id'];
         if (count($parts) !== 2 || !is_numeric($parts[1])) {
             $this->telegram_api->sendMessage($this->chat_id, "Format perintah salah. Gunakan: /konten <ID Konten>");
@@ -170,14 +169,24 @@ class MessageHandler
             return;
         }
 
-        // The rest of the logic to check access and send thumbnail...
-        // This is a good candidate for a shared service/method.
-        $stmt_thumb = $this->pdo->prepare("SELECT file_id, type FROM media_files WHERE id = ?");
-        $stmt_thumb->execute([$package['thumbnail_media_id']]);
-        $thumbnail = $stmt_thumb->fetch(PDO::FETCH_ASSOC);
+        $thumbnail = null;
+        // Coba dapatkan thumbnail yang spesifik terlebih dahulu
+        if (!empty($package['thumbnail_media_id'])) {
+            $stmt_thumb = $this->pdo->prepare("SELECT file_id, type FROM media_files WHERE id = ?");
+            $stmt_thumb->execute([$package['thumbnail_media_id']]);
+            $thumbnail = $stmt_thumb->fetch(PDO::FETCH_ASSOC);
+        }
+
+        // Jika tidak ada thumbnail spesifik atau tidak ditemukan, gunakan file pertama dari paket
+        if (!$thumbnail) {
+            $package_files = $this->package_repo->getPackageFiles($package_id);
+            if (!empty($package_files)) {
+                $thumbnail = $package_files[0];
+            }
+        }
 
         if (!$thumbnail) {
-            $this->telegram_api->sendMessage($this->chat_id, "File thumbnail untuk konten ini tidak dapat ditemukan.");
+            $this->telegram_api->sendMessage($this->chat_id, "Konten ini tidak memiliki media yang dapat ditampilkan.");
             return;
         }
 
