@@ -2,7 +2,8 @@
 
 require_once __DIR__ . '/../database/PackageRepository.php';
 require_once __DIR__ . '/../database/SaleRepository.php';
-require_once __DIR__ . '/../database/MediaFileRepository.php'; // Assuming this exists
+require_once __DIR__ . '/../database/MediaFileRepository.php';
+require_once __DIR__ . '/../database/BotChannelUsageRepository.php';
 
 class MessageHandler
 {
@@ -11,17 +12,19 @@ class MessageHandler
     private $user_repo;
     private $package_repo;
     private $media_repo;
+    private $bot_channel_usage_repo;
     private $current_user;
     private $chat_id;
     private $message;
 
     public function __construct(PDO $pdo, TelegramAPI $telegram_api, UserRepository $user_repo, array $current_user, int $chat_id, array $message)
     {
-        $this->pdo = $pdo; // Can be removed after full refactor
+        $this->pdo = $pdo;
         $this->telegram_api = $telegram_api;
         $this->user_repo = $user_repo;
         $this->package_repo = new PackageRepository($pdo);
         $this->media_repo = new MediaFileRepository($pdo);
+        $this->bot_channel_usage_repo = new BotChannelUsageRepository($pdo);
         $this->current_user = $current_user;
         $this->chat_id = $chat_id;
         $this->message = $message;
@@ -99,9 +102,6 @@ class MessageHandler
 
     private function handleSellCommand()
     {
-        // ... The logic for /sell is complex and involves state changes and media file lookups.
-        // It's a good candidate for its own command class. For now, we leave the logic here.
-        // This logic still uses direct PDO, which should be refactored.
         if (!isset($this->message['reply_to_message'])) {
             $this->telegram_api->sendMessage($this->chat_id, "Untuk menjual, silakan reply media yang ingin Anda jual dengan perintah /sell.");
             return;
@@ -110,10 +110,36 @@ class MessageHandler
         $replied_message = $this->message['reply_to_message'];
         $replied_message_id = $replied_message['message_id'];
         $replied_chat_id = $replied_message['chat']['id'];
-        $description = $replied_message['caption'] ?? '';
-        $media_group_id = $replied_message['media_group_id'] ?? null;
         $internal_user_id = $this->current_user['id'];
         $internal_bot_id = $this->user_repo->getBotId();
+
+        // 1. Dapatkan channel penyimpanan berikutnya
+        $storage_channel = $this->bot_channel_usage_repo->getNextChannelForBot($internal_bot_id);
+        if (!$storage_channel) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Terjadi kesalahan sistem (tidak ada channel penyimpanan). Harap hubungi admin.");
+            error_log("No storage channels available for bot ID: " . $internal_bot_id);
+            return;
+        }
+
+        // 2. Salin pesan ke channel penyimpanan
+        $copied_message = $this->telegram_api->copyMessage(
+            $storage_channel['channel_id'],
+            $replied_chat_id,
+            $replied_message_id
+        );
+
+        if (!$copied_message || !isset($copied_message['ok']) || !$copied_message['ok']) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal menyimpan media. Harap coba lagi atau hubungi admin.");
+            error_log("Failed to copy message to storage channel. API response: " . json_encode($copied_message));
+            return;
+        }
+
+        $storage_message_id = $copied_message['result']['message_id'];
+        $storage_channel_id_db = $storage_channel['id']; // Ini adalah ID dari tabel private_channels
+
+        // 3. Lanjutkan dengan logika penjualan yang ada
+        $description = $replied_message['caption'] ?? '';
+        $media_group_id = $replied_message['media_group_id'] ?? null;
 
         $media_file_ids = [];
         if ($media_group_id) {
@@ -145,9 +171,14 @@ class MessageHandler
         $stmt_package->execute([$internal_user_id, $internal_bot_id, $description, $thumbnail_media_id]);
         $package_id = $this->pdo->lastInsertId();
 
-        $stmt_link = $this->pdo->prepare("UPDATE media_files SET package_id = ? WHERE id = ?");
+        // 4. Tautkan file media ke paket dan simpan info penyimpanan
+        $stmt_link = $this->pdo->prepare(
+            "UPDATE media_files
+             SET package_id = ?, storage_channel_id = ?, storage_message_id = ?
+             WHERE id = ?"
+        );
         foreach ($media_file_ids as $media_id) {
-            $stmt_link->execute([$package_id, $media_id]);
+            $stmt_link->execute([$package_id, $storage_channel['channel_id'], $storage_message_id, $media_id]);
         }
 
         $this->user_repo->setUserState($internal_user_id, 'awaiting_price', ['package_id' => $package_id]);
