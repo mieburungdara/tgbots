@@ -80,39 +80,51 @@ class TelegramAPI {
 
     // --- Metode untuk mengirim berbagai jenis media ---
 
-    public function sendPhoto($chat_id, $photo, $caption = null) {
+    public function sendPhoto($chat_id, $photo, $caption = null, $parse_mode = null, $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'photo' => $photo];
         if ($caption) $data['caption'] = $caption;
+        if ($parse_mode) $data['parse_mode'] = $parse_mode;
+        if ($reply_markup) $data['reply_markup'] = $reply_markup;
         return $this->apiRequest('sendPhoto', $data);
     }
 
-    public function sendVideo($chat_id, $video, $caption = null) {
+    public function sendVideo($chat_id, $video, $caption = null, $parse_mode = null, $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'video' => $video];
         if ($caption) $data['caption'] = $caption;
+        if ($parse_mode) $data['parse_mode'] = $parse_mode;
+        if ($reply_markup) $data['reply_markup'] = $reply_markup;
         return $this->apiRequest('sendVideo', $data);
     }
 
-    public function sendAudio($chat_id, $audio, $caption = null) {
+    public function sendAudio($chat_id, $audio, $caption = null, $parse_mode = null, $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'audio' => $audio];
         if ($caption) $data['caption'] = $caption;
+        if ($parse_mode) $data['parse_mode'] = $parse_mode;
+        if ($reply_markup) $data['reply_markup'] = $reply_markup;
         return $this->apiRequest('sendAudio', $data);
     }
 
-    public function sendDocument($chat_id, $document, $caption = null) {
+    public function sendDocument($chat_id, $document, $caption = null, $parse_mode = null, $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'document' => $document];
         if ($caption) $data['caption'] = $caption;
+        if ($parse_mode) $data['parse_mode'] = $parse_mode;
+        if ($reply_markup) $data['reply_markup'] = $reply_markup;
         return $this->apiRequest('sendDocument', $data);
     }
 
-    public function sendAnimation($chat_id, $animation, $caption = null) {
+    public function sendAnimation($chat_id, $animation, $caption = null, $parse_mode = null, $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'animation' => $animation];
         if ($caption) $data['caption'] = $caption;
+        if ($parse_mode) $data['parse_mode'] = $parse_mode;
+        if ($reply_markup) $data['reply_markup'] = $reply_markup;
         return $this->apiRequest('sendAnimation', $data);
     }
 
-    public function sendVoice($chat_id, $voice, $caption = null) {
+    public function sendVoice($chat_id, $voice, $caption = null, $parse_mode = null, $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'voice' => $voice];
         if ($caption) $data['caption'] = $caption;
+        if ($parse_mode) $data['parse_mode'] = $parse_mode;
+        if ($reply_markup) $data['reply_markup'] = $reply_markup;
         return $this->apiRequest('sendVoice', $data);
     }
 
