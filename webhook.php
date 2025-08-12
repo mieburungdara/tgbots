@@ -93,17 +93,24 @@ if ($setting_to_check === null || empty($settings[$setting_to_check])) {
     exit;
 }
 
-// --- 5. Ekstrak dan Proses Data ---
-app_log("Update '{$update_type}' diterima dari chat_id: {$message_context['chat']['id']}", 'bot');
+// --- 5. Validasi dan Ekstrak Data Penting ---
+// Lakukan validasi untuk memastikan struktur dasar ada sebelum diekstrak
+if (!isset($message_context['from']['id']) || !isset($message_context['chat']['id'])) {
+    app_log("Update '{$update_type}' tidak memiliki 'from' atau 'chat' id, diabaikan.", 'bot');
+    http_response_code(200);
+    exit;
+}
 
-// Ekstrak data penting dari konteks pesan
-$telegram_message_id = $message_context['message_id'];
 $chat_id_from_telegram = $message_context['chat']['id'];
+app_log("Update '{$update_type}' diterima dari chat_id: {$chat_id_from_telegram}", 'bot');
+
+// Ekstrak data penting dari konteks pesan dengan aman
+$telegram_message_id = $message_context['message_id'] ?? 0;
 $user_id_from_telegram = $message_context['from']['id'];
 $first_name = $message_context['from']['first_name'] ?? '';
 $username = $message_context['from']['username'] ?? null;
 $text_content = $message_context['text'] ?? ($message_context['caption'] ?? '');
-$timestamp = $message_context['date'];
+$timestamp = $message_context['date'] ?? time();
 $message_date = date('Y-m-d H:i:s', $timestamp);
 
 
