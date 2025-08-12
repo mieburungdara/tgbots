@@ -320,7 +320,19 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
                     $telegram_api->sendMessage($chat_id_from_telegram, $reply_text, 'Markdown', json_encode($keyboard));
                 } else { $telegram_api->sendMessage($chat_id_from_telegram, "Maaf, item ini sudah tidak tersedia atau tidak ditemukan."); }
             } else {
-                $telegram_api->sendMessage($chat_id_from_telegram, "Selamat datang di bot marketplace! Gunakan /sell untuk mulai menjual media.");
+                $welcome_message = "👋 *Selamat Datang di Bot Marketplace!* 🤖\n\n";
+                $welcome_message .= "Berikut adalah beberapa perintah yang bisa Anda gunakan:\n\n";
+                $welcome_message .= "- *Menjual Konten* 📸\n";
+                $welcome_message .= "  Reply media (foto/video) yang ingin Anda jual dengan perintah `/sell`.\n\n";
+                $welcome_message .= "- *Cek Saldo* 💰\n";
+                $welcome_message .= "  Gunakan perintah `/balance` untuk melihat saldo Anda.\n\n";
+                $welcome_message .= "- *Akses Konten* 📂\n";
+                $welcome_message .= "  Gunakan `/konten <ID Paket>` untuk mengunduh kembali konten yang sudah Anda beli atau jual.\n\n";
+                $welcome_message .= "- *Login ke Panel* 🌐\n";
+                $welcome_message .= "  Gunakan perintah `/login` untuk mendapatkan link akses ke panel member Anda.\n\n";
+                $welcome_message .= "Ada yang bisa saya bantu?";
+
+                $telegram_api->sendMessage($chat_id_from_telegram, $welcome_message, 'Markdown');
             }
         } elseif (strpos($text, '/sell') === 0) {
             if (!isset($message_context['reply_to_message'])) {
