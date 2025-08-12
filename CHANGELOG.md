@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.1.1] - 2025-08-11
+
+### Diperbaiki
+- **Penanganan Error Webhook**: Membungkus seluruh logika pemrosesan webhook dalam blok `try-catch` tunggal. Ini memastikan bahwa semua jenis error (termasuk error fatal) ditangkap dengan benar, dicatat ke dalam file log, dan mencegah server merespons dengan `500 Internal Server Error` yang tidak informatif.
+
 ## [2.1.0] - 2025-08-10
 
 ### Ditambahkan
