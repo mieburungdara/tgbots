@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.7.0] - 2025-08-12
+
+### Ditambahkan
+- **Fitur Channel Penyimpanan Pribadi**: Menambahkan kemampuan untuk mendaftarkan channel-channel pribadi sebagai tujuan penyimpanan file.
+  - **Manajemen via Admin Panel**: Di halaman "Pengaturan", admin sekarang dapat menambah atau menghapus channel penyimpanan.
+  - **Distribusi File Round-Robin per Bot**: Ketika pengguna menggunakan perintah `/sell`, file media akan secara otomatis disalin ke salah satu channel pribadi. Sistem menggunakan strategi round-robin yang dilacak untuk setiap bot secara individual untuk mendistribusikan beban dan menghindari *rate limit* Telegram.
+- **Migrasi Database Baru**: Menambahkan tiga skrip migrasi baru untuk membuat tabel `private_channels`, `bot_channel_usage`, dan untuk menambahkan kolom `storage_channel_id` serta `storage_message_id` ke tabel `media_files`.
+
 ## [2.6.0] - 2025-08-12
 
 ### Diubah
