@@ -230,7 +230,46 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
         $callback_data = $update['callback_query']['data'];
         $callback_query_id = $update['callback_query']['id'];
 
-        if (strpos($callback_data, 'buy_') === 0) {
+        if (strpos($callback_data, 'view_full_') === 0) {
+            $package_id = substr($callback_data, strlen('view_full_'));
+
+            // Re-verify access before sending full content
+            $stmt_pkg = $pdo->prepare("SELECT seller_user_id FROM media_packages WHERE id = ?");
+            $stmt_pkg->execute([$package_id]);
+            $package = $stmt_pkg->fetch();
+
+            $has_access = false;
+            if ($package) {
+                if ($package['seller_user_id'] == $internal_user_id) {
+                    $has_access = true;
+                } else {
+                    $stmt_sale = $pdo->prepare("SELECT id FROM sales WHERE package_id = ? AND buyer_user_id = ?");
+                    $stmt_sale->execute([$package_id, $internal_user_id]);
+                    if ($stmt_sale->fetch()) {
+                        $has_access = true;
+                    }
+                }
+            }
+
+            if ($has_access) {
+                $telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => '✅ Akses diberikan. Mengirim konten lengkap...']);
+
+                $stmt_files = $pdo->prepare("SELECT file_id, type FROM media_files WHERE package_id = ? ORDER BY id");
+                $stmt_files->execute([$package_id]);
+                $files = $stmt_files->fetchAll(PDO::FETCH_ASSOC);
+
+                if (!empty($files)) {
+                    $media_group = [];
+                    foreach ($files as $file) {
+                        $media_group[] = ['type' => $file['type'], 'media' => $file['file_id']];
+                    }
+                    $telegram_api->sendMediaGroup($chat_id_from_telegram, json_encode($media_group));
+                }
+            } else {
+                $telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => '⚠️ Anda tidak memiliki akses ke konten ini.', 'show_alert' => true]);
+            }
+
+        } elseif (strpos($callback_data, 'buy_') === 0) {
             $package_id = substr($callback_data, strlen('buy_'));
 
             $stmt_pkg = $pdo->prepare("SELECT price, seller_user_id FROM media_packages WHERE id = ? AND status = 'available'");
@@ -375,9 +414,19 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
                 if (empty($media_file_ids)) {
                     $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.");
                 } else {
-                    // Create a new package
-                    $stmt_package = $pdo->prepare("INSERT INTO media_packages (seller_user_id, bot_id, description, status) VALUES (?, ?, ?, 'pending')");
-                    $stmt_package->execute([$internal_user_id, $internal_bot_id, $description]);
+                    // Find the specific media file that was replied to, to use as thumbnail
+                    $stmt_thumb = $pdo->prepare("SELECT id FROM media_files WHERE message_id = ? AND chat_id = ?");
+                    $stmt_thumb->execute([$replied_message_id, $replied_chat_id]);
+                    $thumbnail_media_id = $stmt_thumb->fetchColumn();
+
+                    if (!$thumbnail_media_id) {
+                        $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal. Media yang Anda reply tidak dapat ditemukan sebagai thumbnail.");
+                        break;
+                    }
+
+                    // Create a new package with the thumbnail ID
+                    $stmt_package = $pdo->prepare("INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status) VALUES (?, ?, ?, ?, 'pending')");
+                    $stmt_package->execute([$internal_user_id, $internal_bot_id, $description, $thumbnail_media_id]);
                     $package_id = $pdo->lastInsertId();
 
                     // Link media files to the package
@@ -397,45 +446,63 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
             } else {
                 $package_id = (int)$parts[1];
 
-                // Check if user has access (is seller or buyer)
-                $stmt_pkg = $pdo->prepare("SELECT seller_user_id FROM media_packages WHERE id = ?");
+                $stmt_pkg = $pdo->prepare("SELECT id, seller_user_id, description, thumbnail_media_id, price, status FROM media_packages WHERE id = ?");
                 $stmt_pkg->execute([$package_id]);
-                $package = $stmt_pkg->fetch();
+                $package = $stmt_pkg->fetch(PDO::FETCH_ASSOC);
 
+                if (!$package) {
+                    $telegram_api->sendMessage($chat_id_from_telegram, "Konten dengan ID #{$package_id} tidak ditemukan.");
+                    break;
+                }
+
+                if (empty($package['thumbnail_media_id'])) {
+                    $telegram_api->sendMessage($chat_id_from_telegram, "Konten ini tidak memiliki thumbnail yang valid.");
+                    break;
+                }
+
+                $stmt_thumb = $pdo->prepare("SELECT file_id, type FROM media_files WHERE id = ?");
+                $stmt_thumb->execute([$package['thumbnail_media_id']]);
+                $thumbnail = $stmt_thumb->fetch(PDO::FETCH_ASSOC);
+
+                if (!$thumbnail) {
+                    $telegram_api->sendMessage($chat_id_from_telegram, "File thumbnail untuk konten ini tidak dapat ditemukan.");
+                    break;
+                }
+
+                // Check for access rights
                 $has_access = false;
-                if ($package) {
-                    // Check if current user is the seller
-                    if ($package['seller_user_id'] == $internal_user_id) {
+                if ($package['seller_user_id'] == $internal_user_id) {
+                    $has_access = true;
+                } else {
+                    $stmt_sale = $pdo->prepare("SELECT id FROM sales WHERE package_id = ? AND buyer_user_id = ?");
+                    $stmt_sale->execute([$package_id, $internal_user_id]);
+                    if ($stmt_sale->fetch()) {
                         $has_access = true;
-                    } else {
-                        // Check if current user is a buyer
-                        $stmt_sale = $pdo->prepare("SELECT id FROM sales WHERE package_id = ? AND buyer_user_id = ?");
-                        $stmt_sale->execute([$package_id, $internal_user_id]);
-                        if ($stmt_sale->fetch()) {
-                            $has_access = true;
-                        }
                     }
                 }
 
+                $keyboard = [];
                 if ($has_access) {
-                    $stmt_files = $pdo->prepare("SELECT file_id, type FROM media_files WHERE package_id = ? ORDER BY id");
-                    $stmt_files->execute([$package_id]);
-                    $files = $stmt_files->fetchAll(PDO::FETCH_ASSOC);
+                    $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_full_{$package_id}"]]]];
+                } elseif ($package['status'] === 'available') {
+                    $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+                    $keyboard = ['inline_keyboard' => [[['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package_id}"]]]];
+                }
 
-                    if (!empty($files)) {
-                        $media_group = [];
-                        foreach ($files as $file) {
-                            $media_group[] = ['type' => $file['type'], 'media' => $file['file_id']];
-                        }
-                        // Add a caption to the first item of the media group
-                        $media_group[0]['caption'] = "Berikut konten yang Anda minta untuk paket ID #{$package_id}.";
+                $caption = $package['description'];
+                $method = 'send' . ucfirst($thumbnail['type']);
 
-                        $telegram_api->sendMediaGroup($chat_id_from_telegram, json_encode($media_group));
-                    } else {
-                        $telegram_api->sendMessage($chat_id_from_telegram, "Konten untuk paket ini tidak dapat ditemukan.");
-                    }
+                if (method_exists($telegram_api, $method)) {
+                    $telegram_api->$method(
+                        $chat_id_from_telegram,
+                        $thumbnail['file_id'],
+                        $caption,
+                        null, // parse_mode
+                        !empty($keyboard) ? json_encode($keyboard) : null
+                    );
                 } else {
-                    $telegram_api->sendMessage($chat_id_from_telegram, "Anda tidak memiliki akses ke konten ini atau konten tidak ditemukan.");
+                    // Fallback for unsupported types
+                    $telegram_api->sendMessage($chat_id_from_telegram, $caption, null, !empty($keyboard) ? json_encode($keyboard) : null);
                 }
             }
         } elseif (strpos($text, '/balance') === 0) {
