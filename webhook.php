@@ -191,19 +191,6 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
             $update_handled = true;
         } else {
             switch ($current_user['state']) {
-                case 'awaiting_media':
-                    if (strpos($text, '/done') === 0) {
-                        if (isset($state_context['package_id'])) {
-                            $package_id = $state_context['package_id'];
-                            setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_description', ['package_id' => $package_id]);
-                            $telegram_api->sendMessage($chat_id_from_telegram, "✅ Selesai mengunggah media. Sekarang, tulis deskripsi singkat untuk paket media ini.");
-                        } else {
-                            $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Terjadi kesalahan. Anda harus mengirim media terlebih dahulu. Mulai lagi dengan /sell.");
-                            setUserState($pdo, $internal_user_id, $internal_bot_id, null, null);
-                        }
-                        $update_handled = true;
-                    }
-                    break;
                 case 'awaiting_price':
                     if (is_numeric($text) && $text >= 0) {
                         $price = (float)$text;
@@ -214,13 +201,6 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
                     } else {
                         $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Harga tidak valid. Harap masukkan angka saja (contoh: 50000).");
                     }
-                    $update_handled = true;
-                    break;
-                case 'awaiting_description':
-                    $package_id = $state_context['package_id'];
-                    $pdo->prepare("UPDATE media_packages SET description = ? WHERE id = ? AND seller_user_id = ?")->execute([$text, $package_id, $internal_user_id]);
-                    setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_price', ['package_id' => $package_id]);
-                    $telegram_api->sendMessage($chat_id_from_telegram, "📝 Deskripsi disimpan. Sekarang, berapa harga untuk paket ini? (Contoh: 50000)");
                     $update_handled = true;
                     break;
             }
@@ -239,21 +219,8 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
             $stmt_media->execute([':file_id' => $media_info['file_id'], ':type' => $media_type, ':file_size' => $media_info['file_size'] ?? null, ':width' => $media_info['width'] ?? null, ':height' => $media_info['height'] ?? null, ':duration' => $media_info['duration'] ?? null, ':mime_type' => $media_info['mime_type'] ?? null, ':file_name' => $media_info['file_name'] ?? null, ':caption' => $update['message']['caption'] ?? null, ':caption_entities' => isset($update['message']['caption_entities']) ? json_encode($update['message']['caption_entities']) : null, ':user_id' => $user_id_from_telegram, ':chat_id' => $chat_id_from_telegram, ':message_id' => $telegram_message_id, ':media_group_id' => $update['message']['media_group_id'] ?? null, ':has_spoiler' => $update['message']['has_media_spoiler'] ?? false]);
             $last_media_insert_id = $pdo->lastInsertId();
 
-            $package_id = null;
-            if ($current_user['state'] === 'awaiting_media') {
-                $state_context = json_decode($current_user['state_context'] ?? '{}', true);
-                $package_id = $state_context['package_id'] ?? null;
-                $telegram_api->sendMessage($chat_id_from_telegram, "📥 Media diterima.");
-            } else {
-                $stmt_package = $pdo->prepare("INSERT INTO media_packages (seller_user_id, bot_id, status) VALUES (?, ?, 'pending')");
-                $stmt_package->execute([$internal_user_id, $internal_bot_id]);
-                $package_id = $pdo->lastInsertId();
-                setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_media', ['package_id' => $package_id]);
-                $telegram_api->sendMessage($chat_id_from_telegram, "📥 Media pertama diterima. Kirim lebih banyak file jika bagian dari satu paket, atau kirim /done jika selesai.");
-            }
-            if ($package_id) {
-                $pdo->prepare("UPDATE media_files SET package_id = ? WHERE id = ?")->execute([$package_id, $last_media_insert_id]);
-            }
+            // In the new flow, we just save the media. Package creation is handled by the /sell command.
+            // No further action is needed here.
         }
         $update_handled = true;
     }
@@ -349,8 +316,61 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
                 $telegram_api->sendMessage($chat_id_from_telegram, "Selamat datang di bot marketplace! Gunakan /sell untuk mulai menjual media.");
             }
         } elseif (strpos($text, '/sell') === 0) {
-            setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_media', null);
-            $telegram_api->sendMessage($chat_id_from_telegram, "Silakan kirim file media (foto/video) yang ingin Anda jual. Jika lebih dari satu, kirim sebagai album. Kirim /done jika sudah selesai.");
+            if (!isset($message_context['reply_to_message'])) {
+                $telegram_api->sendMessage($chat_id_from_telegram, "Untuk menjual, silakan reply media yang ingin Anda jual dengan perintah /sell.");
+            } else {
+                $replied_message = $message_context['reply_to_message'];
+                $replied_message_id = $replied_message['message_id'];
+                $replied_chat_id = $replied_message['chat']['id'];
+                $description = $replied_message['caption'] ?? '';
+                $media_group_id = $replied_message['media_group_id'] ?? null;
+
+                $media_file_ids = [];
+
+                if ($media_group_id) {
+                    // Handle media group
+                    $stmt_media = $pdo->prepare("SELECT id FROM media_files WHERE media_group_id = ? AND chat_id = ?");
+                    $stmt_media->execute([$media_group_id, $replied_chat_id]);
+                    $media_file_ids = $stmt_media->fetchAll(PDO::FETCH_COLUMN);
+                } else {
+                    // Handle single media
+                    $media_keys = ['photo', 'video', 'audio', 'voice', 'document', 'animation', 'video_note'];
+                    $is_replied_media = false;
+                    foreach ($media_keys as $key) {
+                        if (isset($replied_message[$key])) {
+                            $is_replied_media = true;
+                            break;
+                        }
+                    }
+
+                    if ($is_replied_media) {
+                        $stmt_media = $pdo->prepare("SELECT id FROM media_files WHERE message_id = ? AND chat_id = ?");
+                        $stmt_media->execute([$replied_message_id, $replied_chat_id]);
+                        $media_file_id = $stmt_media->fetchColumn();
+                        if ($media_file_id) {
+                            $media_file_ids[] = $media_file_id;
+                        }
+                    }
+                }
+
+                if (empty($media_file_ids)) {
+                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.");
+                } else {
+                    // Create a new package
+                    $stmt_package = $pdo->prepare("INSERT INTO media_packages (seller_user_id, bot_id, description, status) VALUES (?, ?, ?, 'pending')");
+                    $stmt_package->execute([$internal_user_id, $internal_bot_id, $description]);
+                    $package_id = $pdo->lastInsertId();
+
+                    // Link media files to the package
+                    $stmt_link = $pdo->prepare("UPDATE media_files SET package_id = ? WHERE id = ?");
+                    foreach ($media_file_ids as $media_id) {
+                        $stmt_link->execute([$package_id, $media_id]);
+                    }
+
+                    setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_price', ['package_id' => $package_id]);
+                    $telegram_api->sendMessage($chat_id_from_telegram, "✅ Media telah disiapkan untuk dijual dengan deskripsi:\n\n*\"{$description}\"*\n\nSekarang, silakan masukkan harga untuk paket ini (contoh: 50000).", 'Markdown');
+                }
+            }
         } elseif (strpos($text, '/balance') === 0) {
             $balance = "Rp " . number_format($current_user['balance'], 2, ',', '.');
             $telegram_api->sendMessage($chat_id_from_telegram, "Saldo Anda saat ini: {$balance}");
