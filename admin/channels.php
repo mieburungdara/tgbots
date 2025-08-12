@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         } else {
             $_SESSION['message'] = "Data channel tidak valid.";
         }
-        header("Location: settings.php");
+        header("Location: channels.php");
         exit;
     }
 
@@ -41,60 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $_SESSION['message'] = "Gagal menghapus channel.";
             }
         }
-        header("Location: settings.php");
-        exit;
-    }
-
-    if ($action === 'run_migrations') {
-        ensure_migrations_table_exists($pdo);
-
-    // 2. Dapatkan migrasi yang sudah dieksekusi
-    $executed_migrations = $pdo->query("SELECT migration_file FROM migrations")->fetchAll(PDO::FETCH_COLUMN);
-
-    // 3. Pindai direktori migrasi
-    $migration_files_path = __DIR__ . '/../migrations/';
-    $all_migration_files = glob($migration_files_path . '*.sql');
-
-    $migrations_to_run = [];
-    foreach ($all_migration_files as $file_path) {
-        $file_name = basename($file_path);
-        if (!in_array($file_name, $executed_migrations)) {
-            $migrations_to_run[] = $file_name;
-        }
-    }
-
-    sort($migrations_to_run); // Pastikan urutan eksekusi benar
-
-    $results = [];
-    $error = false;
-
-    if (empty($migrations_to_run)) {
-        $_SESSION['message'] = "Database sudah paling baru. Tidak ada migrasi yang perlu dijalankan.";
-    } else {
-        foreach ($migrations_to_run as $migration_file) {
-            try {
-                $sql = file_get_contents($migration_files_path . $migration_file);
-                $pdo->exec($sql);
-
-                // Catat migrasi yang berhasil
-                $stmt = $pdo->prepare("INSERT INTO migrations (migration_file) VALUES (?)");
-                $stmt->execute([$migration_file]);
-
-                $results[] = "OK: " . $migration_file;
-            } catch (Exception $e) {
-                $results[] = "ERROR: " . $migration_file . " - " . $e->getMessage();
-                $error = true;
-                break; // Hentikan jika ada error
-            }
-        }
-
-        if ($error) {
-            $_SESSION['message'] = "Terjadi error saat migrasi:\n" . implode("\n", $results);
-        } else {
-            $_SESSION['message'] = "Migrasi berhasil dijalankan:\n" . implode("\n", $results);
-        }
-    }
-        header("Location: settings.php");
+        header("Location: channels.php");
         exit;
     }
 }
@@ -113,7 +60,7 @@ $private_channels = $channelRepo->getAllChannels();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengaturan - Admin Panel</title>
+    <title>Pengaturan Channel - Admin Panel</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f6f8; color: #333; }
         .container { max-width: 800px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -146,11 +93,12 @@ $private_channels = $channelRepo->getAllChannels();
             <a href="users.php">Pengguna</a> |
             <a href="roles.php">Manajemen Peran</a> |
             <a href="media_logs.php">Log Media</a> |
-            <a href="settings.php" class="active">Pengaturan</a> |
+            <a href="channels.php" class="active">Channel</a> |
+            <a href="database.php">Database</a> |
             <a href="logs.php">Logs</a>
         </nav>
 
-        <h1>Pengaturan Aplikasi</h1>
+        <h1>Kelola Channel Penyimpanan</h1>
 
         <?php if ($message): ?>
             <div class="alert alert-info">
@@ -158,16 +106,13 @@ $private_channels = $channelRepo->getAllChannels();
             </div>
         <?php endif; ?>
 
-        <hr>
-
-        <h2>Kelola Channel Penyimpanan</h2>
         <p class="description">
             Tambahkan atau hapus channel pribadi yang akan digunakan bot untuk menyimpan file media.
             Bot akan mendistribusikan file ke channel-channel ini secara bergantian (round-robin) untuk setiap bot.
         </p>
 
-        <h3>Tambah Channel Baru</h3>
-        <form action="settings.php" method="post" class="mb-20">
+        <h2>Tambah Channel Baru</h2>
+        <form action="channels.php" method="post" class="mb-20">
             <input type="hidden" name="action" value="add_channel">
             <div class="form-group">
                 <label for="name">Nama Channel (untuk referensi)</label>
@@ -180,7 +125,7 @@ $private_channels = $channelRepo->getAllChannels();
             <button type="submit" class="btn">Tambah Channel</button>
         </form>
 
-        <h3>Daftar Channel Tersimpan</h3>
+        <h2>Daftar Channel Tersimpan</h2>
         <table>
             <thead>
                 <tr>
@@ -200,7 +145,7 @@ $private_channels = $channelRepo->getAllChannels();
                             <td><?php echo htmlspecialchars($channel['name']); ?></td>
                             <td><?php echo htmlspecialchars($channel['channel_id']); ?></td>
                             <td>
-                                <form action="settings.php" method="post" onsubmit="return confirm('Yakin ingin menghapus channel ini?');">
+                                <form action="channels.php" method="post" onsubmit="return confirm('Yakin ingin menghapus channel ini?');">
                                     <input type="hidden" name="action" value="delete_channel">
                                     <input type="hidden" name="id" value="<?php echo $channel['id']; ?>">
                                     <button type="submit" class="btn btn-danger">Hapus</button>
@@ -211,21 +156,6 @@ $private_channels = $channelRepo->getAllChannels();
                 <?php endif; ?>
             </tbody>
         </table>
-
-        <div class="mt-20">
-            <hr>
-        </div>
-
-        <h2 class="mt-20">Database</h2>
-        <p class="description">
-            Gunakan tombol di bawah ini untuk menjalankan pembaruan skema database.
-            Sistem akan secara otomatis menerapkan file migrasi baru dari direktori <code>/migrations</code>
-            tanpa menghapus data yang ada di tabel yang tidak terpengaruh.
-        </p>
-        <form action="settings.php" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menjalankan migrasi database? Proses ini tidak dapat diurungkan.');">
-            <input type="hidden" name="action" value="run_migrations">
-            <button type="submit" class="btn">Jalankan Migrasi Database</button>
-        </form>
     </div>
 </body>
 </html>

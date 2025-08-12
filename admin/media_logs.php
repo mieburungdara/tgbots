@@ -88,7 +88,8 @@ foreach ($media_logs_flat as $log) {
             <a href="users.php">Pengguna</a> |
             <a href="roles.php">Manajemen Peran</a> |
             <a href="media_logs.php" class="active">Log Media</a> |
-            <a href="settings.php">Pengaturan</a> |
+            <a href="channels.php">Channel</a> |
+            <a href="database.php">Database</a> |
             <a href="logs.php">Logs</a>
         </nav>
 
