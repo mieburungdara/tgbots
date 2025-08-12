@@ -78,6 +78,25 @@ class TelegramAPI {
         return $this->apiRequest('sendMediaGroup', $data);
     }
 
+    /**
+     * Menjawab callback query (misalnya, dari tombol inline).
+     *
+     * @param string $callback_query_id ID dari callback query.
+     * @param string|null $text Teks notifikasi yang akan ditampilkan.
+     * @param bool $show_alert Jika true, notifikasi akan ditampilkan sebagai dialog alert.
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function answerCallbackQuery($callback_query_id, $text = null, $show_alert = false) {
+        $data = [
+            'callback_query_id' => $callback_query_id,
+        ];
+        if ($text) {
+            $data['text'] = $text;
+        }
+        $data['show_alert'] = $show_alert;
+        return $this->apiRequest('answerCallbackQuery', $data);
+    }
+
     // --- Metode untuk mengirim berbagai jenis media ---
 
     public function sendPhoto($chat_id, $photo, $caption = null, $parse_mode = null, $reply_markup = null) {
