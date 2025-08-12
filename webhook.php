@@ -238,9 +238,16 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
             $package = $stmt_pkg->fetch();
 
             if ($package && $current_user['balance'] >= $package['price']) {
+                // Transfer balance
                 $pdo->prepare("UPDATE users SET balance = balance - ? WHERE id = ?")->execute([$package['price'], $internal_user_id]);
                 $pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?")->execute([$package['price'], $package['seller_user_id']]);
+
+                // Mark package as sold
                 $pdo->prepare("UPDATE media_packages SET status = 'sold' WHERE id = ?")->execute([$package_id]);
+
+                // Record the sale in the new sales table
+                $stmt_sale = $pdo->prepare("INSERT INTO sales (package_id, seller_user_id, buyer_user_id, price) VALUES (?, ?, ?, ?)");
+                $stmt_sale->execute([$package_id, $package['seller_user_id'], $internal_user_id, $package['price']]);
 
                 $stmt_files = $pdo->prepare("SELECT file_id, type FROM media_files WHERE package_id = ? ORDER BY id");
                 $stmt_files->execute([$package_id]);
@@ -369,6 +376,54 @@ $message_date = date('Y-m-d H:i:s', $timestamp);
 
                     setUserState($pdo, $internal_user_id, $internal_bot_id, 'awaiting_price', ['package_id' => $package_id]);
                     $telegram_api->sendMessage($chat_id_from_telegram, "✅ Media telah disiapkan untuk dijual dengan deskripsi:\n\n*\"{$description}\"*\n\nSekarang, silakan masukkan harga untuk paket ini (contoh: 50000).", 'Markdown');
+                }
+            }
+        } elseif (strpos($text, '/konten') === 0) {
+            $parts = explode(' ', $text);
+            if (count($parts) !== 2 || !is_numeric($parts[1])) {
+                $telegram_api->sendMessage($chat_id_from_telegram, "Format perintah salah. Gunakan: /konten <ID Konten>");
+            } else {
+                $package_id = (int)$parts[1];
+
+                // Check if user has access (is seller or buyer)
+                $stmt_pkg = $pdo->prepare("SELECT seller_user_id FROM media_packages WHERE id = ?");
+                $stmt_pkg->execute([$package_id]);
+                $package = $stmt_pkg->fetch();
+
+                $has_access = false;
+                if ($package) {
+                    // Check if current user is the seller
+                    if ($package['seller_user_id'] == $internal_user_id) {
+                        $has_access = true;
+                    } else {
+                        // Check if current user is a buyer
+                        $stmt_sale = $pdo->prepare("SELECT id FROM sales WHERE package_id = ? AND buyer_user_id = ?");
+                        $stmt_sale->execute([$package_id, $internal_user_id]);
+                        if ($stmt_sale->fetch()) {
+                            $has_access = true;
+                        }
+                    }
+                }
+
+                if ($has_access) {
+                    $stmt_files = $pdo->prepare("SELECT file_id, type FROM media_files WHERE package_id = ? ORDER BY id");
+                    $stmt_files->execute([$package_id]);
+                    $files = $stmt_files->fetchAll(PDO::FETCH_ASSOC);
+
+                    if (!empty($files)) {
+                        $media_group = [];
+                        foreach ($files as $file) {
+                            $media_group[] = ['type' => $file['type'], 'media' => $file['file_id']];
+                        }
+                        // Add a caption to the first item of the media group
+                        $media_group[0]['caption'] = "Berikut konten yang Anda minta untuk paket ID #{$package_id}.";
+
+                        $telegram_api->sendMediaGroup($chat_id_from_telegram, json_encode($media_group));
+                    } else {
+                        $telegram_api->sendMessage($chat_id_from_telegram, "Konten untuk paket ini tidak dapat ditemukan.");
+                    }
+                } else {
+                    $telegram_api->sendMessage($chat_id_from_telegram, "Anda tidak memiliki akses ke konten ini atau konten tidak ditemukan.");
                 }
             }
         } elseif (strpos($text, '/balance') === 0) {
