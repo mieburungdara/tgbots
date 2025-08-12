@@ -79,6 +79,48 @@ class TelegramAPI {
     }
 
     /**
+     * Menyalin satu pesan dari satu chat ke chat lain.
+     *
+     * @param int|string $chat_id ID chat tujuan.
+     * @param int|string $from_chat_id ID chat sumber.
+     * @param int $message_id ID pesan yang akan disalin.
+     * @param string|null $caption Caption baru untuk media (opsional).
+     * @param string|null $reply_markup Keyboard inline (opsional).
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function copyMessage($chat_id, $from_chat_id, $message_id, $caption = null, $reply_markup = null) {
+        $data = [
+            'chat_id' => $chat_id,
+            'from_chat_id' => $from_chat_id,
+            'message_id' => $message_id,
+        ];
+        if ($caption !== null) {
+            $data['caption'] = $caption;
+        }
+        if ($reply_markup !== null) {
+            $data['reply_markup'] = $reply_markup;
+        }
+        return $this->apiRequest('copyMessage', $data);
+    }
+
+    /**
+     * Menyalin beberapa pesan dari satu chat ke chat lain.
+     *
+     * @param int|string $chat_id ID chat tujuan.
+     * @param int|string $from_chat_id ID chat sumber.
+     * @param string $message_ids JSON-encoded array dari ID pesan yang akan disalin.
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function copyMessages($chat_id, $from_chat_id, $message_ids) {
+        $data = [
+            'chat_id' => $chat_id,
+            'from_chat_id' => $from_chat_id,
+            'message_ids' => $message_ids,
+        ];
+        return $this->apiRequest('copyMessages', $data);
+    }
+
+    /**
      * Menjawab callback query (misalnya, dari tombol inline).
      *
      * @param string $callback_query_id ID dari callback query.

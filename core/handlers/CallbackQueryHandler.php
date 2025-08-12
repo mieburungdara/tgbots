@@ -54,8 +54,15 @@ class CallbackQueryHandler
 
             $files = $this->package_repo->getPackageFiles($package_id);
             if (!empty($files)) {
-                $media_group = array_map(fn($file) => ['type' => $file['type'], 'media' => $file['file_id']], $files);
-                $this->telegram_api->sendMediaGroup($this->chat_id, json_encode($media_group));
+                $from_chat_id = $files[0]['chat_id'];
+                $message_ids = json_encode(array_column($files, 'message_id'));
+
+                // Kirim media menggunakan copyMessages
+                $this->telegram_api->copyMessages(
+                    $this->chat_id,
+                    $from_chat_id,
+                    $message_ids
+                );
             }
         } else {
             $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Anda tidak memiliki akses ke konten ini.', true);
@@ -78,9 +85,12 @@ class CallbackQueryHandler
                 $files = $this->package_repo->getPackageFiles($package_id);
                 if (!empty($files)) {
                     $full_package_details = $this->package_repo->find($package_id);
-                    $media_group = array_map(fn($file) => ['type' => $file['type'], 'media' => $file['file_id']], $files);
-                    $media_group[0]['caption'] = "Terima kasih telah membeli!\n\n" . ($full_package_details['description'] ?? '');
-                    $this->telegram_api->sendMediaGroup($this->chat_id, json_encode($media_group));
+                    $caption = "Terima kasih telah membeli!\n\n" . ($full_package_details['description'] ?? '');
+                    $this->telegram_api->sendMessage($this->chat_id, $caption);
+
+                    $from_chat_id = $files[0]['chat_id'];
+                    $message_ids = json_encode(array_column($files, 'message_id'));
+                    $this->telegram_api->copyMessages($this->chat_id, $from_chat_id, $message_ids);
                 }
                 $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian berhasil!');
             } else {

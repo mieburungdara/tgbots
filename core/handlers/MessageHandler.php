@@ -173,7 +173,7 @@ class MessageHandler
         $thumbnail = null;
         // Coba dapatkan thumbnail yang spesifik terlebih dahulu
         if (!empty($package['thumbnail_media_id'])) {
-            $stmt_thumb = $this->pdo->prepare("SELECT file_id, type FROM media_files WHERE id = ?");
+            $stmt_thumb = $this->pdo->prepare("SELECT file_id, type, chat_id, message_id FROM media_files WHERE id = ?");
             $stmt_thumb->execute([$package['thumbnail_media_id']]);
             $thumbnail = $stmt_thumb->fetch(PDO::FETCH_ASSOC);
         }
@@ -206,12 +206,20 @@ class MessageHandler
         }
 
         $caption = $package['description'];
-        $method = 'send' . ucfirst($thumbnail['type']);
+        $reply_markup = !empty($keyboard) ? json_encode($keyboard) : null;
 
-        if (method_exists($this->telegram_api, $method)) {
-            $this->telegram_api->$method($this->chat_id, $thumbnail['file_id'], $caption, null, !empty($keyboard) ? json_encode($keyboard) : null);
+        // Gunakan copyMessage untuk mengirim pratinjau
+        if (isset($thumbnail['chat_id']) && isset($thumbnail['message_id'])) {
+            $this->telegram_api->copyMessage(
+                $this->chat_id,
+                $thumbnail['chat_id'],
+                $thumbnail['message_id'],
+                $caption,
+                $reply_markup
+            );
         } else {
-            $this->telegram_api->sendMessage($this->chat_id, $caption, null, !empty($keyboard) ? json_encode($keyboard) : null);
+            // Fallback jika karena alasan tertentu chat_id atau message_id tidak ada
+            $this->telegram_api->sendMessage($this->chat_id, $caption, null, $reply_markup);
         }
     }
 
