@@ -190,15 +190,18 @@ class MessageHandler
             return;
         }
 
-        $has_access = ($package['seller_user_id'] == $internal_user_id) ||
-                      (new SaleRepository($this->pdo))->hasUserPurchased($package_id, $internal_user_id);
+        $is_admin = ($this->current_user['role'] === 'admin');
+        $is_seller = ($package['seller_user_id'] == $internal_user_id);
+        $has_purchased = (new SaleRepository($this->pdo))->hasUserPurchased($package_id, $internal_user_id);
+
+        $has_access = $is_admin || $is_seller || $has_purchased;
 
         $keyboard = [];
         if ($has_access) {
             $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_full_{$package_id}"]]]];
         } elseif ($package['status'] === 'available') {
             $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
-            $keyboard = ['inline_keyboard' => [[['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package_id}"]]]];
+            $keyboard = ['inline_keyboard' => [[['text' => "Beli Konten Ini ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package_id}"]]]];
         }
 
         $caption = $package['description'];
