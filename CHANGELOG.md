@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.6.0] - 2025-08-12
+
+### Diubah
+- **Metode Pengiriman Media**: Sistem pengiriman media telah diubah sepenuhnya dari penggunaan `file_id` menjadi metode `copyMessage` dan `copyMessages`.
+  - **Pengiriman Tunggal**: Pratinjau konten yang dikirim melalui perintah `/konten` sekarang menggunakan `copyMessage`.
+  - **Pengiriman Massal**: Pengiriman konten lengkap setelah pembelian atau melalui tombol "Lihat Selengkapnya" sekarang menggunakan `copyMessages` untuk mengirim file sebagai batch.
+- **Keuntungan**: Perubahan ini meningkatkan keandalan pengiriman media, karena `file_id` dapat menjadi tidak valid dari waktu ke waktu, sementara `copyMessage` memastikan media selalu dapat diakses selama ada di channel sumber.
+
 ## [2.5.0] - 2025-08-11
 
 ### Peningkatan
