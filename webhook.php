@@ -1,280 +1,154 @@
 <?php
 
-// Sertakan file-file yang diperlukan
+// Sertakan file-file inti
 require_once __DIR__ . '/core/database.php';
 require_once __DIR__ . '/core/TelegramAPI.php';
 require_once __DIR__ . '/core/helpers.php';
-
-// Seluruh logika webhook dibungkus dalam blok try-catch untuk menangani semua kemungkinan error.
-try {
-
-// --- 1. Validasi ID Bot Telegram dari URL ---
-if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
-    http_response_code(400); // Bad Request
-    app_log("Webhook Error: ID bot dari URL tidak valid atau tidak ada.", 'bot');
-    echo "Error: ID bot tidak valid.";
-    exit;
-}
-$telegram_bot_id = $_GET['id'];
-
-// --- 2. Dapatkan koneksi database dan token bot ---
-$pdo = get_db_connection();
-if (!$pdo) {
-    http_response_code(500); // Internal Server Error
-    // Pesan ini sudah dicatat di dalam get_db_connection()
-    exit;
-}
-
-// Cari bot berdasarkan ID bot dari token, bukan ID internal
-$stmt = $pdo->prepare("SELECT id, token FROM bots WHERE token LIKE ?");
-$stmt->execute(["{$telegram_bot_id}:%"]);
-$bot = $stmt->fetch();
-
-if (!$bot) {
-    http_response_code(404); // Not Found
-    app_log("Webhook Error: Bot dengan ID Telegram {$telegram_bot_id} tidak ditemukan.", 'bot');
-    echo "Error: Bot tidak ditemukan.";
-    exit;
-}
-$bot_token = $bot['token'];
-$internal_bot_id = $bot['id']; // ID internal untuk foreign key
-
-// Ambil pengaturan untuk bot ini
-$stmt_settings = $pdo->prepare("SELECT setting_key, setting_value FROM bot_settings WHERE bot_id = ?");
-$stmt_settings->execute([$internal_bot_id]);
-$bot_settings_raw = $stmt_settings->fetchAll(PDO::FETCH_KEY_PAIR);
-
-// Tetapkan pengaturan default jika tidak ada di database
-$settings = [
-    'save_text_messages'    => $bot_settings_raw['save_text_messages'] ?? '1',
-    'save_media_messages'   => $bot_settings_raw['save_media_messages'] ?? '1',
-    'save_callback_queries' => $bot_settings_raw['save_callback_queries'] ?? '0',
-    'save_edited_messages'  => $bot_settings_raw['save_edited_messages'] ?? '0',
-];
-
-// --- 3. Baca dan proses input dari Telegram ---
-$update_json = file_get_contents('php://input');
-$update = json_decode($update_json, true);
-
-if (!$update) {
-    exit; // Keluar jika tidak ada update
-}
-
+require_once __DIR__ . '/core/database/BotRepository.php';
+require_once __DIR__ . '/core/database/UserRepository.php';
 require_once __DIR__ . '/core/handlers/UpdateHandler.php';
 
-// --- 4. Tentukan Jenis Update & Periksa Pengaturan ---
-$update_handler = new UpdateHandler($settings);
-$update_type = $update_handler->getUpdateType($update);
-
-// Jika jenis update tidak didukung atau dinonaktifkan oleh admin, keluar.
-if ($update_type === null) {
-    http_response_code(200); // Balas OK ke Telegram tapi tidak melakukan apa-apa
-    exit;
-}
-
-// Dapatkan konteks pesan (message, edited_message, atau callback_query.message)
-$message_context = UpdateHandler::getMessageContext($update);
-
-// --- 5. Validasi dan Ekstrak Data Penting ---
-// Lakukan validasi untuk memastikan struktur dasar ada sebelum diekstrak
-if (!isset($message_context['from']['id']) || !isset($message_context['chat']['id'])) {
-    app_log("Update '{$update_type}' tidak memiliki 'from' atau 'chat' id, diabaikan.", 'bot');
-    http_response_code(200);
-    exit;
-}
-
-$chat_id_from_telegram = $message_context['chat']['id'];
-app_log("Update '{$update_type}' diterima dari chat_id: {$chat_id_from_telegram}", 'bot');
-
-// Variabel $is_media diperlukan oleh logika di bawahnya.
-$is_media = false;
-if (isset($update['message'])) {
-    $media_keys = ['photo', 'video', 'audio', 'voice', 'document', 'animation', 'video_note'];
-    foreach ($media_keys as $key) {
-        if (isset($update['message'][$key])) {
-            $is_media = true;
-            break;
-        }
+// Bungkus semua dalam try-catch untuk penanganan error terpusat
+try {
+    // 1. Validasi ID Bot dari URL
+    if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
+        http_response_code(400);
+        app_log("Webhook Error: ID bot dari URL tidak valid atau tidak ada.", 'bot');
+        exit;
     }
-}
+    $telegram_bot_id = (int)$_GET['id'];
 
-// Ekstrak data penting dari konteks pesan dengan aman
-$telegram_message_id = $message_context['message_id'] ?? 0;
-$user_id_from_telegram = $message_context['from']['id'];
-$first_name = $message_context['from']['first_name'] ?? '';
-$username = $message_context['from']['username'] ?? null;
-$text_content = $message_context['text'] ?? ($message_context['caption'] ?? '');
-$timestamp = $message_context['date'] ?? time();
-$message_date = date('Y-m-d H:i:s', $timestamp);
-
-
-    // --- Mulai Transaksi Database ---
-    $pdo->beginTransaction();
-
-    // --- Cari atau buat pengguna, dapatkan data lengkap termasuk state dan saldo ---
-    $stmt_user = $pdo->prepare(
-        "SELECT u.id, u.telegram_id, u.role, u.balance, r.state, r.state_context
-         FROM users u
-         LEFT JOIN rel_user_bot r ON u.id = r.user_id AND r.bot_id = ?
-         WHERE u.telegram_id = ?"
-    );
-    $stmt_user->execute([$internal_bot_id, $user_id_from_telegram]);
-    $current_user = $stmt_user->fetch();
-
-    if ($current_user) {
-        $internal_user_id = $current_user['id'];
-    } else {
-        $initial_role = (defined('SUPER_ADMIN_TELEGRAM_ID') && (string)$user_id_from_telegram === (string)SUPER_ADMIN_TELEGRAM_ID) ? 'admin' : 'user';
-        $stmt_insert = $pdo->prepare("INSERT INTO users (telegram_id, first_name, username, role) VALUES (?, ?, ?, ?)");
-        $stmt_insert->execute([$user_id_from_telegram, $first_name, $username, $initial_role]);
-        $internal_user_id = $pdo->lastInsertId();
-        $stmt_user->execute([$internal_bot_id, $user_id_from_telegram]);
-        $current_user = $stmt_user->fetch();
-        app_log("Pengguna baru dibuat: telegram_id: {$user_id_from_telegram}, user: {$first_name}, peran: {$initial_role}", 'bot');
+    // 2. Koneksi DB dan Inisialisasi Repository
+    $pdo = get_db_connection();
+    if (!$pdo) {
+        http_response_code(500);
+        exit;
     }
 
-    if ($current_user) {
-        if (defined('SUPER_ADMIN_TELEGRAM_ID') && !empty(SUPER_ADMIN_TELEGRAM_ID) && (string)$user_id_from_telegram === (string)SUPER_ADMIN_TELEGRAM_ID) {
-            if ($current_user['role'] !== 'admin') {
-                $pdo->prepare("UPDATE users SET role = 'admin' WHERE id = ?")->execute([$internal_user_id]);
-                $current_user['role'] = 'admin';
-                app_log("Peran admin diberikan kepada super admin: {$user_id_from_telegram}", 'bot');
+    $bot_repo = new BotRepository($pdo);
+    $bot = $bot_repo->findBotByTelegramId($telegram_bot_id);
+
+    if (!$bot) {
+        http_response_code(404);
+        app_log("Webhook Error: Bot dengan ID Telegram {$telegram_bot_id} tidak ditemukan.", 'bot');
+        exit;
+    }
+    $bot_token = $bot['token'];
+    $internal_bot_id = (int)$bot['id'];
+    $settings = $bot_repo->getBotSettings($internal_bot_id);
+
+    // 3. Baca dan Proses Input dari Telegram
+    $update_json = file_get_contents('php://input');
+    $update = json_decode($update_json, true);
+    if (!$update) {
+        exit;
+    }
+
+    // 4. Routing dan Validasi Update
+    $update_handler = new UpdateHandler($settings);
+    $update_type = $update_handler->getUpdateType($update);
+    if ($update_type === null) {
+        http_response_code(200); // Abaikan update yang tidak didukung atau dinonaktifkan
+        exit;
+    }
+
+    $message_context = UpdateHandler::getMessageContext($update);
+    if (!isset($message_context['from']['id']) || !isset($message_context['chat']['id'])) {
+        http_response_code(200); // Abaikan update tanpa konteks user/chat
+        exit;
+    }
+
+    // 5. Ekstrak Data Penting
+    $chat_id_from_telegram = $message_context['chat']['id'];
+    $user_id_from_telegram = $message_context['from']['id'];
+    $first_name = $message_context['from']['first_name'] ?? '';
+    $username = $message_context['from']['username'] ?? null;
+    $telegram_message_id = $message_context['message_id'] ?? 0;
+    $text_content = $message_context['text'] ?? ($message_context['caption'] ?? '');
+    $timestamp = $message_context['date'] ?? time();
+    $message_date = date('Y-m-d H:i:s', $timestamp);
+
+    $is_media = false;
+    if (isset($update['message'])) {
+        $media_keys = ['photo', 'video', 'audio', 'voice', 'document', 'animation', 'video_note'];
+        foreach ($media_keys as $key) {
+            if (isset($update['message'][$key])) {
+                $is_media = true;
+                break;
             }
         }
-        $stmt_rel_check = $pdo->prepare("SELECT state FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
-        $stmt_rel_check->execute([$internal_user_id, $internal_bot_id]);
-        if ($stmt_rel_check->fetch() === false) {
-             $pdo->prepare("INSERT INTO rel_user_bot (user_id, bot_id) VALUES (?, ?)")->execute([$internal_user_id, $internal_bot_id]);
-             $stmt_user->execute([$internal_bot_id, $user_id_from_telegram]);
-             $current_user = $stmt_user->fetch();
-        }
-        $stmt_member = $pdo->prepare("SELECT id FROM members WHERE user_id = ?");
-        $stmt_member->execute([$internal_user_id]);
-        if (!$stmt_member->fetch()) {
-            $pdo->prepare("INSERT INTO members (user_id) VALUES (?)")->execute([$internal_user_id]);
-        }
     }
 
-    // Simpan pesan ke tabel 'messages'
+    // --- Mulai Transaksi dan Logika Utama ---
+    $pdo->beginTransaction();
+
+    // 6. Dapatkan atau Buat User
+    $user_repo = new UserRepository($pdo, $internal_bot_id);
+    $current_user = $user_repo->findOrCreateUser($user_id_from_telegram, $first_name, $username);
+    if (!$current_user) {
+        app_log("Gagal menemukan atau membuat pengguna untuk telegram_id: {$user_id_from_telegram}", 'error');
+        $pdo->rollBack();
+        http_response_code(500);
+        exit;
+    }
+    $internal_user_id = $current_user['id'];
+
+    // 7. Simpan Pesan (jika diaktifkan)
     $pdo->prepare("INSERT INTO messages (user_id, bot_id, telegram_message_id, text, raw_data, direction, telegram_timestamp) VALUES (?, ?, ?, ?, ?, 'incoming', ?)")
         ->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $text_content, $update_json, $message_date]);
 
-    // ===============================================================
-    // =========== BLOK LOGIKA APLIKASI MARKETPLACE DIMULAI ==========
-    // ===============================================================
+    // 8. Inisialisasi API dan delegasikan ke Handler yang Tepat
     $telegram_api = new TelegramAPI($bot_token);
-
-    function setUserState($pdo, $user_id, $bot_id, $state, $context = null) {
-        $stmt = $pdo->prepare("UPDATE rel_user_bot SET state = ?, state_context = ? WHERE user_id = ? AND bot_id = ?");
-        $stmt->execute([$state, $context ? json_encode($context) : null, $user_id, $bot_id]);
-    }
-
     $update_handled = false;
 
-    // 1. HANDLE STATE-BASED CONVERSATION
+    // Logika State-based (harus dijalankan sebelum command handler)
     if ($current_user['state'] !== null && $update_type === 'message' && isset($message_context['text'])) {
         $text = $message_context['text'];
         $state_context = json_decode($current_user['state_context'] ?? '{}', true);
-
         if (strpos($text, '/cancel') === 0) {
-            setUserState($pdo, $internal_user_id, $internal_bot_id, null, null);
+            $user_repo->setUserState($internal_user_id, null, null);
             $telegram_api->sendMessage($chat_id_from_telegram, "Operasi dibatalkan.");
             $update_handled = true;
         } else {
-            switch ($current_user['state']) {
-                case 'awaiting_price':
-                    if (is_numeric($text) && $text >= 0) {
-                        $price = (float)$text;
-                        $package_id = $state_context['package_id'];
-                        $pdo->prepare("UPDATE media_packages SET price = ?, status = 'available' WHERE id = ? AND seller_user_id = ?")->execute([$price, $package_id, $internal_user_id]);
-                        setUserState($pdo, $internal_user_id, $internal_bot_id, null, null);
-                        $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan. Paket media Anda dengan ID #{$package_id} sekarang tersedia untuk dijual.");
-                    } else {
-                        $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Harga tidak valid. Harap masukkan angka saja (contoh: 50000).");
-                    }
-                    $update_handled = true;
-                    break;
-            }
-        }
-    }
-
-    // 2. HANDLE MEDIA SUBMISSION
-    if (!$update_handled && $is_media && isset($update['message'])) {
-        require_once __DIR__ . '/core/handlers/MediaHandler.php';
-        $media_handler = new MediaHandler($pdo, $update['message'], $user_id_from_telegram, $chat_id_from_telegram, $telegram_message_id);
-        $media_handler->handle();
-        $update_handled = true;
-    }
-
-    // 3. HANDLE CALLBACK QUERIES
-    if (!$update_handled && $update_type === 'callback_query') {
-        require_once __DIR__ . '/core/handlers/CallbackQueryHandler.php';
-        $callback_handler = new CallbackQueryHandler($pdo, $telegram_api, $current_user, $chat_id_from_telegram, $update['callback_query']);
-        $callback_handler->handle();
-        $update_handled = true;
-    }
-
-    // 4. HANDLE TEXT MESSAGES (COMMANDS) & STATE-BASED CONVERSATIONS
-    if (!$update_handled && $update_type === 'message' && isset($message_context['text'])) {
-        $text = $message_context['text'];
-
-        // Handle state-based conversation first
-        if ($current_user['state'] !== null) {
-            $state_context = json_decode($current_user['state_context'] ?? '{}', true);
-            if (strpos($text, '/cancel') === 0) {
+            // ... (logika state-based lainnya seperti 'awaiting_price')
+            if ($current_user['state'] == 'awaiting_price' && is_numeric($text) && $text >= 0) {
+                $price = (float)$text;
+                $package_id = $state_context['package_id'];
+                $pdo->prepare("UPDATE media_packages SET price = ?, status = 'available' WHERE id = ? AND seller_user_id = ?")->execute([$price, $package_id, $internal_user_id]);
                 $user_repo->setUserState($internal_user_id, null, null);
-                $telegram_api->sendMessage($chat_id_from_telegram, "Operasi dibatalkan.");
+                $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan. Paket media Anda dengan ID #{$package_id} sekarang tersedia untuk dijual.");
                 $update_handled = true;
-            } else {
-                switch ($current_user['state']) {
-                    case 'awaiting_price':
-                        if (is_numeric($text) && $text >= 0) {
-                            $price = (float)$text;
-                            $package_id = $state_context['package_id'];
-                            $pdo->prepare("UPDATE media_packages SET price = ?, status = 'available' WHERE id = ? AND seller_user_id = ?")->execute([$price, $package_id, $internal_user_id]);
-                            $user_repo->setUserState($internal_user_id, null, null);
-                            $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan. Paket media Anda dengan ID #{$package_id} sekarang tersedia untuk dijual.");
-                        } else {
-                            $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Harga tidak valid. Harap masukkan angka saja (contoh: 50000).");
-                        }
-                        $update_handled = true;
-                        break;
-                }
+            } elseif ($current_user['state'] == 'awaiting_price') {
+                 $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Harga tidak valid. Harap masukkan angka saja (contoh: 50000).");
+                 $update_handled = true;
             }
         }
+    }
 
-        // If not handled by a state, treat as a command
-        if (!$update_handled) {
-            require_once __DIR__ . '/core/handlers/MessageHandler.php';
-            $message_handler = new MessageHandler($pdo, $telegram_api, $user_repo, $current_user, $chat_id_from_telegram, $message_context);
-            $message_handler->handle();
-            $update_handled = true;
-        }
+    if ($update_handled) {
+        // Jika sudah ditangani oleh state machine, jangan proses lebih lanjut
+    } elseif ($is_media && $update_type === 'message') {
+        require_once __DIR__ . '/core/handlers/MediaHandler.php';
+        $handler = new MediaHandler($pdo, $update['message'], $user_id_from_telegram, $chat_id_from_telegram, $telegram_message_id);
+        $handler->handle();
+    } elseif ($update_type === 'callback_query') {
+        require_once __DIR__ . '/core/handlers/CallbackQueryHandler.php';
+        $handler = new CallbackQueryHandler($pdo, $telegram_api, $current_user, $chat_id_from_telegram, $update['callback_query']);
+        $handler->handle();
+    } elseif ($update_type === 'message') {
+        require_once __DIR__ . '/core/handlers/MessageHandler.php';
+        $handler = new MessageHandler($pdo, $telegram_api, $user_repo, $current_user, $chat_id_from_telegram, $message_context);
+        $handler->handle();
     }
 
     $pdo->commit();
-
-    // Beri respons OK ke Telegram untuk menandakan update sudah diterima.
     http_response_code(200);
-    echo "OK";
 
 } catch (Throwable $e) {
-    // Jika terjadi error di mana pun, tangkap di sini.
-    // Rollback transaksi jika sedang berjalan.
-    if (isset($pdo) && $pdo instanceof PDO && $pdo->inTransaction()) {
+    if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
-
-    // Catat error fatal ke log.
-    $error_message = sprintf(
-        "Fatal Webhook Error: %s in %s on line %d",
-        $e->getMessage(),
-        $e->getFile(),
-        $e->getLine()
-    );
+    $error_message = sprintf("Fatal Webhook Error: %s in %s on line %d", $e->getMessage(), $e->getFile(), $e->getLine());
     app_log($error_message, 'error');
-
-    // Beri respons 500 ke Telegram.
     http_response_code(500);
-    echo "Internal Server Error";
 }
