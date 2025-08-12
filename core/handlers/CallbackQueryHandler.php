@@ -42,7 +42,7 @@ class CallbackQueryHandler
 
         $package = $this->package_repo->find($package_id);
         if (!$package) {
-            $this->telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => '⚠️ Paket tidak ditemukan.', 'show_alert' => true]);
+            $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Paket tidak ditemukan.', true);
             return;
         }
 
@@ -50,7 +50,7 @@ class CallbackQueryHandler
         $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $internal_user_id);
 
         if ($is_seller || $has_purchased) {
-            $this->telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => '✅ Akses diberikan. Mengirim konten lengkap...']);
+            $this->telegram_api->answerCallbackQuery($callback_query_id, '✅ Akses diberikan. Mengirim konten lengkap...');
 
             $files = $this->package_repo->getPackageFiles($package_id);
             if (!empty($files)) {
@@ -58,7 +58,7 @@ class CallbackQueryHandler
                 $this->telegram_api->sendMediaGroup($this->chat_id, json_encode($media_group));
             }
         } else {
-            $this->telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => '⚠️ Anda tidak memiliki akses ke konten ini.', 'show_alert' => true]);
+            $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Anda tidak memiliki akses ke konten ini.', true);
         }
     }
 
@@ -82,12 +82,12 @@ class CallbackQueryHandler
                     $media_group[0]['caption'] = "Terima kasih telah membeli!\n\n" . ($full_package_details['description'] ?? '');
                     $this->telegram_api->sendMediaGroup($this->chat_id, json_encode($media_group));
                 }
-                $this->telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => 'Pembelian berhasil!']);
+                $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian berhasil!');
             } else {
-                $this->telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => 'Pembelian gagal karena kesalahan internal.', 'show_alert' => true]);
+                $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian gagal karena kesalahan internal.', true);
             }
         } else {
-            $this->telegram_api->apiRequest('answerCallbackQuery', ['callback_query_id' => $callback_query_id, 'text' => 'Pembelian gagal. Saldo tidak cukup atau item tidak tersedia.', 'show_alert' => true]);
+            $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian gagal. Saldo tidak cukup atau item tidak tersedia.', true);
         }
     }
 }

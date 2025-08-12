@@ -132,11 +132,9 @@ try {
         $handler = new MediaHandler($pdo, $update['message'], $user_id_from_telegram, $chat_id_from_telegram, $telegram_message_id);
         $handler->handle();
     } elseif ($update_type === 'callback_query') {
-        app_log("Entering callback_query handler block.", 'bot');
         require_once __DIR__ . '/core/handlers/CallbackQueryHandler.php';
         $handler = new CallbackQueryHandler($pdo, $telegram_api, $current_user, $chat_id_from_telegram, $update['callback_query']);
         $handler->handle();
-        app_log("Exited callback_query handler block.", 'bot');
     } elseif ($update_type === 'message') {
         require_once __DIR__ . '/core/handlers/MessageHandler.php';
         $handler = new MessageHandler($pdo, $telegram_api, $user_repo, $current_user, $chat_id_from_telegram, $message_context);
