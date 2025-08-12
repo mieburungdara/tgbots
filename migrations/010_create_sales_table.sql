@@ -4,9 +4,9 @@
 
 CREATE TABLE `sales` (
   `id` BIGINT AUTO_INCREMENT PRIMARY KEY,
-  `package_id` BIGINT NOT NULL,
-  `seller_user_id` BIGINT NOT NULL,
-  `buyer_user_id` BIGINT NOT NULL,
+  `package_id` BIGINT NOT NULL COMMENT 'Referensi ke media_packages.id',
+  `seller_user_id` INT(11) NOT NULL COMMENT 'Referensi ke users.id (penjual)',
+  `buyer_user_id` INT(11) NOT NULL COMMENT 'Referensi ke users.id (pembeli)',
   `price` DECIMAL(15, 2) NOT NULL,
   `purchased_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY `package_id` (`package_id`),
