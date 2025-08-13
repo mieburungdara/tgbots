@@ -15,7 +15,7 @@ if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
 $telegram_bot_id = $_GET['id'];
 
 // Ambil data bot dari database menggunakan ID bot dari token
-$stmt = $pdo->prepare("SELECT id, name, token, created_at FROM bots WHERE token LIKE ?");
+$stmt = $pdo->prepare("SELECT id, first_name, username, token, created_at FROM bots WHERE token LIKE ?");
 $stmt->execute(["{$telegram_bot_id}:%"]);
 $bot = $stmt->fetch();
 
@@ -47,7 +47,7 @@ unset($_SESSION['status_message']);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Bot: <?= htmlspecialchars($bot['name']) ?> - Admin Panel</title>
+    <title>Edit Bot: <?= htmlspecialchars($bot['first_name']) ?> - Admin Panel</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f6f8; color: #333; }
         .container { max-width: 800px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -73,6 +73,8 @@ unset($_SESSION['status_message']);
         .actions .test-webhook:hover { background-color: #e0a800; }
         .actions .delete-webhook { background-color: #dc3545; }
         .actions .delete-webhook:hover { background-color: #c82333; }
+        .actions .get-me { background-color: #6c757d; }
+        .actions .get-me:hover { background-color: #5a6268; }
         .save-settings { background-color: #28a745; }
         .save-settings:hover { background-color: #218838; }
 
@@ -99,11 +101,12 @@ unset($_SESSION['status_message']);
             <a href="users.php">Pengguna</a> |
             <a href="roles.php">Manajemen Peran</a> |
             <a href="media_logs.php">Log Media</a> |
-            <a href="settings.php">Pengaturan</a> |
+            <a href="channels.php">Channel</a> |
+            <a href="database.php">Database</a> |
             <a href="logs.php">Logs</a>
         </nav>
 
-        <h1>Edit Bot: <?= htmlspecialchars($bot['name']) ?></h1>
+        <h1>Edit Bot: <?= htmlspecialchars($bot['first_name']) ?></h1>
 
         <?php if ($status_message): ?>
             <div class="alert-success"><?= htmlspecialchars($status_message) ?></div>
@@ -112,17 +115,19 @@ unset($_SESSION['status_message']);
         <div class="bot-info">
             <h2>Informasi Bot</h2>
             <p><strong>ID Telegram:</strong> <?= htmlspecialchars($telegram_bot_id) ?></p>
-            <p><strong>Nama:</strong> <?= htmlspecialchars($bot['name']) ?></p>
+            <p><strong>Nama Depan:</strong> <?= htmlspecialchars($bot['first_name']) ?></p>
+            <p><strong>Username:</strong> @<?= htmlspecialchars($bot['username'] ?? 'N/A') ?></p>
             <p><strong>Token:</strong> <code><?= substr(htmlspecialchars($bot['token']), 0, 15) ?>...</code></p>
             <p><strong>Dibuat pada:</strong> <?= htmlspecialchars($bot['created_at']) ?></p>
         </div>
 
         <div class="actions">
-            <h2>Manajemen Webhook</h2>
-            <button class="set-webhook" data-bot-id="<?= $bot['id'] // Gunakan ID internal untuk AJAX ?>">Set Webhook</button>
-            <button class="check-webhook" data-bot-id="<?= $bot['id'] // Gunakan ID internal untuk AJAX ?>">Check Webhook</button>
-            <button class="test-webhook" data-telegram-bot-id="<?= htmlspecialchars($telegram_bot_id) ?>" title="Kirim POST request kosong untuk memeriksa apakah webhook merespons 200 OK">Test Webhook (POST)</button>
-            <button class="delete-webhook" data-bot-id="<?= $bot['id'] // Gunakan ID internal untuk AJAX ?>">Delete Webhook</button>
+            <h2>Manajemen Bot & Webhook</h2>
+            <button class="set-webhook" data-bot-id="<?= $bot['id'] ?>">Set Webhook</button>
+            <button class="check-webhook" data-bot-id="<?= $bot['id'] ?>">Check Webhook</button>
+            <button class="delete-webhook" data-bot-id="<?= $bot['id'] ?>">Delete Webhook</button>
+            <button class="test-webhook" data-telegram-bot-id="<?= htmlspecialchars($telegram_bot_id) ?>" title="Kirim POST request kosong untuk memeriksa apakah webhook merespons 200 OK">Test Webhook</button>
+            <button class="get-me" data-bot-id="<?= $bot['id'] ?>">Get Me & Update</button>
         </div>
 
         <div class="settings">
@@ -248,6 +253,27 @@ unset($_SESSION['status_message']);
                 }
             }
 
+            // Handler untuk aksi bot (getMe)
+            async function handleBotAction(action, botId) {
+                showModal('Hasil ' + action, 'Sedang memproses permintaan...');
+                try {
+                    const response = await fetch('bot_manager.php', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `action=${action}&bot_id=${botId}`
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const result = await response.json();
+                    if (result.status === 'error') throw new Error(result.message);
+
+                    let successMessage = `Sukses! Informasi bot telah diperbarui.\n\nNama: ${result.data.first_name}\nUsername: @${result.data.username}\n\nSilakan muat ulang halaman untuk melihat perubahan.`;
+                    showModal('Hasil ' + action, successMessage);
+
+                } catch (error) {
+                    showModal('Error', 'Gagal melakukan permintaan: ' + error.message);
+                }
+            }
+
             // Tambahkan event listener ke tombol-tombol
             document.querySelectorAll('.set-webhook, .check-webhook, .delete-webhook').forEach(button => {
                 button.addEventListener('click', function() {
@@ -257,9 +283,17 @@ unset($_SESSION['status_message']);
                 });
             });
 
-            document.querySelector('.test-webhook').addEventListener('click', function() {
-                handleTestWebhook(this.dataset.telegramBotId);
+            document.querySelector('.get-me').addEventListener('click', function() {
+                handleBotAction('get_me', this.dataset.botId);
             });
+
+            // The test-webhook button was removed in the previous step by mistake. Let's ensure its listener exists.
+            const testWebhookBtn = document.querySelector('.test-webhook');
+            if (testWebhookBtn) {
+                testWebhookBtn.addEventListener('click', function() {
+                    handleTestWebhook(this.dataset.telegramBotId);
+                });
+            }
         });
     </script>
 </body>
