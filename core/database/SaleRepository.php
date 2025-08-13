@@ -58,4 +58,24 @@ class SaleRepository
             return false;
         }
     }
+
+    /**
+     * Menemukan semua paket yang dibeli oleh ID pembeli tertentu.
+     *
+     * @param int $buyerId ID internal pengguna pembeli.
+     * @return array Daftar paket yang dibeli.
+     */
+    public function findPackagesByBuyerId(int $buyerId): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT s.purchased_at, mp.*, mf.file_id as thumbnail_file_id
+             FROM sales s
+             JOIN media_packages mp ON s.package_id = mp.id
+             LEFT JOIN media_files mf ON mp.thumbnail_media_id = mf.id
+             WHERE s.buyer_user_id = ?
+             ORDER BY s.purchased_at DESC"
+        );
+        $stmt->execute([$buyerId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

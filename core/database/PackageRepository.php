@@ -35,4 +35,23 @@ class PackageRepository
         $stmt = $this->pdo->prepare("UPDATE media_packages SET status = 'sold' WHERE id = ?");
         $stmt->execute([$package_id]);
     }
+
+    /**
+     * Menemukan semua paket yang dijual oleh ID penjual tertentu.
+     *
+     * @param int $sellerId ID internal pengguna penjual.
+     * @return array Daftar paket yang dijual.
+     */
+    public function findAllBySellerId(int $sellerId): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT mp.*, mf.file_id as thumbnail_file_id
+             FROM media_packages mp
+             LEFT JOIN media_files mf ON mp.thumbnail_media_id = mf.id
+             WHERE mp.seller_user_id = ?
+             ORDER BY mp.created_at DESC"
+        );
+        $stmt->execute([$sellerId]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
