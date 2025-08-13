@@ -149,12 +149,12 @@ if ($selected_telegram_bot_id) {
                                 <tr>
                                     <td>
                                         <a href="chat.php?user_id=<?= $conv['user_internal_id'] ?>&bot_id=<?= $internal_bot_id ?>">
-                                            <?= htmlspecialchars($conv['first_name']) ?>
+                                            <?= htmlspecialchars($conv['first_name'] ?? '') ?>
                                         </a>
                                     </td>
-                                    <td>@<?= htmlspecialchars($conv['username']) ?></td>
-                                <td class="last-message"><?= htmlspecialchars(mb_strimwidth($conv['last_message'], 0, 50, "...")) ?></td>
-                                <td><?= htmlspecialchars($conv['last_message_time']) ?></td>
+                                    <td>@<?= htmlspecialchars($conv['username'] ?? '') ?></td>
+                                <td class="last-message"><?= htmlspecialchars(mb_strimwidth($conv['last_message'] ?? '', 0, 50, "...")) ?></td>
+                                <td><?= htmlspecialchars($conv['last_message_time'] ?? '') ?></td>
                             </tr>
                         <?php endforeach; ?>
                     <?php endif; ?>
