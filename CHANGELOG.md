@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.1.0] - 2025-08-12
+
+### Ditambahkan
+- **Fitur Soft-Delete Konten**: Member sekarang dapat menghapus konten yang mereka jual dari halaman "Konten Dijual".
+  - Ini adalah *soft delete*: status paket diubah menjadi `deleted` dan tidak lagi ditampilkan, tetapi data tetap ada di database untuk integritas arsip.
+  - Konten yang sudah terjual (`sold`) tidak dapat dihapus.
+  - Menambahkan status `deleted` baru ke kolom `status` pada tabel `media_packages`.
+
 ## [3.0.0] - 2025-08-12
 
 ### Ditambahkan
