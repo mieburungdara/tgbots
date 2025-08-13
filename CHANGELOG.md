@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.9.0] - 2025-08-12
+
+### Peningkatan
+- **Manajemen Bot Otomatis**: Proses penambahan bot di panel admin telah disederhanakan secara signifikan.
+  - **Hapus Input Nama**: Admin tidak perlu lagi memasukkan nama bot secara manual. Cukup dengan memasukkan token bot.
+  - **Ambil Info via `getMe`**: Sistem sekarang secara otomatis memanggil metode `getMe` dari API Telegram untuk mengambil `first_name` dan `username` bot, lalu menyimpannya ke database.
+  - **Tombol Pembaruan**: Menambahkan tombol "Get Me & Update" di halaman edit bot, yang memungkinkan admin untuk menyinkronkan dan memperbarui informasi bot kapan saja.
+- **Skema Database**: Memperbarui tabel `bots` dengan mengganti nama kolom `name` menjadi `first_name` dan menambahkan kolom `username` untuk menyelaraskan dengan data dari API Telegram.
+
 ## [2.8.0] - 2025-08-12
 
 ### Peningkatan

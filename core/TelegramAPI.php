@@ -216,4 +216,13 @@ class TelegramAPI {
     public function deleteWebhook() {
         return $this->apiRequest('deleteWebhook');
     }
+
+    /**
+     * Mendapatkan informasi dasar tentang bot.
+     *
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function getMe() {
+        return $this->apiRequest('getMe');
+    }
 }

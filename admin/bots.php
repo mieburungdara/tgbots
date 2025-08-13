@@ -2,6 +2,7 @@
 session_start();
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
+require_once __DIR__ . '/../core/TelegramAPI.php';
 
 $pdo = get_db_connection();
 $error = null;
@@ -11,49 +12,51 @@ if (!$pdo) {
     die("Koneksi database gagal. Pastikan file `config.php` sudah benar. Periksa file log server untuk detailnya.");
 }
 
-// Cek apakah tabel sudah dibuat
-try {
-    $tables_exist = check_tables_exist($pdo);
-} catch (PDOException $e) {
-    // Tangani error jika query check itu sendiri gagal (misal: user tidak punya izin)
-    die("Error saat memeriksa database: " . $e->getMessage());
-}
-
-if (!$tables_exist) {
-    // Jika tabel tidak ada, tampilkan pesan error dan berhenti.
-    $setup_error_message = "<strong>Database belum di-setup!</strong><br>" .
-        "Tabel yang diperlukan (`bots`, `chats`, `messages`) tidak ditemukan.<br><br>" .
-        "Silakan impor file <code>setup.sql</code> ke database Anda melalui phpMyAdmin atau alat database lainnya untuk membuat tabel-tabel tersebut.";
-
-    // Tampilkan HTML error
-    include __DIR__ . '/../core/templates/setup_error.php';
-    exit;
-}
-
 // Handle penambahan bot baru
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bot'])) {
-    $name = trim($_POST['name']);
     $token = trim($_POST['token']);
 
-    if (empty($name) || empty($token)) {
-        $error = "Nama bot dan token tidak boleh kosong.";
+    if (empty($token)) {
+        $error = "Token tidak boleh kosong.";
     } else {
         try {
-            $stmt = $pdo->prepare("INSERT INTO bots (name, token) VALUES (?, ?)");
-            $stmt->execute([$name, $token]);
-            $success = "Bot '{$name}' berhasil ditambahkan! Harap set webhook untuk bot ini ke: <br><code>" . htmlspecialchars("https://<YOUR_DOMAIN>/webhook.php?bot_id=" . $pdo->lastInsertId()) . "</code>";
-        } catch (PDOException $e) {
-            if ($e->getCode() == 23000) { // Kode untuk duplicate entry
-                $error = "Error: Token ini sudah ada di database.";
+            $telegram_api = new TelegramAPI($token);
+            $bot_info = $telegram_api->getMe();
+
+            if (isset($bot_info['ok']) && $bot_info['ok'] === true) {
+                $bot_result = $bot_info['result'];
+                $first_name = $bot_result['first_name'];
+                $username = $bot_result['username'] ?? null;
+                $telegram_id = $bot_result['id'];
+
+                // Cek apakah token sudah ada
+                $stmt_check = $pdo->prepare("SELECT id FROM bots WHERE token = ?");
+                $stmt_check->execute([$token]);
+                if ($stmt_check->fetch()) {
+                     throw new Exception("Token ini sudah ada di database.", 23000);
+                }
+
+                $stmt = $pdo->prepare("INSERT INTO bots (first_name, username, token) VALUES (?, ?, ?)");
+                $stmt->execute([$first_name, $username, $token]);
+
+                $bot_id_from_token = explode(':', $token)[0];
+                $success = "Bot '{$first_name}' (@{$username}) berhasil ditambahkan!";
+
             } else {
-                $error = "Gagal menyimpan bot ke database: " . $e->getMessage();
+                throw new Exception("Token tidak valid atau gagal menghubungi API Telegram. " . ($bot_info['description'] ?? ''));
+            }
+        } catch (Exception $e) {
+            if ($e->getCode() == 23000) {
+                $error = "Error: " . $e->getMessage();
+            } else {
+                $error = "Gagal menambahkan bot: " . $e->getMessage();
             }
         }
     }
 }
 
 // Ambil daftar bot yang ada
-$bots = $pdo->query("SELECT id, name, token, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
+$bots = $pdo->query("SELECT id, first_name, username, token, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
 
 ?>
 <!DOCTYPE html>
@@ -75,7 +78,7 @@ $bots = $pdo->query("SELECT id, name, token, created_at FROM bots ORDER BY creat
         button:hover { background-color: #0056b3; }
         .btn-edit { display: inline-block; padding: 5px 10px; background-color: #28a745; color: white; text-decoration: none; border-radius: 4px; }
         .btn-edit:hover { background-color: #218838; }
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; word-wrap: break-word; }
         .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
         .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         nav { margin-bottom: 20px; }
@@ -107,7 +110,6 @@ $bots = $pdo->query("SELECT id, name, token, created_at FROM bots ORDER BY creat
 
         <h2>Tambah Bot Baru</h2>
         <form action="bots.php" method="post">
-            <input type="text" name="name" placeholder="Nama Bot (misal: Bot Toko Online)" required>
             <input type="text" name="token" placeholder="Token API dari BotFather" required>
             <button type="submit" name="add_bot">Tambah Bot</button>
         </form>
@@ -118,25 +120,24 @@ $bots = $pdo->query("SELECT id, name, token, created_at FROM bots ORDER BY creat
                 <tr>
                     <th>ID</th>
                     <th>Nama</th>
-                    <th>Tanggal Dibuat</th>
+                    <th>Username</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($bots)): ?>
                     <tr>
-                        <td colspan="4">Belum ada bot yang ditambahkan.</td>
+                        <td colspan="4" style="text-align: center;">Belum ada bot yang ditambahkan.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($bots as $bot): ?>
                         <?php
-                            // Ekstrak ID bot dari token
                             $telegram_bot_id = explode(':', $bot['token'])[0];
                         ?>
                         <tr>
-                            <td><?= htmlspecialchars($telegram_bot_id) // Tampilkan ID dari token ?></td>
-                            <td><?= htmlspecialchars($bot['name']) ?></td>
-                            <td><?= htmlspecialchars($bot['created_at']) ?></td>
+                            <td><?= htmlspecialchars($telegram_bot_id) ?></td>
+                            <td><?= htmlspecialchars($bot['first_name']) ?></td>
+                            <td>@<?= htmlspecialchars($bot['username'] ?? 'N/A') ?></td>
                             <td>
                                 <a href="edit_bot.php?id=<?= htmlspecialchars($telegram_bot_id) ?>" class="btn-edit">Edit</a>
                             </td>
