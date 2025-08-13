@@ -225,4 +225,19 @@ class TelegramAPI {
     public function getMe() {
         return $this->apiRequest('getMe');
     }
+
+    /**
+     * Menghapus sebuah pesan.
+     *
+     * @param int|string $chat_id ID dari chat.
+     * @param int $message_id ID dari pesan yang akan dihapus.
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function deleteMessage($chat_id, $message_id) {
+        $data = [
+            'chat_id' => $chat_id,
+            'message_id' => $message_id,
+        ];
+        return $this->apiRequest('deleteMessage', $data);
+    }
 }

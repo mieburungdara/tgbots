@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.2.0] - 2025-08-12
+
+### Ditambahkan
+- **Fitur Hard-Delete Konten (Admin)**: Memberikan admin kemampuan untuk menghapus konten secara permanen.
+  - **Halaman Manajemen Konten**: Membuat halaman baru `admin/packages.php` yang menampilkan semua paket konten dalam sistem.
+  - **Tombol Hapus Permanen**: Setiap konten di halaman baru ini memiliki tombol "Hard Delete". Tombol ini dinonaktifkan untuk konten yang sudah terjual untuk melindungi riwayat transaksi.
+  - **Logika Penghapusan Penuh**: Aksi ini akan menghapus paket dari database, menghapus semua file media terkait dari database, dan juga menghapus pesan media dari channel penyimpanan pribadi di Telegram.
+
 ## [3.1.0] - 2025-08-12
 
 ### Ditambahkan

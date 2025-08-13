@@ -93,6 +93,7 @@ $bots = $pdo->query("SELECT id, first_name, username, token, created_at FROM bot
             <a href="bots.php" class="active">Kelola Bot</a> |
             <a href="users.php">Pengguna</a> |
             <a href="roles.php">Manajemen Peran</a> |
+            <a href="packages.php">Konten</a> |
             <a href="media_logs.php">Log Media</a> |
             <a href="channels.php">Channel</a> |
             <a href="database.php">Database</a> |
