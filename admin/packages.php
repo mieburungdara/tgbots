@@ -99,6 +99,7 @@ $packages = $packageRepo->findAll();
             <a href="media_logs.php">Log Media</a> |
             <a href="channels.php">Channel</a> |
             <a href="database.php">Database</a> |
+            <a href="analytics.php">Analitik</a> |
             <a href="logs.php">Logs</a>
         </nav>
         <h1>Manajemen Konten</h1>
