@@ -127,7 +127,7 @@ $sold_packages = $packageRepo->findAllBySellerId($user_id);
                             <div class="protection-toggle">
                                 <label for="protect-toggle-<?= $package['id'] ?>">Proteksi Konten</label>
                                 <label class="switch">
-                                    <input type="checkbox" class="protect-toggle-checkbox" id="protect-toggle-<?= $package['id'] ?>" data-package-id="<?= $package['id'] ?>" <?= $package['protect_content'] ? 'checked' : '' ?>>
+                                    <input type="checkbox" class="protect-toggle-checkbox" id="protect-toggle-<?= $package['id'] ?>" data-package-id="<?= $package['id'] ?>" <?= !empty($package['protect_content']) ? 'checked' : '' ?>>
                                     <span class="slider"></span>
                                 </label>
                             </div>
