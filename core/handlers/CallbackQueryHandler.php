@@ -56,12 +56,14 @@ class CallbackQueryHandler
             if (!empty($files)) {
                 $from_chat_id = $files[0]['chat_id'];
                 $message_ids = json_encode(array_column($files, 'message_id'));
+                $protect_content = (bool) $package['protect_content'];
 
                 // Kirim media menggunakan copyMessages
                 $this->telegram_api->copyMessages(
                     $this->chat_id,
                     $from_chat_id,
-                    $message_ids
+                    $message_ids,
+                    $protect_content
                 );
             }
         } else {
@@ -75,8 +77,9 @@ class CallbackQueryHandler
         $callback_query_id = $this->callback_query['id'];
 
         $package = $this->package_repo->findForPurchase($package_id);
+        $full_package_details = $this->package_repo->find($package_id);
 
-        if ($package && $this->current_user['balance'] >= $package['price']) {
+        if ($package && $full_package_details && $this->current_user['balance'] >= $package['price']) {
             $sale_successful = $this->sale_repo->createSale($package_id, $package['seller_user_id'], $internal_user_id, $package['price']);
 
             if ($sale_successful) {
@@ -84,13 +87,14 @@ class CallbackQueryHandler
 
                 $files = $this->package_repo->getPackageFiles($package_id);
                 if (!empty($files)) {
-                    $full_package_details = $this->package_repo->find($package_id);
                     $caption = "Terima kasih telah membeli!\n\n" . ($full_package_details['description'] ?? '');
                     $this->telegram_api->sendMessage($this->chat_id, $caption);
 
                     $from_chat_id = $files[0]['chat_id'];
                     $message_ids = json_encode(array_column($files, 'message_id'));
-                    $this->telegram_api->copyMessages($this->chat_id, $from_chat_id, $message_ids);
+                    $protect_content = (bool) $full_package_details['protect_content'];
+
+                    $this->telegram_api->copyMessages($this->chat_id, $from_chat_id, $message_ids, $protect_content);
                 }
                 $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian berhasil!');
             } else {

@@ -86,9 +86,10 @@ class TelegramAPI {
      * @param int $message_id ID pesan yang akan disalin.
      * @param string|null $caption Caption baru untuk media (opsional).
      * @param string|null $reply_markup Keyboard inline (opsional).
+     * @param bool $protect_content Melindungi konten dari forward dan save.
      * @return mixed Hasil dari API Telegram.
      */
-    public function copyMessage($chat_id, $from_chat_id, $message_id, $caption = null, $reply_markup = null) {
+    public function copyMessage($chat_id, $from_chat_id, $message_id, $caption = null, $reply_markup = null, bool $protect_content = false) {
         $data = [
             'chat_id' => $chat_id,
             'from_chat_id' => $from_chat_id,
@@ -100,6 +101,9 @@ class TelegramAPI {
         if ($reply_markup !== null) {
             $data['reply_markup'] = $reply_markup;
         }
+        if ($protect_content) {
+            $data['protect_content'] = true;
+        }
         return $this->apiRequest('copyMessage', $data);
     }
 
@@ -109,14 +113,18 @@ class TelegramAPI {
      * @param int|string $chat_id ID chat tujuan.
      * @param int|string $from_chat_id ID chat sumber.
      * @param string $message_ids JSON-encoded array dari ID pesan yang akan disalin.
+     * @param bool $protect_content Melindungi konten dari forward dan save.
      * @return mixed Hasil dari API Telegram.
      */
-    public function copyMessages($chat_id, $from_chat_id, $message_ids) {
+    public function copyMessages($chat_id, $from_chat_id, $message_ids, bool $protect_content = false) {
         $data = [
             'chat_id' => $chat_id,
             'from_chat_id' => $from_chat_id,
             'message_ids' => $message_ids,
         ];
+        if ($protect_content) {
+            $data['protect_content'] = true;
+        }
         return $this->apiRequest('copyMessages', $data);
     }
 

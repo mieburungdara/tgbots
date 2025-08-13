@@ -149,4 +149,32 @@ class PackageRepository
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Mengubah status proteksi konten sebuah paket.
+     *
+     * @param int $packageId ID paket yang akan diubah.
+     * @param int $sellerId ID penjual untuk verifikasi kepemilikan.
+     * @return bool Status proteksi yang baru.
+     * @throws Exception Jika paket tidak ditemukan atau bukan milik penjual.
+     */
+    public function toggleProtection(int $packageId, int $sellerId): bool
+    {
+        $package = $this->find($packageId);
+
+        if (!$package) {
+            throw new Exception("Paket tidak ditemukan.");
+        }
+
+        if ($package['seller_user_id'] != $sellerId) {
+            throw new Exception("Anda tidak memiliki izin untuk mengubah paket ini.");
+        }
+
+        $new_status = !$package['protect_content'];
+
+        $stmt = $this->pdo->prepare("UPDATE media_packages SET protect_content = ? WHERE id = ?");
+        $stmt->execute([$new_status, $packageId]);
+
+        return $new_status;
+    }
 }
