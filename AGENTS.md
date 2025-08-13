@@ -5,3 +5,6 @@
 5. proyek digunakan di shared hosting.
 6. code always wrapped in a try-catch block to handle and log potential errors.
 7. lakukan publish agar saya dapat mengecek kode langsung.
+8. Kirim perubahan: Setelah perubahan diverifikasi, kirimkan perubahan dengan pesan commit yang jelas dengan bahasa indonesia.
+
+
