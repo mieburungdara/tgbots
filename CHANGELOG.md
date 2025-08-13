@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.3.0] - 2025-08-12
+
+### Ditambahkan
+- **Fitur Proteksi Konten**: Penjual sekarang dapat melindungi konten mereka agar tidak dapat disimpan atau diteruskan oleh pembeli.
+  - **Tombol Toggle di Panel Member**: Di halaman "Konten Dijual", setiap paket memiliki tombol *toggle* untuk mengaktifkan/menonaktifkan proteksi.
+  - **Penerapan via `protect_content`**: Saat pembeli mengakses konten yang diproteksi, sistem akan menggunakan parameter `protect_content=true` dari API Telegram, yang mencegah penyimpanan, penerusan, dan *screenshot* pada sebagian besar perangkat.
+  - **Perubahan Database**: Menambahkan kolom `protect_content` ke tabel `media_packages`.
+
 ## [3.2.0] - 2025-08-12
 
 ### Ditambahkan
