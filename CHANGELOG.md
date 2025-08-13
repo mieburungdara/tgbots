@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.4.0] - 2025-08-13
+
+### Ditambahkan
+- **Fitur Analitik Penjualan**: Menambahkan dasbor analitik baru untuk admin dan penjual.
+  - **Halaman Analitik Admin (`admin/analytics.php`)**: Halaman baru yang menampilkan ringkasan penjualan global, termasuk total pendapatan, jumlah penjualan, grafik pendapatan harian, dan daftar konten terlaris.
+  - **Analitik di Dasbor Member**: Penjual sekarang dapat melihat ringkasan pendapatan dan jumlah penjualan pribadi mereka langsung di halaman dasbor member.
+  - **`AnalyticsRepository`**: Membuat repository baru yang didedikasikan untuk menangani query analitik yang kompleks.
+
 ## [3.3.0] - 2025-08-12
 
 ### Ditambahkan
