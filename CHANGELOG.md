@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.0.0] - 2025-08-12
+
+### Ditambahkan
+- **Fitur Panel Member**: Memperluas fungsionalitas panel member secara signifikan dengan menambahkan dua halaman baru.
+  - **Halaman Konten Dijual (`member/sold.php`)**: Member sekarang dapat melihat riwayat semua konten yang telah mereka jual, lengkap dengan status (pending, available, sold).
+  - **Halaman Konten Dibeli (`member/purchased.php`)**: Member dapat melihat riwayat semua konten yang telah mereka beli, beserta harga dan tanggal pembelian.
+- **Peningkatan Navigasi Member**: Mendesain ulang header di seluruh panel member untuk menyertakan navigasi yang jelas antara halaman Dashboard, Dijual, dan Dibeli.
+- **Metode Repository Baru**: Menambahkan `findAllBySellerId` ke `PackageRepository` dan `findPackagesByBuyerId` ke `SaleRepository` untuk mendukung halaman-halaman baru.
+
 ## [2.9.0] - 2025-08-12
 
 ### Peningkatan
