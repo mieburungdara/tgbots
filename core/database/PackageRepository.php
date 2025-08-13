@@ -86,4 +86,67 @@ class PackageRepository
         $stmt = $this->pdo->prepare("UPDATE media_packages SET status = 'deleted' WHERE id = ?");
         return $stmt->execute([$packageId]);
     }
+
+    /**
+     * Menghapus paket secara permanen dari database.
+     *
+     * @param int $packageId ID paket yang akan dihapus.
+     * @return array Informasi file yang disimpan untuk dihapus dari Telegram.
+     * @throws Exception Jika paket tidak ditemukan atau sudah terjual.
+     */
+    public function hardDeletePackage(int $packageId): array
+    {
+        $package = $this->find($packageId);
+        if (!$package) {
+            throw new Exception("Paket tidak ditemukan.");
+        }
+        if ($package['status'] === 'sold') {
+            throw new Exception("Tidak dapat menghapus paket yang sudah terjual untuk menjaga riwayat transaksi.");
+        }
+
+        // Ambil info file yang disimpan sebelum menghapus
+        $stmt_files = $this->pdo->prepare("SELECT storage_channel_id, storage_message_id FROM media_files WHERE package_id = ?");
+        $stmt_files->execute([$packageId]);
+        $files_to_delete = $stmt_files->fetchAll(PDO::FETCH_ASSOC);
+
+        // Hapus file media dan paket
+        $this->pdo->beginTransaction();
+        try {
+            $stmt_delete_files = $this->pdo->prepare("DELETE FROM media_files WHERE package_id = ?");
+            $stmt_delete_files->execute([$packageId]);
+
+            $stmt_delete_package = $this->pdo->prepare("DELETE FROM media_packages WHERE id = ?");
+            $stmt_delete_package->execute([$packageId]);
+
+            $this->pdo->commit();
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            throw new Exception("Gagal menghapus paket dari database: " . $e->getMessage());
+        }
+
+        return $files_to_delete;
+    }
+
+    /**
+     * Menemukan semua paket untuk ditampilkan di admin panel.
+     *
+     * @param int $limit
+     * @param int $offset
+     * @return array
+     */
+    public function findAll(int $limit = 100, int $offset = 0): array
+    {
+        $sql = "
+            SELECT mp.*, u.username as seller_username
+            FROM media_packages mp
+            JOIN users u ON mp.seller_user_id = u.id
+            ORDER BY mp.created_at DESC
+            LIMIT :limit OFFSET :offset
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

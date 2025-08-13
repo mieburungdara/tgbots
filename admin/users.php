@@ -99,6 +99,7 @@ function get_sort_link($column, $current_sort, $current_order) {
             <a href="bots.php">Kelola Bot</a> |
             <a href="users.php" class="active">Pengguna</a> |
             <a href="roles.php">Manajemen Peran</a> |
+            <a href="packages.php">Konten</a> |
             <a href="media_logs.php">Log Media</a> |
             <a href="channels.php">Channel</a> |
             <a href="database.php">Database</a> |
@@ -147,7 +148,7 @@ function get_sort_link($column, $current_sort, $current_order) {
                                 // NOTE: This creates an N+1 query problem. For a larger scale app,
                                 // this data should be fetched in a more optimized way.
                                 $related_bots_stmt = $pdo->prepare(
-                                    "SELECT b.id, b.name, r.is_blocked
+                                    "SELECT b.id, b.first_name, r.is_blocked
                                      FROM bots b
                                      JOIN rel_user_bot r ON b.id = r.bot_id
                                      WHERE r.user_id = ?"
@@ -160,7 +161,7 @@ function get_sort_link($column, $current_sort, $current_order) {
                                     <li>
                                         <span>
                                             <a href="chat.php?user_id=<?= $user['id'] ?>&bot_id=<?= $related_bot['id'] ?>">
-                                                <?= htmlspecialchars($related_bot['name']) ?>
+                                                <?= htmlspecialchars($related_bot['first_name']) ?>
                                             </a>
                                             (<?= $related_bot['is_blocked'] ? 'Diblokir' : 'Aktif' ?>)
                                         </span>

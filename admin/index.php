@@ -103,6 +103,7 @@ if ($selected_telegram_bot_id) {
             <a href="bots.php">Kelola Bot</a> |
             <a href="users.php">Pengguna</a> |
             <a href="roles.php">Manajemen Peran</a> |
+            <a href="packages.php">Konten</a> |
             <a href="media_logs.php">Log Media</a> |
             <a href="channels.php">Channel</a> |
             <a href="database.php">Database</a> |
@@ -119,7 +120,7 @@ if ($selected_telegram_bot_id) {
                     <?php foreach ($bots as $bot): ?>
                         <?php $telegram_bot_id = explode(':', $bot['token'])[0]; ?>
                         <option value="<?= $telegram_bot_id ?>" <?= ($selected_telegram_bot_id == $telegram_bot_id) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($bot['name']) ?>
+                            <?= htmlspecialchars($bot['first_name']) ?>
                         </option>
                     <?php endforeach; ?>
                 </select>

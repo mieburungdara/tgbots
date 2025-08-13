@@ -91,6 +91,7 @@ if (isset($_SESSION['message'])) {
             <a href="bots.php">Kelola Bot</a> |
             <a href="users.php">Pengguna</a> |
             <a href="roles.php">Manajemen Peran</a> |
+            <a href="packages.php">Konten</a> |
             <a href="media_logs.php">Log Media</a> |
             <a href="channels.php">Channel</a> |
             <a href="database.php" class="active">Database</a> |
