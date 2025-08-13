@@ -48,10 +48,42 @@ class PackageRepository
             "SELECT mp.*, mf.file_id as thumbnail_file_id
              FROM media_packages mp
              LEFT JOIN media_files mf ON mp.thumbnail_media_id = mf.id
-             WHERE mp.seller_user_id = ?
+             WHERE mp.seller_user_id = ? AND mp.status != 'deleted'
              ORDER BY mp.created_at DESC"
         );
         $stmt->execute([$sellerId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Melakukan soft delete pada sebuah paket dengan mengubah statusnya menjadi 'deleted'.
+     *
+     * @param int $packageId ID paket yang akan dihapus.
+     * @param int $sellerId ID penjual yang meminta penghapusan, untuk verifikasi kepemilikan.
+     * @return bool True jika berhasil, false jika gagal.
+     * @throws Exception Jika paket tidak ditemukan, bukan milik penjual, atau sudah terjual.
+     */
+    public function softDeletePackage(int $packageId, int $sellerId): bool
+    {
+        $package = $this->find($packageId);
+
+        if (!$package) {
+            throw new Exception("Paket tidak ditemukan.");
+        }
+
+        if ($package['seller_user_id'] != $sellerId) {
+            throw new Exception("Anda tidak memiliki izin untuk menghapus paket ini.");
+        }
+
+        if ($package['status'] === 'sold') {
+            throw new Exception("Tidak dapat menghapus paket yang sudah terjual.");
+        }
+
+        if ($package['status'] === 'deleted') {
+            return true; // Anggap berhasil jika sudah dihapus
+        }
+
+        $stmt = $this->pdo->prepare("UPDATE media_packages SET status = 'deleted' WHERE id = ?");
+        return $stmt->execute([$packageId]);
     }
 }
