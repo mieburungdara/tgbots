@@ -170,7 +170,9 @@ class PackageRepository
             throw new Exception("Anda tidak memiliki izin untuk mengubah paket ini.");
         }
 
-        $new_status = !$package['protect_content'];
+        // Gunakan null coalescing operator untuk menangani kasus di mana kolom belum ada
+        $current_status = $package['protect_content'] ?? false;
+        $new_status = !$current_status;
 
         $stmt = $this->pdo->prepare("UPDATE media_packages SET protect_content = ? WHERE id = ?");
         $stmt->execute([$new_status, $packageId]);
