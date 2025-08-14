@@ -192,22 +192,28 @@ try {
                 $storage_info = []; // To store [db_id => new_storage_message_id]
 
                 if ($media_group_id) {
-                    // Media group: copy all files individually
+                    // Media group: copy all files at once for efficiency
                     $stmt_group_files = $pdo->prepare("SELECT id, message_id FROM media_files WHERE media_group_id = ? ORDER BY id");
                     $stmt_group_files->execute([$media_group_id]);
                     $group_files = $stmt_group_files->fetchAll(PDO::FETCH_ASSOC);
 
-                    foreach ($group_files as $file) {
-                        $copied_message = $telegram_api->copyMessage($storage_channel_id, $replied_chat_id, $file['message_id']);
-                        if (!$copied_message || !isset($copied_message['ok']) || !$copied_message['ok']) {
-                            $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan sebagian media (ID: {$file['message_id']}). Proses dibatalkan.");
-                            $user_repo->setUserState($internal_user_id, null, null);
-                            $update_handled = true;
-                            $pdo->commit();
-                            http_response_code(200);
-                            exit;
-                        }
-                        $storage_info[$file['id']] = $copied_message['result']['message_id'];
+                    $original_db_ids = array_column($group_files, 'id');
+                    $original_message_ids = array_column($group_files, 'message_id');
+
+                    $copied_messages_result = $telegram_api->copyMessages($storage_channel_id, $replied_chat_id, json_encode($original_message_ids));
+
+                    if (!$copied_messages_result || !isset($copied_messages_result['ok']) || !$copied_messages_result['ok'] || count($copied_messages_result['result']) !== count($original_db_ids)) {
+                        $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan album media. Proses dibatalkan.");
+                        $user_repo->setUserState($internal_user_id, null, null);
+                        $update_handled = true;
+                        $pdo->commit();
+                        http_response_code(200);
+                        exit;
+                    }
+
+                    $new_storage_message_ids = $copied_messages_result['result'];
+                    for ($i = 0; $i < count($original_db_ids); $i++) {
+                        $storage_info[$original_db_ids[$i]] = $new_storage_message_ids[$i]['message_id'];
                     }
                 } else {
                     // Single media
@@ -220,7 +226,6 @@ try {
                         http_response_code(200);
                         exit;
                     }
-                    // The only media file ID is the thumbnail ID in this case for single media
                     $storage_info[$thumbnail_media_id] = $copied_message['result']['message_id'];
                 }
 

@@ -4,8 +4,11 @@
 
 ### Diubah
 - **Penanganan Penjualan Album/Media Group**: Mengubah logika inti dari proses penjualan untuk mendukung album (media group) secara penuh.
-  - **Sebelumnya**: Saat menjual sebuah album, bot hanya akan menyalin satu media (yang di-reply oleh pengguna) ke channel penyimpanan, meskipun semua media dalam album tersebut terhubung ke paket.
-  - **Sekarang**: Jika bot mendeteksi penjualan sebuah media group, bot akan secara iteratif menyalin *setiap* media dari grup tersebut ke channel penyimpanan. Setiap file media sekarang dicatat dengan `storage_message_id`-nya yang unik, memastikan bahwa pembeli menerima semua konten dari album yang mereka beli.
+  - **Sebelumnya**: Saat menjual sebuah album, bot hanya akan menyalin satu media (yang di-reply oleh pengguna) ke channel penyimpanan.
+  - **Sekarang**: Jika bot mendeteksi penjualan sebuah media group, bot akan menyalin *setiap* media dari grup tersebut ke channel penyimpanan, memastikan pembeli menerima semua konten.
+
+### Peningkatan
+- **Optimisasi Penyalinan Album**: Proses penyalinan media group sekarang menggunakan metode `copyMessages` dari API Telegram, yang menyalin semua media dalam satu panggilan API tunggal, bukan satu per satu. Ini secara signifikan mengurangi jumlah panggilan API, membuat proses penjualan album lebih cepat dan efisien.
 
 ## [3.8.1] - 2025-08-13
 
