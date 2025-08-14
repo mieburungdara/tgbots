@@ -241,6 +241,14 @@ class MessageHandler
 
         $is_admin = ($this->current_user['role'] === 'admin');
         $is_seller = ($package['seller_user_id'] == $internal_user_id);
+
+        // Defensive check: Inexplicably, sale_repo is sometimes null here.
+        // Re-initialize it to prevent a fatal error.
+        if ($this->sale_repo === null) {
+            app_log("DEFENSIVE: Re-initializing SaleRepository in MessageHandler because it was null.", 'warning');
+            $this->sale_repo = new SaleRepository($this->pdo);
+        }
+
         $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $internal_user_id);
 
         $has_access = $is_admin || $is_seller || $has_purchased;
