@@ -219,7 +219,7 @@ class MessageHandler
         $thumbnail = null;
         // Coba dapatkan thumbnail yang spesifik terlebih dahulu
         if (!empty($package['thumbnail_media_id'])) {
-            $stmt_thumb = $this->pdo->prepare("SELECT file_id, type, chat_id, message_id FROM media_files WHERE id = ?");
+            $stmt_thumb = $this->pdo->prepare("SELECT type, chat_id, message_id FROM media_files WHERE id = ?");
             $stmt_thumb->execute([$package['thumbnail_media_id']]);
             $thumbnail = $stmt_thumb->fetch(PDO::FETCH_ASSOC);
         }

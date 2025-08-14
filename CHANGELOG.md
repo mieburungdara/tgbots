@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.12.3] - 2025-08-14
+
+### Diperbaiki
+- **Fatal Error di Perintah /konten**: Memperbaiki error fatal `Column not found: 1054 Unknown column 'file_id'` yang terjadi saat menggunakan perintah `/konten`.
+  - **Penyebab**: Serupa dengan error sebelumnya, query untuk mengambil data thumbnail di dalam `handleKontenCommand` masih mencoba memilih kolom `file_id` yang sudah dihapus.
+  - **Solusi**: Menghapus referensi ke `file_id` dari query SQL di `MessageHandler.php`.
+
 ## [3.12.2] - 2025-08-14
 
 ### Diperbaiki
