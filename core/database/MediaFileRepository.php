@@ -17,12 +17,11 @@ class MediaFileRepository
      */
     public function saveMediaFile(array $params): string
     {
-        $sql = "INSERT INTO media_files (file_id, type, file_size, width, height, duration, mime_type, file_name, caption, caption_entities, user_id, chat_id, message_id, media_group_id, has_spoiler)
-                VALUES (:file_id, :type, :file_size, :width, :height, :duration, :mime_type, :file_name, :caption, :caption_entities, :user_id, :chat_id, :message_id, :media_group_id, :has_spoiler)";
+        $sql = "INSERT INTO media_files (type, file_size, width, height, duration, mime_type, file_name, caption, caption_entities, user_id, chat_id, message_id, media_group_id, has_spoiler)
+                VALUES (:type, :file_size, :width, :height, :duration, :mime_type, :file_name, :caption, :caption_entities, :user_id, :chat_id, :message_id, :media_group_id, :has_spoiler)";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
-            ':file_id' => $params['file_id'],
             ':type' => $params['type'],
             ':file_size' => $params['file_size'] ?? null,
             ':width' => $params['width'] ?? null,

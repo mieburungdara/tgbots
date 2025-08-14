@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.10.0] - 2025-08-13
+
+### Peningkatan
+- **Optimisasi Skema Database**: Menghapus kolom `file_id` yang tidak lagi diperlukan dari tabel `media_files`.
+  - **Alasan**: Sejak implementasi `copyMessage` dan `copyMessages` sebagai metode utama untuk mengirim media, `file_id` menjadi berlebihan. Referensi ke media sekarang secara konsisten ditangani menggunakan `chat_id` dan `message_id`.
+  - **Keuntungan**: Mengurangi ukuran database dan menyederhanakan logika `MediaHandler` dan `MediaFileRepository` dengan menghapus penyimpanan dan penanganan data yang tidak terpakai.
+
 ## [3.9.0] - 2025-08-13
 
 ### Diubah
