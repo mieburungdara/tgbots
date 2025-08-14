@@ -34,7 +34,7 @@ if (!$tables_exist) {
 }
 
 // Ambil daftar bot untuk dropdown
-$bots = $pdo->query("SELECT id, name, token FROM bots ORDER BY name ASC")->fetchAll();
+$bots = $pdo->query("SELECT id, first_name, token FROM bots ORDER BY first_name ASC")->fetchAll();
 
 // Dapatkan bot_id yang dipilih dari URL, jika ada
 $selected_telegram_bot_id = isset($_GET['bot_id']) ? (string)$_GET['bot_id'] : null;
@@ -120,7 +120,7 @@ if ($selected_telegram_bot_id) {
                     <?php foreach ($bots as $bot): ?>
                         <?php $telegram_bot_id = explode(':', $bot['token'])[0]; ?>
                         <option value="<?= $telegram_bot_id ?>" <?= ($selected_telegram_bot_id == $telegram_bot_id) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($bot['first_name']) ?>
+                            <?= htmlspecialchars($bot['first_name'] ?? 'Bot Tanpa Nama') ?>
                         </option>
                     <?php endforeach; ?>
                 </select>
