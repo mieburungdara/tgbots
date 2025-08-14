@@ -89,3 +89,39 @@ function ensure_migrations_table_exists(PDO $pdo): void {
         die("Fatal Error: Tidak dapat membuat tabel migrasi. Periksa log server.");
     }
 }
+
+/**
+ * Menghapus semua data transaksional dari database.
+ *
+ * @param PDO $pdo Objek koneksi PDO.
+ * @return void
+ * @throws Exception Jika terjadi error saat proses truncate.
+ */
+function clean_transactional_data(PDO $pdo): void {
+    $tables_to_truncate = [
+        'sales',
+        'media_files',
+        'media_packages',
+        'messages',
+        'rel_user_bot',
+        'bot_settings',
+        'bot_channel_usage',
+        'members',
+        'users' // 'users' terakhir karena tabel lain memiliki foreign key ke sini
+    ];
+
+    $pdo->beginTransaction();
+    try {
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 0;');
+        foreach ($tables_to_truncate as $table) {
+            $pdo->exec("TRUNCATE TABLE `{$table}`");
+        }
+        $pdo->exec('SET FOREIGN_KEY_CHECKS = 1;');
+        $pdo->commit();
+        app_log("Semua data transaksional telah dibersihkan oleh admin.", 'app');
+    } catch (Exception $e) {
+        $pdo->rollBack();
+        app_log("Gagal membersihkan data transaksional: " . $e->getMessage(), 'error');
+        throw $e; // Lemparkan kembali untuk ditangani oleh pemanggil
+    }
+}
