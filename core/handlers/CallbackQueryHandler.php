@@ -46,12 +46,14 @@ class CallbackQueryHandler
     private function handleViewPage(string $params)
     {
         $parts = explode('_', $params);
-        if (count($parts) !== 2) {
+        if (count($parts) < 2) {
             $this->telegram_api->answerCallbackQuery($this->callback_query['id'], '⚠️ Format callback tidak valid.', true);
             return;
         }
-        $public_id = $parts[0];
-        $page_index = (int)$parts[1];
+
+        // The last part is always the page index. The rest is the public_id.
+        $page_index = (int)array_pop($parts);
+        $public_id = implode('_', $parts);
 
         $internal_user_id = $this->current_user['id'];
         $callback_query_id = $this->callback_query['id'];
