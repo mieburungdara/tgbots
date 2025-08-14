@@ -129,10 +129,10 @@ $packages = $packageRepo->findAll();
                 <?php else: ?>
                     <?php foreach ($packages as $package): ?>
                         <tr>
-                            <td><?= htmlspecialchars($package['public_id']) ?></td>
+                            <td><?= htmlspecialchars($package['public_id'] ?? 'N/A') ?></td>
                             <td><?= htmlspecialchars($package['description'] ?: 'N/A') ?></td>
-                            <td>@<?= htmlspecialchars($package['seller_username']) ?></td>
-                            <td>Rp <?= number_format($package['price'], 0, ',', '.') ?></td>
+                            <td>@<?= htmlspecialchars($package['seller_username'] ?? 'N/A') ?></td>
+                            <td>Rp <?= number_format($package['price'] ?? 0, 0, ',', '.') ?></td>
                             <td>
                                 <span class="status status-<?= strtolower($package['status']) ?>">
                                     <?= htmlspecialchars(ucfirst($package['status'])) ?>
