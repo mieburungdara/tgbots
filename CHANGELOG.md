@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.8.0] - 2025-08-13
+
+### Diubah
+- **Refactoring Alur Perintah /sell**: Merombak total alur kerja perintah `/sell` untuk meningkatkan efisiensi dan keandalan, terutama dalam menangani pembatalan.
+  - **Sebelumnya**: Saat `/sell` digunakan, bot akan langsung menyalin media ke channel penyimpanan dan membuat entri paket `pending` di database (menaikkan nomor urut ID konten) *sebelum* meminta harga. Jika pengguna membatalkan, media sampah dan ID yang terlewat akan tertinggal.
+  - **Sekarang**: Proses dibalik. Perintah `/sell` sekarang hanya akan menangkap konteks media dan meminta harga. Semua aksi berat—menyalin media, membuat paket, dan menaikkan nomor urut ID—ditunda dan hanya akan dijalankan *setelah* penjual memberikan harga yang valid.
+  - **Keuntungan**: Pembatalan (`/cancel`) sekarang bersih dan tidak meninggalkan data sisa. ID konten hanya akan digunakan dan di-increment saat transaksi benar-benar dikonfirmasi dengan harga, mencegah adanya celah dalam urutan ID.
+
 ## [3.7.0] - 2025-08-13
 
 ### Ditambahkan
