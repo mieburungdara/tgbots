@@ -110,7 +110,7 @@ class PackageRepository
         $files_to_delete = $stmt_files->fetchAll(PDO::FETCH_ASSOC);
 
         // Hapus file media dan paket
-        $this->pdo->beginTransaction();
+        // Transaksi sekarang ditangani oleh pemanggil (misalnya, webhook)
         try {
             $stmt_delete_files = $this->pdo->prepare("DELETE FROM media_files WHERE package_id = ?");
             $stmt_delete_files->execute([$packageId]);
@@ -118,9 +118,8 @@ class PackageRepository
             $stmt_delete_package = $this->pdo->prepare("DELETE FROM media_packages WHERE id = ?");
             $stmt_delete_package->execute([$packageId]);
 
-            $this->pdo->commit();
         } catch (Exception $e) {
-            $this->pdo->rollBack();
+            // Rollback akan ditangani oleh penangan eksepsi global
             throw new Exception("Gagal menghapus paket dari database: " . $e->getMessage());
         }
 
@@ -199,9 +198,9 @@ class PackageRepository
      */
     public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id): int
     {
-        $this->pdo->beginTransaction();
         try {
             // 1. Ambil dan kunci baris pengguna untuk mendapatkan urutan & ID publik
+            // Catatan: FOR UPDATE memerlukan transaksi aktif, yang sekarang ditangani oleh webhook.php
             $stmt_user = $this->pdo->prepare("SELECT public_seller_id, seller_package_sequence FROM users WHERE id = ? FOR UPDATE");
             $stmt_user->execute([$seller_user_id]);
             $seller_info = $stmt_user->fetch(PDO::FETCH_ASSOC);
@@ -226,11 +225,10 @@ class PackageRepository
             $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $public_id]);
             $package_id = $this->pdo->lastInsertId();
 
-            $this->pdo->commit();
             return $package_id;
 
         } catch (Exception $e) {
-            $this->pdo->rollBack();
+            // Rollback akan ditangani oleh penangan eksepsi global di webhook.php
             throw new Exception("Gagal membuat paket baru: " . $e->getMessage());
         }
     }
