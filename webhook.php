@@ -113,11 +113,111 @@ try {
             // ... (logika state-based lainnya seperti 'awaiting_price')
             if ($current_user['state'] == 'awaiting_price' && is_numeric($text) && $text >= 0) {
                 $price = (float)$text;
-                $package_id = $state_context['package_id'];
-                $pdo->prepare("UPDATE media_packages SET price = ?, status = 'available' WHERE id = ? AND seller_user_id = ?")->execute([$price, $package_id, $internal_user_id]);
+
+                // --- All logic is now deferred to this point ---
+
+                // 1. Get message context from the saved state
+                $replied_message_id = $state_context['reply_to_message_id'];
+                $replied_chat_id = $state_context['reply_to_chat_id'];
+
+                // We need to instantiate repositories here as they are not in this scope
+                require_once __DIR__ . '/core/database/PackageRepository.php';
+                require_once __DIR__ . '/core/database/BotChannelUsageRepository.php';
+                $package_repo = new PackageRepository($pdo);
+                $bot_channel_usage_repo = new BotChannelUsageRepository($pdo);
+
+                // 2. Get description and media group info
+                $stmt_media_info = $pdo->prepare("SELECT media_group_id, caption FROM media_files WHERE message_id = ? AND chat_id = ?");
+                $stmt_media_info->execute([$replied_message_id, $replied_chat_id]);
+                $media_info = $stmt_media_info->fetch(PDO::FETCH_ASSOC);
+
+                $media_group_id = $media_info['media_group_id'] ?? null;
+                $description = $media_info['caption'] ?? ''; // Default
+
+                if ($media_group_id) {
+                    $stmt_caption = $pdo->prepare("SELECT caption FROM media_files WHERE media_group_id = ? AND caption IS NOT NULL AND caption != '' LIMIT 1");
+                    $stmt_caption->execute([$media_group_id]);
+                    $group_caption = $stmt_caption->fetchColumn();
+                    if ($group_caption) {
+                        $description = $group_caption;
+                    }
+                }
+
+                // 3. Get all media file IDs for the package
+                $media_file_ids = [];
+                if ($media_group_id) {
+                    $stmt_media = $pdo->prepare("SELECT id FROM media_files WHERE media_group_id = ? AND chat_id = ?");
+                    $stmt_media->execute([$media_group_id, $replied_chat_id]);
+                    $media_file_ids = $stmt_media->fetchAll(PDO::FETCH_COLUMN);
+                } else {
+                    $stmt_media = $pdo->prepare("SELECT id FROM media_files WHERE message_id = ? AND chat_id = ?");
+                    $stmt_media->execute([$replied_message_id, $replied_chat_id]);
+                    $media_file_id = $stmt_media->fetchColumn();
+                    if ($media_file_id) $media_file_ids[] = $media_file_id;
+                }
+
+                if (empty($media_file_ids)) {
+                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Terjadi kesalahan internal (media tidak ditemukan). Proses dibatalkan.");
+                    $user_repo->setUserState($internal_user_id, null, null);
+                    $update_handled = true;
+                    $pdo->commit(); // Commit the state change and exit cleanly
+                    http_response_code(200);
+                    exit;
+                }
+
+                // 4. Get thumbnail ID
+                $stmt_thumb = $pdo->prepare("SELECT id FROM media_files WHERE message_id = ? AND chat_id = ?");
+                $stmt_thumb->execute([$replied_message_id, $replied_chat_id]);
+                $thumbnail_media_id = $stmt_thumb->fetchColumn();
+                if (!$thumbnail_media_id) {
+                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Terjadi kesalahan internal (thumbnail tidak ditemukan). Proses dibatalkan.");
+                    $user_repo->setUserState($internal_user_id, null, null);
+                    $update_handled = true;
+                    $pdo->commit(); // Commit the state change and exit cleanly
+                    http_response_code(200);
+                    exit;
+                }
+
+                // 5. Get storage channel and copy the message
+                $storage_channel = $bot_channel_usage_repo->getNextChannelForBot($internal_bot_id);
+                if (!$storage_channel) {
+                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Terjadi kesalahan sistem (tidak ada channel penyimpanan). Harap hubungi admin.");
+                    $user_repo->setUserState($internal_user_id, null, null);
+                    $update_handled = true;
+                    $pdo->commit();
+                    http_response_code(200);
+                    exit;
+                }
+                $copied_message = $telegram_api->copyMessage($storage_channel['channel_id'], $replied_chat_id, $replied_message_id);
+                if (!$copied_message || !isset($copied_message['ok']) || !$copied_message['ok']) {
+                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan media. Harap coba lagi atau hubungi admin.");
+                    $user_repo->setUserState($internal_user_id, null, null);
+                    $update_handled = true;
+                    $pdo->commit();
+                    http_response_code(200);
+                    exit;
+                }
+                $storage_message_id = $copied_message['result']['message_id'];
+
+                // 6. Create the package (NOW we increment the sequence)
+                $package_id = $package_repo->createPackageWithPublicId($internal_user_id, $internal_bot_id, $description, $thumbnail_media_id);
+
+                // 7. Link files to the package and update price
+                $pdo->prepare("UPDATE media_packages SET price = ?, status = 'available' WHERE id = ?")->execute([$price, $package_id]);
+
+                $stmt_link = $pdo->prepare("UPDATE media_files SET package_id = ?, storage_channel_id = ?, storage_message_id = ? WHERE id = ?");
+                foreach ($media_file_ids as $media_id) {
+                    $stmt_link->execute([$package_id, $storage_channel['channel_id'], $storage_message_id, $media_id]);
+                }
+
+                // 8. Finalize
                 $user_repo->setUserState($internal_user_id, null, null);
-                $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan. Paket media Anda dengan ID #{$package_id} sekarang tersedia untuk dijual.");
+                $package = $package_repo->find($package_id);
+                $public_id_display = $package['public_id'] ?? 'N/A';
+                $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan. Paket media Anda dengan ID *{$public_id_display}* sekarang tersedia untuk dijual.");
+
                 $update_handled = true;
+
             } elseif ($current_user['state'] == 'awaiting_price') {
                  $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Harga tidak valid. Harap masukkan angka saja (contoh: 50000).");
                  $update_handled = true;

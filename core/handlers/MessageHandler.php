@@ -116,105 +116,25 @@ class MessageHandler
         }
 
         $replied_message = $this->message['reply_to_message'];
-        $replied_message_id = $replied_message['message_id'];
-        $replied_chat_id = $replied_message['chat']['id'];
-        $internal_user_id = $this->current_user['id'];
-        $internal_bot_id = $this->user_repo->getBotId();
 
-        // 1. Dapatkan channel penyimpanan berikutnya
-        $storage_channel = $this->bot_channel_usage_repo->getNextChannelForBot($internal_bot_id);
-        if (!$storage_channel) {
-            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Terjadi kesalahan sistem (tidak ada channel penyimpanan). Harap hubungi admin.");
-            error_log("No storage channels available for bot ID: " . $internal_bot_id);
-            return;
+        // Cek apakah media yang di-reply sudah ada di database.
+        // Ini penting karena kita butuh data media untuk proses selanjutnya.
+        $stmt_check_media = $this->pdo->prepare("SELECT COUNT(*) FROM media_files WHERE message_id = ? AND chat_id = ?");
+        $stmt_check_media->execute([$replied_message['message_id'], $replied_message['chat']['id']]);
+        if ($stmt_check_media->fetchColumn() == 0) {
+             $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.");
+             return;
         }
 
-        // 2. Salin pesan ke channel penyimpanan
-        $copied_message = $this->telegram_api->copyMessage(
-            $storage_channel['channel_id'],
-            $replied_chat_id,
-            $replied_message_id
-        );
+        // Simpan konteks pesan yang akan dijual untuk langkah selanjutnya.
+        $state_context = [
+            'reply_to_message_id' => $replied_message['message_id'],
+            'reply_to_chat_id' => $replied_message['chat']['id']
+        ];
 
-        if (!$copied_message || !isset($copied_message['ok']) || !$copied_message['ok']) {
-            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal menyimpan media. Harap coba lagi atau hubungi admin.");
-            error_log("Failed to copy message to storage channel. API response: " . json_encode($copied_message));
-            return;
-        }
+        $this->user_repo->setUserState($this->current_user['id'], 'awaiting_price', $state_context);
 
-        $storage_message_id = $copied_message['result']['message_id'];
-        $storage_channel_id_db = $storage_channel['id']; // Ini adalah ID dari tabel private_channels
-
-        // 3. Lanjutkan dengan logika penjualan yang ada
-        $media_group_id = $replied_message['media_group_id'] ?? null;
-        $description = $replied_message['caption'] ?? ''; // Default
-
-        if ($media_group_id) {
-            // Jika ini adalah media group, coba cari caption dari salah satu item di grup
-            $stmt_caption = $this->pdo->prepare(
-                "SELECT caption FROM media_files WHERE media_group_id = ? AND caption IS NOT NULL AND caption != '' LIMIT 1"
-            );
-            $stmt_caption->execute([$media_group_id]);
-            $group_caption = $stmt_caption->fetchColumn();
-            if ($group_caption) {
-                $description = $group_caption;
-            }
-        }
-
-        $media_file_ids = [];
-        if ($media_group_id) {
-            $stmt_media = $this->pdo->prepare("SELECT id FROM media_files WHERE media_group_id = ? AND chat_id = ?");
-            $stmt_media->execute([$media_group_id, $replied_chat_id]);
-            $media_file_ids = $stmt_media->fetchAll(PDO::FETCH_COLUMN);
-        } else {
-            $stmt_media = $this->pdo->prepare("SELECT id FROM media_files WHERE message_id = ? AND chat_id = ?");
-            $stmt_media->execute([$replied_message_id, $replied_chat_id]);
-            $media_file_id = $stmt_media->fetchColumn();
-            if ($media_file_id) $media_file_ids[] = $media_file_id;
-        }
-
-        if (empty($media_file_ids)) {
-            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.");
-            return;
-        }
-
-        $stmt_thumb = $this->pdo->prepare("SELECT id FROM media_files WHERE message_id = ? AND chat_id = ?");
-        $stmt_thumb->execute([$replied_message_id, $replied_chat_id]);
-        $thumbnail_media_id = $stmt_thumb->fetchColumn();
-
-        if (!$thumbnail_media_id) {
-            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal. Media yang Anda reply tidak dapat ditemukan sebagai thumbnail.");
-            return;
-        }
-
-        try {
-            $package_id = $this->package_repo->createPackageWithPublicId(
-                $internal_user_id,
-                $internal_bot_id,
-                $description,
-                $thumbnail_media_id
-            );
-        } catch (Exception $e) {
-            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal membuat paket baru. Silakan coba lagi. Error: " . $e->getMessage());
-            return;
-        }
-
-        // 4. Tautkan file media ke paket dan simpan info penyimpanan
-        $stmt_link = $this->pdo->prepare(
-            "UPDATE media_files
-             SET package_id = ?, storage_channel_id = ?, storage_message_id = ?
-             WHERE id = ?"
-        );
-        foreach ($media_file_ids as $media_id) {
-            $stmt_link->execute([$package_id, $storage_channel['channel_id'], $storage_message_id, $media_id]);
-        }
-
-        $this->user_repo->setUserState($internal_user_id, 'awaiting_price', ['package_id' => $package_id]);
-
-        $package = $this->package_repo->find($package_id);
-        $public_id_display = $package['public_id'] ?? 'N/A';
-
-        $this->telegram_api->sendMessage($this->chat_id, "✅ Media telah disiapkan untuk dijual dengan ID: *{$public_id_display}*\nDeskripsi:\n*\"{$description}\"*\n\nSekarang, silakan masukkan harga untuk paket ini (contoh: 50000).", 'Markdown');
+        $this->telegram_api->sendMessage($this->chat_id, "✅ Media telah siap untuk dijual.\n\nSekarang, silakan masukkan harga untuk paket ini (contoh: 50000).");
     }
 
     private function handleKontenCommand(array $parts)
