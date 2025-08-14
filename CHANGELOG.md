@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.12.2] - 2025-08-14
+
+### Diperbaiki
+- **Fatal Error di Halaman Log Media**: Memperbaiki error fatal `Column not found: 1054 Unknown column 'mf.file_id'` pada halaman `admin/media_logs.php`.
+  - **Penyebab**: Halaman log media masih mencoba memilih kolom `file_id` dari database, padahal kolom tersebut sudah dihapus pada optimisasi skema sebelumnya (v3.10.0).
+  - **Solusi**: Menghapus referensi ke `mf.file_id` dari query SQL di halaman log media.
+
 ## [3.12.1] - 2025-08-14
 
 ### Diperbaiki
