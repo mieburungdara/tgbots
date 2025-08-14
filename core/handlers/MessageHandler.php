@@ -86,16 +86,12 @@ class MessageHandler
         $user_id = $this->current_user['id'];
 
         // Mengambil statistik
-        $purchase_stats = $this->analytics_repo->getUserPurchaseStats($user_id);
         $sales_stats = $this->analytics_repo->getSellerSummary($user_id); // Reusing existing method
 
         // Format pesan
         $user_name = htmlspecialchars(trim($this->current_user['first_name'] . ' ' . ($this->current_user['last_name'] ?? '')));
         $balance = "Rp " . number_format($this->current_user['balance'], 0, ',', '.');
         $seller_id = $this->current_user['public_seller_id'] ? "`" . $this->current_user['public_seller_id'] . "`" : "Belum terdaftar";
-
-        $total_purchases = $purchase_stats['total_purchases'];
-        $total_spent = "Rp " . number_format($purchase_stats['total_spent'], 0, ',', '.');
 
         $total_sales = $sales_stats['total_sales'];
         $total_revenue = "Rp " . number_format($sales_stats['total_revenue'], 0, ',', '.');
@@ -107,10 +103,6 @@ class MessageHandler
 
         $message .= "💰 *Keuangan*\n";
         $message .= "Saldo Saat Ini: *{$balance}*\n\n";
-
-        $message .= "🛒 *Aktivitas Pembelian*\n";
-        $message .= "Total Item Dibeli: *{$total_purchases}* item\n";
-        $message .= "Total Uang Dibelanjakan: *{$total_spent}*\n\n";
 
         $message .= "📈 *Aktivitas Penjualan*\n";
         $message .= "Total Item Terjual: *{$total_sales}* item\n";
