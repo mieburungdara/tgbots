@@ -79,18 +79,19 @@ class CallbackQueryHandler
             return;
         }
 
-        // Build the navigation keyboard
+        // Build the numbered pagination keyboard
         $keyboard_buttons = [];
-        if ($page_index > 0) {
-            $keyboard_buttons[] = ['text' => '◀️ Sebelumnya', 'callback_data' => "view_page_{$public_id}_" . ($page_index - 1)];
+        if ($total_pages > 1) {
+            for ($i = 0; $i < $total_pages; $i++) {
+                if ($i === $page_index) {
+                    // Highlight the current page
+                    $keyboard_buttons[] = ['text' => "- " . ($i + 1) . " -", 'callback_data' => 'noop'];
+                } else {
+                    $keyboard_buttons[] = ['text' => (string)($i + 1), 'callback_data' => "view_page_{$public_id}_{$i}"];
+                }
+            }
         }
-
-        $keyboard_buttons[] = ['text' => ($page_index + 1) . " / {$total_pages}", 'callback_data' => 'noop'];
-
-        if ($page_index < $total_pages - 1) {
-            $keyboard_buttons[] = ['text' => 'Selanjutnya ▶️', 'callback_data' => "view_page_{$public_id}_" . ($page_index + 1)];
-        }
-        $reply_markup = json_encode(['inline_keyboard' => [$keyboard_buttons]]);
+        $reply_markup = empty($keyboard_buttons) ? null : json_encode(['inline_keyboard' => [$keyboard_buttons]]);
 
         // Send the content for the current page
         $current_page_content = $pages[$page_index];
