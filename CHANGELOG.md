@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.12.0] - 2025-08-13
+
+### Ditambahkan
+- **Mode Edit Paket dengan /addmedia <ID>**: Perintah `/addmedia` sekarang memiliki fungsionalitas ganda untuk mengedit paket yang sudah ada.
+  - **Alur Kerja Baru**: Penjual dapat menggunakan `/addmedia <ID_PAKET>` sambil me-reply media baru untuk menambahkannya ke paket yang sudah ada dan tersedia.
+  - **Otorisasi**: Sistem akan memverifikasi bahwa pengguna yang menjalankan perintah adalah pemilik sah dari paket tersebut.
+  - **Penambahan Konten**: Media baru (termasuk seluruh item dari media group) akan disalin ke channel penyimpanan yang sama dengan konten lama dan ditautkan ke paket yang ada di database.
+  - **Tujuan**: Memberikan fleksibilitas kepada penjual untuk memperbarui dan memperluas konten paket mereka bahkan setelah paket tersebut dirilis.
+
 ## [3.11.0] - 2025-08-13
 
 ### Ditambahkan
