@@ -112,7 +112,7 @@ $packages = $packageRepo->findAll();
         <table>
             <thead>
                 <tr>
-                    <th>ID</th>
+                    <th>ID Publik</th>
                     <th>Deskripsi</th>
                     <th>Penjual</th>
                     <th>Harga</th>
@@ -129,7 +129,7 @@ $packages = $packageRepo->findAll();
                 <?php else: ?>
                     <?php foreach ($packages as $package): ?>
                         <tr>
-                            <td>#<?= htmlspecialchars($package['id']) ?></td>
+                            <td><?= htmlspecialchars($package['public_id']) ?></td>
                             <td><?= htmlspecialchars($package['description'] ?: 'N/A') ?></td>
                             <td>@<?= htmlspecialchars($package['seller_username']) ?></td>
                             <td>Rp <?= number_format($package['price'], 0, ',', '.') ?></td>

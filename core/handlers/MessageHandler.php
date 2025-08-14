@@ -107,6 +107,14 @@ class MessageHandler
             return;
         }
 
+        // Cek apakah pengguna sudah menjadi penjual
+        if (empty($this->current_user['public_seller_id'])) {
+            $text = "Anda belum terdaftar sebagai penjual. Apakah Anda ingin mendaftar sekarang?\n\nDengan mendaftar, Anda akan mendapatkan ID Penjual unik.";
+            $keyboard = ['inline_keyboard' => [[['text' => "Ya, Daftar Sekarang", 'callback_data' => "register_seller"]]]];
+            $this->telegram_api->sendMessage($this->chat_id, $text, null, json_encode($keyboard));
+            return;
+        }
+
         $replied_message = $this->message['reply_to_message'];
         $replied_message_id = $replied_message['message_id'];
         $replied_chat_id = $replied_message['chat']['id'];
@@ -167,9 +175,17 @@ class MessageHandler
             return;
         }
 
-        $stmt_package = $this->pdo->prepare("INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status) VALUES (?, ?, ?, ?, 'pending')");
-        $stmt_package->execute([$internal_user_id, $internal_bot_id, $description, $thumbnail_media_id]);
-        $package_id = $this->pdo->lastInsertId();
+        try {
+            $package_id = $this->package_repo->createPackageWithPublicId(
+                $internal_user_id,
+                $internal_bot_id,
+                $description,
+                $thumbnail_media_id
+            );
+        } catch (Exception $e) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal membuat paket baru. Silakan coba lagi. Error: " . $e->getMessage());
+            return;
+        }
 
         // 4. Tautkan file media ke paket dan simpan info penyimpanan
         $stmt_link = $this->pdo->prepare(
@@ -182,24 +198,29 @@ class MessageHandler
         }
 
         $this->user_repo->setUserState($internal_user_id, 'awaiting_price', ['package_id' => $package_id]);
-        $this->telegram_api->sendMessage($this->chat_id, "✅ Media telah disiapkan untuk dijual dengan deskripsi:\n\n*\"{$description}\"*\n\nSekarang, silakan masukkan harga untuk paket ini (contoh: 50000).", 'Markdown');
+
+        $package = $this->package_repo->find($package_id);
+        $public_id_display = $package['public_id'] ?? 'N/A';
+
+        $this->telegram_api->sendMessage($this->chat_id, "✅ Media telah disiapkan untuk dijual dengan ID: *{$public_id_display}*\nDeskripsi:\n*\"{$description}\"*\n\nSekarang, silakan masukkan harga untuk paket ini (contoh: 50000).", 'Markdown');
     }
 
     private function handleKontenCommand(array $parts)
     {
         $internal_user_id = $this->current_user['id'];
-        if (count($parts) !== 2 || !is_numeric($parts[1])) {
+        if (count($parts) !== 2) {
             $this->telegram_api->sendMessage($this->chat_id, "Format perintah salah. Gunakan: /konten <ID Konten>");
             return;
         }
 
-        $package_id = (int)$parts[1];
-        $package = $this->package_repo->find($package_id);
+        $public_id = $parts[1];
+        $package = $this->package_repo->findByPublicId($public_id);
 
         if (!$package) {
-            $this->telegram_api->sendMessage($this->chat_id, "Konten dengan ID #{$package_id} tidak ditemukan.");
+            $this->telegram_api->sendMessage($this->chat_id, "Konten dengan ID `{$public_id}` tidak ditemukan.", 'Markdown');
             return;
         }
+        $package_id = $package['id'];
 
         $thumbnail = null;
         // Coba dapatkan thumbnail yang spesifik terlebih dahulu
@@ -224,16 +245,16 @@ class MessageHandler
 
         $is_admin = ($this->current_user['role'] === 'admin');
         $is_seller = ($package['seller_user_id'] == $internal_user_id);
-        $has_purchased = (new SaleRepository($this->pdo))->hasUserPurchased($package_id, $internal_user_id);
+        $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $internal_user_id);
 
         $has_access = $is_admin || $is_seller || $has_purchased;
 
         $keyboard = [];
         if ($has_access) {
-            $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_full_{$package_id}"]]]];
+            $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_full_{$package['public_id']}"]]]];
         } elseif ($package['status'] === 'available') {
             $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
-            $keyboard = ['inline_keyboard' => [[['text' => "Beli Konten Ini ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package_id}"]]]];
+            $keyboard = ['inline_keyboard' => [[['text' => "Beli Konten Ini ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"]]]];
         }
 
         $caption = $package['description'];

@@ -111,7 +111,7 @@ $sold_packages = $packageRepo->findAllBySellerId($user_id);
                              <span>🖼️</span>
                         </div>
                         <div class="card-body">
-                            <p class="card-text">ID Paket: #<?= htmlspecialchars($package['id']) ?></p>
+                            <p class="card-text">ID: <?= htmlspecialchars($package['public_id']) ?></p>
                             <h2 class="card-title"><?= htmlspecialchars($package['description'] ?: 'Tanpa deskripsi') ?></h2>
                             <p class="card-price">Rp <?= number_format($package['price'], 0, ',', '.') ?></p>
                             <p class="card-text">

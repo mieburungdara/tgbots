@@ -150,6 +150,13 @@ class PackageRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    public function findByPublicId(string $publicId)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM media_packages WHERE public_id = ?");
+        $stmt->execute([$publicId]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
     /**
      * Mengubah status proteksi konten sebuah paket.
      *
@@ -178,5 +185,53 @@ class PackageRepository
         $stmt->execute([$new_status, $packageId]);
 
         return $new_status;
+    }
+
+    /**
+     * Membuat paket baru dengan ID publik yang diformat.
+     *
+     * @param int $seller_user_id
+     * @param int $bot_id
+     * @param string $description
+     * @param int $thumbnail_media_id
+     * @return int ID internal dari paket yang baru dibuat.
+     * @throws Exception
+     */
+    public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id): int
+    {
+        $this->pdo->beginTransaction();
+        try {
+            // 1. Ambil dan kunci baris pengguna untuk mendapatkan urutan & ID publik
+            $stmt_user = $this->pdo->prepare("SELECT public_seller_id, seller_package_sequence FROM users WHERE id = ? FOR UPDATE");
+            $stmt_user->execute([$seller_user_id]);
+            $seller_info = $stmt_user->fetch(PDO::FETCH_ASSOC);
+
+            if (!$seller_info || !$seller_info['public_seller_id']) {
+                throw new Exception("Penjual ini tidak memiliki ID publik.");
+            }
+
+            // 2. Tingkatkan nomor urut
+            $new_sequence = $seller_info['seller_package_sequence'] + 1;
+            $stmt_update_seq = $this->pdo->prepare("UPDATE users SET seller_package_sequence = ? WHERE id = ?");
+            $stmt_update_seq->execute([$new_sequence, $seller_user_id]);
+
+            // 3. Buat ID publik
+            $public_id = $seller_info['public_seller_id'] . '_' . str_pad($new_sequence, 4, '0', STR_PAD_LEFT);
+
+            // 4. Masukkan paket baru
+            $stmt_package = $this->pdo->prepare(
+                "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id)
+                 VALUES (?, ?, ?, ?, 'pending', ?)"
+            );
+            $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $public_id]);
+            $package_id = $this->pdo->lastInsertId();
+
+            $this->pdo->commit();
+            return $package_id;
+
+        } catch (Exception $e) {
+            $this->pdo->rollBack();
+            throw new Exception("Gagal membuat paket baru: " . $e->getMessage());
+        }
     }
 }

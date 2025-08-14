@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.5.0] - 2025-08-13
+
+### Diubah
+- **Format ID Konten**: Mengubah format ID konten yang dilihat pengguna menjadi `XXXX_YYYY` (4 huruf acak unik per penjual, diikuti 4 angka berurutan per penjual).
+  - **Alur Registrasi Penjual**: Saat pengguna pertama kali menggunakan `/sell`, bot akan memandu mereka melalui proses pendaftaran singkat untuk mendapatkan ID Penjual publik yang unik (misal: `ASDF`).
+  - **ID Konten Berurutan per Penjual**: Setiap konten yang dibuat oleh penjual akan mendapatkan nomor urut, menghasilkan ID seperti `ASDF_0001`, `ASDF_0002`, dst.
+  - **Pembaruan Database & Kode**: Menambahkan kolom `public_seller_id` dan `seller_package_sequence` ke tabel `users`, serta `public_id` ke `media_packages`. Semua antarmuka pengguna diperbarui untuk menggunakan format ID baru ini.
+  - **Skrip Back-fill**: Menyertakan skrip `migrations/populate_public_ids.php` untuk menghasilkan ID baru ini bagi semua data penjual dan konten yang sudah ada.
+
 ## [3.4.0] - 2025-08-13
 
 ### Ditambahkan
