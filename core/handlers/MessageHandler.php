@@ -126,15 +126,50 @@ class MessageHandler
              return;
         }
 
+        // Ambil info media untuk ditampilkan ke pengguna
+        $stmt_media_info = $this->pdo->prepare("SELECT media_group_id, caption FROM media_files WHERE message_id = ? AND chat_id = ?");
+        $stmt_media_info->execute([$replied_message['message_id'], $replied_message['chat']['id']]);
+        $media_info = $stmt_media_info->fetch(PDO::FETCH_ASSOC);
+
+        $media_group_id = $media_info['media_group_id'] ?? null;
+        $description = $media_info['caption'] ?? ''; // Default
+
+        if ($media_group_id) {
+            // Jika ini adalah media group, cari caption dari salah satu item
+            $stmt_caption = $this->pdo->prepare("SELECT caption FROM media_files WHERE media_group_id = ? AND caption IS NOT NULL AND caption != '' LIMIT 1");
+            $stmt_caption->execute([$media_group_id]);
+            $group_caption = $stmt_caption->fetchColumn();
+            if ($group_caption) {
+                $description = $group_caption;
+            }
+        }
+
+        // Hitung jumlah media
+        $media_count = 1;
+        if ($media_group_id) {
+            $stmt_count = $this->pdo->prepare("SELECT COUNT(*) FROM media_files WHERE media_group_id = ?");
+            $stmt_count->execute([$media_group_id]);
+            $media_count = $stmt_count->fetchColumn();
+        }
+
         // Simpan konteks pesan yang akan dijual untuk langkah selanjutnya.
         $state_context = [
             'reply_to_message_id' => $replied_message['message_id'],
             'reply_to_chat_id' => $replied_message['chat']['id']
         ];
-
         $this->user_repo->setUserState($this->current_user['id'], 'awaiting_price', $state_context);
 
-        $this->telegram_api->sendMessage($this->chat_id, "✅ Media telah siap untuk dijual.\n\nSekarang, silakan masukkan harga untuk paket ini (contoh: 50000).");
+        // Buat dan kirim pesan yang informatif
+        $message_text = "✅ Media telah siap untuk dijual.\n\n";
+        if (!empty($description)) {
+            // Escape special characters for Markdown
+            $description_escaped = str_replace(['*', '_', '`', '['], ['\*', '\_', '\`', '\['], $description);
+            $message_text .= "Deskripsi: *\"" . $description_escaped . "\"*\n";
+        }
+        $message_text .= "Jumlah Media: *{$media_count}*\n\n";
+        $message_text .= "Sekarang, silakan masukkan harga untuk paket ini (contoh: 50000).";
+
+        $this->telegram_api->sendMessage($this->chat_id, $message_text, 'Markdown');
     }
 
     private function handleKontenCommand(array $parts)

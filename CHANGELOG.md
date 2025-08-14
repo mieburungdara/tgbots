@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.8.1] - 2025-08-13
+
+### Peningkatan
+- **Pesan Konfirmasi /sell yang Lebih Informatif**: Saat pengguna memulai perintah `/sell`, pesan yang meminta harga sekarang juga menampilkan pratinjau deskripsi (caption) dan jumlah total media yang akan dijual. Ini memberikan konfirmasi langsung kepada penjual tentang item apa yang sedang mereka proses, meningkatkan kejelasan alur kerja.
+
 ## [3.8.0] - 2025-08-13
 
 ### Diubah
