@@ -54,6 +54,9 @@ class MessageHandler
             case '/sell':
                 $this->handleSellCommand();
                 break;
+            case '/addmedia':
+                $this->handleAddMediaCommand();
+                break;
             case '/konten':
                 $this->handleKontenCommand($parts);
                 break;
@@ -172,9 +175,14 @@ class MessageHandler
         }
 
         // Simpan konteks pesan yang akan dijual untuk langkah selanjutnya.
+        // Strukturnya adalah array of messages untuk mendukung /addmedia
         $state_context = [
-            'reply_to_message_id' => $replied_message['message_id'],
-            'reply_to_chat_id' => $replied_message['chat']['id']
+            'media_messages' => [
+                [
+                    'message_id' => $replied_message['message_id'],
+                    'chat_id' => $replied_message['chat']['id']
+                ]
+            ]
         ];
         $this->user_repo->setUserState($this->current_user['id'], 'awaiting_price', $state_context);
 
@@ -288,5 +296,46 @@ class MessageHandler
         }
         // ... Logic for admin commands, still using direct PDO.
         // This can also be refactored.
+    }
+
+    private function handleAddMediaCommand()
+    {
+        if ($this->current_user['state'] !== 'awaiting_price') {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Perintah ini hanya bisa digunakan saat Anda sedang dalam proses menjual item.");
+            return;
+        }
+
+        if (!isset($this->message['reply_to_message'])) {
+            $this->telegram_api->sendMessage($this->chat_id, "Untuk menambah media, silakan reply media yang ingin Anda tambahkan dengan perintah /addmedia.");
+            return;
+        }
+
+        $replied_message = $this->message['reply_to_message'];
+
+        $stmt_check_media = $this->pdo->prepare("SELECT COUNT(*) FROM media_files WHERE message_id = ? AND chat_id = ?");
+        $stmt_check_media->execute([$replied_message['message_id'], $replied_message['chat']['id']]);
+        if ($stmt_check_media->fetchColumn() == 0) {
+             $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.");
+             return;
+        }
+
+        $state_context = json_decode($this->current_user['state_context'], true);
+
+        // Prevent adding the same message twice
+        foreach ($state_context['media_messages'] as $msg) {
+            if ($msg['message_id'] == $replied_message['message_id']) {
+                $this->telegram_api->sendMessage($this->chat_id, "⚠️ Media ini sudah ada dalam paket.");
+                return;
+            }
+        }
+
+        $state_context['media_messages'][] = [
+            'message_id' => $replied_message['message_id'],
+            'chat_id' => $replied_message['chat']['id']
+        ];
+
+        $this->user_repo->setUserState($this->current_user['id'], 'awaiting_price', $state_context);
+
+        $this->telegram_api->sendMessage($this->chat_id, "✅ Media berhasil ditambahkan. Silakan tambah media lagi dengan /addmedia, atau masukkan harga untuk menyelesaikan.");
     }
 }

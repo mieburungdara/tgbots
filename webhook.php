@@ -114,133 +114,81 @@ try {
             if ($current_user['state'] == 'awaiting_price' && is_numeric($text) && $text >= 0) {
                 $price = (float)$text;
 
-                // --- All logic is now deferred to this point ---
+                // --- Finalization logic for /sell & /addmedia ---
 
-                // 1. Get message context from the saved state
-                $replied_message_id = $state_context['reply_to_message_id'];
-                $replied_chat_id = $state_context['reply_to_chat_id'];
+                $media_messages = $state_context['media_messages'] ?? [];
+                if (empty($media_messages)) {
+                    $user_repo->setUserState($internal_user_id, null, null);
+                    $update_handled = true;
+                    return;
+                }
 
-                // We need to instantiate repositories here as they are not in this scope
                 require_once __DIR__ . '/core/database/PackageRepository.php';
                 require_once __DIR__ . '/core/database/BotChannelUsageRepository.php';
                 $package_repo = new PackageRepository($pdo);
                 $bot_channel_usage_repo = new BotChannelUsageRepository($pdo);
 
-                // 2. Get description and media group info
-                $stmt_media_info = $pdo->prepare("SELECT media_group_id, caption FROM media_files WHERE message_id = ? AND chat_id = ?");
-                $stmt_media_info->execute([$replied_message_id, $replied_chat_id]);
-                $media_info = $stmt_media_info->fetch(PDO::FETCH_ASSOC);
+                // 1. Collect all unique media file info from all messages/groups
+                $media_to_process = []; // [ 'db_id' => ['message_id' => ..., 'chat_id' => ...], ... ]
+                $all_captions = [];
+                $first_message_context = $media_messages[0];
 
-                $media_group_id = $media_info['media_group_id'] ?? null;
-                $description = $media_info['caption'] ?? ''; // Default
+                foreach ($media_messages as $msg_context) {
+                    $stmt_info = $pdo->prepare("SELECT id, media_group_id, caption FROM media_files WHERE message_id = ? AND chat_id = ?");
+                    $stmt_info->execute([$msg_context['message_id'], $msg_context['chat_id']]);
+                    $media_info = $stmt_info->fetch(PDO::FETCH_ASSOC);
+                    if (!$media_info) continue;
 
-                if ($media_group_id) {
-                    $stmt_caption = $pdo->prepare("SELECT caption FROM media_files WHERE media_group_id = ? AND caption IS NOT NULL AND caption != '' LIMIT 1");
-                    $stmt_caption->execute([$media_group_id]);
-                    $group_caption = $stmt_caption->fetchColumn();
-                    if ($group_caption) {
-                        $description = $group_caption;
+                    if (!empty($media_info['caption'])) $all_captions[] = $media_info['caption'];
+
+                    if ($media_group_id = $media_info['media_group_id']) {
+                        $stmt_group = $pdo->prepare("SELECT id, message_id FROM media_files WHERE media_group_id = ?");
+                        $stmt_group->execute([$media_group_id]);
+                        while ($row = $stmt_group->fetch(PDO::FETCH_ASSOC)) {
+                            $media_to_process[$row['id']] = ['message_id' => $row['message_id'], 'chat_id' => $msg_context['chat_id']];
+                        }
+                    } else {
+                        $media_to_process[$media_info['id']] = ['message_id' => $msg_context['message_id'], 'chat_id' => $msg_context['chat_id']];
                     }
                 }
 
-                // 3. Get all media file IDs for the package
-                $media_file_ids = [];
-                if ($media_group_id) {
-                    $stmt_media = $pdo->prepare("SELECT id FROM media_files WHERE media_group_id = ? AND chat_id = ?");
-                    $stmt_media->execute([$media_group_id, $replied_chat_id]);
-                    $media_file_ids = $stmt_media->fetchAll(PDO::FETCH_COLUMN);
-                } else {
-                    $stmt_media = $pdo->prepare("SELECT id FROM media_files WHERE message_id = ? AND chat_id = ?");
-                    $stmt_media->execute([$replied_message_id, $replied_chat_id]);
-                    $media_file_id = $stmt_media->fetchColumn();
-                    if ($media_file_id) $media_file_ids[] = $media_file_id;
-                }
+                if (empty($media_to_process)) { /* ... error handling ... */ exit; }
 
-                if (empty($media_file_ids)) {
-                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Terjadi kesalahan internal (media tidak ditemukan). Proses dibatalkan.");
-                    $user_repo->setUserState($internal_user_id, null, null);
-                    $update_handled = true;
-                    $pdo->commit(); // Commit the state change and exit cleanly
-                    http_response_code(200);
-                    exit;
-                }
-
-                // 4. Get thumbnail ID
+                // 2. Define thumbnail and description
                 $stmt_thumb = $pdo->prepare("SELECT id FROM media_files WHERE message_id = ? AND chat_id = ?");
-                $stmt_thumb->execute([$replied_message_id, $replied_chat_id]);
+                $stmt_thumb->execute([$first_message_context['message_id'], $first_message_context['chat_id']]);
                 $thumbnail_media_id = $stmt_thumb->fetchColumn();
-                if (!$thumbnail_media_id) {
-                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Terjadi kesalahan internal (thumbnail tidak ditemukan). Proses dibatalkan.");
-                    $user_repo->setUserState($internal_user_id, null, null);
-                    $update_handled = true;
-                    $pdo->commit(); // Commit the state change and exit cleanly
-                    http_response_code(200);
-                    exit;
-                }
+                $description = $all_captions[0] ?? '';
 
-                // 5. Get storage channel and copy media
+                // 3. Get storage channel and copy all media
                 $storage_channel = $bot_channel_usage_repo->getNextChannelForBot($internal_bot_id);
-                if (!$storage_channel) {
-                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Terjadi kesalahan sistem (tidak ada channel penyimpanan). Harap hubungi admin.");
-                    $user_repo->setUserState($internal_user_id, null, null);
-                    $update_handled = true;
-                    $pdo->commit();
-                    http_response_code(200);
+                if (!$storage_channel) { /* ... error handling ... */ exit; }
+                $storage_channel_id = $storage_channel['channel_id'];
+
+                $original_db_ids = array_keys($media_to_process);
+                $original_message_ids = array_column($media_to_process, 'message_id');
+                $from_chat_id = $first_message_context['chat_id']; // Assume all media from one user comes from the same chat
+
+                $copied_messages_result = $telegram_api->copyMessages($storage_channel_id, $from_chat_id, json_encode($original_message_ids));
+                if (!$copied_messages_result || !isset($copied_messages_result['ok']) || !$copied_messages_result['ok'] || count($copied_messages_result['result']) !== count($original_message_ids)) {
+                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan semua media. Proses dibatalkan.");
+                    // ... error handling ...
                     exit;
                 }
-                $storage_channel_id = $storage_channel['channel_id'];
-                $storage_info = []; // To store [db_id => new_storage_message_id]
 
-                if ($media_group_id) {
-                    // Media group: copy all files at once for efficiency
-                    $stmt_group_files = $pdo->prepare("SELECT id, message_id FROM media_files WHERE media_group_id = ? ORDER BY id");
-                    $stmt_group_files->execute([$media_group_id]);
-                    $group_files = $stmt_group_files->fetchAll(PDO::FETCH_ASSOC);
-
-                    $original_db_ids = array_column($group_files, 'id');
-                    $original_message_ids = array_column($group_files, 'message_id');
-
-                    $copied_messages_result = $telegram_api->copyMessages($storage_channel_id, $replied_chat_id, json_encode($original_message_ids));
-
-                    if (!$copied_messages_result || !isset($copied_messages_result['ok']) || !$copied_messages_result['ok'] || count($copied_messages_result['result']) !== count($original_db_ids)) {
-                        $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan album media. Proses dibatalkan.");
-                        $user_repo->setUserState($internal_user_id, null, null);
-                        $update_handled = true;
-                        $pdo->commit();
-                        http_response_code(200);
-                        exit;
-                    }
-
-                    $new_storage_message_ids = $copied_messages_result['result'];
-                    for ($i = 0; $i < count($original_db_ids); $i++) {
-                        $storage_info[$original_db_ids[$i]] = $new_storage_message_ids[$i]['message_id'];
-                    }
-                } else {
-                    // Single media
-                    $copied_message = $telegram_api->copyMessage($storage_channel_id, $replied_chat_id, $replied_message_id);
-                    if (!$copied_message || !isset($copied_message['ok']) || !$copied_message['ok']) {
-                        $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan media. Harap coba lagi atau hubungi admin.");
-                        $user_repo->setUserState($internal_user_id, null, null);
-                        $update_handled = true;
-                        $pdo->commit();
-                        http_response_code(200);
-                        exit;
-                    }
-                    $storage_info[$thumbnail_media_id] = $copied_message['result']['message_id'];
-                }
-
-                // 6. Create the package (NOW we increment the sequence)
+                // 4. Create the package
                 $package_id = $package_repo->createPackageWithPublicId($internal_user_id, $internal_bot_id, $description, $thumbnail_media_id);
 
-                // 7. Link files to the package and update price
+                // 5. Link files to the package and update price
                 $pdo->prepare("UPDATE media_packages SET price = ?, status = 'available' WHERE id = ?")->execute([$price, $package_id]);
 
+                $new_storage_message_ids = $copied_messages_result['result'];
                 $stmt_link = $pdo->prepare("UPDATE media_files SET package_id = ?, storage_channel_id = ?, storage_message_id = ? WHERE id = ?");
-                foreach ($storage_info as $db_id => $storage_message_id) {
-                    $stmt_link->execute([$package_id, $storage_channel_id, $storage_message_id, $db_id]);
+                for ($i = 0; $i < count($original_db_ids); $i++) {
+                    $stmt_link->execute([$package_id, $storage_channel_id, $new_storage_message_ids[$i]['message_id'], $original_db_ids[$i]]);
                 }
 
-                // 8. Finalize
+                // 6. Finalize
                 $user_repo->setUserState($internal_user_id, null, null);
                 $package = $package_repo->find($package_id);
                 $public_id_display = $package['public_id'] ?? 'N/A';

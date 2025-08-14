@@ -1,5 +1,14 @@
 # Changelog
 
+## [3.11.0] - 2025-08-13
+
+### Ditambahkan
+- **Perintah /addmedia untuk Paket Multi-bagian**: Penjual sekarang dapat membuat paket konten yang besar dengan menambahkan media secara bertahap.
+  - **Alur Kerja Baru**: Setelah memulai dengan `/sell`, penjual dapat menggunakan perintah `/addmedia` baru sambil me-reply media atau album tambahan. Proses ini dapat diulang beberapa kali.
+  - **State Management**: Logika state pengguna (`awaiting_price`) telah direfaktor untuk dapat menampung beberapa media atau media group dalam satu sesi pembuatan paket.
+  - **Finalisasi**: Saat penjual akhirnya memasukkan harga, bot akan memproses semua media yang telah ditambahkan, menyalin semuanya ke channel penyimpanan, dan menggabungkannya ke dalam satu paket tunggal.
+  - **Tujuan**: Memungkinkan penjual untuk melampaui batas 10 item per media group di Telegram, sehingga dapat menjual paket konten yang jauh lebih besar (hingga 100 item atau lebih).
+
 ## [3.10.0] - 2025-08-13
 
 ### Peningkatan
