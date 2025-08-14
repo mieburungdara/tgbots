@@ -18,7 +18,7 @@ class PackageRepository
 
     public function getPackageFiles(int $package_id): array
     {
-        $stmt = $this->pdo->prepare("SELECT type, chat_id, message_id FROM media_files WHERE package_id = ? ORDER BY id");
+        $stmt = $this->pdo->prepare("SELECT storage_channel_id, storage_message_id FROM media_files WHERE package_id = ? AND storage_message_id IS NOT NULL ORDER BY storage_message_id ASC");
         $stmt->execute([$package_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
