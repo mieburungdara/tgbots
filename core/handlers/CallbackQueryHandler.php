@@ -60,11 +60,12 @@ class CallbackQueryHandler
 
             $files = $this->package_repo->getPackageFiles($package_id);
             if (!empty($files)) {
-                $from_chat_id = $files[0]['chat_id'];
-                $message_ids = json_encode(array_column($files, 'message_id'));
+                // Gunakan data dari channel penyimpanan, bukan dari sumber asli
+                $from_chat_id = $files[0]['storage_channel_id'];
+                $message_ids = json_encode(array_column($files, 'storage_message_id'));
                 $protect_content = (bool) $package['protect_content'];
 
-                // Kirim media menggunakan copyMessages
+                // Kirim media menggunakan copyMessages dari channel penyimpanan
                 $this->telegram_api->copyMessages(
                     $this->chat_id,
                     $from_chat_id,
