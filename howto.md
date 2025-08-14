@@ -60,3 +60,17 @@ Untuk memudahkan melihat paket besar, konten ditampilkan per halaman. Setiap "ha
 
 - Gunakan tombol bernomor `[1] [2] [3]...` untuk melompat langsung ke halaman (album/media) yang diinginkan.
 - Nomor halaman yang sedang Anda lihat akan ditandai secara khusus (contoh: `- 2 -`).
+
+## 5. Perintah Admin
+
+Admin (yang ID Telegram-nya diatur di `config.php`) memiliki perintah khusus:
+
+1.  **Menambah Saldo (Untuk Uji Coba):**
+    *   **Perintah:** `/dev_addsaldo <user_telegram_id> <jumlah>`
+    *   **Contoh:** `/dev_addsaldo 12345678 100000`
+    *   **Fungsi:** Menambahkan saldo ke pengguna tertentu. Ini penting untuk memungkinkan pembeli melakukan transaksi pertama mereka.
+
+2.  **Mempromosikan Paket Media:**
+    *   **Perintah:** `/feature <package_id> <channel_id>`
+    *   **Contoh:** `/feature 17 @namachannelanda`
+    *   **Fungsi:** Memposting pratinjau sebuah paket media ke channel yang ditentukan. `package_id` adalah ID *internal* (angka biasa), bukan ID publik. `channel_id` bisa berupa `@usernamechannel` atau ID numerik channel. Bot harus menjadi admin di channel tersebut.
