@@ -144,12 +144,31 @@ class MessageHandler
             }
         }
 
-        // Hitung jumlah media
-        $media_count = 1;
+        // Dapatkan rincian jenis media
+        $media_details_str = '';
+        $emoji_map = [
+            'photo' => '🖼️', 'video' => '📹', 'document' => '📄', 'audio' => '🎵',
+            'voice' => '🎤', 'animation' => '🎬', 'video_note' => '⏺️'
+        ];
+
         if ($media_group_id) {
-            $stmt_count = $this->pdo->prepare("SELECT COUNT(*) FROM media_files WHERE media_group_id = ?");
-            $stmt_count->execute([$media_group_id]);
-            $media_count = $stmt_count->fetchColumn();
+            $stmt_types = $this->pdo->prepare("SELECT type FROM media_files WHERE media_group_id = ?");
+            $stmt_types->execute([$media_group_id]);
+            $types = $stmt_types->fetchAll(PDO::FETCH_COLUMN);
+            $type_counts = array_count_values($types);
+
+            $details_parts = [];
+            foreach ($type_counts as $type => $count) {
+                $emoji = $emoji_map[$type] ?? '❓';
+                $details_parts[] = "{$count} {$emoji}";
+            }
+            $media_details_str = implode(', ', $details_parts);
+        } else {
+            $stmt_type = $this->pdo->prepare("SELECT type FROM media_files WHERE message_id = ? AND chat_id = ?");
+            $stmt_type->execute([$replied_message['message_id'], $replied_message['chat']['id']]);
+            $type = $stmt_type->fetchColumn();
+            $emoji = $emoji_map[$type] ?? '❓';
+            $media_details_str = "1 {$emoji}";
         }
 
         // Simpan konteks pesan yang akan dijual untuk langkah selanjutnya.
@@ -162,12 +181,12 @@ class MessageHandler
         // Buat dan kirim pesan yang informatif
         $message_text = "✅ Media telah siap untuk dijual.\n\n";
         if (!empty($description)) {
-            // Escape special characters for Markdown
             $description_escaped = str_replace(['*', '_', '`', '['], ['\*', '\_', '\`', '\['], $description);
             $message_text .= "Deskripsi: *\"" . $description_escaped . "\"*\n";
         }
-        $message_text .= "Jumlah Media: *{$media_count}*\n\n";
-        $message_text .= "Sekarang, silakan masukkan harga untuk paket ini (contoh: 50000).";
+        $message_text .= "Isi Konten: *{$media_details_str}*\n\n";
+        $message_text .= "Sekarang, silakan masukkan harga untuk paket ini (contoh: 50000).\n\n";
+        $message_text .= "_Ketik /cancel untuk membatalkan._";
 
         $this->telegram_api->sendMessage($this->chat_id, $message_text, 'Markdown');
     }

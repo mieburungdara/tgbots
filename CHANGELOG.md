@@ -3,7 +3,10 @@
 ## [3.8.1] - 2025-08-13
 
 ### Peningkatan
-- **Pesan Konfirmasi /sell yang Lebih Informatif**: Saat pengguna memulai perintah `/sell`, pesan yang meminta harga sekarang juga menampilkan pratinjau deskripsi (caption) dan jumlah total media yang akan dijual. Ini memberikan konfirmasi langsung kepada penjual tentang item apa yang sedang mereka proses, meningkatkan kejelasan alur kerja.
+- **Pesan Konfirmasi /sell yang Lebih Informatif**: Saat pengguna memulai perintah `/sell`, pesan yang meminta harga sekarang juga menampilkan rincian konten yang akan dijual.
+  - **Rincian Konten**: Pesan sekarang menyertakan pratinjau deskripsi (caption) dan rincian jumlah media berdasarkan jenisnya (misal: `1 📹, 3 🖼️`).
+  - **Instruksi Pembatalan**: Pesan juga secara eksplisit memberitahu pengguna bahwa mereka dapat mengetik `/cancel` untuk membatalkan proses penjualan.
+  - **Tujuan**: Memberikan konfirmasi yang jelas kepada penjual tentang item apa yang sedang mereka proses, meningkatkan kejelasan alur kerja, dan mengurangi kesalahan.
 
 ## [3.8.0] - 2025-08-13
 
