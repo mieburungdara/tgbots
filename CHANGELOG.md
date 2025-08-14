@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.6.1] - 2025-08-13
+
+### Diperbaiki
+- **Masalah Transaksi Bersarang**: Memperbaiki bug kritis di mana perintah `/sell` akan gagal dengan error `There is already an active transaction`.
+  - **Penyebab**: Logika webhook utama sudah memulai sebuah transaksi database untuk setiap permintaan. Namun, `PackageRepository` mencoba memulai transaksi kedua secara internal, yang menyebabkan konflik.
+  - **Solusi**: Menghapus logika transaksi (panggilan `beginTransaction`, `commit`, `rollBack`) yang berlebihan dari dalam metode `createPackageWithPublicId` dan `hardDeletePackage` di `PackageRepository`. Transaksi tunggal yang dikelola oleh `webhook.php` sekarang mencakup seluruh operasi, memastikan integritas data tanpa menyebabkan error.
+
 ## [3.6.0] - 2025-08-13
 
 ### Ditambahkan
