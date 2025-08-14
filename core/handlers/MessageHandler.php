@@ -255,7 +255,8 @@ class MessageHandler
 
         $keyboard = [];
         if ($has_access) {
-            $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_full_{$package['public_id']}"]]]];
+            // Mengarahkan ke handler pagination halaman pertama (indeks 0)
+            $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]]];
         } elseif ($package['status'] === 'available') {
             $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
             $keyboard = ['inline_keyboard' => [[['text' => "Beli Konten Ini ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"]]]];

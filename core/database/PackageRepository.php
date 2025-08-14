@@ -23,6 +23,59 @@ class PackageRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Mengambil file paket dan mengelompokkannya berdasarkan media_group_id.
+     * Setiap grup atau file tunggal dianggap sebagai satu "halaman".
+     *
+     * @param int $package_id
+     * @return array Array yang berisi halaman-halaman, di mana setiap halaman adalah array file.
+     */
+    public function getGroupedPackageContent(int $package_id): array
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT storage_channel_id, storage_message_id, media_group_id
+             FROM media_files
+             WHERE package_id = ? AND storage_message_id IS NOT NULL
+             ORDER BY storage_message_id ASC"
+        );
+        $stmt->execute([$package_id]);
+        $all_files = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        if (empty($all_files)) {
+            return [];
+        }
+
+        $pages = [];
+        $processed_storage_ids = [];
+
+        foreach ($all_files as $file) {
+            if (in_array($file['storage_message_id'], $processed_storage_ids)) {
+                continue;
+            }
+
+            if ($file['media_group_id'] === null) {
+                // File tunggal, menjadi satu halaman sendiri
+                $pages[] = [$file];
+                $processed_storage_ids[] = $file['storage_message_id'];
+            } else {
+                // Bagian dari media group, temukan semua file lain dalam grup ini
+                $current_group_id = $file['media_group_id'];
+                $current_page = [];
+                foreach ($all_files as $group_file) {
+                    if ($group_file['media_group_id'] === $current_group_id) {
+                        $current_page[] = $group_file;
+                        $processed_storage_ids[] = $group_file['storage_message_id'];
+                    }
+                }
+                if (!empty($current_page)) {
+                    $pages[] = $current_page;
+                }
+            }
+        }
+
+        return $pages;
+    }
+
     public function findForPurchase(int $package_id)
     {
         $stmt = $this->pdo->prepare("SELECT price, seller_user_id FROM media_packages WHERE id = ? AND status = 'available'");

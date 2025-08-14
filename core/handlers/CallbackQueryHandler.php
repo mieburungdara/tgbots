@@ -2,14 +2,14 @@
 
 require_once __DIR__ . '/../database/PackageRepository.php';
 require_once __DIR__ . '/../database/SaleRepository.php';
-require_once __DIR__ . '/../database/UserRepository.php'; // Tambahkan ini
+require_once __DIR__ . '/../database/UserRepository.php';
 
 class CallbackQueryHandler
 {
     private $pdo;
     private $telegram_api;
     private $current_user;
-    private $user_repo; // Tambahkan ini
+    private $user_repo;
     private $chat_id;
     private $callback_query;
     private $package_repo;
@@ -17,9 +17,9 @@ class CallbackQueryHandler
 
     public function __construct(PDO $pdo, TelegramAPI $telegram_api, UserRepository $user_repo, array $current_user, int $chat_id, array $callback_query)
     {
-        $this->pdo = $pdo; // pdo can be removed after all queries are moved
+        $this->pdo = $pdo;
         $this->telegram_api = $telegram_api;
-        $this->user_repo = $user_repo; // Tambahkan ini
+        $this->user_repo = $user_repo;
         $this->current_user = $current_user;
         $this->chat_id = $chat_id;
         $this->callback_query = $callback_query;
@@ -31,17 +31,28 @@ class CallbackQueryHandler
     {
         $callback_data = $this->callback_query['data'];
 
-        if (strpos($callback_data, 'view_full_') === 0) {
-            $this->handleViewFull(substr($callback_data, strlen('view_full_')));
+        if (strpos($callback_data, 'view_page_') === 0) {
+            $this->handleViewPage(substr($callback_data, strlen('view_page_')));
         } elseif (strpos($callback_data, 'buy_') === 0) {
             $this->handleBuy(substr($callback_data, strlen('buy_')));
         } elseif ($callback_data === 'register_seller') {
             $this->handleRegisterSeller();
+        } elseif ($callback_data === 'noop') {
+            // Button for display only, like page numbers. Just answer the callback.
+            $this->telegram_api->answerCallbackQuery($this->callback_query['id']);
         }
     }
 
-    private function handleViewFull(string $public_id)
+    private function handleViewPage(string $params)
     {
+        $parts = explode('_', $params);
+        if (count($parts) !== 2) {
+            $this->telegram_api->answerCallbackQuery($this->callback_query['id'], '⚠️ Format callback tidak valid.', true);
+            return;
+        }
+        $public_id = $parts[0];
+        $page_index = (int)$parts[1];
+
         $internal_user_id = $this->current_user['id'];
         $callback_query_id = $this->callback_query['id'];
 
@@ -55,27 +66,66 @@ class CallbackQueryHandler
         $is_seller = ($package['seller_user_id'] == $internal_user_id);
         $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $internal_user_id);
 
-        if ($is_seller || $has_purchased) {
-            $this->telegram_api->answerCallbackQuery($callback_query_id, '✅ Akses diberikan. Mengirim konten lengkap...');
-
-            $files = $this->package_repo->getPackageFiles($package_id);
-            if (!empty($files)) {
-                // Gunakan data dari channel penyimpanan, bukan dari sumber asli
-                $from_chat_id = $files[0]['storage_channel_id'];
-                $message_ids = json_encode(array_column($files, 'storage_message_id'));
-                $protect_content = (bool) $package['protect_content'];
-
-                // Kirim media menggunakan copyMessages dari channel penyimpanan
-                $this->telegram_api->copyMessages(
-                    $this->chat_id,
-                    $from_chat_id,
-                    $message_ids,
-                    $protect_content
-                );
-            }
-        } else {
+        if (!$is_seller && !$has_purchased) {
             $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Anda tidak memiliki akses ke konten ini.', true);
+            return;
         }
+
+        $pages = $this->package_repo->getGroupedPackageContent($package_id);
+        $total_pages = count($pages);
+
+        if (empty($pages) || !isset($pages[$page_index])) {
+            $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Konten tidak ditemukan atau halaman tidak valid.', true);
+            return;
+        }
+
+        // Build the navigation keyboard
+        $keyboard_buttons = [];
+        if ($page_index > 0) {
+            $keyboard_buttons[] = ['text' => '◀️ Sebelumnya', 'callback_data' => "view_page_{$public_id}_" . ($page_index - 1)];
+        }
+
+        $keyboard_buttons[] = ['text' => ($page_index + 1) . " / {$total_pages}", 'callback_data' => 'noop'];
+
+        if ($page_index < $total_pages - 1) {
+            $keyboard_buttons[] = ['text' => 'Selanjutnya ▶️', 'callback_data' => "view_page_{$public_id}_" . ($page_index + 1)];
+        }
+        $reply_markup = json_encode(['inline_keyboard' => [$keyboard_buttons]]);
+
+        // Send the content for the current page
+        $current_page_content = $pages[$page_index];
+        $from_chat_id = $current_page_content[0]['storage_channel_id'];
+        $protect_content = (bool) $package['protect_content'];
+
+        // Hapus pesan navigasi sebelumnya jika ada
+        if (isset($this->callback_query['message']['message_id'])) {
+            $this->telegram_api->deleteMessage($this->chat_id, $this->callback_query['message']['message_id']);
+        }
+
+        if (count($current_page_content) === 1) {
+            // Single media item, kirim dengan keyboard navigasi
+            $this->telegram_api->copyMessage(
+                $this->chat_id,
+                $from_chat_id,
+                $current_page_content[0]['storage_message_id'],
+                null, // caption
+                $reply_markup,
+                $protect_content
+            );
+        } else {
+            // Media group / album
+            $message_ids = json_encode(array_column($current_page_content, 'storage_message_id'));
+            $this->telegram_api->copyMessages(
+                $this->chat_id,
+                $from_chat_id,
+                $message_ids,
+                $protect_content
+            );
+            // Kirim keyboard navigasi dalam pesan terpisah untuk album
+            $this->telegram_api->sendMessage($this->chat_id, "Navigasi Konten:", null, $reply_markup);
+        }
+
+        $this->telegram_api->answerCallbackQuery($callback_query_id);
     }
 
     private function handleRegisterSeller()
@@ -83,7 +133,6 @@ class CallbackQueryHandler
         $callback_query_id = $this->callback_query['id'];
         $user_id = $this->current_user['id'];
 
-        // Cek lagi untuk memastikan pengguna belum punya ID
         if (!empty($this->current_user['public_seller_id'])) {
             $this->telegram_api->answerCallbackQuery($callback_query_id, 'Anda sudah terdaftar sebagai penjual.', true);
             return;
@@ -112,7 +161,6 @@ class CallbackQueryHandler
         }
         $package_id = $package['id'];
 
-        // Lakukan pengecekan ulang untuk memastikan paket masih tersedia untuk dibeli
         $package_for_purchase = $this->package_repo->findForPurchase($package_id);
 
         if ($package_for_purchase && $this->current_user['balance'] >= $package['price']) {
@@ -121,18 +169,9 @@ class CallbackQueryHandler
             if ($sale_successful) {
                 $this->package_repo->markAsSold($package_id);
 
-                $files = $this->package_repo->getPackageFiles($package_id);
-                if (!empty($files)) {
-                    $caption = "Terima kasih telah membeli!\n\n" . ($package['description'] ?? '');
-                    $this->telegram_api->sendMessage($this->chat_id, $caption);
-
-                    $from_chat_id = $files[0]['chat_id'];
-                    $message_ids = json_encode(array_column($files, 'message_id'));
-                    $protect_content = (bool) $package['protect_content'];
-
-                    $this->telegram_api->copyMessages($this->chat_id, $from_chat_id, $message_ids, $protect_content);
-                }
-                $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian berhasil!');
+                // Setelah membeli, langsung tampilkan konten dengan pagination
+                $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian berhasil! Menampilkan konten...');
+                $this->handleViewPage("{$public_id}_0");
             } else {
                 $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian gagal karena kesalahan internal.', true);
             }
