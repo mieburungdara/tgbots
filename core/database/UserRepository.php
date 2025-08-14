@@ -70,13 +70,13 @@ class UserRepository
     public function findUserByTelegramId(int $telegram_user_id)
     {
         $stmt_user = $this->pdo->prepare(
-            "SELECT u.id, u.telegram_id, u.role, u.balance, r.state, r.state_context
+            "SELECT u.id, u.telegram_id, u.public_seller_id, u.role, u.balance, r.state, r.state_context
              FROM users u
              LEFT JOIN rel_user_bot r ON u.id = r.user_id AND r.bot_id = ?
              WHERE u.telegram_id = ?"
         );
         $stmt_user->execute([$this->bot_id, $telegram_user_id]);
-        return $stmt_user->fetch();
+        return $stmt_user->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
@@ -95,5 +95,35 @@ class UserRepository
     public function getBotId(): int
     {
         return $this->bot_id;
+    }
+
+    /**
+     * Menetapkan ID publik yang unik untuk seorang penjual.
+     *
+     * @param int $userId ID internal pengguna.
+     * @return string ID publik yang baru dibuat.
+     * @throws Exception Jika gagal membuat ID unik setelah beberapa kali percobaan.
+     */
+    public function setPublicId(int $userId): string
+    {
+        $max_retries = 5;
+        for ($i = 0; $i < $max_retries; $i++) {
+            $public_id = generate_seller_id();
+
+            // Cek apakah ID sudah ada
+            $stmt_check = $this->pdo->prepare("SELECT 1 FROM users WHERE public_seller_id = ?");
+            $stmt_check->execute([$public_id]);
+            if ($stmt_check->fetch()) {
+                continue; // Coba lagi jika sudah ada
+            }
+
+            // Simpan ID yang unik
+            $stmt_update = $this->pdo->prepare("UPDATE users SET public_seller_id = ? WHERE id = ?");
+            if ($stmt_update->execute([$public_id, $userId])) {
+                return $public_id;
+            }
+        }
+
+        throw new Exception("Gagal menghasilkan ID penjual yang unik.");
     }
 }

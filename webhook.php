@@ -133,7 +133,7 @@ try {
         $handler->handle();
     } elseif ($update_type === 'callback_query') {
         require_once __DIR__ . '/core/handlers/CallbackQueryHandler.php';
-        $handler = new CallbackQueryHandler($pdo, $telegram_api, $current_user, $chat_id_from_telegram, $update['callback_query']);
+        $handler = new CallbackQueryHandler($pdo, $telegram_api, $user_repo, $current_user, $chat_id_from_telegram, $update['callback_query']);
         $handler->handle();
     } elseif ($update_type === 'message') {
         require_once __DIR__ . '/core/handlers/MessageHandler.php';

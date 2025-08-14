@@ -44,3 +44,28 @@ function app_log(string $message, string $level = 'app'): void {
     // Gunakan FILE_APPEND untuk menambahkan ke file, dan LOCK_EX untuk mencegah penulisan bersamaan.
     file_put_contents($log_file, $formatted_message, FILE_APPEND | LOCK_EX);
 }
+
+/**
+ * Menghasilkan string acak dengan panjang tertentu dari karakter yang diberikan.
+ *
+ * @param int $length Panjang string yang diinginkan.
+ * @param string $characters Kumpulan karakter yang akan digunakan.
+ * @return string String acak yang dihasilkan.
+ */
+function generate_random_string(int $length, string $characters): string {
+    $charactersLength = strlen($characters);
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, $charactersLength - 1)];
+    }
+    return $randomString;
+}
+
+/**
+ * Menghasilkan ID penjual unik 4 karakter.
+ *
+ * @return string ID penjual 4 karakter.
+ */
+function generate_seller_id(): string {
+    return generate_random_string(4, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+}
