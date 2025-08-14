@@ -178,7 +178,7 @@ try {
                     exit;
                 }
 
-                // 5. Get storage channel and copy the message
+                // 5. Get storage channel and copy media
                 $storage_channel = $bot_channel_usage_repo->getNextChannelForBot($internal_bot_id);
                 if (!$storage_channel) {
                     $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Terjadi kesalahan sistem (tidak ada channel penyimpanan). Harap hubungi admin.");
@@ -188,16 +188,41 @@ try {
                     http_response_code(200);
                     exit;
                 }
-                $copied_message = $telegram_api->copyMessage($storage_channel['channel_id'], $replied_chat_id, $replied_message_id);
-                if (!$copied_message || !isset($copied_message['ok']) || !$copied_message['ok']) {
-                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan media. Harap coba lagi atau hubungi admin.");
-                    $user_repo->setUserState($internal_user_id, null, null);
-                    $update_handled = true;
-                    $pdo->commit();
-                    http_response_code(200);
-                    exit;
+                $storage_channel_id = $storage_channel['channel_id'];
+                $storage_info = []; // To store [db_id => new_storage_message_id]
+
+                if ($media_group_id) {
+                    // Media group: copy all files individually
+                    $stmt_group_files = $pdo->prepare("SELECT id, message_id FROM media_files WHERE media_group_id = ? ORDER BY id");
+                    $stmt_group_files->execute([$media_group_id]);
+                    $group_files = $stmt_group_files->fetchAll(PDO::FETCH_ASSOC);
+
+                    foreach ($group_files as $file) {
+                        $copied_message = $telegram_api->copyMessage($storage_channel_id, $replied_chat_id, $file['message_id']);
+                        if (!$copied_message || !isset($copied_message['ok']) || !$copied_message['ok']) {
+                            $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan sebagian media (ID: {$file['message_id']}). Proses dibatalkan.");
+                            $user_repo->setUserState($internal_user_id, null, null);
+                            $update_handled = true;
+                            $pdo->commit();
+                            http_response_code(200);
+                            exit;
+                        }
+                        $storage_info[$file['id']] = $copied_message['result']['message_id'];
+                    }
+                } else {
+                    // Single media
+                    $copied_message = $telegram_api->copyMessage($storage_channel_id, $replied_chat_id, $replied_message_id);
+                    if (!$copied_message || !isset($copied_message['ok']) || !$copied_message['ok']) {
+                        $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan media. Harap coba lagi atau hubungi admin.");
+                        $user_repo->setUserState($internal_user_id, null, null);
+                        $update_handled = true;
+                        $pdo->commit();
+                        http_response_code(200);
+                        exit;
+                    }
+                    // The only media file ID is the thumbnail ID in this case for single media
+                    $storage_info[$thumbnail_media_id] = $copied_message['result']['message_id'];
                 }
-                $storage_message_id = $copied_message['result']['message_id'];
 
                 // 6. Create the package (NOW we increment the sequence)
                 $package_id = $package_repo->createPackageWithPublicId($internal_user_id, $internal_bot_id, $description, $thumbnail_media_id);
@@ -206,8 +231,8 @@ try {
                 $pdo->prepare("UPDATE media_packages SET price = ?, status = 'available' WHERE id = ?")->execute([$price, $package_id]);
 
                 $stmt_link = $pdo->prepare("UPDATE media_files SET package_id = ?, storage_channel_id = ?, storage_message_id = ? WHERE id = ?");
-                foreach ($media_file_ids as $media_id) {
-                    $stmt_link->execute([$package_id, $storage_channel['channel_id'], $storage_message_id, $media_id]);
+                foreach ($storage_info as $db_id => $storage_message_id) {
+                    $stmt_link->execute([$package_id, $storage_channel_id, $storage_message_id, $db_id]);
                 }
 
                 // 8. Finalize

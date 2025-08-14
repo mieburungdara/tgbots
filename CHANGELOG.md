@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.9.0] - 2025-08-13
+
+### Diubah
+- **Penanganan Penjualan Album/Media Group**: Mengubah logika inti dari proses penjualan untuk mendukung album (media group) secara penuh.
+  - **Sebelumnya**: Saat menjual sebuah album, bot hanya akan menyalin satu media (yang di-reply oleh pengguna) ke channel penyimpanan, meskipun semua media dalam album tersebut terhubung ke paket.
+  - **Sekarang**: Jika bot mendeteksi penjualan sebuah media group, bot akan secara iteratif menyalin *setiap* media dari grup tersebut ke channel penyimpanan. Setiap file media sekarang dicatat dengan `storage_message_id`-nya yang unik, memastikan bahwa pembeli menerima semua konten dari album yang mereka beli.
+
 ## [3.8.1] - 2025-08-13
 
 ### Peningkatan
