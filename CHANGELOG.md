@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.12.1] - 2025-08-14
+
+### Diperbaiki
+- **Error di Panel Admin**: Memperbaiki `Warning: Undefined array key "first_name"` dan error `htmlspecialchars()` terkait yang muncul di dropdown pemilihan bot pada halaman utama panel admin.
+  - **Penyebab**: Query database di `admin/index.php` masih memilih kolom `name` yang lama, padahal seharusnya `first_name` sesuai dengan skema database terbaru.
+  - **Solusi**: Mengubah query SQL untuk memilih `first_name` dan menambahkan null coalescing operator (`??`) pada `htmlspecialchars()` untuk mencegah error jika nama bot kosong.
+
 ## [3.12.0] - 2025-08-13
 
 ### Ditambahkan
