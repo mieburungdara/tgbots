@@ -4,6 +4,7 @@ require_once __DIR__ . '/../database/PackageRepository.php';
 require_once __DIR__ . '/../database/SaleRepository.php';
 require_once __DIR__ . '/../database/MediaFileRepository.php';
 require_once __DIR__ . '/../database/BotChannelUsageRepository.php';
+require_once __DIR__ . '/../database/AnalyticsRepository.php';
 
 class MessageHandler
 {
@@ -14,6 +15,7 @@ class MessageHandler
     private $media_repo;
     private $bot_channel_usage_repo;
     private $sale_repo;
+    private $analytics_repo;
     private $current_user;
     private $chat_id;
     private $message;
@@ -27,6 +29,7 @@ class MessageHandler
         $this->media_repo = new MediaFileRepository($pdo);
         $this->bot_channel_usage_repo = new BotChannelUsageRepository($pdo);
         $this->sale_repo = new SaleRepository($pdo);
+        $this->analytics_repo = new AnalyticsRepository($pdo);
         $this->current_user = $current_user;
         $this->chat_id = $chat_id;
         $this->message = $message;
@@ -68,10 +71,57 @@ class MessageHandler
             case '/login':
                 $this->handleLoginCommand();
                 break;
+            case '/me':
+                $this->handleMeCommand();
+                break;
+            case '/help':
+                $this->handleHelpCommand();
+                break;
             case '/dev_addsaldo':
             case '/feature':
                 $this->handleAdminCommands($command, $parts);
                 break;
+        }
+    }
+
+    private function handleMeCommand()
+    {
+        $user_id = $this->current_user['id'];
+
+        // Mengambil statistik
+        $sales_stats = $this->analytics_repo->getSellerSummary($user_id); // Reusing existing method
+
+        // Format pesan
+        $user_name = htmlspecialchars(trim($this->current_user['first_name'] . ' ' . ($this->current_user['last_name'] ?? '')));
+        $balance = "Rp " . number_format($this->current_user['balance'], 0, ',', '.');
+        $seller_id = $this->current_user['public_seller_id'] ? "`" . $this->current_user['public_seller_id'] . "`" : "Belum terdaftar";
+
+        $total_sales = $sales_stats['total_sales'];
+        $total_revenue = "Rp " . number_format($sales_stats['total_revenue'], 0, ',', '.');
+
+        $message = "👤 *Profil Anda*\n\n";
+        $message .= "Nama: *{$user_name}*\n";
+        $message .= "Telegram ID: `{$this->current_user['telegram_id']}`\n";
+        $message .= "ID Penjual: {$seller_id}\n\n";
+
+        $message .= "💰 *Keuangan*\n";
+        $message .= "Saldo Saat Ini: *{$balance}*\n\n";
+
+        $message .= "📈 *Aktivitas Penjualan*\n";
+        $message .= "Total Item Terjual: *{$total_sales}* item\n";
+        $message .= "Total Pendapatan: *{$total_revenue}*";
+
+        $this->telegram_api->sendMessage($this->chat_id, $message, 'Markdown');
+    }
+
+    private function handleHelpCommand()
+    {
+        $help_file = __DIR__ . '/../../howto.md';
+        if (file_exists($help_file)) {
+            $help_text = file_get_contents($help_file);
+            $this->telegram_api->sendMessage($this->chat_id, $help_text, 'Markdown');
+        } else {
+            $this->telegram_api->sendMessage($this->chat_id, "Maaf, dokumentasi bantuan tidak ditemukan.");
         }
     }
 

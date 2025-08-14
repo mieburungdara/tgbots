@@ -24,6 +24,22 @@ class AnalyticsRepository
     }
 
     /**
+     * Mengambil ringkasan data pembelian untuk pengguna tertentu.
+     * @param int $buyerId
+     * @return array
+     */
+    public function getUserPurchaseStats(int $buyerId): array
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(id) as total_purchases, SUM(price) as total_spent FROM sales WHERE buyer_user_id = ?");
+        $stmt->execute([$buyerId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return [
+            'total_purchases' => $result['total_purchases'] ?? 0,
+            'total_spent' => $result['total_spent'] ?? 0,
+        ];
+    }
+
+    /**
      * Mengambil ringkasan data penjualan untuk penjual tertentu.
      * @param int $sellerId
      * @return array
