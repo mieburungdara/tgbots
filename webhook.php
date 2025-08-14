@@ -131,6 +131,10 @@ try {
         require_once __DIR__ . '/core/handlers/MediaHandler.php';
         $handler = new MediaHandler($pdo, $update['message'], $user_id_from_telegram, $chat_id_from_telegram, $telegram_message_id);
         $handler->handle();
+    } elseif ($update_type === 'edited_message') {
+        require_once __DIR__ . '/core/handlers/EditedMessageHandler.php';
+        $handler = new EditedMessageHandler($pdo, $update['edited_message']);
+        $handler->handle();
     } elseif ($update_type === 'callback_query') {
         require_once __DIR__ . '/core/handlers/CallbackQueryHandler.php';
         $handler = new CallbackQueryHandler($pdo, $telegram_api, $user_repo, $current_user, $chat_id_from_telegram, $update['callback_query']);

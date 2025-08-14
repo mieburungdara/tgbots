@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.7.0] - 2025-08-13
+
+### Ditambahkan
+- **Sinkronisasi Caption yang Diedit**: Bot sekarang dapat mendeteksi saat pengguna mengedit caption sebuah media.
+  - **Logika Baru**: Menambahkan handler baru (`EditedMessageHandler`) yang akan aktif saat menerima pembaruan `edited_message` dari Telegram.
+  - **Pembaruan Database**: Jika pesan yang diedit terhubung ke sebuah file media yang tersimpan di database, bot akan secara otomatis memperbarui kolom `caption` di tabel `media_files` dengan teks yang baru. Ini memastikan bahwa deskripsi produk selalu sinkron, bahkan jika penjual mengubahnya setelah pengiriman awal.
+
 ## [3.6.2] - 2025-08-13
 
 ### Peningkatan
