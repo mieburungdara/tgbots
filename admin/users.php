@@ -8,28 +8,55 @@ if (!$pdo) {
     die("Koneksi database gagal.");
 }
 
-// --- Logic untuk Block/Unblock ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'toggle_block') {
-    $user_id_to_toggle = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
-    $bot_id_to_toggle = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
+$message = '';
 
-    if ($user_id_to_toggle && $bot_id_to_toggle) {
-        // Get current status
-        $stmt = $pdo->prepare("SELECT is_blocked FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
-        $stmt->execute([$user_id_to_toggle, $bot_id_to_toggle]);
-        $current_status = $stmt->fetchColumn();
+// --- Logic untuk Aksi POST ---
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    if ($_POST['action'] === 'toggle_block') {
+        $user_id_to_toggle = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $bot_id_to_toggle = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
 
-        if ($current_status !== false) {
-            // Toggle status
-            $new_status = $current_status ? 0 : 1;
-            $update_stmt = $pdo->prepare("UPDATE rel_user_bot SET is_blocked = ? WHERE user_id = ? AND bot_id = ?");
-            $update_stmt->execute([$new_status, $user_id_to_toggle, $bot_id_to_toggle]);
+        if ($user_id_to_toggle && $bot_id_to_toggle) {
+            $stmt = $pdo->prepare("SELECT is_blocked FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
+            $stmt->execute([$user_id_to_toggle, $bot_id_to_toggle]);
+            $current_status = $stmt->fetchColumn();
+
+            if ($current_status !== false) {
+                $new_status = $current_status ? 0 : 1;
+                $update_stmt = $pdo->prepare("UPDATE rel_user_bot SET is_blocked = ? WHERE user_id = ? AND bot_id = ?");
+                $update_stmt->execute([$new_status, $user_id_to_toggle, $bot_id_to_toggle]);
+                $message = "Status blokir pengguna berhasil diubah.";
+            }
+        }
+    } elseif ($_POST['action'] === 'update_balance') {
+        $user_id_to_update = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $new_balance = isset($_POST['balance']) ? filter_var($_POST['balance'], FILTER_VALIDATE_FLOAT) : false;
+
+        if ($user_id_to_update && $new_balance !== false) {
+            $update_stmt = $pdo->prepare("UPDATE users SET balance = ? WHERE id = ?");
+            if ($update_stmt->execute([$new_balance, $user_id_to_update])) {
+                $message = "Saldo pengguna berhasil diperbarui.";
+            } else {
+                $message = "Gagal memperbarui saldo.";
+            }
+        } else {
+            $message = "Input tidak valid untuk memperbarui saldo.";
         }
     }
 
-    // Redirect to the same page to avoid form resubmission
-    header("Location: " . $_SERVER['REQUEST_URI']);
+    // Redirect to the same page to avoid form resubmission, passing the message
+    $redirect_url = "users.php?" . http_build_query($_GET);
+    if (!empty($message)) {
+        $_SESSION['flash_message'] = $message;
+    }
+    header("Location: " . $redirect_url);
     exit;
+}
+
+// Check for flash message from redirect
+if (isset($_SESSION['flash_message'])) {
+    $message = $_SESSION['flash_message'];
+    unset($_SESSION['flash_message']);
 }
 
 
@@ -43,7 +70,7 @@ if (!empty($search_term)) {
 }
 
 // --- Logic untuk Sort ---
-$sort_columns = ['id', 'telegram_id', 'first_name', 'last_name', 'username', 'created_at'];
+$sort_columns = ['id', 'telegram_id', 'first_name', 'last_name', 'username', 'balance', 'created_at'];
 $sort_by = isset($_GET['sort']) && in_array($_GET['sort'], $sort_columns) ? $_GET['sort'] : 'id';
 $order = isset($_GET['order']) && strtolower($_GET['order']) === 'asc' ? 'ASC' : 'DESC';
 $order_by_clause = "ORDER BY {$sort_by} {$order}";
@@ -90,6 +117,11 @@ function get_sort_link($column, $current_sort, $current_order) {
         .action-btn { font-size: 0.8em; padding: 2px 6px; border-radius: 3px; color: white; border: none; cursor: pointer; }
         .btn-block { background-color: #dc3545; }
         .btn-unblock { background-color: #28a745; }
+        .balance-form input { width: 100px; padding: 4px; border-radius: 3px; border: 1px solid #ccc; }
+        .balance-form button { padding: 4px 8px; }
+        .message { padding: 10px; margin-bottom: 15px; border-radius: 4px; color: #fff; }
+        .message.success { background-color: #28a745; }
+        .message.error { background-color: #dc3545; }
     </style>
 </head>
 <body>
@@ -108,6 +140,10 @@ function get_sort_link($column, $current_sort, $current_order) {
 
         <h1>Manajemen Pengguna</h1>
 
+        <?php if (!empty($message)): ?>
+            <div class="message success"><?= htmlspecialchars($message) ?></div>
+        <?php endif; ?>
+
         <div class="search-form">
             <form action="users.php" method="get">
                 <input type="text" name="search" placeholder="Cari ID, Nama, Username..." value="<?= htmlspecialchars($search_term) ?>">
@@ -120,33 +156,34 @@ function get_sort_link($column, $current_sort, $current_order) {
                 <tr>
                     <th><a href="<?= get_sort_link('id', $sort_by, $order) ?>">ID</a></th>
                     <th><a href="<?= get_sort_link('telegram_id', $sort_by, $order) ?>">Telegram ID</a></th>
-                    <th><a href="<?= get_sort_link('first_name', $sort_by, $order) ?>">Nama Depan</a></th>
-                    <th><a href="<?= get_sort_link('last_name', $sort_by, $order) ?>">Nama Belakang</a></th>
+                    <th><a href="<?= get_sort_link('first_name', $sort_by, $order) ?>">Nama</a></th>
                     <th><a href="<?= get_sort_link('username', $sort_by, $order) ?>">Username</a></th>
-                    <th>Kode Bahasa</th>
-                    <th><a href="<?= get_sort_link('created_at', $sort_by, $order) ?>">Tanggal Dibuat</a></th>
-                    <th colspan="2">Bot Terkait & Aksi</th>
+                    <th><a href="<?= get_sort_link('balance', $sort_by, $order) ?>">Saldo</a></th>
+                    <th>Bot Terkait & Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($users)): ?>
                     <tr>
-                        <td colspan="8">Tidak ada pengguna yang cocok dengan kriteria.</td>
+                        <td colspan="6">Tidak ada pengguna yang cocok dengan kriteria.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($users as $user): ?>
                     <tr>
                         <td><?= htmlspecialchars($user['id']) ?></td>
                         <td><?= htmlspecialchars($user['telegram_id']) ?></td>
-                        <td><?= htmlspecialchars($user['first_name'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($user['last_name'] ?? '') ?></td>
+                        <td><?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></td>
                         <td>@<?= htmlspecialchars($user['username'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($user['language_code'] ?? '') ?></td>
-                        <td><?= htmlspecialchars($user['created_at']) ?></td>
-                        <td colspan="2">
+                        <td>
+                            <form action="users.php?<?= http_build_query($_GET) ?>" method="post" class="balance-form">
+                                <input type="hidden" name="action" value="update_balance">
+                                <input type="hidden" name="user_id" value="<?= $user['id'] ?>">
+                                <input type="number" name="balance" value="<?= htmlspecialchars($user['balance']) ?>" step="any" required>
+                                <button type="submit" class="action-btn btn-unblock">Simpan</button>
+                            </form>
+                        </td>
+                        <td>
                             <?php
-                                // NOTE: This creates an N+1 query problem. For a larger scale app,
-                                // this data should be fetched in a more optimized way.
                                 $related_bots_stmt = $pdo->prepare(
                                     "SELECT b.id, b.first_name, r.is_blocked
                                      FROM bots b
