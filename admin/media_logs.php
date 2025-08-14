@@ -16,7 +16,6 @@ $sql = "
     SELECT
         mf.id,
         mf.type,
-        mf.file_id,
         mf.file_name,
         mf.caption,
         mf.file_size,
