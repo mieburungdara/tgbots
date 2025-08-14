@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.12.4] - 2025-08-14
+
+### Diperbaiki
+- **Fatal Error di MessageHandler**: Memperbaiki error fatal `Call to a member function hasUserPurchased() on null` yang terjadi saat memproses pesan biasa.
+  - **Penyebab**: `MessageHandler` tidak menginisialisasi `SaleRepository` di dalam constructor-nya, sehingga properti `$this->sale_repo` bernilai `null` saat coba diakses.
+  - **Solusi**: Menambahkan inisialisasi `SaleRepository` di dalam constructor `MessageHandler.php` untuk memastikan semua dependensi tersedia.
+
 ## [3.12.3] - 2025-08-14
 
 ### Diperbaiki

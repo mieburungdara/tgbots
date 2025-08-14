@@ -13,6 +13,7 @@ class MessageHandler
     private $package_repo;
     private $media_repo;
     private $bot_channel_usage_repo;
+    private $sale_repo;
     private $current_user;
     private $chat_id;
     private $message;
@@ -25,6 +26,7 @@ class MessageHandler
         $this->package_repo = new PackageRepository($pdo);
         $this->media_repo = new MediaFileRepository($pdo);
         $this->bot_channel_usage_repo = new BotChannelUsageRepository($pdo);
+        $this->sale_repo = new SaleRepository($pdo);
         $this->current_user = $current_user;
         $this->chat_id = $chat_id;
         $this->message = $message;
