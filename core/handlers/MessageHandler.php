@@ -54,6 +54,9 @@ class MessageHandler
             case '/sell':
                 $this->handleSellCommand();
                 break;
+            case '/addmedia':
+                $this->handleAddMediaCommand();
+                break;
             case '/konten':
                 $this->handleKontenCommand($parts);
                 break;
@@ -172,9 +175,14 @@ class MessageHandler
         }
 
         // Simpan konteks pesan yang akan dijual untuk langkah selanjutnya.
+        // Strukturnya adalah array of messages untuk mendukung /addmedia
         $state_context = [
-            'reply_to_message_id' => $replied_message['message_id'],
-            'reply_to_chat_id' => $replied_message['chat']['id']
+            'media_messages' => [
+                [
+                    'message_id' => $replied_message['message_id'],
+                    'chat_id' => $replied_message['chat']['id']
+                ]
+            ]
         ];
         $this->user_repo->setUserState($this->current_user['id'], 'awaiting_price', $state_context);
 
@@ -288,5 +296,129 @@ class MessageHandler
         }
         // ... Logic for admin commands, still using direct PDO.
         // This can also be refactored.
+    }
+
+    private function handleAddMediaCommand()
+    {
+        $parts = explode(' ', $this->message['text']);
+        $has_id = count($parts) > 1;
+
+        if ($has_id) {
+            // Logic for adding media to an existing package
+            $this->addMediaToExistingPackage($parts[1]);
+        } else {
+            // Logic for adding media to a new package being created
+            $this->addMediaToNewPackage();
+        }
+    }
+
+    private function addMediaToNewPackage()
+    {
+        if ($this->current_user['state'] !== 'awaiting_price') {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Perintah ini hanya bisa digunakan saat Anda sedang dalam proses menjual item (setelah `/sell`).");
+            return;
+        }
+
+        if (!isset($this->message['reply_to_message'])) {
+            $this->telegram_api->sendMessage($this->chat_id, "Untuk menambah media, silakan reply media yang ingin Anda tambahkan dengan perintah /addmedia.");
+            return;
+        }
+
+        $replied_message = $this->message['reply_to_message'];
+
+        $stmt_check_media = $this->pdo->prepare("SELECT COUNT(*) FROM media_files WHERE message_id = ? AND chat_id = ?");
+        $stmt_check_media->execute([$replied_message['message_id'], $replied_message['chat']['id']]);
+        if ($stmt_check_media->fetchColumn() == 0) {
+             $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.");
+             return;
+        }
+
+        $state_context = json_decode($this->current_user['state_context'], true);
+
+        foreach ($state_context['media_messages'] as $msg) {
+            if ($msg['message_id'] == $replied_message['message_id']) {
+                $this->telegram_api->sendMessage($this->chat_id, "⚠️ Media ini sudah ada dalam paket.");
+                return;
+            }
+        }
+
+        $state_context['media_messages'][] = [
+            'message_id' => $replied_message['message_id'],
+            'chat_id' => $replied_message['chat']['id']
+        ];
+
+        $this->user_repo->setUserState($this->current_user['id'], 'awaiting_price', $state_context);
+
+        $this->telegram_api->sendMessage($this->chat_id, "✅ Media berhasil ditambahkan. Silakan tambah media lagi dengan /addmedia, atau masukkan harga untuk menyelesaikan.");
+    }
+
+    private function addMediaToExistingPackage($public_package_id)
+    {
+        if (!isset($this->message['reply_to_message'])) {
+            $this->telegram_api->sendMessage($this->chat_id, "Untuk menambah media ke paket yang sudah ada, silakan reply media baru dengan perintah `/addmedia <ID_PAKET>`.");
+            return;
+        }
+
+        // 1. Find package and check ownership
+        $package = $this->package_repo->findByPublicId($public_package_id);
+        if (!$package) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Paket dengan ID `{$public_package_id}` tidak ditemukan.");
+            return;
+        }
+        if ($package['seller_user_id'] != $this->current_user['id']) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Anda tidak memiliki izin untuk mengubah paket ini.");
+            return;
+        }
+
+        $replied_message = $this->message['reply_to_message'];
+
+        // 2. Validate the new media
+        $stmt_check_media = $this->pdo->prepare("SELECT id, media_group_id FROM media_files WHERE message_id = ? AND chat_id = ?");
+        $stmt_check_media->execute([$replied_message['message_id'], $replied_message['chat']['id']]);
+        $new_media_info = $stmt_check_media->fetch(PDO::FETCH_ASSOC);
+        if (!$new_media_info) {
+             $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.");
+             return;
+        }
+
+        // 3. Get storage channel from existing package files
+        $stmt_storage = $this->pdo->prepare("SELECT storage_channel_id FROM media_files WHERE package_id = ? AND storage_channel_id IS NOT NULL LIMIT 1");
+        $stmt_storage->execute([$package['id']]);
+        $storage_channel_id = $stmt_storage->fetchColumn();
+        if (!$storage_channel_id) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal menemukan channel penyimpanan untuk paket ini. Hubungi admin.");
+            return;
+        }
+
+        // 4. Collect all new media files to be added
+        $media_to_copy = [];
+        if ($new_media_group_id = $new_media_info['media_group_id']) {
+            $stmt_group = $this->pdo->prepare("SELECT id, message_id FROM media_files WHERE media_group_id = ?");
+            $stmt_group->execute([$new_media_group_id]);
+            while ($row = $stmt_group->fetch(PDO::FETCH_ASSOC)) {
+                $media_to_copy[$row['id']] = $row['message_id'];
+            }
+        } else {
+            $media_to_copy[$new_media_info['id']] = $replied_message['message_id'];
+        }
+
+        // 5. Copy new media to storage channel
+        $original_db_ids = array_keys($media_to_copy);
+        $original_message_ids = array_values($media_to_copy);
+
+        $copied_messages_result = $this->telegram_api->copyMessages($storage_channel_id, $replied_message['chat']['id'], json_encode($original_message_ids));
+        if (!$copied_messages_result || !isset($copied_messages_result['ok']) || !$copied_messages_result['ok'] || count($copied_messages_result['result']) !== count($original_message_ids)) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Gagal menyimpan media baru. Proses dibatalkan.");
+            return;
+        }
+
+        // 6. Link new media to the existing package
+        $new_storage_message_ids = $copied_messages_result['result'];
+        $stmt_link = $this->pdo->prepare("UPDATE media_files SET package_id = ?, storage_channel_id = ?, storage_message_id = ? WHERE id = ?");
+        for ($i = 0; $i < count($original_db_ids); $i++) {
+            $stmt_link->execute([$package['id'], $storage_channel_id, $new_storage_message_ids[$i]['message_id'], $original_db_ids[$i]]);
+        }
+
+        $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$public_package_id}*.");
     }
 }

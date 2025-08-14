@@ -37,7 +37,6 @@ class MediaHandler
 
         if ($media_type && $media_info) {
             $params = [
-                'file_id' => $media_info['file_id'],
                 'type' => $media_type,
                 'file_size' => $media_info['file_size'] ?? null,
                 'width' => $media_info['width'] ?? null,

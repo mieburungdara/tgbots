@@ -1,5 +1,30 @@
 # Changelog
 
+## [3.12.0] - 2025-08-13
+
+### Ditambahkan
+- **Mode Edit Paket dengan /addmedia <ID>**: Perintah `/addmedia` sekarang memiliki fungsionalitas ganda untuk mengedit paket yang sudah ada.
+  - **Alur Kerja Baru**: Penjual dapat menggunakan `/addmedia <ID_PAKET>` sambil me-reply media baru untuk menambahkannya ke paket yang sudah ada dan tersedia.
+  - **Otorisasi**: Sistem akan memverifikasi bahwa pengguna yang menjalankan perintah adalah pemilik sah dari paket tersebut.
+  - **Penambahan Konten**: Media baru (termasuk seluruh item dari media group) akan disalin ke channel penyimpanan yang sama dengan konten lama dan ditautkan ke paket yang ada di database.
+  - **Tujuan**: Memberikan fleksibilitas kepada penjual untuk memperbarui dan memperluas konten paket mereka bahkan setelah paket tersebut dirilis.
+
+## [3.11.0] - 2025-08-13
+
+### Ditambahkan
+- **Perintah /addmedia untuk Paket Multi-bagian**: Penjual sekarang dapat membuat paket konten yang besar dengan menambahkan media secara bertahap.
+  - **Alur Kerja Baru**: Setelah memulai dengan `/sell`, penjual dapat menggunakan perintah `/addmedia` baru sambil me-reply media atau album tambahan. Proses ini dapat diulang beberapa kali.
+  - **State Management**: Logika state pengguna (`awaiting_price`) telah direfaktor untuk dapat menampung beberapa media atau media group dalam satu sesi pembuatan paket.
+  - **Finalisasi**: Saat penjual akhirnya memasukkan harga, bot akan memproses semua media yang telah ditambahkan, menyalin semuanya ke channel penyimpanan, dan menggabungkannya ke dalam satu paket tunggal.
+  - **Tujuan**: Memungkinkan penjual untuk melampaui batas 10 item per media group di Telegram, sehingga dapat menjual paket konten yang jauh lebih besar (hingga 100 item atau lebih).
+
+## [3.10.0] - 2025-08-13
+
+### Peningkatan
+- **Optimisasi Skema Database**: Menghapus kolom `file_id` yang tidak lagi diperlukan dari tabel `media_files`.
+  - **Alasan**: Sejak implementasi `copyMessage` dan `copyMessages` sebagai metode utama untuk mengirim media, `file_id` menjadi berlebihan. Referensi ke media sekarang secara konsisten ditangani menggunakan `chat_id` dan `message_id`.
+  - **Keuntungan**: Mengurangi ukuran database dan menyederhanakan logika `MediaHandler` dan `MediaFileRepository` dengan menghapus penyimpanan dan penanganan data yang tidak terpakai.
+
 ## [3.9.0] - 2025-08-13
 
 ### Diubah
