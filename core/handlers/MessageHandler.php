@@ -146,8 +146,20 @@ class MessageHandler
         $storage_channel_id_db = $storage_channel['id']; // Ini adalah ID dari tabel private_channels
 
         // 3. Lanjutkan dengan logika penjualan yang ada
-        $description = $replied_message['caption'] ?? '';
         $media_group_id = $replied_message['media_group_id'] ?? null;
+        $description = $replied_message['caption'] ?? ''; // Default
+
+        if ($media_group_id) {
+            // Jika ini adalah media group, coba cari caption dari salah satu item di grup
+            $stmt_caption = $this->pdo->prepare(
+                "SELECT caption FROM media_files WHERE media_group_id = ? AND caption IS NOT NULL AND caption != '' LIMIT 1"
+            );
+            $stmt_caption->execute([$media_group_id]);
+            $group_caption = $stmt_caption->fetchColumn();
+            if ($group_caption) {
+                $description = $group_caption;
+            }
+        }
 
         $media_file_ids = [];
         if ($media_group_id) {

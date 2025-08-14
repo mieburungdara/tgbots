@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.6.2] - 2025-08-13
+
+### Peningkatan
+- **Deteksi Caption pada Media Group**: Meningkatkan logika perintah `/sell` secara signifikan.
+  - **Sebelumnya**: Bot hanya mengambil caption dari satu media spesifik yang di-reply oleh pengguna. Jika pengguna me-reply pada gambar atau video dalam sebuah album yang tidak memiliki caption, maka deskripsi produk akan menjadi kosong.
+  - **Sekarang**: Jika bot mendeteksi media yang di-reply adalah bagian dari `media_group_id`, bot akan secara otomatis memindai semua item dalam grup tersebut di database untuk menemukan caption yang ada. Ini memastikan deskripsi produk terisi dengan benar, tidak peduli item mana dalam album yang di-reply oleh pengguna.
+
 ## [3.6.1] - 2025-08-13
 
 ### Diperbaiki
