@@ -38,6 +38,15 @@ class UpdateHandler
         } elseif (isset($update['callback_query'])) {
             $update_type = 'callback_query';
             $setting_to_check = 'save_callback_queries';
+        } elseif (isset($update['channel_post'])) {
+            $update_type = 'channel_post';
+            // Selalu proses channel post yang merupakan perintah
+            if (isset($update['channel_post']['text']) && strpos($update['channel_post']['text'], '/') === 0) {
+                return $update_type;
+            }
+            return null; // Abaikan channel post biasa
+        } elseif (isset($update['inline_query'])) {
+            return 'inline_query';
         }
 
         // Jika jenis update tidak didukung atau dinonaktifkan oleh admin, kembalikan null.
@@ -67,6 +76,8 @@ class UpdateHandler
             $message_context['text'] = "Callback: " . ($update['callback_query']['data'] ?? ''); // Store callback data
             $message_context['date'] = time(); // Time the button was clicked
             return $message_context;
+        } elseif (isset($update['channel_post'])) {
+            return $update['channel_post'];
         }
         return null;
     }
