@@ -3,6 +3,7 @@
 require_once __DIR__ . '/../database/PackageRepository.php';
 require_once __DIR__ . '/../database/SaleRepository.php';
 require_once __DIR__ . '/../database/UserRepository.php';
+require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
 
 class CallbackQueryHandler
 {
@@ -14,6 +15,7 @@ class CallbackQueryHandler
     private $callback_query;
     private $package_repo;
     private $sale_repo;
+    private $sales_channel_repo;
 
     public function __construct(PDO $pdo, TelegramAPI $telegram_api, UserRepository $user_repo, array $current_user, int $chat_id, array $callback_query)
     {
@@ -25,6 +27,7 @@ class CallbackQueryHandler
         $this->callback_query = $callback_query;
         $this->package_repo = new PackageRepository($pdo);
         $this->sale_repo = new SaleRepository($pdo);
+        $this->sales_channel_repo = new SellerSalesChannelRepository($pdo);
     }
 
     public function handle()
@@ -37,9 +40,73 @@ class CallbackQueryHandler
             $this->handleBuy(substr($callback_data, strlen('buy_')));
         } elseif ($callback_data === 'register_seller') {
             $this->handleRegisterSeller();
+        } elseif (strpos($callback_data, 'post_channel_') === 0) {
+            $this->handlePostToChannel(substr($callback_data, strlen('post_channel_')));
         } elseif ($callback_data === 'noop') {
             // Button for display only, like page numbers. Just answer the callback.
             $this->telegram_api->answerCallbackQuery($this->callback_query['id']);
+        }
+    }
+
+    private function handlePostToChannel(string $public_id)
+    {
+        $callback_query_id = $this->callback_query['id'];
+        $internal_user_id = $this->current_user['id'];
+
+        // 1. Get package and verify ownership
+        $package = $this->package_repo->findByPublicId($public_id);
+        if (!$package || $package['seller_user_id'] != $internal_user_id) {
+            $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Anda tidak memiliki izin untuk mem-posting konten ini.', true);
+            return;
+        }
+
+        // 2. Get seller's registered channel
+        $sales_channel = $this->sales_channel_repo->findBySellerId($internal_user_id);
+        if (!$sales_channel) {
+            $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Anda belum mendaftarkan channel jualan.', true);
+            return;
+        }
+        $channel_id = $sales_channel['channel_id'];
+
+        // 3. Get thumbnail to post
+        $thumbnail = $this->package_repo->getThumbnailFile($package['id']);
+        if (!$thumbnail) {
+            $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Gagal mendapatkan media pratinjau untuk konten ini.', true);
+            return;
+        }
+
+        // 4. Format the message and keyboard
+        $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+        $buy_url = "https://t.me/" . BOT_USERNAME . "?start=package_" . $package['public_id'];
+        $caption = "✨ *Konten Baru Tersedia* ✨\n\n" .
+                   "{$package['description']}\n\n" .
+                   "Harga: *{$price_formatted}*";
+        $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang 🛒", 'url' => $buy_url]]]];
+        $reply_markup = json_encode($keyboard);
+
+        // 5. Try to post and handle failure
+        try {
+            $result = $this->telegram_api->copyMessage(
+                $channel_id,
+                $thumbnail['chat_id'],
+                $thumbnail['message_id'],
+                $caption,
+                $reply_markup,
+                (bool)$package['protect_content']
+            );
+
+            if (!$result || ($result['ok'] === false)) {
+                throw new Exception($result['description'] ?? 'Gagal mengirim pesan ke channel.');
+            }
+
+            $this->telegram_api->answerCallbackQuery($callback_query_id, '✅ Berhasil di-posting ke channel Anda!', false);
+
+        } catch (Exception $e) {
+            // Un-register the channel on failure
+            $this->sales_channel_repo->deactivate($internal_user_id);
+            $error_message = "❌ Gagal mem-posting ke channel. Kemungkinan bot tidak lagi menjadi admin atau channel telah dihapus. Channel Anda telah di-unregister secara otomatis. Silakan daftar ulang.";
+            $this->telegram_api->answerCallbackQuery($callback_query_id, $error_message, true);
+            app_log("Gagal post ke channel {$channel_id} untuk user {$internal_user_id}: " . $e->getMessage(), 'bot_error');
         }
     }
 

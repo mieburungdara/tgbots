@@ -5,6 +5,7 @@ require_once __DIR__ . '/../database/SaleRepository.php';
 require_once __DIR__ . '/../database/MediaFileRepository.php';
 require_once __DIR__ . '/../database/BotChannelUsageRepository.php';
 require_once __DIR__ . '/../database/AnalyticsRepository.php';
+require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
 
 class MessageHandler
 {
@@ -16,6 +17,7 @@ class MessageHandler
     private $bot_channel_usage_repo;
     private $sale_repo;
     private $analytics_repo;
+    private $sales_channel_repo;
     private $current_user;
     private $chat_id;
     private $message;
@@ -30,6 +32,7 @@ class MessageHandler
         $this->bot_channel_usage_repo = new BotChannelUsageRepository($pdo);
         $this->sale_repo = new SaleRepository($pdo);
         $this->analytics_repo = new AnalyticsRepository($pdo);
+        $this->sales_channel_repo = new SellerSalesChannelRepository($pdo);
         $this->current_user = $current_user;
         $this->chat_id = $chat_id;
         $this->message = $message;
@@ -77,10 +80,61 @@ class MessageHandler
             case '/help':
                 $this->handleHelpCommand();
                 break;
+            case '/register_channel':
+                $this->handleRegisterChannelCommand($parts);
+                break;
             case '/dev_addsaldo':
             case '/feature':
                 $this->handleAdminCommands($command, $parts);
                 break;
+        }
+    }
+
+    private function handleRegisterChannelCommand(array $parts)
+    {
+        if (count($parts) < 2) {
+            $this->telegram_api->sendMessage($this->chat_id, "Format perintah salah. Gunakan: `/register_channel <ID atau @username channel>`");
+            return;
+        }
+
+        $channel_identifier = $parts[1];
+
+        // 1. Verify the user is a registered seller
+        if (empty($this->current_user['public_seller_id'])) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Perintah ini hanya untuk penjual terdaftar.");
+            return;
+        }
+
+        // 2. Verify the bot is an admin in the channel
+        $bot_member = $this->telegram_api->getChatMember($channel_identifier, $this->telegram_api->getBotId());
+
+        if (!$bot_member || !$bot_member['ok'] || !in_array($bot_member['result']['status'], ['administrator', 'creator'])) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Pastikan bot telah ditambahkan sebagai **admin** di channel `{$channel_identifier}`.", 'Markdown');
+            return;
+        }
+
+        // 3. Check for necessary permissions
+        if (!($bot_member['result']['can_post_messages'] ?? false)) {
+             $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Bot memerlukan izin untuk **'Post Messages'** di channel tersebut.", 'Markdown');
+            return;
+        }
+
+        // 4. All checks passed, get full channel info to store the numeric ID
+        $channel_info = $this->telegram_api->getChat($channel_identifier);
+        if (!$channel_info || !$channel_info['ok']) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Tidak dapat mengambil informasi untuk channel `{$channel_identifier}`. Pastikan ID atau username channel sudah benar.", 'Markdown');
+            return;
+        }
+        $numeric_channel_id = $channel_info['result']['id'];
+        $channel_title = $channel_info['result']['title'];
+
+        // 5. Save to database
+        $success = $this->sales_channel_repo->createOrUpdate($this->current_user['id'], $numeric_channel_id);
+
+        if ($success) {
+            $this->telegram_api->sendMessage($this->chat_id, "✅ Selamat! Channel **{$channel_title}** (`{$numeric_channel_id}`) telah berhasil didaftarkan sebagai channel jualan Anda.", 'Markdown');
+        } else {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Terjadi kesalahan database saat mencoba mendaftarkan channel ini.");
         }
     }
 
@@ -384,8 +438,17 @@ EOT;
 
         $keyboard = [];
         if ($has_access) {
-            // Mengarahkan ke handler pagination halaman pertama (indeks 0)
-            $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]]];
+            $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
+
+            // Tambahkan tombol "Post ke Channel" jika pengguna adalah penjual dan punya channel terdaftar
+            if ($is_seller) {
+                $sales_channel = $this->sales_channel_repo->findBySellerId($internal_user_id);
+                if ($sales_channel) {
+                    $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
+                }
+            }
+            $keyboard = ['inline_keyboard' => $keyboard_buttons];
+
         } elseif ($package['status'] === 'available') {
             $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
             $keyboard = ['inline_keyboard' => [[['text' => "Beli Konten Ini ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"]]]];
