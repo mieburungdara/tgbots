@@ -381,6 +381,30 @@ class TelegramAPI {
     }
 
     /**
+     * Mendapatkan ID numerik dari bot saat ini.
+     * @return int|null ID bot atau null jika gagal.
+     */
+    public function getBotId()
+    {
+        $response = $this->getMe();
+        return $response['ok'] ? $response['result']['id'] : null;
+    }
+
+    /**
+     * Mendapatkan informasi tentang sebuah chat (channel, grup, atau user).
+     *
+     * @param int|string $chat_id ID atau username dari chat.
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function getChat($chat_id)
+    {
+        $data = [
+            'chat_id' => $chat_id,
+        ];
+        return $this->apiRequest('getChat', $data);
+    }
+
+    /**
      * Menjawab inline query.
      *
      * @param string $inline_query_id ID dari inline query.

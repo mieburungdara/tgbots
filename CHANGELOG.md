@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.0] - 2025-08-15
+
+### Fitur
+- **Posting Konten ke Channel Jualan**: Penjual sekarang dapat mendaftarkan channel jualan mereka dan mem-posting konten ke sana.
+  - **Pendaftaran Channel**: Perintah baru `/register_channel <ID Channel>` memungkinkan penjual untuk mendaftarkan channel mereka melalui chat pribadi dengan bot. Bot akan memverifikasi bahwa ia adalah admin di channel tersebut.
+  - **Tombol Posting Manual**: Saat melihat detail konten milik sendiri via `/konten`, penjual akan melihat tombol baru "Post ke Channel".
+  - **Penanganan Kegagalan Otomatis**: Jika bot gagal mem-posting ke channel (misalnya, karena sudah bukan admin), channel tersebut akan otomatis di-unregister dari sistem untuk mencegah error berulang.
+
 ## [4.1.0] - 2025-08-14
 
 ### Fitur
