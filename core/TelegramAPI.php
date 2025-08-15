@@ -365,6 +365,38 @@ class TelegramAPI {
     }
 
     /**
+     * Mendapatkan informasi tentang seorang member di sebuah chat.
+     *
+     * @param int|string $chat_id ID dari chat.
+     * @param int $user_id ID dari pengguna.
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function getChatMember($chat_id, $user_id)
+    {
+        $data = [
+            'chat_id' => $chat_id,
+            'user_id' => $user_id,
+        ];
+        return $this->apiRequest('getChatMember', $data);
+    }
+
+    /**
+     * Menjawab inline query.
+     *
+     * @param string $inline_query_id ID dari inline query.
+     * @param array $results Array dari hasil query (InlineQueryResult).
+     * @return mixed Hasil dari API Telegram.
+     */
+    public function answerInlineQuery(string $inline_query_id, array $results)
+    {
+        $data = [
+            'inline_query_id' => $inline_query_id,
+            'results' => json_encode($results),
+        ];
+        return $this->apiRequest('answerInlineQuery', $data);
+    }
+
+    /**
      * Mengirim pesan teks yang panjang dengan memecahnya menjadi beberapa bagian.
      * Pesan dipecah berdasarkan paragraf (baris baru ganda) untuk menjaga keterbacaan.
      *

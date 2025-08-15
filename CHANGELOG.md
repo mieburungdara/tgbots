@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.1.0] - 2025-08-14
+
+### Fitur
+- **Berbagi Konten via Inline Mode**: Bot sekarang mendukung Inline Mode. Pengguna dapat mengetik `@nama_bot <ID Konten>` di grup atau chat mana pun untuk secara instan mencari dan membagikan pratinjau konten, lengkap dengan tombol "Beli". Ini memberikan cara yang cepat dan ramah privasi untuk mempromosikan konten.
+
 ## [4.0.2] - 2025-08-14
 
 ### Keamanan

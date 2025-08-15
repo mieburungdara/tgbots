@@ -55,6 +55,25 @@ try {
         exit;
     }
 
+    // Handle inline query separately as it has a different structure
+    if ($update_type === 'inline_query') {
+        require_once __DIR__ . '/core/handlers/InlineQueryHandler.php';
+
+        $api_for_inline = new TelegramAPI($bot_token);
+        $bot_info = $api_for_inline->getMe();
+        $bot_username = $bot_info['result']['username'] ?? '';
+
+        if (!defined('BOT_USERNAME')) {
+            define('BOT_USERNAME', $bot_username);
+        }
+
+        $handler = new InlineQueryHandler($pdo, $api_for_inline);
+        $handler->handle($update['inline_query']);
+
+        http_response_code(200);
+        exit;
+    }
+
     $message_context = UpdateHandler::getMessageContext($update);
     if (!isset($message_context['from']['id']) || !isset($message_context['chat']['id'])) {
         http_response_code(200); // Abaikan update tanpa konteks user/chat
@@ -219,6 +238,10 @@ try {
     } elseif ($update_type === 'callback_query') {
         require_once __DIR__ . '/core/handlers/CallbackQueryHandler.php';
         $handler = new CallbackQueryHandler($pdo, $telegram_api, $user_repo, $current_user, $chat_id_from_telegram, $update['callback_query']);
+        $handler->handle();
+    } elseif ($update_type === 'channel_post') {
+        require_once __DIR__ . '/core/handlers/ChannelPostHandler.php';
+        $handler = new ChannelPostHandler($pdo, $telegram_api, $user_repo, $current_user, $chat_id_from_telegram, $message_context);
         $handler->handle();
     } elseif ($update_type === 'message') {
         require_once __DIR__ . '/core/handlers/MessageHandler.php';
