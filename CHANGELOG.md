@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.1] - 2025-08-15
+
+### Diperbaiki
+- **Fatal Error pada Callback Tombol "Post ke Channel"**: Memperbaiki error `Undefined constant "BOT_USERNAME"` yang terjadi saat pengguna menekan tombol "Post ke Channel".
+  - **Penyebab**: Konstanta `BOT_USERNAME` hanya didefinisikan untuk satu jenis update (inline query) dan tidak tersedia untuk callback query.
+  - **Solusi**: Logika untuk mendefinisikan konstanta `BOT_USERNAME` telah dipindahkan ke bagian awal skrip `webhook.php` sehingga tersedia secara global untuk semua jenis update.
+
 ## [4.2.0] - 2025-08-15
 
 ### Fitur
