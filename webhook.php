@@ -40,6 +40,13 @@ try {
     $internal_bot_id = (int)$bot['id'];
     $settings = $bot_repo->getBotSettings($internal_bot_id);
 
+    // Definisikan konstanta global untuk digunakan di semua handler
+    $api_for_globals = new TelegramAPI($bot_token, $pdo, $internal_bot_id);
+    $bot_info = $api_for_globals->getMe();
+    if (!defined('BOT_USERNAME')) {
+        define('BOT_USERNAME', $bot_info['result']['username'] ?? '');
+    }
+
     // 3. Baca dan Proses Input dari Telegram
     $update_json = file_get_contents('php://input');
     $update = json_decode($update_json, true);
@@ -59,15 +66,8 @@ try {
     if ($update_type === 'inline_query') {
         require_once __DIR__ . '/core/handlers/InlineQueryHandler.php';
 
-        $api_for_inline = new TelegramAPI($bot_token);
-        $bot_info = $api_for_inline->getMe();
-        $bot_username = $bot_info['result']['username'] ?? '';
-
-        if (!defined('BOT_USERNAME')) {
-            define('BOT_USERNAME', $bot_username);
-        }
-
-        $handler = new InlineQueryHandler($pdo, $api_for_inline);
+        // Gunakan instance API yang sudah dibuat untuk globals
+        $handler = new InlineQueryHandler($pdo, $api_for_globals);
         $handler->handle($update['inline_query']);
 
         http_response_code(200);
