@@ -179,6 +179,10 @@ Untuk memudahkan melihat paket besar, konten ditampilkan per halaman. Setiap "ha
 
 - Gunakan tombol bernomor `[1] [2] [3]...` untuk melompat langsung ke halaman (album/media) yang diinginkan.
 - Nomor halaman yang sedang Anda lihat akan ditandai secara khusus (contoh: `- 2 -`).
+EOT;
+
+        if ($this->current_user['role'] === 'admin') {
+            $admin_help_text = <<<EOT
 
 ## 5. 👑 Perintah Admin
 
@@ -194,6 +198,9 @@ Admin (yang ID Telegram-nya diatur di `config.php`) memiliki perintah khusus:
     *   **Contoh:** `/feature 17 @namachannelanda`
     *   **Fungsi:** Memposting pratinjau sebuah paket media ke channel yang ditentukan. `package_id` adalah ID *internal* (angka biasa), bukan ID publik. `channel_id` bisa berupa `@usernamechannel` atau ID numerik channel. Bot harus menjadi admin di channel tersebut.
 EOT;
+            $help_text .= $admin_help_text;
+        }
+
         $this->telegram_api->sendLongMessage($this->chat_id, $help_text, 'Markdown');
     }
 

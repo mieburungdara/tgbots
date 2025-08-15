@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.0.2] - 2025-08-14
+
+### Keamanan
+- **Menyembunyikan Perintah Admin**: Perintah `/help` sekarang hanya akan menampilkan bagian "Perintah Admin" kepada pengguna yang memiliki peran sebagai admin. Ini mencegah pengguna biasa melihat perintah-perintah sensitif yang dapat disalahgunakan.
+
 ## [4.0.1] - 2025-08-14
 
 ### Diperbaiki
