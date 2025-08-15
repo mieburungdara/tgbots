@@ -100,7 +100,8 @@ $packages = $packageRepo->findAll();
             <a href="channels.php">Channel</a> |
             <a href="database.php">Database</a> |
             <a href="analytics.php">Analitik</a> |
-            <a href="logs.php">Logs</a>
+            <a href="logs.php">Logs</a> |
+            <a href="telegram_logs.php">Log Error Telegram</a>
         </nav>
         <h1>Manajemen Konten</h1>
         <p>Halaman ini menampilkan semua paket konten dalam sistem. Admin dapat menghapus konten secara permanen jika diperlukan.</p>
