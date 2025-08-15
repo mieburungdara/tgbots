@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.0.1] - 2025-08-14
+
+### Diperbaiki
+- **Pesan Perintah /help Terlalu Panjang**: Memperbaiki error `Bad Request: message is too long` yang terjadi saat menggunakan perintah `/help`. Pesan bantuan yang panjang sekarang secara otomatis dipecah menjadi beberapa pesan yang lebih kecil untuk mematuhi batas karakter API Telegram.
+
 ## [4.0.0] - 2025-08-14
 
 ### Fitur

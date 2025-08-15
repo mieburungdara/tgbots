@@ -363,4 +363,54 @@ class TelegramAPI {
         ];
         return $this->apiRequest('deleteMessage', $data);
     }
+
+    /**
+     * Mengirim pesan teks yang panjang dengan memecahnya menjadi beberapa bagian.
+     * Pesan dipecah berdasarkan paragraf (baris baru ganda) untuk menjaga keterbacaan.
+     *
+     * @param int|string $chat_id ID dari chat tujuan.
+     * @param string $text Teks panjang yang akan dikirim.
+     * @param string|null $parse_mode Mode parsing: 'Markdown', 'HTML', atau null.
+     */
+    public function sendLongMessage($chat_id, $text, $parse_mode = null)
+    {
+        $max_length = 4096;
+        $paragraphs = preg_split('/(\r\n|\n|\r){2,}/', $text);
+        $current_message = "";
+
+        foreach ($paragraphs as $paragraph) {
+            if (empty(trim($paragraph))) {
+                continue;
+            }
+
+            // Jika paragraf itu sendiri sudah terlalu panjang, pecah secara paksa
+            if (strlen($paragraph) > $max_length) {
+                if (!empty($current_message)) {
+                    $this->sendMessage($chat_id, $current_message, $parse_mode);
+                    $current_message = "";
+                }
+                $sub_chunks = str_split($paragraph, $max_length);
+                foreach ($sub_chunks as $chunk) {
+                    $this->sendMessage($chat_id, $chunk, $parse_mode);
+                }
+                continue;
+            }
+
+            if (strlen($current_message) + strlen($paragraph) + 2 > $max_length) {
+                if (!empty($current_message)) {
+                    $this->sendMessage($chat_id, $current_message, $parse_mode);
+                }
+                $current_message = $paragraph;
+            } else {
+                if (!empty($current_message)) {
+                    $current_message .= "\n\n";
+                }
+                $current_message .= $paragraph;
+            }
+        }
+
+        if (!empty($current_message)) {
+            $this->sendMessage($chat_id, $current_message, $parse_mode);
+        }
+    }
 }
