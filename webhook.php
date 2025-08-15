@@ -1,5 +1,8 @@
 <?php
 
+// Definisikan path root untuk akses file yang andal
+define('ROOT_PATH', __DIR__);
+
 // Sertakan file-file inti
 require_once __DIR__ . '/core/database.php';
 require_once __DIR__ . '/core/TelegramAPI.php';
