@@ -101,7 +101,7 @@ try {
         ->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $text_content, $update_json, $message_date]);
 
     // 8. Inisialisasi API dan delegasikan ke Handler yang Tepat
-    $telegram_api = new TelegramAPI($bot_token);
+    $telegram_api = new TelegramAPI($bot_token, $pdo, $internal_bot_id);
     $update_handled = false;
 
     // Logika State-based (harus dijalankan sebelum command handler)

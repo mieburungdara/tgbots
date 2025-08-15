@@ -96,7 +96,8 @@ $private_channels = $channelRepo->getAllChannels();
             <a href="media_logs.php">Log Media</a> |
             <a href="channels.php" class="active">Channel</a> |
             <a href="database.php">Database</a> |
-            <a href="logs.php">Logs</a>
+            <a href="logs.php">Logs</a> |
+            <a href="telegram_logs.php">Log Error Telegram</a>
         </nav>
 
         <h1>Kelola Channel Penyimpanan</h1>

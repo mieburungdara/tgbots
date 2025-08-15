@@ -1,5 +1,20 @@
 # Changelog
 
+## [4.0.0] - 2025-08-14
+
+### Fitur
+- **Logging Kesalahan API ke Database**: Semua kegagalan saat berkomunikasi dengan API Telegram sekarang dicatat secara otomatis ke dalam tabel `telegram_error_logs` baru di database. Ini memberikan catatan permanen dan terstruktur untuk analisis masalah.
+- **Halaman Log Kesalahan di Panel Admin**: Menambahkan halaman baru (`admin/telegram_logs.php`) yang menampilkan semua log kesalahan API Telegram dari database. Halaman ini dilengkapi dengan paginasi untuk navigasi yang mudah.
+
+### Peningkatan
+- **Penanganan Kesalahan API**: Merombak total mekanisme penanganan kesalahan di `TelegramAPI.php`. Sekarang menggunakan blok `try-catch` yang lebih tangguh untuk menangkap semua jenis kegagalan, termasuk error koneksi cURL, timeout, dan respons error dari Telegram.
+- **Logika Penanganan Error Spesifik**: Menambahkan logika cerdas untuk menangani kode error spesifik dari Telegram:
+  - **400 (Bad Request)**: Memberikan log yang lebih deskriptif untuk masalah umum seperti "chat not found" atau "can't parse entities".
+  - **403 (Forbidden)**: Secara spesifik mendeteksi saat bot diblokir oleh pengguna.
+  - **429 (Too Many Requests)**: Mendeteksi permintaan rate-limit dan mencatatnya dengan status `pending_retry` untuk potensi pemrosesan ulang di masa depan.
+- **Navigasi Panel Admin**: Menambahkan tautan "Log Error Telegram" ke menu navigasi di semua halaman panel admin untuk akses yang cepat dan konsisten.
+- **Status Pengguna Diblokir**: Saat bot mendeteksi bahwa ia diblokir oleh pengguna, sistem sekarang secara otomatis akan memperbarui status pengguna tersebut menjadi 'blocked' di database, bukan hanya mencatatnya di log.
+
 ## [3.12.4] - 2025-08-14
 
 ### Diperbaiki
