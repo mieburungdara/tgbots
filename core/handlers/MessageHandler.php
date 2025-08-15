@@ -51,8 +51,6 @@ class MessageHandler
         $parts = explode(' ', $text);
         $command = $parts[0];
 
-        app_log("MessageHandler: Processing command '{$command}' for user {$this->current_user['id']}", 'debug');
-
         // This can be further refactored into command classes
         switch ($command) {
             case '/start':
@@ -118,8 +116,7 @@ class MessageHandler
 
     private function handleHelpCommand()
     {
-        app_log("Executing handleHelpCommand", 'debug');
-        $help_file = __DIR__ . '/../../howto.md';
+        $help_file = ROOT_PATH . '/howto.md';
         if (file_exists($help_file)) {
             $help_text = file_get_contents($help_file);
             $this->telegram_api->sendMessage($this->chat_id, $help_text, 'Markdown');
