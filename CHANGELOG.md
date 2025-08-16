@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.2] - 2025-08-15
+
+### Diperbaiki
+- **Fatal Error pada Perintah /start dengan Deep Link**: Memperbaiki error `TypeError` yang terjadi saat pengguna menggunakan tautan `start` yang berisi ID paket (misalnya, dari tombol "Beli").
+  - **Penyebab**: ID paket diekstrak sebagai string, tetapi metode `PackageRepository::find()` mengharapkan integer.
+  - **Solusi**: Melakukan konversi tipe data (casting) ID paket menjadi integer sebelum memanggil metode `find()`.
+
 ## [4.2.1] - 2025-08-15
 
 ### Diperbaiki
