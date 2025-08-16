@@ -172,88 +172,33 @@ class MessageHandler
     {
         // NOTE: MarkdownV2 requires escaping of many characters.
         // Chars to escape: _ * [ ] ( ) ~ ` > # + - = | { } . !
-        $help_text = <<<EOT
-*🤖 Panduan Perintah Bot 🤖*
-
-Berikut adalah perintah utama yang bisa Anda gunakan:
-
-*\-\-\- UNTUK PENJUAL \-\-\-*
-
-➡️ `/sell`
-Balas \(reply\) sebuah media \(foto/video/album\) dengan perintah ini untuk mulai menjual\. Bot akan memandu Anda untuk menetapkan harga\.
-
-➡️ `/addmedia`
-Gunakan saat proses `/sell` \(sebelum menetapkan harga\) untuk menambahkan lebih banyak media ke dalam satu paket\.
-
-➡️ `/addmedia <ID_PAKET>`
-Gunakan sambil me\-reply media baru untuk menambahkan media tersebut ke paket yang sudah ada\. Contoh: `/addmedia ABCD\_0001`
-
-➡️ `/register_channel <ID_CHANNEL>`
-Daftarkan channel jualan Anda\. Bot harus menjadi admin di channel tersebut\. Contoh: `/register_channel @channel_saya`
-
-*\-\-\- UNTUK SEMUA PENGGUNA \-\-\-*
-
-➡️ `/konten <ID_PAKET>`
-Lihat detail atau beli sebuah konten\. Contoh: `/konten ABCD\_0001`
-
-➡️ `/me`
-Lihat profil, ID penjual, dan ringkasan penjualan Anda\.
-
-➡️ `/balance`
-Cek saldo Anda saat ini\.
-
-➡️ `/login`
-Dapatkan tautan unik untuk masuk ke panel member di web\.
-=======
-*--- UNTUK PENJUAL ---*
-
-➡️ `/sell`
-Balas (reply) sebuah media (foto/video/album) dengan perintah ini untuk mulai menjual. Bot akan memandu Anda untuk menetapkan harga.
-
-➡️ `/addmedia`
-Gunakan saat proses `/sell` (sebelum menetapkan harga) untuk menambahkan lebih banyak media ke dalam satu paket.
-
-➡️ `/addmedia <ID_PAKET>`
-Gunakan sambil me-reply media baru untuk menambahkan media tersebut ke paket yang sudah ada. Contoh: `/addmedia ABCD\_0001`
-
-➡️ `/register_channel <ID_CHANNEL>`
-Daftarkan channel jualan Anda. Bot harus menjadi admin di channel tersebut. Contoh: `/register_channel @channel_saya`
-
-*--- UNTUK SEMUA PENGGUNA ---*
-
-➡️ `/konten <ID_PAKET>`
-Lihat detail atau beli sebuah konten. Contoh: `/konten ABCD\_0001`
-
-➡️ `/me`
-Lihat profil, ID penjual, dan ringkasan penjualan Anda.
-
-➡️ `/balance`
-Cek saldo Anda saat ini.
-
-➡️ `/login`
-Dapatkan tautan unik untuk masuk ke panel member di web.
-EOT;
+        $help_text = "*🤖 Panduan Perintah Bot 🤖*\n\n" .
+             "Berikut adalah perintah utama yang bisa Anda gunakan:\n\n" .
+             "*\-\-\- UNTUK PENJUAL \-\-\-*\n\n" .
+             "➡️ `/sell`\n" .
+             "Balas \\(reply\\) sebuah media \\(foto/video/album\\) dengan perintah ini untuk mulai menjual\\. Bot akan memandu Anda untuk menetapkan harga\\.\n\n" .
+             "➡️ `/addmedia`\n" .
+             "Gunakan saat proses `/sell` \\(sebelum menetapkan harga\\) untuk menambahkan lebih banyak media ke dalam satu paket\\.\n\n" .
+             "➡️ `/addmedia <ID_PAKET>`\n" .
+             "Gunakan sambil me\\-reply media baru untuk menambahkan media tersebut ke paket yang sudah ada\\. Contoh: `/addmedia ABCD\\_0001`\n\n" .
+             "➡️ `/register_channel <ID_CHANNEL>`\n" .
+             "Daftarkan channel jualan Anda\\. Bot harus menjadi admin di channel tersebut\\. Contoh: `/register_channel @channel_saya`\n\n" .
+             "*\-\-\- UNTUK SEMUA PENGGUNA \-\-\-*\n\n" .
+             "➡️ `/konten <ID_PAKET>`\n" .
+             "Lihat detail atau beli sebuah konten\\. Contoh: `/konten ABCD\\_0001`\n\n" .
+             "➡️ `/me`\n" .
+             "Lihat profil, ID penjual, dan ringkasan penjualan Anda\\.\n\n" .
+             "➡️ `/balance`\n" .
+             "Cek saldo Anda saat ini\\.\n\n" .
+             "➡️ `/login`\n" .
+             "Dapatkan tautan unik untuk masuk ke panel member di web\\.";
 
         if ($this->current_user['role'] === 'admin') {
-            $admin_help_text = <<<EOT
-
-
-*\-\-\- KHUSUS ADMIN \-\-\-*
-
-➡️ `/dev_addsaldo <user_id> <jumlah>`
-Menambah saldo ke pengguna\.
-
-➡️ `/feature <package_id> <channel_id>`
-Mempromosikan paket ke channel\.
-=======
-*--- KHUSUS ADMIN ---*
-
-➡️ `/dev_addsaldo <user_id> <jumlah>`
-Menambah saldo ke pengguna.
-
-➡️ `/feature <package_id> <channel_id>`
-Mempromosikan paket ke channel.
-EOT;
+            $admin_help_text = "\n\n\n*\-\-\- KHUSUS ADMIN \-\-\-*\n\n" .
+                 "➡️ `/dev_addsaldo <user_id> <jumlah>`\n" .
+                 "Menambah saldo ke pengguna\\.\n\n" .
+                 "➡️ `/feature <package_id> <channel_id>`\n" .
+                 "Mempromosikan paket ke channel\\.";
             $help_text .= $admin_help_text;
         }
 
