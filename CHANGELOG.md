@@ -1,5 +1,13 @@
 # Changelog
 
+
+## [4.2.7] - 2025-08-15
+
+### Diperbaiki
+- **Fatal Error `can't parse entities` pada Perintah /help**: Memperbaiki error Markdown yang tersisa pada perintah `/help`.
+  - **Penyebab**: Penggunaan `Markdown` legacy yang tidak konsisten dan karakter `-` yang tidak di-escape menyebabkan error saat parsing di `MarkdownV2`.
+  - **Solusi**: Secara eksplisit mengubah `parse_mode` untuk perintah `/help` menjadi `MarkdownV2` dan melakukan escaping pada semua karakter khusus (`-`, `.`, `(`, `)`, dll.) sesuai dengan aturan `MarkdownV2`.
+
 ## [4.2.6] - 2025-08-15
 
 ### Peningkatan
