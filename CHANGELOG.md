@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.5] - 2025-08-15
+
+### Diperbaiki
+- **Format Markdown Rusak pada Perintah /help**: Memperbaiki masalah format pada pesan `/help` yang menyebabkan teks tidak ditampilkan dengan benar.
+  - **Penyebab**: Karakter garis bawah (`_`) dalam contoh ID paket (misalnya, `ABCD_0001`) tidak di-escape, sehingga merusak parser Markdown Telegram.
+  - **Solusi**: Melakukan escaping pada karakter `_` di semua contoh ID dalam teks bantuan.
+
 ## [4.2.4] - 2025-08-15
 
 ### Diperbaiki
