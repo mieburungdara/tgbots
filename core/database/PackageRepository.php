@@ -98,9 +98,8 @@ class PackageRepository
     public function findAllBySellerId(int $sellerId): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT mp.*, mf.file_id as thumbnail_file_id
+            "SELECT mp.*
              FROM media_packages mp
-             LEFT JOIN media_files mf ON mp.thumbnail_media_id = mf.id
              WHERE mp.seller_user_id = ? AND mp.status != 'deleted'
              ORDER BY mp.created_at DESC"
         );
@@ -284,5 +283,32 @@ class PackageRepository
             // Rollback akan ditangani oleh penangan eksepsi global di webhook.php
             throw new Exception("Gagal membuat paket baru: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Mendapatkan file media yang dijadikan thumbnail untuk sebuah paket.
+     *
+     * @param int $package_id ID paket.
+     * @return array|false Data file thumbnail atau false jika tidak ditemukan.
+     */
+    public function getThumbnailFile(int $package_id)
+    {
+        $package = $this->find($package_id);
+        if (!$package) return false;
+
+        $thumbnail_media_id = $package['thumbnail_media_id'];
+
+        // Jika thumbnail spesifik di-set, gunakan itu
+        if (!empty($thumbnail_media_id)) {
+            $stmt = $this->pdo->prepare("SELECT * FROM media_files WHERE id = ?");
+            $stmt->execute([$thumbnail_media_id]);
+            $thumb = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($thumb) return $thumb;
+        }
+
+        // Jika tidak, gunakan file pertama yang terkait dengan paket
+        $stmt = $this->pdo->prepare("SELECT * FROM media_files WHERE package_id = ? ORDER BY id ASC LIMIT 1");
+        $stmt->execute([$package_id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }

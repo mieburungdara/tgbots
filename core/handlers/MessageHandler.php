@@ -5,6 +5,7 @@ require_once __DIR__ . '/../database/SaleRepository.php';
 require_once __DIR__ . '/../database/MediaFileRepository.php';
 require_once __DIR__ . '/../database/BotChannelUsageRepository.php';
 require_once __DIR__ . '/../database/AnalyticsRepository.php';
+require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
 
 class MessageHandler
 {
@@ -16,6 +17,7 @@ class MessageHandler
     private $bot_channel_usage_repo;
     private $sale_repo;
     private $analytics_repo;
+    private $sales_channel_repo;
     private $current_user;
     private $chat_id;
     private $message;
@@ -30,6 +32,7 @@ class MessageHandler
         $this->bot_channel_usage_repo = new BotChannelUsageRepository($pdo);
         $this->sale_repo = new SaleRepository($pdo);
         $this->analytics_repo = new AnalyticsRepository($pdo);
+        $this->sales_channel_repo = new SellerSalesChannelRepository($pdo);
         $this->current_user = $current_user;
         $this->chat_id = $chat_id;
         $this->message = $message;
@@ -77,10 +80,61 @@ class MessageHandler
             case '/help':
                 $this->handleHelpCommand();
                 break;
+            case '/register_channel':
+                $this->handleRegisterChannelCommand($parts);
+                break;
             case '/dev_addsaldo':
             case '/feature':
                 $this->handleAdminCommands($command, $parts);
                 break;
+        }
+    }
+
+    private function handleRegisterChannelCommand(array $parts)
+    {
+        if (count($parts) < 2) {
+            $this->telegram_api->sendMessage($this->chat_id, "Format perintah salah. Gunakan: `/register_channel <ID atau @username channel>`");
+            return;
+        }
+
+        $channel_identifier = $parts[1];
+
+        // 1. Verify the user is a registered seller
+        if (empty($this->current_user['public_seller_id'])) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Perintah ini hanya untuk penjual terdaftar.");
+            return;
+        }
+
+        // 2. Verify the bot is an admin in the channel
+        $bot_member = $this->telegram_api->getChatMember($channel_identifier, $this->telegram_api->getBotId());
+
+        if (!$bot_member || !$bot_member['ok'] || !in_array($bot_member['result']['status'], ['administrator', 'creator'])) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Pastikan bot telah ditambahkan sebagai **admin** di channel `{$channel_identifier}`.", 'Markdown');
+            return;
+        }
+
+        // 3. Check for necessary permissions
+        if (!($bot_member['result']['can_post_messages'] ?? false)) {
+             $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Bot memerlukan izin untuk **'Post Messages'** di channel tersebut.", 'Markdown');
+            return;
+        }
+
+        // 4. All checks passed, get full channel info to store the numeric ID
+        $channel_info = $this->telegram_api->getChat($channel_identifier);
+        if (!$channel_info || !$channel_info['ok']) {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Tidak dapat mengambil informasi untuk channel `{$channel_identifier}`. Pastikan ID atau username channel sudah benar.", 'Markdown');
+            return;
+        }
+        $numeric_channel_id = $channel_info['result']['id'];
+        $channel_title = $channel_info['result']['title'];
+
+        // 5. Save to database
+        $success = $this->sales_channel_repo->createOrUpdate($this->current_user['id'], $numeric_channel_id);
+
+        if ($success) {
+            $this->telegram_api->sendMessage($this->chat_id, "✅ Selamat! Channel **{$channel_title}** (`{$numeric_channel_id}`) telah berhasil didaftarkan sebagai channel jualan Anda.", 'Markdown');
+        } else {
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Terjadi kesalahan database saat mencoba mendaftarkan channel ini.");
         }
     }
 
@@ -116,92 +170,65 @@ class MessageHandler
 
     private function handleHelpCommand()
     {
+        // NOTE: MarkdownV2 requires escaping of many characters.
+        // Chars to escape: _ * [ ] ( ) ~ ` > # + - = | { } . !
         $help_text = <<<EOT
-# 📖 Panduan Penggunaan Bot Marketplace
+*🤖 Panduan Perintah Bot 🤖*
 
-Selamat datang di panduan Bot Marketplace! 🤖 Dokumen ini akan menjelaskan cara menggunakan berbagai fitur yang tersedia, mulai dari menjual konten hingga melihat item yang sudah dibeli.
+Berikut adalah perintah utama yang bisa Anda gunakan:
 
-## 1. 🚀 Menjadi Penjual
+*\-\-\- UNTUK PENJUAL \-\-\-*
 
-Sebelum Anda dapat menjual, Anda harus terdaftar sebagai penjual. Proses ini otomatis dan hanya perlu dilakukan sekali.
+➡️ `/sell`
+Balas \(reply\) sebuah media \(foto/video/album\) dengan perintah ini untuk mulai menjual\. Bot akan memandu Anda untuk menetapkan harga\.
 
-- **Langkah 1:** Lakukan perintah `/sell` untuk pertama kalinya.
-- **Langkah 2:** Bot akan bertanya apakah Anda ingin mendaftar sebagai penjual. Tekan tombol **"Ya, Daftar Sekarang"**.
-- **Langkah 3:** Bot akan memberikan Anda **ID Penjual Publik** yang unik (contoh: `ABCD`). ID ini akan digunakan untuk membuat ID unik untuk setiap konten yang Anda jual.
+➡️ `/addmedia`
+Gunakan saat proses `/sell` \(sebelum menetapkan harga\) untuk menambahkan lebih banyak media ke dalam satu paket\.
 
-Setelah terdaftar, Anda dapat mulai menjual.
+➡️ `/addmedia <ID_PAKET>`
+Gunakan sambil me\-reply media baru untuk menambahkan media tersebut ke paket yang sudah ada\. Contoh: `/addmedia ABCD\_0001`
 
-## 2. 💰 Menjual Konten
+➡️ `/register_channel <ID_CHANNEL>`
+Daftarkan channel jualan Anda\. Bot harus menjadi admin di channel tersebut\. Contoh: `/register_channel @channel_saya`
 
-Proses menjual konten dirancang agar cepat dan mudah.
+*\-\-\- UNTUK SEMUA PENGGUNA \-\-\-*
 
-### A. Menjual Item Tunggal atau Satu Album
+➡️ `/konten <ID_PAKET>`
+Lihat detail atau beli sebuah konten\. Contoh: `/konten ABCD\_0001`
 
-Ini adalah cara menjual yang paling umum.
+➡️ `/me`
+Lihat profil, ID penjual, dan ringkasan penjualan Anda\.
 
-- **Langkah 1:** Kirim media (foto, video, atau album/media group) ke chat bot.
-- **Langkah 2:** **Reply** (balas) media yang baru saja Anda kirim dengan perintah `/sell`.
-- **Langkah 3:** Bot akan meminta Anda untuk memasukkan harga. Kirim harga dalam bentuk angka (contoh: `50000`).
-- **Selesai!** 🎉 Paket Anda sekarang tersedia untuk dijual dengan ID unik (contoh: `ABCD_0001`).
+➡️ `/balance`
+Cek saldo Anda saat ini\.
 
-**Catatan Penting:**
-- **Deskripsi:** 📝 Caption (teks) dari media yang Anda reply akan secara otomatis digunakan sebagai deskripsi produk. Jika Anda menjual album, bot akan secara cerdas mencari caption dari salah satu item di dalam album tersebut.
-- **Mengedit Deskripsi:** ✍️ Jika Anda mengedit caption media asli setelah paket dibuat, deskripsi produk di bot akan **otomatis diperbarui**.
-
-### B. Membuat Paket Besar (Lebih dari 10 Media)
-
-Telegram memiliki batas 10 item per media group. Untuk menjual paket yang lebih besar, Anda bisa menggunakan perintah `/addmedia`.
-
-- **Langkah 1:** Mulai proses penjualan seperti biasa dengan me-reply media pertama (atau album pertama) dengan `/sell`.
-- **Langkah 2:** **Jangan masukkan harga dulu.** Alih-alih, kirim media atau album berikutnya yang ingin Anda tambahkan ke paket.
-- **Langkah 3:** Reply media/album tambahan tersebut dengan perintah `/addmedia`. Anda bisa mengulangi langkah ini beberapa kali untuk menambahkan lebih banyak media.
-- **Langkah 4:** Setelah semua media ditambahkan, kirimkan harga untuk menyelesaikan proses. Semua media yang Anda tambahkan akan digabung menjadi satu paket besar.
-
-## 3. ✏️ Mengedit Paket yang Sudah Ada
-
-Anda dapat menambahkan media baru ke paket yang sudah Anda jual.
-
-- **Langkah 1:** Kirim media atau album baru yang ingin Anda tambahkan.
-- **Langkah 2:** Reply media/album baru tersebut dengan perintah `/addmedia <ID_PAKET>`, di mana `<ID_PAKET>` adalah ID dari paket yang ingin Anda edit (contoh: `/addmedia ABCD_0001`).
-- **Selesai!** ✅ Media baru akan ditambahkan ke paket yang sudah ada.
-
-## 4. 📂 Melihat Konten
-
-Baik sebagai penjual maupun pembeli, Anda dapat melihat konten yang Anda miliki.
-
-- **Langkah 1:** Gunakan perintah `/konten <ID_PAKET>` (contoh: `/konten ABCD_0001`).
-- **Langkah 2:** Bot akan menampilkan pratinjau konten. Jika Anda memiliki akses (sebagai penjual atau pembeli), Anda akan melihat tombol **"Lihat Selengkapnya 📂"**.
-- **Langkah 3:** Tekan tombol tersebut untuk masuk ke mode penampil konten.
-
-### Navigasi Konten (Pagination)
-
-Untuk memudahkan melihat paket besar, konten ditampilkan per halaman. Setiap "halaman" adalah satu album atau satu media tunggal.
-
-- Gunakan tombol bernomor `[1] [2] [3]...` untuk melompat langsung ke halaman (album/media) yang diinginkan.
-- Nomor halaman yang sedang Anda lihat akan ditandai secara khusus (contoh: `- 2 -`).
-
-## 5. 👑 Perintah Admin
-
-Admin (yang ID Telegram-nya diatur di `config.php`) memiliki perintah khusus:
-
-1.  **Menambah Saldo (Untuk Uji Coba):**
-    *   **Perintah:** `/dev_addsaldo <user_telegram_id> <jumlah>`
-    *   **Contoh:** `/dev_addsaldo 12345678 100000`
-    *   **Fungsi:** Menambahkan saldo ke pengguna tertentu. Ini penting untuk memungkinkan pembeli melakukan transaksi pertama mereka.
-
-2.  **Mempromosikan Paket Media:**
-    *   **Perintah:** `/feature <package_id> <channel_id>`
-    *   **Contoh:** `/feature 17 @namachannelanda`
-    *   **Fungsi:** Memposting pratinjau sebuah paket media ke channel yang ditentukan. `package_id` adalah ID *internal* (angka biasa), bukan ID publik. `channel_id` bisa berupa `@usernamechannel` atau ID numerik channel. Bot harus menjadi admin di channel tersebut.
+➡️ `/login`
+Dapatkan tautan unik untuk masuk ke panel member di web\.
 EOT;
-        $this->telegram_api->sendMessage($this->chat_id, $help_text, 'Markdown');
+
+        if ($this->current_user['role'] === 'admin') {
+            $admin_help_text = <<<EOT
+
+
+*\-\-\- KHUSUS ADMIN \-\-\-*
+
+➡️ `/dev_addsaldo <user_id> <jumlah>`
+Menambah saldo ke pengguna\.
+
+➡️ `/feature <package_id> <channel_id>`
+Mempromosikan paket ke channel\.
+EOT;
+            $help_text .= $admin_help_text;
+        }
+
+        $this->telegram_api->sendLongMessage($this->chat_id, $help_text, 'MarkdownV2');
     }
 
     private function handleStartCommand(array $parts)
     {
         if (count($parts) > 1 && strpos($parts[1], 'package_') === 0) {
             $package_id = substr($parts[1], strlen('package_'));
-            $package = $this->package_repo->find($package_id);
+            $package = $this->package_repo->find((int)$package_id);
             if ($package && $package['status'] == 'available') {
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
                 $balance_formatted = "Rp " . number_format($this->current_user['balance'], 0, ',', '.');
@@ -377,8 +404,17 @@ EOT;
 
         $keyboard = [];
         if ($has_access) {
-            // Mengarahkan ke handler pagination halaman pertama (indeks 0)
-            $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]]];
+            $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
+
+            // Tambahkan tombol "Post ke Channel" jika pengguna adalah penjual dan punya channel terdaftar
+            if ($is_seller) {
+                $sales_channel = $this->sales_channel_repo->findBySellerId($internal_user_id);
+                if ($sales_channel) {
+                    $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
+                }
+            }
+            $keyboard = ['inline_keyboard' => $keyboard_buttons];
+
         } elseif ($package['status'] === 'available') {
             $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
             $keyboard = ['inline_keyboard' => [[['text' => "Beli Konten Ini ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"]]]];

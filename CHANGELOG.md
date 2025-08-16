@@ -1,5 +1,90 @@
 # Changelog
 
+## [4.2.7] - 2025-08-15
+
+### Diperbaiki
+- **Fatal Error `can't parse entities` pada Perintah /help**: Memperbaiki error Markdown yang tersisa pada perintah `/help`.
+  - **Penyebab**: Penggunaan `Markdown` legacy yang tidak konsisten dan karakter `-` yang tidak di-escape menyebabkan error saat parsing di `MarkdownV2`.
+  - **Solusi**: Secara eksplisit mengubah `parse_mode` untuk perintah `/help` menjadi `MarkdownV2` dan melakukan escaping pada semua karakter khusus (`-`, `.`, `(`, `)`, dll.) sesuai dengan aturan `MarkdownV2`.
+
+## [4.2.6] - 2025-08-15
+
+### Peningkatan
+- **Pesan Bantuan /help Disederhanakan**: Teks bantuan yang ditampilkan oleh perintah `/help` telah ditulis ulang sepenuhnya menjadi lebih ringkas, jelas, dan mudah dibaca menggunakan format daftar (bullet points) untuk meningkatkan pengalaman pengguna.
+
+## [4.2.5] - 2025-08-15
+
+### Diperbaiki
+- **Format Markdown Rusak pada Perintah /help**: Memperbaiki masalah format pada pesan `/help` yang menyebabkan teks tidak ditampilkan dengan benar.
+  - **Penyebab**: Karakter garis bawah (`_`) dalam contoh ID paket (misalnya, `ABCD_0001`) tidak di-escape, sehingga merusak parser Markdown Telegram.
+  - **Solusi**: Melakukan escaping pada karakter `_` di semua contoh ID dalam teks bantuan.
+
+## [4.2.4] - 2025-08-15
+
+### Diperbaiki
+- **Fatal Error di Halaman "Konten Dibeli"**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mf.file_id'` yang terjadi saat member membuka halaman "Konten Dibeli".
+  - **Penyebab**: Query database untuk mengambil daftar konten yang dibeli (`findPackagesByBuyerId`) masih mencoba memilih kolom `file_id` yang sudah dihapus.
+  - **Solusi**: Menghapus referensi ke kolom `mf.file_id` dari query di `SaleRepository.php`.
+
+## [4.2.3] - 2025-08-15
+
+### Diperbaiki
+- **Fatal Error di Halaman "Konten Dijual"**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mf.file_id'` yang terjadi saat member membuka halaman "Konten Dijual".
+  - **Penyebab**: Query database untuk mengambil daftar konten yang dijual (`findAllBySellerId`) masih mencoba memilih kolom `file_id` yang sudah dihapus.
+  - **Solusi**: Menghapus referensi ke kolom `mf.file_id` dari query di `PackageRepository.php`.
+
+## [4.2.2] - 2025-08-15
+
+### Diperbaiki
+- **Fatal Error pada Perintah /start dengan Deep Link**: Memperbaiki error `TypeError` yang terjadi saat pengguna menggunakan tautan `start` yang berisi ID paket (misalnya, dari tombol "Beli").
+  - **Penyebab**: ID paket diekstrak sebagai string, tetapi metode `PackageRepository::find()` mengharapkan integer.
+  - **Solusi**: Melakukan konversi tipe data (casting) ID paket menjadi integer sebelum memanggil metode `find()`.
+
+## [4.2.1] - 2025-08-15
+
+### Diperbaiki
+- **Fatal Error pada Callback Tombol "Post ke Channel"**: Memperbaiki error `Undefined constant "BOT_USERNAME"` yang terjadi saat pengguna menekan tombol "Post ke Channel".
+  - **Penyebab**: Konstanta `BOT_USERNAME` hanya didefinisikan untuk satu jenis update (inline query) dan tidak tersedia untuk callback query.
+  - **Solusi**: Logika untuk mendefinisikan konstanta `BOT_USERNAME` telah dipindahkan ke bagian awal skrip `webhook.php` sehingga tersedia secara global untuk semua jenis update.
+
+## [4.2.0] - 2025-08-15
+
+### Fitur
+- **Posting Konten ke Channel Jualan**: Penjual sekarang dapat mendaftarkan channel jualan mereka dan mem-posting konten ke sana.
+  - **Pendaftaran Channel**: Perintah baru `/register_channel <ID Channel>` memungkinkan penjual untuk mendaftarkan channel mereka melalui chat pribadi dengan bot. Bot akan memverifikasi bahwa ia adalah admin di channel tersebut.
+  - **Tombol Posting Manual**: Saat melihat detail konten milik sendiri via `/konten`, penjual akan melihat tombol baru "Post ke Channel".
+  - **Penanganan Kegagalan Otomatis**: Jika bot gagal mem-posting ke channel (misalnya, karena sudah bukan admin), channel tersebut akan otomatis di-unregister dari sistem untuk mencegah error berulang.
+
+## [4.1.0] - 2025-08-14
+
+### Fitur
+- **Berbagi Konten via Inline Mode**: Bot sekarang mendukung Inline Mode. Pengguna dapat mengetik `@nama_bot <ID Konten>` di grup atau chat mana pun untuk secara instan mencari dan membagikan pratinjau konten, lengkap dengan tombol "Beli". Ini memberikan cara yang cepat dan ramah privasi untuk mempromosikan konten.
+
+## [4.0.2] - 2025-08-14
+
+### Keamanan
+- **Menyembunyikan Perintah Admin**: Perintah `/help` sekarang hanya akan menampilkan bagian "Perintah Admin" kepada pengguna yang memiliki peran sebagai admin. Ini mencegah pengguna biasa melihat perintah-perintah sensitif yang dapat disalahgunakan.
+
+## [4.0.1] - 2025-08-14
+
+### Diperbaiki
+- **Pesan Perintah /help Terlalu Panjang**: Memperbaiki error `Bad Request: message is too long` yang terjadi saat menggunakan perintah `/help`. Pesan bantuan yang panjang sekarang secara otomatis dipecah menjadi beberapa pesan yang lebih kecil untuk mematuhi batas karakter API Telegram.
+
+## [4.0.0] - 2025-08-14
+
+### Fitur
+- **Logging Kesalahan API ke Database**: Semua kegagalan saat berkomunikasi dengan API Telegram sekarang dicatat secara otomatis ke dalam tabel `telegram_error_logs` baru di database. Ini memberikan catatan permanen dan terstruktur untuk analisis masalah.
+- **Halaman Log Kesalahan di Panel Admin**: Menambahkan halaman baru (`admin/telegram_logs.php`) yang menampilkan semua log kesalahan API Telegram dari database. Halaman ini dilengkapi dengan paginasi untuk navigasi yang mudah.
+
+### Peningkatan
+- **Penanganan Kesalahan API**: Merombak total mekanisme penanganan kesalahan di `TelegramAPI.php`. Sekarang menggunakan blok `try-catch` yang lebih tangguh untuk menangkap semua jenis kegagalan, termasuk error koneksi cURL, timeout, dan respons error dari Telegram.
+- **Logika Penanganan Error Spesifik**: Menambahkan logika cerdas untuk menangani kode error spesifik dari Telegram:
+  - **400 (Bad Request)**: Memberikan log yang lebih deskriptif untuk masalah umum seperti "chat not found" atau "can't parse entities".
+  - **403 (Forbidden)**: Secara spesifik mendeteksi saat bot diblokir oleh pengguna.
+  - **429 (Too Many Requests)**: Mendeteksi permintaan rate-limit dan mencatatnya dengan status `pending_retry` untuk potensi pemrosesan ulang di masa depan.
+- **Navigasi Panel Admin**: Menambahkan tautan "Log Error Telegram" ke menu navigasi di semua halaman panel admin untuk akses yang cepat dan konsisten.
+- **Status Pengguna Diblokir**: Saat bot mendeteksi bahwa ia diblokir oleh pengguna, sistem sekarang secara otomatis akan memperbarui status pengguna tersebut menjadi 'blocked' di database, bukan hanya mencatatnya di log.
+
 ## [3.12.4] - 2025-08-14
 
 ### Diperbaiki

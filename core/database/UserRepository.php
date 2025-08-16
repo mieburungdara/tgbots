@@ -126,4 +126,23 @@ class UserRepository
 
         throw new Exception("Gagal menghasilkan ID penjual yang unik.");
     }
+
+    /**
+     * Memperbarui status pengguna berdasarkan ID Telegram mereka.
+     *
+     * @param int $telegram_user_id ID Telegram pengguna.
+     * @param string $status Status baru ('active' or 'blocked').
+     * @return bool True jika berhasil, false jika gagal.
+     */
+    public function updateUserStatusByTelegramId(int $telegram_user_id, string $status): bool
+    {
+        // Validasi status untuk keamanan
+        if (!in_array($status, ['active', 'blocked'])) {
+            return false;
+        }
+
+        $sql = "UPDATE users SET status = ? WHERE telegram_id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([$status, $telegram_user_id]);
+    }
 }

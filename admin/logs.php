@@ -78,7 +78,8 @@ if ($selected_log) {
             <a href="media_logs.php">Log Media</a> |
             <a href="channels.php">Channel</a> |
             <a href="database.php">Database</a> |
-            <a href="logs.php" class="active">Logs</a>
+            <a href="logs.php" class="active">Logs</a> |
+            <a href="telegram_logs.php">Log Error Telegram</a>
         </nav>
 
         <h1>Log Viewer</h1>

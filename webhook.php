@@ -40,6 +40,13 @@ try {
     $internal_bot_id = (int)$bot['id'];
     $settings = $bot_repo->getBotSettings($internal_bot_id);
 
+    // Definisikan konstanta global untuk digunakan di semua handler
+    $api_for_globals = new TelegramAPI($bot_token, $pdo, $internal_bot_id);
+    $bot_info = $api_for_globals->getMe();
+    if (!defined('BOT_USERNAME')) {
+        define('BOT_USERNAME', $bot_info['result']['username'] ?? '');
+    }
+
     // 3. Baca dan Proses Input dari Telegram
     $update_json = file_get_contents('php://input');
     $update = json_decode($update_json, true);
@@ -52,6 +59,18 @@ try {
     $update_type = $update_handler->getUpdateType($update);
     if ($update_type === null) {
         http_response_code(200); // Abaikan update yang tidak didukung atau dinonaktifkan
+        exit;
+    }
+
+    // Handle inline query separately as it has a different structure
+    if ($update_type === 'inline_query') {
+        require_once __DIR__ . '/core/handlers/InlineQueryHandler.php';
+
+        // Gunakan instance API yang sudah dibuat untuk globals
+        $handler = new InlineQueryHandler($pdo, $api_for_globals);
+        $handler->handle($update['inline_query']);
+
+        http_response_code(200);
         exit;
     }
 
@@ -101,7 +120,7 @@ try {
         ->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $text_content, $update_json, $message_date]);
 
     // 8. Inisialisasi API dan delegasikan ke Handler yang Tepat
-    $telegram_api = new TelegramAPI($bot_token);
+    $telegram_api = new TelegramAPI($bot_token, $pdo, $internal_bot_id);
     $update_handled = false;
 
     // Logika State-based (harus dijalankan sebelum command handler)
@@ -219,6 +238,10 @@ try {
     } elseif ($update_type === 'callback_query') {
         require_once __DIR__ . '/core/handlers/CallbackQueryHandler.php';
         $handler = new CallbackQueryHandler($pdo, $telegram_api, $user_repo, $current_user, $chat_id_from_telegram, $update['callback_query']);
+        $handler->handle();
+    } elseif ($update_type === 'channel_post') {
+        require_once __DIR__ . '/core/handlers/ChannelPostHandler.php';
+        $handler = new ChannelPostHandler($pdo, $telegram_api, $user_repo, $current_user, $chat_id_from_telegram, $message_context);
         $handler->handle();
     } elseif ($update_type === 'message') {
         require_once __DIR__ . '/core/handlers/MessageHandler.php';
