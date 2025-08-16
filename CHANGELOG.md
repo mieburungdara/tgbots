@@ -1,5 +1,6 @@
 # Changelog
 
+
 ## [4.2.7] - 2025-08-15
 
 ### Diperbaiki
