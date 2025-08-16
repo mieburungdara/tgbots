@@ -189,7 +189,7 @@ Setelah terdaftar, Anda dapat mulai menjual.
 
 Proses menjual konten dirancang agar cepat dan mudah.
 
-### A. Menjual Item Tunggal atau Satu Album
+A. Menjual Item Tunggal atau Satu Album
 
 Ini adalah cara menjual yang paling umum.
 
@@ -255,7 +255,7 @@ EOT;
             $help_text .= $admin_help_text;
         }
 
-        $this->telegram_api->sendLongMessage($this->chat_id, $help_text, 'Markdown');
+        $this->telegram_api->sendLongMessage($this->chat_id, $help_text, 'MarkdownV2');
     }
 
     private function handleStartCommand(array $parts)
