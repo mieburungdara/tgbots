@@ -262,7 +262,7 @@ EOT;
     {
         if (count($parts) > 1 && strpos($parts[1], 'package_') === 0) {
             $package_id = substr($parts[1], strlen('package_'));
-            $package = $this->package_repo->find($package_id);
+            $package = $this->package_repo->find((int)$package_id);
             if ($package && $package['status'] == 'available') {
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
                 $balance_formatted = "Rp " . number_format($this->current_user['balance'], 0, ',', '.');
