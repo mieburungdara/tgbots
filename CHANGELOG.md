@@ -1,6 +1,16 @@
 # Changelog
 
 
+## [4.2.9] - 2025-08-16
+
+### Diperbaiki
+- **Fatal Error `can't parse entities` pada Callback Handler**: Memperbaiki error `can't parse entities` yang terlewat pada beberapa alur kerja yang ditangani oleh `CallbackQueryHandler`.
+  - **Penyebab**: Beberapa metode di `CallbackQueryHandler` (seperti `handleRegisterSeller` dan `handlePostToChannel`) masih mengirim pesan dengan `parse_mode` `Markdown` atau tidak menyertakan `parse_mode` saat mengirim caption dengan markup, serta tidak melakukan escaping pada konten. Selain itu, metode `copyMessage` di `TelegramAPI.php` tidak mendukung parameter `parse_mode`.
+  - **Solusi**:
+    1.  Menambahkan dukungan parameter `parse_mode` ke metode `copyMessage` di `TelegramAPI.php`.
+    2.  Di `CallbackQueryHandler.php`, mengubah semua pemanggilan `sendMessage` dan `copyMessage` yang relevan untuk menggunakan `parse_mode=MarkdownV2`.
+    3.  Menerapkan fungsi `escapeMarkdownV2()` pada semua konten dinamis (seperti ID publik, deskripsi, harga) sebelum dikirim.
+
 ## [4.2.8] - 2025-08-16
 
 ### Diperbaiki
