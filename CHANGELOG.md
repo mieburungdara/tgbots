@@ -1,5 +1,10 @@
 # Changelog
 
+## [4.2.6] - 2025-08-15
+
+### Peningkatan
+- **Pesan Bantuan /help Disederhanakan**: Teks bantuan yang ditampilkan oleh perintah `/help` telah ditulis ulang sepenuhnya menjadi lebih ringkas, jelas, dan mudah dibaca menggunakan format daftar (bullet points) untuk meningkatkan pengalaman pengguna.
+
 ## [4.2.5] - 2025-08-15
 
 ### Diperbaiki
