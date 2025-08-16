@@ -98,9 +98,8 @@ class PackageRepository
     public function findAllBySellerId(int $sellerId): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT mp.*, mf.file_id as thumbnail_file_id
+            "SELECT mp.*
              FROM media_packages mp
-             LEFT JOIN media_files mf ON mp.thumbnail_media_id = mf.id
              WHERE mp.seller_user_id = ? AND mp.status != 'deleted'
              ORDER BY mp.created_at DESC"
         );
