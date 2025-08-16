@@ -156,6 +156,18 @@ class TelegramAPI {
     }
 
     /**
+     * Escapes text for use in MarkdownV2 parse mode.
+     * @param string $text The text to escape.
+     * @return string The escaped text.
+     */
+    public function escapeMarkdownV2($text)
+    {
+        // Characters to escape for MarkdownV2
+        $escape_chars = '_*[]()~`>#+-=|{}.!';
+        return preg_replace('/([' . preg_quote($escape_chars, '/') . '])/', '\\\\$1', $text);
+    }
+
+    /**
      * Mengirim pesan teks ke sebuah chat.
      *
      * @param int|string $chat_id ID dari chat tujuan.

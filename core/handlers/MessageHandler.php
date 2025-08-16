@@ -109,20 +109,22 @@ class MessageHandler
         $bot_member = $this->telegram_api->getChatMember($channel_identifier, $this->telegram_api->getBotId());
 
         if (!$bot_member || !$bot_member['ok'] || !in_array($bot_member['result']['status'], ['administrator', 'creator'])) {
-            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Pastikan bot telah ditambahkan sebagai **admin** di channel `{$channel_identifier}`.", 'Markdown');
+            $escaped_identifier = $this->telegram_api->escapeMarkdownV2($channel_identifier);
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Pastikan bot telah ditambahkan sebagai *admin* di channel `{$escaped_identifier}`\\.", 'MarkdownV2');
             return;
         }
 
         // 3. Check for necessary permissions
         if (!($bot_member['result']['can_post_messages'] ?? false)) {
-             $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Bot memerlukan izin untuk **'Post Messages'** di channel tersebut.", 'Markdown');
+             $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Bot memerlukan izin untuk *'Post Messages'* di channel tersebut\\.", 'MarkdownV2');
             return;
         }
 
         // 4. All checks passed, get full channel info to store the numeric ID
         $channel_info = $this->telegram_api->getChat($channel_identifier);
         if (!$channel_info || !$channel_info['ok']) {
-            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Tidak dapat mengambil informasi untuk channel `{$channel_identifier}`. Pastikan ID atau username channel sudah benar.", 'Markdown');
+            $escaped_identifier = $this->telegram_api->escapeMarkdownV2($channel_identifier);
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Pendaftaran gagal: Tidak dapat mengambil informasi untuk channel `{$escaped_identifier}`\\. Pastikan ID atau username channel sudah benar\\.", 'MarkdownV2');
             return;
         }
         $numeric_channel_id = $channel_info['result']['id'];
@@ -132,9 +134,10 @@ class MessageHandler
         $success = $this->sales_channel_repo->createOrUpdate($this->current_user['id'], $numeric_channel_id);
 
         if ($success) {
-            $this->telegram_api->sendMessage($this->chat_id, "✅ Selamat! Channel **{$channel_title}** (`{$numeric_channel_id}`) telah berhasil didaftarkan sebagai channel jualan Anda.", 'Markdown');
+            $escaped_title = $this->telegram_api->escapeMarkdownV2($channel_title);
+            $this->telegram_api->sendMessage($this->chat_id, "✅ Selamat\\! Channel *{$escaped_title}* (`{$numeric_channel_id}`) telah berhasil didaftarkan sebagai channel jualan Anda\\.", 'MarkdownV2');
         } else {
-            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Terjadi kesalahan database saat mencoba mendaftarkan channel ini.");
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Terjadi kesalahan database saat mencoba mendaftarkan channel ini\\.");
         }
     }
 
@@ -146,12 +149,16 @@ class MessageHandler
         $sales_stats = $this->analytics_repo->getSellerSummary($user_id); // Reusing existing method
 
         // Format pesan
-        $user_name = htmlspecialchars(trim($this->current_user['first_name'] . ' ' . ($this->current_user['last_name'] ?? '')));
+        $user_name = $this->telegram_api->escapeMarkdownV2(trim($this->current_user['first_name'] . ' ' . ($this->current_user['last_name'] ?? '')));
         $balance = "Rp " . number_format($this->current_user['balance'], 0, ',', '.');
-        $seller_id = $this->current_user['public_seller_id'] ? "`" . $this->current_user['public_seller_id'] . "`" : "Belum terdaftar";
+        $esc_balance = $this->telegram_api->escapeMarkdownV2($balance);
 
-        $total_sales = $sales_stats['total_sales'];
-        $total_revenue = "Rp " . number_format($sales_stats['total_revenue'], 0, ',', '.');
+        $seller_id_raw = $this->current_user['public_seller_id'];
+        $seller_id = $seller_id_raw ? "`" . $seller_id_raw . "`" : "Belum terdaftar";
+
+        $total_sales = $this->telegram_api->escapeMarkdownV2($sales_stats['total_sales']);
+        $total_revenue_raw = "Rp " . number_format($sales_stats['total_revenue'], 0, ',', '.');
+        $total_revenue = $this->telegram_api->escapeMarkdownV2($total_revenue_raw);
 
         $message = "👤 *Profil Anda*\n\n";
         $message .= "Nama: *{$user_name}*\n";
@@ -159,13 +166,13 @@ class MessageHandler
         $message .= "ID Penjual: {$seller_id}\n\n";
 
         $message .= "💰 *Keuangan*\n";
-        $message .= "Saldo Saat Ini: *{$balance}*\n\n";
+        $message .= "Saldo Saat Ini: *{$esc_balance}*\n\n";
 
         $message .= "📈 *Aktivitas Penjualan*\n";
         $message .= "Total Item Terjual: *{$total_sales}* item\n";
         $message .= "Total Pendapatan: *{$total_revenue}*";
 
-        $this->telegram_api->sendMessage($this->chat_id, $message, 'Markdown');
+        $this->telegram_api->sendMessage($this->chat_id, $message, 'MarkdownV2');
     }
 
     private function handleHelpCommand()
@@ -268,25 +275,30 @@ EOT;
             if ($package && $package['status'] == 'available') {
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
                 $balance_formatted = "Rp " . number_format($this->current_user['balance'], 0, ',', '.');
-                $reply_text = "Anda tertarik dengan item berikut:\n\n*Deskripsi:* {$package['description']}\n*Harga:* {$price_formatted}\n\nSaldo Anda saat ini: {$balance_formatted}.";
+
+                $escaped_description = $this->telegram_api->escapeMarkdownV2($package['description']);
+                $escaped_price = $this->telegram_api->escapeMarkdownV2($price_formatted);
+                $escaped_balance = $this->telegram_api->escapeMarkdownV2($balance_formatted);
+
+                $reply_text = "Anda tertarik dengan item berikut:\n\n*Deskripsi:* {$escaped_description}\n*Harga:* {$escaped_price}\n\nSaldo Anda saat ini: {$escaped_balance}\\.";
                 $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang ({$price_formatted})", 'callback_data' => "buy_{$package_id}"]]]];
-                $this->telegram_api->sendMessage($this->chat_id, $reply_text, 'Markdown', json_encode($keyboard));
+                $this->telegram_api->sendMessage($this->chat_id, $reply_text, 'MarkdownV2', json_encode($keyboard));
             } else {
                 $this->telegram_api->sendMessage($this->chat_id, "Maaf, item ini sudah tidak tersedia atau tidak ditemukan.");
             }
         } else {
-            $welcome_message = "👋 *Selamat Datang di Bot Marketplace!* 🤖\n\n" .
+            $welcome_message = "👋 *Selamat Datang di Bot Marketplace\\!* 🤖\n\n" .
                                "Berikut adalah beberapa perintah yang bisa Anda gunakan:\n\n" .
-                               "- *Menjual Konten* 📸\n" .
-                               "  Reply media (foto/video) yang ingin Anda jual dengan perintah `/sell`.\n\n" .
-                               "- *Cek Saldo* 💰\n" .
-                               "  Gunakan perintah `/balance` untuk melihat saldo Anda.\n\n" .
-                               "- *Akses Konten* 📂\n" .
-                               "  Gunakan `/konten <ID Paket>` untuk mengunduh kembali konten yang sudah Anda beli atau jual.\n\n" .
-                               "- *Login ke Panel* 🌐\n" .
-                               "  Gunakan perintah `/login` untuk mendapatkan link akses ke panel member Anda.\n\n" .
+                               "\\- *Menjual Konten* 📸\n" .
+                               "  Reply media \\(foto/video\\) yang ingin Anda jual dengan perintah `/sell`\\.\n\n" .
+                               "\\- *Cek Saldo* 💰\n" .
+                               "  Gunakan perintah `/balance` untuk melihat saldo Anda\\.\n\n" .
+                               "\\- *Akses Konten* 📂\n" .
+                               "  Gunakan `/konten <ID Paket>` untuk mengunduh kembali konten yang sudah Anda beli atau jual\\.\n\n" .
+                               "\\- *Login ke Panel* 🌐\n" .
+                               "  Gunakan perintah `/login` untuk mendapatkan link akses ke panel member Anda\\.\n\n" .
                                "Ada yang bisa saya bantu?";
-            $this->telegram_api->sendMessage($this->chat_id, $welcome_message, 'Markdown');
+            $this->telegram_api->sendMessage($this->chat_id, $welcome_message, 'MarkdownV2');
         }
     }
 
@@ -374,16 +386,16 @@ EOT;
         $this->user_repo->setUserState($this->current_user['id'], 'awaiting_price', $state_context);
 
         // Buat dan kirim pesan yang informatif
-        $message_text = "✅ Media telah siap untuk dijual.\n\n";
+        $message_text = "✅ Media telah siap untuk dijual\\.\n\n";
         if (!empty($description)) {
-            $description_escaped = str_replace(['*', '_', '`', '['], ['\*', '\_', '\`', '\['], $description);
+            $description_escaped = $this->telegram_api->escapeMarkdownV2($description);
             $message_text .= "Deskripsi: *\"" . $description_escaped . "\"*\n";
         }
         $message_text .= "Isi Konten: *{$media_details_str}*\n\n";
-        $message_text .= "Sekarang, silakan masukkan harga untuk paket ini (contoh: 50000).\n\n";
-        $message_text .= "_Ketik /cancel untuk membatalkan._";
+        $message_text .= "Sekarang, silakan masukkan harga untuk paket ini \\(contoh: 50000\\)\\.\n\n";
+        $message_text .= "_Ketik /cancel untuk membatalkan\\._";
 
-        $this->telegram_api->sendMessage($this->chat_id, $message_text, 'Markdown');
+        $this->telegram_api->sendMessage($this->chat_id, $message_text, 'MarkdownV2');
     }
 
     private function handleKontenCommand(array $parts)
@@ -398,7 +410,7 @@ EOT;
         $package = $this->package_repo->findByPublicId($public_id);
 
         if (!$package) {
-            $this->telegram_api->sendMessage($this->chat_id, "Konten dengan ID `{$public_id}` tidak ditemukan.", 'Markdown');
+            $this->telegram_api->sendMessage($this->chat_id, "Konten dengan ID `{$public_id}` tidak ditemukan\\.", 'MarkdownV2');
             return;
         }
         $package_id = $package['id'];
@@ -567,7 +579,7 @@ EOT;
         // 1. Find package and check ownership
         $package = $this->package_repo->findByPublicId($public_package_id);
         if (!$package) {
-            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Paket dengan ID `{$public_package_id}` tidak ditemukan.");
+            $this->telegram_api->sendMessage($this->chat_id, "⚠️ Paket dengan ID `{$public_package_id}` tidak ditemukan\\.", 'MarkdownV2');
             return;
         }
         if ($package['seller_user_id'] != $this->current_user['id']) {
@@ -624,6 +636,7 @@ EOT;
             $stmt_link->execute([$package['id'], $storage_channel_id, $new_storage_message_ids[$i]['message_id'], $original_db_ids[$i]]);
         }
 
-        $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$public_package_id}*.");
+        $escaped_public_id = $this->telegram_api->escapeMarkdownV2($public_package_id);
+        $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$escaped_public_id}*\\.", 'MarkdownV2');
     }
 }

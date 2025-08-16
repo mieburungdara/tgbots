@@ -1,6 +1,17 @@
 # Changelog
 
 
+## [4.2.8] - 2025-08-16
+
+### Diperbaiki
+- **Fatal Error `can't parse entities` pada Berbagai Perintah**: Memperbaiki error `can't parse entities` yang disebabkan oleh karakter khusus (`=`, `!`, `.`, `(`, `)`, dll.) dalam data dinamis (seperti nama pengguna, deskripsi item) atau teks statis di berbagai perintah.
+  - **Penyebab**: Pesan yang dikirim dengan `parse_mode=Markdown` atau `MarkdownV2` tidak melakukan escaping pada karakter-karakter khusus yang dicadangkan oleh Telegram, menyebabkan API gagal mem-parsing pesan.
+  - **Solusi**:
+    1.  Membuat fungsi helper baru `escapeMarkdownV2()` di `TelegramAPI.php` untuk melakukan escaping pada semua karakter khusus sesuai standar `MarkdownV2`.
+    2.  Mengubah semua `parse_mode` yang relevan di `MessageHandler.php` dan `webhook.php` menjadi `MarkdownV2`.
+    3.  Menerapkan fungsi `escapeMarkdownV2()` pada semua data dinamis yang dimasukkan ke dalam pesan.
+    4.  Melakukan escaping manual pada karakter khusus di semua teks pesan statis untuk memastikan konsistensi.
+
 ## [4.2.7] - 2025-08-15
 
 ### Diperbaiki
