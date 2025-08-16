@@ -219,7 +219,7 @@ EOT;
             $help_text .= $admin_help_text;
         }
 
-        $this->telegram_api->sendLongMessage($this->chat_id, $help_text, 'Markdown');
+        $this->telegram_api->sendLongMessage($this->chat_id, $help_text, 'MarkdownV2');
     }
 
     private function handleStartCommand(array $parts)
