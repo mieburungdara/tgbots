@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.4] - 2025-08-15
+
+### Diperbaiki
+- **Fatal Error di Halaman "Konten Dibeli"**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mf.file_id'` yang terjadi saat member membuka halaman "Konten Dibeli".
+  - **Penyebab**: Query database untuk mengambil daftar konten yang dibeli (`findPackagesByBuyerId`) masih mencoba memilih kolom `file_id` yang sudah dihapus.
+  - **Solusi**: Menghapus referensi ke kolom `mf.file_id` dari query di `SaleRepository.php`.
+
 ## [4.2.3] - 2025-08-15
 
 ### Diperbaiki
