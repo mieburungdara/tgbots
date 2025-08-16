@@ -91,9 +91,10 @@ class ChannelPostHandler
 
         if ($success) {
             $channel_title = $this->message['chat']['title'] ?? 'channel ini';
-            $this->telegram_api->sendMessage($this->channel_id, "✅ Channel *{$channel_title}* berhasil didaftarkan sebagai channel jualan Anda.");
+            $escaped_title = $this->telegram_api->escapeMarkdownV2($channel_title);
+            $this->telegram_api->sendMessage($this->channel_id, "✅ Channel *{$escaped_title}* berhasil didaftarkan sebagai channel jualan Anda\\.", 'MarkdownV2');
         } else {
-            $this->telegram_api->sendMessage($this->channel_id, "⚠️ Terjadi kesalahan database.");
+            $this->telegram_api->sendMessage($this->channel_id, "⚠️ Terjadi kesalahan database\\.", 'MarkdownV2');
         }
         */
     }

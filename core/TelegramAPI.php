@@ -216,7 +216,7 @@ class TelegramAPI {
      * @param bool $protect_content Melindungi konten dari forward dan save.
      * @return mixed Hasil dari API Telegram.
      */
-    public function copyMessage($chat_id, $from_chat_id, $message_id, $caption = null, $reply_markup = null, bool $protect_content = false) {
+    public function copyMessage($chat_id, $from_chat_id, $message_id, $caption = null, $parse_mode = null, $reply_markup = null, bool $protect_content = false) {
         $data = [
             'chat_id' => $chat_id,
             'from_chat_id' => $from_chat_id,
@@ -224,6 +224,9 @@ class TelegramAPI {
         ];
         if ($caption !== null) {
             $data['caption'] = $caption;
+        }
+        if ($parse_mode) {
+            $data['parse_mode'] = $parse_mode;
         }
         if ($reply_markup !== null) {
             $data['reply_markup'] = $reply_markup;
