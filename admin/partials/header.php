@@ -45,6 +45,7 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 <header class="header">
     <div class="nav-container">
+        <h1><a href="index.php" style="text-decoration: none; color: inherit;">Admin Panel</a></h1>
         <nav>
             <a href="index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Percakapan</a>
             <a href="bots.php" class="<?= $current_page == 'bots.php' || $current_page == 'edit_bot.php' ? 'active' : '' ?>">Kelola Bot</a>
