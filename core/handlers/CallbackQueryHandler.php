@@ -68,7 +68,15 @@ class CallbackQueryHandler
         }
         $channel_id = $sales_channel['channel_id'];
 
-        // 3. Get thumbnail to post
+        // 3. Get full channel info to check for a linked discussion group
+        $channel_info = $this->telegram_api->getChat($channel_id);
+        if (!$channel_info || ($channel_info['ok'] === false)) {
+            $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Gagal mendapatkan informasi channel. Pastikan bot masih menjadi admin.', true);
+            return;
+        }
+        $linked_chat_id = $channel_info['result']['linked_chat_id'] ?? null;
+
+        // 4. Get thumbnail to post
         $thumbnail = $this->package_repo->getThumbnailFile($package['id']);
         if (!$thumbnail) {
             $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Gagal mendapatkan media pratinjau untuk konten ini.', true);
@@ -88,28 +96,55 @@ class CallbackQueryHandler
         $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang 🛒", 'url' => $buy_url]]]];
         $reply_markup = json_encode($keyboard);
 
-        // 5. Try to post and handle failure
+        // 5. Try to post based on whether a discussion group is linked
         try {
-            $result = $this->telegram_api->copyMessage(
-                $channel_id,
-                $thumbnail['chat_id'],
-                $thumbnail['message_id'],
-                $caption,
-                'Markdown',
-                $reply_markup,
-                (bool)$package['protect_content']
-            );
+            if ($linked_chat_id) {
+                // Case A: Discussion group exists. Post to channel without keyboard, then send a new message with keyboard to the group.
+                $channel_post_result = $this->telegram_api->copyMessage(
+                    $channel_id,
+                    $thumbnail['chat_id'],
+                    $thumbnail['message_id'],
+                    $caption,
+                    'Markdown',
+                    null, // No keyboard in the channel post
+                    (bool)$package['protect_content']
+                );
 
-            if (!$result || ($result['ok'] === false)) {
-                throw new Exception($result['description'] ?? 'Gagal mengirim pesan ke channel.');
+                if (!$channel_post_result || ($channel_post_result['ok'] === false)) {
+                    throw new Exception($channel_post_result['description'] ?? 'Gagal mengirim pesan ke channel.');
+                }
+
+                // Send a new message with the keyboard to the discussion group
+                $this->telegram_api->sendMessage(
+                    $linked_chat_id,
+                    $caption,
+                    'Markdown',
+                    $reply_markup
+                );
+
+            } else {
+                // Case B: No discussion group. Post to channel with keyboard (original behavior).
+                $result = $this->telegram_api->copyMessage(
+                    $channel_id,
+                    $thumbnail['chat_id'],
+                    $thumbnail['message_id'],
+                    $caption,
+                    'Markdown',
+                    $reply_markup,
+                    (bool)$package['protect_content']
+                );
+
+                if (!$result || ($result['ok'] === false)) {
+                    throw new Exception($result['description'] ?? 'Gagal mengirim pesan ke channel.');
+                }
             }
 
-            $this->telegram_api->answerCallbackQuery($callback_query_id, '✅ Berhasil di-posting ke channel Anda!', false);
+            $this->telegram_api->answerCallbackQuery($callback_query_id, '✅ Berhasil di-posting!', false);
 
         } catch (Exception $e) {
             // Un-register the channel on failure
             $this->sales_channel_repo->deactivate($internal_user_id);
-            $error_message = "❌ Gagal mem-posting ke channel. Kemungkinan bot tidak lagi menjadi admin atau channel telah dihapus. Channel Anda telah di-unregister secara otomatis. Silakan daftar ulang.";
+            $error_message = "❌ Gagal mem-posting. Pastikan bot adalah admin di channel & grup diskusi. Channel Anda telah di-unregister secara otomatis.";
             $this->telegram_api->answerCallbackQuery($callback_query_id, $error_message, true);
             app_log("Gagal post ke channel {$channel_id} untuk user {$internal_user_id}: " . $e->getMessage(), 'bot_error');
         }
