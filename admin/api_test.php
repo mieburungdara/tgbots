@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const label = document.createElement('label');
             label.htmlFor = inputId;
-            label.innerHTML = `${param.name} ${param.isOptional ? '<em>(opsional)</em>' : '<strong style="color:red;">*</strong>'}`;
+            label.innerHTML = `${paramName} ${param.isOptional ? '<em>(opsional)</em>' : '<strong style="color:red;">*</strong>'}`;
             div.appendChild(label);
             div.appendChild(document.createElement('br'));
 
