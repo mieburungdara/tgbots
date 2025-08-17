@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'json':
                     input = document.createElement('textarea');
                     input.rows = 3;
-                    input.placeholder = `${param.name} (JSON-encoded)`;
+                    input.placeholder = `${paramName} (JSON-encoded)`;
                     break;
                 case 'boolean':
                     input = document.createElement('input');
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     fieldset.style.border = '1px solid #ccc';
                     fieldset.style.padding = '10px';
                     const legend = document.createElement('legend');
-                    legend.textContent = param.name;
+                    legend.textContent = paramName;
                     fieldset.appendChild(legend);
                     buildParamsForm(fieldset, param.properties, inputName);
                     div.appendChild(fieldset);
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 default: // text, number
                     input = document.createElement('input');
                     input.type = param.type === 'number' ? 'number' : 'text';
-                    input.placeholder = param.name;
+                    input.placeholder = paramName;
             }
 
             input.id = inputId;
