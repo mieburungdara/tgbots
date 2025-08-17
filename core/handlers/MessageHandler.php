@@ -430,6 +430,7 @@ EOT;
                 $thumbnail['chat_id'],
                 $thumbnail['message_id'],
                 $caption,
+                null, // parse_mode
                 $reply_markup
             );
         } else {

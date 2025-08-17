@@ -184,6 +184,7 @@ class CallbackQueryHandler
                 $from_chat_id,
                 $current_page_content[0]['storage_message_id'],
                 null, // caption
+                null, // parse_mode
                 $reply_markup,
                 $protect_content
             );
