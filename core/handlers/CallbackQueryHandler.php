@@ -99,7 +99,7 @@ class CallbackQueryHandler
         // 5. Try to post based on whether a discussion group is linked
         try {
             if ($linked_chat_id) {
-                // Case A: Discussion group exists. Post to channel without keyboard, then send a new message with keyboard to the group.
+                // Case A: Discussion group exists. Post to channel, then post to the discussion thread.
                 $channel_post_result = $this->telegram_api->copyMessage(
                     $channel_id,
                     $thumbnail['chat_id'],
@@ -114,12 +114,16 @@ class CallbackQueryHandler
                     throw new Exception($channel_post_result['description'] ?? 'Gagal mengirim pesan ke channel.');
                 }
 
-                // Send a new message with the keyboard to the discussion group
+                // The message_id of the post in the channel becomes the message_thread_id for the discussion group
+                $message_thread_id = $channel_post_result['result']['message_id'];
+
+                // Send a new message with the keyboard to the discussion group's topic
                 $this->telegram_api->sendMessage(
                     $linked_chat_id,
-                    $caption,
+                    "⬇️ Tombol aksi untuk postingan di atas ⬇️",
                     'Markdown',
-                    $reply_markup
+                    $reply_markup,
+                    $message_thread_id
                 );
 
             } else {
