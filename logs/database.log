@@ -1,0 +1,2 @@
+[2025-08-17 11:13:13] Koneksi database gagal: SQLSTATE[HY000] [1698] Access denied for user 'root'@'localhost'
+[2025-08-17 11:14:26] Setup database dari setup.sql berhasil dijalankan.

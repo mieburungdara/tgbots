@@ -1,0 +1,20 @@
+<?php
+// Salin file ini ke config.php dan isi nilainya.
+
+// Konfigurasi Database
+define('DB_HOST', 'localhost');
+define('DB_USER', 'tguser');
+define('DB_PASS', 'tgpass');
+define('DB_NAME', 'telegram_dashboard');
+
+// URL dasar aplikasi (akhiri dengan /)
+// Contoh: define('BASE_URL', 'https://mydomain.com/tgbots/');
+define('BASE_URL', '');
+
+// (Opsional) ID Telegram dari admin utama (Super Admin).
+// Pengguna dengan ID ini akan secara otomatis mendapatkan peran 'admin'
+// saat pertama kali berinteraksi dengan bot manapun.
+// Kosongkan jika tidak ingin menggunakan fitur ini.
+define('SUPER_ADMIN_TELEGRAM_ID', '');
+
+?>
