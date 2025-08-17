@@ -1,5 +1,4 @@
 <?php
-session_start();
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
 
@@ -71,102 +70,64 @@ if ($selected_telegram_bot_id) {
     }
 }
 
+$page_title = 'Percakapan';
+include __DIR__ . '/partials/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Percakapan - Admin Panel</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f6f8; color: #333; }
-        .container { max-width: 900px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #f2f2f2; }
-        tr:hover { background-color: #f1f1f1; }
-        .bot-selector { margin-bottom: 20px; }
-        label { font-weight: bold; margin-right: 10px; }
-        select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
-        nav { margin-bottom: 20px; }
-        nav a { text-decoration: none; color: #007bff; padding: 10px; }
-        nav a.active { font-weight: bold; }
-        a { color: #007bff; text-decoration: none; }
-        .last-message { color: #555; font-size: 0.9em; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <nav>
-            <a href="index.php" class="active">Percakapan</a> |
-            <a href="bots.php">Kelola Bot</a> |
-            <a href="users.php">Pengguna</a> |
-            <a href="roles.php">Manajemen Peran</a> |
-            <a href="packages.php">Konten</a> |
-            <a href="media_logs.php">Log Media</a> |
-            <a href="channels.php">Channel</a> |
-            <a href="database.php">Database</a> |
-            <a href="logs.php">Logs</a> |
-            <a href="telegram_logs.php">Log Error Telegram</a>
-        </nav>
 
-        <h1>Daftar Percakapan</h1>
+<h1>Daftar Percakapan</h1>
 
-        <div class="bot-selector">
-            <form action="index.php" method="get">
-                <label for="bot_id">Pilih Bot:</label>
-                <select name="bot_id" id="bot_id" onchange="this.form.submit()">
-                    <option value="">-- Pilih Bot --</option>
-                    <?php foreach ($bots as $bot): ?>
-                        <?php $telegram_bot_id = explode(':', $bot['token'])[0]; ?>
-                        <option value="<?= $telegram_bot_id ?>" <?= ($selected_telegram_bot_id == $telegram_bot_id) ? 'selected' : '' ?>>
-                            <?= htmlspecialchars($bot['first_name'] ?? 'Bot Tanpa Nama') ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </form>
-        </div>
+<div class="bot-selector">
+    <form action="index.php" method="get" style="padding: 0; border: none; background: none;">
+        <label for="bot_id">Pilih Bot:</label>
+        <select name="bot_id" id="bot_id" onchange="this.form.submit()">
+            <option value="">-- Pilih Bot --</option>
+            <?php foreach ($bots as $bot): ?>
+                <?php $telegram_bot_id = explode(':', $bot['token'])[0]; ?>
+                <option value="<?= $telegram_bot_id ?>" <?= ($selected_telegram_bot_id == $telegram_bot_id) ? 'selected' : '' ?>>
+                    <?= htmlspecialchars($bot['first_name'] ?? 'Bot Tanpa Nama') ?>
+                </option>
+            <?php endforeach; ?>
+        </select>
+    </form>
+</div>
 
-        <?php if ($selected_telegram_bot_id): ?>
-            <?php if (!$internal_bot_id): ?>
-                <p>Bot dengan ID <?= htmlspecialchars($selected_telegram_bot_id) ?> tidak ditemukan.</p>
-            <?php else: ?>
-                <table>
-                    <thead>
+<?php if ($selected_telegram_bot_id): ?>
+    <?php if (!$internal_bot_id): ?>
+        <p>Bot dengan ID <?= htmlspecialchars($selected_telegram_bot_id) ?> tidak ditemukan.</p>
+    <?php else: ?>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Pengguna</th>
+                    <th>Username</th>
+                    <th>Pesan Terakhir</th>
+                    <th>Waktu</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($conversations)): ?>
+                    <tr>
+                        <td colspan="4">Belum ada percakapan untuk bot ini.</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($conversations as $conv): ?>
                         <tr>
-                            <th>Nama Pengguna</th>
-                            <th>Username</th>
-                            <th>Pesan Terakhir</th>
-                            <th>Waktu</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (empty($conversations)): ?>
-                            <tr>
-                                <td colspan="4">Belum ada percakapan untuk bot ini.</td>
-                            </tr>
-                        <?php else: ?>
-                            <?php foreach ($conversations as $conv): ?>
-                                <tr>
-                                    <td>
-                                        <a href="chat.php?user_id=<?= $conv['user_internal_id'] ?>&bot_id=<?= $internal_bot_id ?>">
-                                            <?= htmlspecialchars($conv['first_name'] ?? '') ?>
-                                        </a>
-                                    </td>
-                                    <td>@<?= htmlspecialchars($conv['username'] ?? '') ?></td>
-                                <td class="last-message"><?= htmlspecialchars(mb_strimwidth($conv['last_message'] ?? '', 0, 50, "...")) ?></td>
-                                <td><?= htmlspecialchars($conv['last_message_time'] ?? '') ?></td>
-                            </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
+                            <td>
+                                <a href="chat.php?user_id=<?= $conv['user_internal_id'] ?>&bot_id=<?= $internal_bot_id ?>">
+                                    <?= htmlspecialchars($conv['first_name'] ?? '') ?>
+                                </a>
+                            </td>
+                            <td>@<?= htmlspecialchars($conv['username'] ?? '') ?></td>
+                        <td class="last-message"><?= htmlspecialchars(mb_strimwidth($conv['last_message'] ?? '', 0, 50, "...")) ?></td>
+                        <td><?= htmlspecialchars($conv['last_message_time'] ?? '') ?></td>
+                    </tr>
+                <?php endforeach; ?>
             <?php endif; ?>
-        <?php else: ?>
-            <p>Silakan pilih bot untuk melihat percakapannya.</p>
-        <?php endif; ?>
+        </tbody>
+    </table>
+    <?php endif; ?>
+<?php else: ?>
+    <p>Silakan pilih bot untuk melihat percakapannya.</p>
+<?php endif; ?>
 
-    </div>
-</body>
-</html>
+<?php include __DIR__ . '/partials/footer.php'; ?>
