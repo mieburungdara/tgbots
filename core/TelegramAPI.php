@@ -156,14 +156,14 @@ class TelegramAPI {
     }
 
     /**
-     * Escapes text for use in MarkdownV2 parse mode.
+     * Escapes text for use in legacy Markdown parse mode.
      * @param string $text The text to escape.
      * @return string The escaped text.
      */
-    public function escapeMarkdownV2($text)
+    public function escapeMarkdown($text)
     {
-        // Characters to escape for MarkdownV2
-        $escape_chars = '_*[]()~`>#+-=|{}.!';
+        // Characters to escape for legacy Markdown
+        $escape_chars = '_*`[';
         return preg_replace('/([' . preg_quote($escape_chars, '/') . '])/', '\\\\$1', $text);
     }
 
