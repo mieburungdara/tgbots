@@ -167,15 +167,21 @@ class CallbackQueryHandler
         }
         $reply_markup = empty($keyboard_buttons) ? null : json_encode(['inline_keyboard' => [$keyboard_buttons]]);
 
+        // Build the caption text
+        $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+        $escaped_description = $this->telegram_api->escapeMarkdown($package['description'] ?? '');
+        $escaped_price = $this->telegram_api->escapeMarkdown($price_formatted);
+        $info_text = "{$escaped_description}\n\nHarga: *{$escaped_price}*";
+
         // Send the content for the current page
         $current_page_content = $pages[$page_index];
         $from_chat_id = $current_page_content[0]['storage_channel_id'];
         $protect_content = (bool) $package['protect_content'];
 
         // Hapus pesan navigasi sebelumnya jika ada
-        if (isset($this->callback_query['message']['message_id'])) {
-            $this->telegram_api->deleteMessage($this->chat_id, $this->callback_query['message']['message_id']);
-        }
+        // if (isset($this->callback_query['message']['message_id'])) {
+        //     $this->telegram_api->deleteMessage($this->chat_id, $this->callback_query['message']['message_id']);
+        // }
 
         if (count($current_page_content) === 1) {
             // Single media item, kirim dengan keyboard navigasi
@@ -183,8 +189,8 @@ class CallbackQueryHandler
                 $this->chat_id,
                 $from_chat_id,
                 $current_page_content[0]['storage_message_id'],
-                null, // caption
-                null, // parse_mode
+                $info_text, // caption
+                'Markdown', // parse_mode
                 $reply_markup,
                 $protect_content
             );
@@ -198,7 +204,7 @@ class CallbackQueryHandler
                 $protect_content
             );
             // Kirim keyboard navigasi dalam pesan terpisah untuk album
-            $this->telegram_api->sendMessage($this->chat_id, "Navigasi Konten:", null, $reply_markup);
+            $this->telegram_api->sendMessage($this->chat_id, $info_text, 'Markdown', $reply_markup);
         }
 
         $this->telegram_api->answerCallbackQuery($callback_query_id);
