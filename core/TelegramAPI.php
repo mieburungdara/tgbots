@@ -176,7 +176,7 @@ class TelegramAPI {
      * @param string|null $reply_markup Keyboard inline atau kustom dalam format JSON.
      * @return mixed Hasil dari API Telegram, atau false jika gagal.
      */
-    public function sendMessage($chat_id, $text, $parse_mode = null, $reply_markup = null, $message_thread_id = null, $reply_parameters = null) {
+    public function sendMessage($chat_id, $text, $parse_mode = 'Markdown', $reply_markup = null, $message_thread_id = null, $reply_parameters = null) {
         $data = [
             'chat_id' => $chat_id,
             'text' => $text,
@@ -190,7 +190,8 @@ class TelegramAPI {
         if ($message_thread_id) {
             $data['message_thread_id'] = $message_thread_id;
         }
-        if ($reply_parameters) {
+        // Pastikan reply_parameters adalah array yang valid dan tidak kosong sebelum dikirim
+        if (is_array($reply_parameters) && !empty($reply_parameters)) {
             $data['reply_parameters'] = json_encode($reply_parameters);
         }
         return $this->apiRequest('sendMessage', $data);
@@ -222,7 +223,7 @@ class TelegramAPI {
      * @param bool $protect_content Melindungi konten dari forward dan save.
      * @return mixed Hasil dari API Telegram.
      */
-    public function copyMessage($chat_id, $from_chat_id, $message_id, $caption = null, $parse_mode = null, $reply_markup = null, bool $protect_content = false) {
+    public function copyMessage($chat_id, $from_chat_id, $message_id, $caption = null, $parse_mode = 'Markdown', $reply_markup = null, bool $protect_content = false) {
         $data = [
             'chat_id' => $chat_id,
             'from_chat_id' => $from_chat_id,
@@ -285,7 +286,7 @@ class TelegramAPI {
 
     // --- Metode untuk mengirim berbagai jenis media ---
 
-    public function sendPhoto($chat_id, $photo, $caption = null, $parse_mode = null, $reply_markup = null) {
+    public function sendPhoto($chat_id, $photo, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'photo' => $photo];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -293,7 +294,7 @@ class TelegramAPI {
         return $this->apiRequest('sendPhoto', $data);
     }
 
-    public function sendVideo($chat_id, $video, $caption = null, $parse_mode = null, $reply_markup = null) {
+    public function sendVideo($chat_id, $video, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'video' => $video];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -301,7 +302,7 @@ class TelegramAPI {
         return $this->apiRequest('sendVideo', $data);
     }
 
-    public function sendAudio($chat_id, $audio, $caption = null, $parse_mode = null, $reply_markup = null) {
+    public function sendAudio($chat_id, $audio, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'audio' => $audio];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -309,7 +310,7 @@ class TelegramAPI {
         return $this->apiRequest('sendAudio', $data);
     }
 
-    public function sendDocument($chat_id, $document, $caption = null, $parse_mode = null, $reply_markup = null) {
+    public function sendDocument($chat_id, $document, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'document' => $document];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -317,7 +318,7 @@ class TelegramAPI {
         return $this->apiRequest('sendDocument', $data);
     }
 
-    public function sendAnimation($chat_id, $animation, $caption = null, $parse_mode = null, $reply_markup = null) {
+    public function sendAnimation($chat_id, $animation, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'animation' => $animation];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -325,7 +326,7 @@ class TelegramAPI {
         return $this->apiRequest('sendAnimation', $data);
     }
 
-    public function sendVoice($chat_id, $voice, $caption = null, $parse_mode = null, $reply_markup = null) {
+    public function sendVoice($chat_id, $voice, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
         $data = ['chat_id' => $chat_id, 'voice' => $voice];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;

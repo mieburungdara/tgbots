@@ -42,7 +42,7 @@ function get_special_param_structures() {
         'reply_parameters' => [
             'type' => 'object',
             'properties' => [
-                'message_id' => ['type' => 'number', 'isOptional' => false],
+                'message_id' => ['type' => 'number', 'isOptional' => true],
                 'chat_id' => ['type' => 'text', 'isOptional' => true],
                 'allow_sending_without_reply' => ['type' => 'boolean', 'isOptional' => true],
                 'quote' => ['type' => 'text', 'isOptional' => true],
