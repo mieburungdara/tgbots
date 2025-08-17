@@ -33,11 +33,40 @@ try {
     echo json_encode(['error' => $e->getMessage()]);
 }
 
+function get_special_param_structures() {
+    return [
+        'parse_mode' => [
+            'type' => 'dropdown',
+            'choices' => ['HTML', 'Markdown', 'MarkdownV2']
+        ],
+        'reply_parameters' => [
+            'type' => 'object',
+            'properties' => [
+                'message_id' => ['type' => 'number', 'isOptional' => false],
+                'chat_id' => ['type' => 'text', 'isOptional' => true],
+                'allow_sending_without_reply' => ['type' => 'boolean', 'isOptional' => true],
+                'quote' => ['type' => 'text', 'isOptional' => true],
+                // Note: quote_parse_mode could also be a dropdown. For simplicity, we'll keep it text for now.
+                'quote_parse_mode' => ['type' => 'text', 'isOptional' => true],
+            ]
+        ],
+        // For simplicity, complex types like markups are treated as a single JSON textarea.
+        // A more advanced implementation could build UIs for these as well.
+        'reply_markup' => ['type' => 'json'],
+        'media' => ['type' => 'json'],
+        'results' => ['type' => 'json'],
+        'entities' => ['type' => 'json'],
+        'message_ids' => ['type' => 'json'],
+    ];
+}
+
+
 function handle_get_methods() {
     $reflection = new ReflectionClass('TelegramAPI');
     $public_methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
 
     $excluded_methods = ['__construct', '__call', 'escapeMarkdown', 'getBotId', 'sendLongMessage'];
+    $special_params = get_special_param_structures();
     $methods_data = [];
 
     foreach ($public_methods as $method) {
@@ -46,13 +75,24 @@ function handle_get_methods() {
             continue;
         }
 
-        $params = [];
+        $params_data = [];
         foreach ($method->getParameters() as $param) {
-            $params[$param->getName()] = [
+            $paramName = $param->getName();
+            $param_info = [
+                'name' => $paramName,
                 'isOptional' => $param->isOptional(),
             ];
+
+            if (isset($special_params[$paramName])) {
+                // This is a special parameter, merge its structure
+                $param_info = array_merge($param_info, $special_params[$paramName]);
+            } else {
+                // Default to a simple text input
+                $param_info['type'] = 'text';
+            }
+            $params_data[$paramName] = $param_info;
         }
-        $methods_data[$methodName] = ['parameters' => $params];
+        $methods_data[$methodName] = ['parameters' => $params_data];
     }
     ksort($methods_data);
     echo json_encode($methods_data);
@@ -76,9 +116,37 @@ function handle_run_method($pdo, $data) {
     }
 
     $telegram_api = new TelegramAPI($bot_token, $pdo, $bot_id);
-    $clean_params = array_filter($params, fn($val) => $val !== '' && $val !== null);
 
-    $api_response = call_user_func_array([$telegram_api, $method], $clean_params);
+    // Process params: remove empty strings, and for objects, filter empty properties
+    $clean_params = [];
+    foreach ($params as $key => $value) {
+        if (is_array($value)) {
+            $clean_object = array_filter($value, fn($v) => $v !== '' && $v !== null);
+            if (!empty($clean_object)) {
+                $clean_params[$key] = $clean_object;
+            }
+        } elseif ($value !== '' && $value !== null) {
+            $clean_params[$key] = $value;
+        }
+    }
+
+    // Re-create the final argument list in the correct order
+    $reflection = new ReflectionMethod('TelegramAPI', $method);
+    $final_args = [];
+    foreach ($reflection->getParameters() as $param) {
+        $paramName = $param->getName();
+        if (isset($clean_params[$paramName])) {
+            $final_args[] = $clean_params[$paramName];
+        } else {
+            // This will fail for non-optional params, which is expected.
+            // For optional ones, it will pass `null` implicitly.
+            if (!$param->isOptional()) {
+                 throw new Exception("Parameter wajib '{$paramName}' tidak ada.");
+            }
+        }
+    }
+
+    $api_response = $telegram_api->$method(...$final_args);
 
     // Simpan ke log
     $log_stmt = $pdo->prepare(

@@ -116,44 +116,91 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function buildParamsForm(methodName) {
-        paramsContainer.innerHTML = '';
-        runRequestBtn.style.display = 'none';
-        if (!methodName || !methodsData[methodName]) return;
+    function buildParamsForm(container, params, prefix = '') {
+        for (const paramName in params) {
+            const param = params[paramName];
+            const inputId = `param-${prefix}${paramName}`;
+            const inputName = prefix ? `${prefix}[${paramName}]` : paramName;
 
-        const params = methodsData[methodName].parameters;
-        if (Object.keys(params).length === 0) {
-            paramsContainer.innerHTML = '<p>Metode ini tidak memerlukan parameter.</p>';
-        } else {
-            for (const paramName in params) {
-                const param = params[paramName];
-                const isOptional = param.isOptional;
-                const inputId = `param-${methodName}-${paramName}`;
+            const div = document.createElement('div');
+            div.style.marginBottom = '10px';
 
-                let inputHtml = `<div style="margin-bottom: 10px;">
-                    <label for="${inputId}">
-                        ${paramName} ${isOptional ? '<em>(opsional)</em>' : '<strong style="color:red;">*</strong>'}
-                    </label><br>`;
+            const label = document.createElement('label');
+            label.htmlFor = inputId;
+            label.innerHTML = `${param.name} ${param.isOptional ? '<em>(opsional)</em>' : '<strong style="color:red;">*</strong>'}`;
+            div.appendChild(label);
+            div.appendChild(document.createElement('br'));
 
-                const useTextarea = paramName.includes('markup') || paramName.includes('media') || paramName.includes('results') || paramName.includes('entities');
-                if (useTextarea) {
-                    inputHtml += `<textarea name="${paramName}" id="${inputId}" rows="3" placeholder="${paramName} (JSON-encoded)"></textarea>`;
-                } else {
-                    inputHtml += `<input type="text" name="${paramName}" id="${inputId}" placeholder="${paramName}">`;
-                }
-                inputHtml += `</div>`;
-                paramsContainer.innerHTML += inputHtml;
+            let input;
+            switch (param.type) {
+                case 'dropdown':
+                    input = document.createElement('select');
+                    input.add(new Option('-- Pilih --', ''));
+                    param.choices.forEach(choice => input.add(new Option(choice, choice)));
+                    break;
+                case 'json':
+                    input = document.createElement('textarea');
+                    input.rows = 3;
+                    input.placeholder = `${param.name} (JSON-encoded)`;
+                    break;
+                case 'boolean':
+                    input = document.createElement('input');
+                    input.type = 'checkbox';
+                    input.value = '1'; // Send '1' if checked
+                    break;
+                case 'object':
+                    const fieldset = document.createElement('fieldset');
+                    fieldset.style.border = '1px solid #ccc';
+                    fieldset.style.padding = '10px';
+                    const legend = document.createElement('legend');
+                    legend.textContent = param.name;
+                    fieldset.appendChild(legend);
+                    buildParamsForm(fieldset, param.properties, inputName);
+                    div.appendChild(fieldset);
+                    container.appendChild(div);
+                    continue; // Skip appending normal input
+                default: // text, number
+                    input = document.createElement('input');
+                    input.type = param.type === 'number' ? 'number' : 'text';
+                    input.placeholder = param.name;
+            }
+
+            input.id = inputId;
+            input.name = inputName;
+            div.appendChild(input);
+            container.appendChild(div);
+        }
+    }
+
+    function serializeForm(form) {
+        const formData = new FormData(form);
+        const obj = {};
+        for (const [key, value] of formData.entries()) {
+            // Handle nested keys like "reply_parameters[message_id]"
+            const keys = key.match(/[^[\]]+/g);
+            if (keys.length > 1) {
+                let current = obj;
+                keys.forEach((k, i) => {
+                    if (i === keys.length - 1) {
+                        current[k] = value;
+                    } else {
+                        current[k] = current[k] || {};
+                        current = current[k];
+                    }
+                });
+            } else {
+                obj[key] = value;
             }
         }
-        runRequestBtn.style.display = 'block';
+        return obj;
     }
+
 
     async function runApiRequest(event) {
         event.preventDefault();
         const selectedBotId = botSelector.value;
         const selectedMethod = methodSelector.value;
-        const formData = new FormData(apiParamsForm);
-        const params = Object.fromEntries(formData.entries());
+        const params = serializeForm(apiParamsForm);
 
         apiResultContainer.style.display = 'block';
         apiResultEl.textContent = 'Menjalankan...';
@@ -241,7 +288,14 @@ document.addEventListener('DOMContentLoaded', function() {
     botSelector.addEventListener('change', () => fetchHistory(1));
 
     methodSelector.addEventListener('change', () => {
-        buildParamsForm(methodSelector.value);
+        const methodName = methodSelector.value;
+        paramsContainer.innerHTML = ''; // Hapus formulir sebelumnya
+        runRequestBtn.style.display = 'none';
+
+        if (methodName && methodsData[methodName]) {
+            buildParamsForm(paramsContainer, methodsData[methodName].parameters);
+            runRequestBtn.style.display = 'block';
+        }
     });
 
     apiParamsForm.addEventListener('submit', runApiRequest);
