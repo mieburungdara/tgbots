@@ -129,7 +129,7 @@ try {
         $state_context = json_decode($current_user['state_context'] ?? '{}', true);
         if (strpos($text, '/cancel') === 0) {
             $user_repo->setUserState($internal_user_id, null, null);
-            $telegram_api->sendMessage($chat_id_from_telegram, "Operasi dibatalkan\\.", 'MarkdownV2');
+            $telegram_api->sendMessage($chat_id_from_telegram, "Operasi dibatalkan.");
             $update_handled = true;
         } else {
             // ... (logika state-based lainnya seperti 'awaiting_price')
@@ -193,7 +193,7 @@ try {
 
                 $copied_messages_result = $telegram_api->copyMessages($storage_channel_id, $from_chat_id, json_encode($original_message_ids));
                 if (!$copied_messages_result || !isset($copied_messages_result['ok']) || !$copied_messages_result['ok'] || count($copied_messages_result['result']) !== count($original_message_ids)) {
-                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan semua media\\. Proses dibatalkan\\.", 'MarkdownV2');
+                    $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Gagal menyimpan semua media. Proses dibatalkan.");
                     // ... error handling ...
                     exit;
                 }
@@ -214,13 +214,13 @@ try {
                 $user_repo->setUserState($internal_user_id, null, null);
                 $package = $package_repo->find($package_id);
                 $public_id_display = $package['public_id'] ?? 'N/A';
-                $escaped_public_id = $telegram_api->escapeMarkdownV2($public_id_display);
-                $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan\\. Paket media Anda dengan ID *{$escaped_public_id}* sekarang tersedia untuk dijual\\.", 'MarkdownV2');
+                $escaped_public_id = $telegram_api->escapeMarkdown($public_id_display);
+                $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan. Paket media Anda dengan ID *{$escaped_public_id}* sekarang tersedia untuk dijual.", 'Markdown');
 
                 $update_handled = true;
 
             } elseif ($current_user['state'] == 'awaiting_price') {
-                 $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Harga tidak valid\\. Harap masukkan angka saja \\(contoh: 50000\\)\\.", 'MarkdownV2');
+                 $telegram_api->sendMessage($chat_id_from_telegram, "⚠️ Harga tidak valid. Harap masukkan angka saja (contoh: 50000).");
                  $update_handled = true;
             }
         }

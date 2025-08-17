@@ -79,8 +79,8 @@ class CallbackQueryHandler
         $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
         $buy_url = "https://t.me/" . BOT_USERNAME . "?start=package_" . $package['public_id'];
 
-        $escaped_description = $this->telegram_api->escapeMarkdownV2($package['description']);
-        $escaped_price = $this->telegram_api->escapeMarkdownV2($price_formatted);
+        $escaped_description = $this->telegram_api->escapeMarkdown($package['description']);
+        $escaped_price = $this->telegram_api->escapeMarkdown($price_formatted);
 
         $caption = "✨ *Konten Baru Tersedia* ✨\n\n" .
                    "{$escaped_description}\n\n" .
@@ -95,7 +95,7 @@ class CallbackQueryHandler
                 $thumbnail['chat_id'],
                 $thumbnail['message_id'],
                 $caption,
-                'MarkdownV2',
+                'Markdown',
                 $reply_markup,
                 (bool)$package['protect_content']
             );
@@ -215,9 +215,9 @@ class CallbackQueryHandler
 
         try {
             $public_id = $this->user_repo->setPublicId($user_id);
-            $escaped_public_id = $this->telegram_api->escapeMarkdownV2($public_id);
-            $message = "Selamat\\! Anda berhasil terdaftar sebagai penjual\\.\n\nID Penjual Publik Anda adalah: *{$escaped_public_id}*\n\nSekarang Anda dapat menggunakan perintah /sell dengan me\\-reply media yang ingin Anda jual\\.";
-            $this->telegram_api->sendMessage($this->chat_id, $message, 'MarkdownV2');
+            $escaped_public_id = $this->telegram_api->escapeMarkdown($public_id);
+            $message = "Selamat! Anda berhasil terdaftar sebagai penjual.\n\nID Penjual Publik Anda adalah: *{$escaped_public_id}*\n\nSekarang Anda dapat menggunakan perintah /sell dengan me-reply media yang ingin Anda jual.";
+            $this->telegram_api->sendMessage($this->chat_id, $message, 'Markdown');
             $this->telegram_api->answerCallbackQuery($callback_query_id);
         } catch (Exception $e) {
             $this->telegram_api->answerCallbackQuery($callback_query_id, 'Terjadi kesalahan saat mendaftar. Coba lagi.', true);
