@@ -176,7 +176,7 @@ class TelegramAPI {
      * @param string|null $reply_markup Keyboard inline atau kustom dalam format JSON.
      * @return mixed Hasil dari API Telegram, atau false jika gagal.
      */
-    public function sendMessage($chat_id, $text, $parse_mode = null, $reply_markup = null, $reply_parameters = null) {
+    public function sendMessage($chat_id, $text, $parse_mode = null, $reply_markup = null, $message_thread_id = null, $reply_parameters = null) {
         $data = [
             'chat_id' => $chat_id,
             'text' => $text,
@@ -186,6 +186,9 @@ class TelegramAPI {
         }
         if ($reply_markup) {
             $data['reply_markup'] = $reply_markup;
+        }
+        if ($message_thread_id) {
+            $data['message_thread_id'] = $message_thread_id;
         }
         if ($reply_parameters) {
             $data['reply_parameters'] = json_encode($reply_parameters);
