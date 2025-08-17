@@ -87,7 +87,12 @@ class TelegramAPI {
                 curl_close($ch);
             }
             $this->handleApiError($e, $response, $method, $data);
-            return false;
+            // Kembalikan array error yang konsisten dengan format respons Telegram
+            return [
+                'ok' => false,
+                'error_code' => $e->getCode(),
+                'description' => $e->getMessage(),
+            ];
         }
     }
 
