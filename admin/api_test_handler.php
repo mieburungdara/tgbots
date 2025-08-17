@@ -135,7 +135,7 @@ function handle_run_method($pdo, $data) {
         $clean_params['message_thread_id'] = (int)$clean_params['message_thread_id'];
     }
 
-    // Re-create the final argument list in the correct order
+    // Re-create the final argument list in the correct order, handling optional params correctly
     $reflection = new ReflectionMethod('TelegramAPI', $method);
     $final_args = [];
     foreach ($reflection->getParameters() as $param) {
@@ -143,10 +143,12 @@ function handle_run_method($pdo, $data) {
         if (isset($clean_params[$paramName])) {
             $final_args[] = $clean_params[$paramName];
         } else {
-            // This will fail for non-optional params, which is expected.
-            // For optional ones, it will pass `null` implicitly.
-            if (!$param->isOptional()) {
-                 throw new Exception("Parameter wajib '{$paramName}' tidak ada.");
+            if ($param->isOptional()) {
+                // Gunakan nilai default jika parameter opsional tidak disediakan
+                $final_args[] = $param->getDefaultValue();
+            } else {
+                // Lemparkan error jika parameter wajib tidak ada
+                throw new Exception("Parameter wajib '{$paramName}' tidak ada.");
             }
         }
     }
