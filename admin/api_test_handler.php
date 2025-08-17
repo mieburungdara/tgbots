@@ -130,6 +130,11 @@ function handle_run_method($pdo, $data) {
         }
     }
 
+    // Lakukan type casting untuk parameter spesifik
+    if (isset($clean_params['message_thread_id']) && is_numeric($clean_params['message_thread_id'])) {
+        $clean_params['message_thread_id'] = (int)$clean_params['message_thread_id'];
+    }
+
     // Re-create the final argument list in the correct order
     $reflection = new ReflectionMethod('TelegramAPI', $method);
     $final_args = [];
