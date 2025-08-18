@@ -17,13 +17,13 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f4f6f8; color: #333; }
         .header { background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 0 20px; }
-        .nav-container { max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .nav-container { max-width: 1600px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
         .nav-container h1 { font-size: 1.5em; color: #333; }
-        nav { display: flex; gap: 5px; overflow-x: auto; padding: 10px 0; }
+        nav { display: flex; gap: 5px; padding: 10px 0; flex-wrap: wrap; }
         nav a { text-decoration: none; color: #007bff; padding: 10px 15px; border-radius: 5px; white-space: nowrap; }
         nav a:hover { background-color: #f0f0f0; }
         nav a.active { font-weight: bold; background-color: #e9ecef; }
-        .container { max-width: 1200px; margin: 20px auto; padding: 20px; }
+        .container { max-width: 1600px; margin: 20px auto; padding: 20px; }
         .content { background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; word-wrap: break-word; }
         .alert-danger { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
