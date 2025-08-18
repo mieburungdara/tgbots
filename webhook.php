@@ -214,8 +214,7 @@ try {
                 $user_repo->setUserState($internal_user_id, null, null);
                 $package = $package_repo->find($package_id);
                 $public_id_display = $package['public_id'] ?? 'N/A';
-                $escaped_public_id = $telegram_api->escapeMarkdown($public_id_display);
-                $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan. Paket media Anda dengan ID *{$escaped_public_id}* sekarang tersedia untuk dijual.", 'Markdown');
+                $telegram_api->sendMessage($chat_id_from_telegram, "✅ Harga telah ditetapkan. Paket media Anda dengan ID *{$public_id_display}* sekarang tersedia untuk dijual.", 'Markdown');
 
                 $update_handled = true;
 
