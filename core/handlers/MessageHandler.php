@@ -40,11 +40,16 @@ class MessageHandler
 
     public function handle()
     {
-        if (!isset($this->message['text'])) {
-            return;
+        // Fitur baru: Tangani pesan yang di-forward otomatis dari channel ke grup diskusi
+        if (isset($this->message['is_automatic_forward']) && $this->message['is_automatic_forward'] === true) {
+            $this->handleAutomaticForward();
+            return; // Hentikan proses lebih lanjut untuk pesan ini
         }
 
-        $text = $this->message['text'];
+        $text = $this->message['text'] ?? null;
+        if ($text === null) {
+            return; // Abaikan pesan non-teks yang bukan forward otomatis
+        }
 
         // Command routing
         if (strpos($text, '/') !== 0) {
@@ -591,5 +596,61 @@ EOT;
 
         $escaped_public_id = $this->telegram_api->escapeMarkdown($public_package_id);
         $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$escaped_public_id}*.", 'Markdown');
+    }
+
+    private function handleAutomaticForward()
+    {
+        // 1. Dapatkan URL dari tombol di pesan yang di-forward
+        $url = $this->message['reply_markup']['inline_keyboard'][0][0]['url'] ?? null;
+        if (!$url) {
+            return; // Tidak ada URL, abaikan
+        }
+
+        // 2. Ekstrak public_id dari URL
+        // Contoh URL: https://t.me/YourBotName?start=package_ABC_123
+        $url_parts = parse_url($url);
+        if (!isset($url_parts['query'])) {
+            return;
+        }
+        parse_str($url_parts['query'], $query_params);
+        $start_param = $query_params['start'] ?? null;
+
+        if (!$start_param || strpos($start_param, 'package_') !== 0) {
+            return; // Parameter 'start' tidak ada atau tidak valid
+        }
+        $public_id = substr($start_param, strlen('package_'));
+
+        // 3. Dapatkan info paket untuk memverifikasi dan mendapatkan harga
+        $package = $this->package_repo->findByPublicId($public_id);
+        if (!$package || $package['status'] !== 'available') {
+            return; // Paket tidak ditemukan atau tidak tersedia
+        }
+
+        // 4. Buat keyboard baru dengan callback_data
+        $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+        $channel_numeric_id = substr($this->message['forward_from_chat']['id'], 4); // Hapus -100 dari ID
+        $comment_url = "https://t.me/c/{$channel_numeric_id}/{$this->message['forward_from_message_id']}";
+
+        $keyboard = [
+            'inline_keyboard' => [
+                [
+                    ['text' => "Diskusi / Komentar 💬", 'url' => $comment_url],
+                    ['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$public_id}"]
+                ]
+            ]
+        ];
+        $reply_markup = json_encode($keyboard);
+
+        // 5. Kirim pesan balasan ke pesan yang di-forward di grup diskusi
+        $reply_parameters = json_encode(['message_id' => $this->message['message_id']]);
+
+        $this->telegram_api->sendMessage(
+            $this->chat_id,
+            "⬇️ Aksi untuk konten di atas ⬇️",
+            'Markdown',
+            $reply_markup,
+            null, // message_thread_id
+            $reply_parameters
+        );
     }
 }
