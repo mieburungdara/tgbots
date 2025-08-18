@@ -42,47 +42,11 @@ if ($selected_log) {
     }
 }
 
+$page_title = 'Log Viewer';
+require_once __DIR__ . '/../partials/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log Viewer - Admin Panel</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f6f8; color: #333; }
-        .container { max-width: 1000px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        nav { margin-bottom: 20px; }
-        nav a { text-decoration: none; color: #007bff; padding: 10px; }
-        nav a.active { font-weight: bold; }
-        .log-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .log-viewer { background-color: #2d2d2d; color: #f1f1f1; padding: 20px; border-radius: 5px; font-family: 'SF Mono', 'Consolas', 'Menlo', monospace; font-size: 0.9em; white-space: pre-wrap; word-wrap: break-word; max-height: 60vh; overflow-y: auto; }
-        .log-viewer p { margin: 0 0 5px 0; }
-        .log-viewer p.empty { color: #888; }
-        .btn { padding: 8px 12px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; }
-        .btn-danger { background-color: #dc3545; }
-        .btn-danger:hover { background-color: #c82333; }
-        select { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; background-color: #d4edda; color: #155724; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <nav>
-            <a href="index.php">Percakapan</a> |
-            <a href="bots.php">Kelola Bot</a> |
-            <a href="users.php">Pengguna</a> |
-            <a href="roles.php">Manajemen Peran</a> |
-            <a href="packages.php">Konten</a> |
-            <a href="media_logs.php">Log Media</a> |
-            <a href="channels.php">Channel</a> |
-            <a href="database.php">Database</a> |
-            <a href="logs.php" class="active">Logs</a> |
-            <a href="telegram_logs.php">Log Error Telegram</a>
-        </nav>
 
-        <h1>Log Viewer</h1>
+<h1>Log Viewer</h1>
 
         <?php if ($message): ?>
             <div class="alert"><?= htmlspecialchars($message) ?></div>
@@ -119,6 +83,7 @@ if ($selected_log) {
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
-    </div>
-</body>
-</html>
+
+<?php
+require_once __DIR__ . '/../partials/footer.php';
+?>

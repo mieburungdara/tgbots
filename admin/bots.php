@@ -58,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bot'])) {
 $bots = $pdo->query("SELECT id, first_name, username, token, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
 
 $page_title = 'Kelola Bot';
-include __DIR__ . '/partials/header.php';
+require_once __DIR__ . '/../partials/header.php';
 ?>
 
 <h1>Kelola Bot Telegram</h1>
@@ -109,4 +109,4 @@ include __DIR__ . '/partials/header.php';
     </tbody>
 </table>
 
-<?php include __DIR__ . '/partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/footer.php'; ?>

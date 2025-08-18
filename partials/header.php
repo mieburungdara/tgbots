@@ -6,13 +6,14 @@ if (session_status() == PHP_SESSION_NONE) {
 
 // Dapatkan nama file skrip saat ini untuk menyorot tautan aktif
 $current_page = basename($_SERVER['PHP_SELF']);
+$is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= $page_title ?? 'Admin Panel' ?></title>
+    <title><?= $page_title ?? ($is_admin_page ? 'Admin Panel' : 'Member Area') ?></title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f4f6f8; color: #333; }
         .header { background-color: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1); padding: 0 20px; }
@@ -45,20 +46,32 @@ $current_page = basename($_SERVER['PHP_SELF']);
 
 <header class="header">
     <div class="nav-container">
-        <h1><a href="index.php" style="text-decoration: none; color: inherit;">Admin Panel</a></h1>
-        <nav>
-            <a href="index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Percakapan</a>
-            <a href="bots.php" class="<?= $current_page == 'bots.php' || $current_page == 'edit_bot.php' ? 'active' : '' ?>">Kelola Bot</a>
-            <a href="users.php" class="<?= $current_page == 'users.php' ? 'active' : '' ?>">Pengguna</a>
-            <a href="roles.php" class="<?= $current_page == 'roles.php' ? 'active' : '' ?>">Manajemen Peran</a>
-            <a href="packages.php" class="<?= $current_page == 'packages.php' ? 'active' : '' ?>">Konten</a>
-            <a href="media_logs.php" class="<?= $current_page == 'media_logs.php' ? 'active' : '' ?>">Log Media</a>
-            <a href="channels.php" class="<?= $current_page == 'channels.php' ? 'active' : '' ?>">Channel</a>
-            <a href="database.php" class="<?= $current_page == 'database.php' ? 'active' : '' ?>">Database</a>
-            <a href="logs.php" class="<?= $current_page == 'logs.php' ? 'active' : '' ?>">Logs</a>
-            <a href="telegram_logs.php" class="<?= $current_page == 'telegram_logs.php' ? 'active' : '' ?>">Log Error Telegram</a>
-            <a href="api_test.php" class="<?= $current_page == 'api_test.php' ? 'active' : '' ?>">Tes API</a>
-        </nav>
+        <?php if ($is_admin_page): ?>
+            <h1><a href="index.php" style="text-decoration: none; color: inherit;">Admin Panel</a></h1>
+            <nav>
+                <a href="index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Percakapan</a>
+                <a href="bots.php" class="<?= $current_page == 'bots.php' || $current_page == 'edit_bot.php' ? 'active' : '' ?>">Kelola Bot</a>
+                <a href="users.php" class="<?= $current_page == 'users.php' ? 'active' : '' ?>">Pengguna</a>
+                <a href="roles.php" class="<?= $current_page == 'roles.php' ? 'active' : '' ?>">Manajemen Peran</a>
+                <a href="packages.php" class="<?= $current_page == 'packages.php' ? 'active' : '' ?>">Konten</a>
+                <a href="media_logs.php" class="<?= $current_page == 'media_logs.php' ? 'active' : '' ?>">Log Media</a>
+                <a href="channels.php" class="<?= $current_page == 'channels.php' ? 'active' : '' ?>">Channel</a>
+                <a href="database.php" class="<?= $current_page == 'database.php' ? 'active' : '' ?>">Database</a>
+                <a href="logs.php" class="<?= $current_page == 'logs.php' ? 'active' : '' ?>">Logs</a>
+                <a href="telegram_logs.php" class="<?= $current_page == 'telegram_logs.php' ? 'active' : '' ?>">Log Error Telegram</a>
+                <a href="api_test.php" class="<?= $current_page == 'api_test.php' ? 'active' : '' ?>">Tes API</a>
+                <a href="../index.php">Logout</a>
+            </nav>
+        <?php else: // Member page ?>
+            <h1><a href="index.php" style="text-decoration: none; color: inherit;">Member Area</a></h1>
+            <nav>
+                <a href="dashboard.php" class="<?= $current_page == 'dashboard.php' ? 'active' : '' ?>">Dashboard</a>
+                <a href="package_manager.php" class="<?= $current_page == 'package_manager.php' ? 'active' : '' ?>">My Content</a>
+                <a href="purchased.php" class="<?= $current_page == 'purchased.php' ? 'active' : '' ?>">Purchased</a>
+                <a href="sold.php" class="<?= $current_page == 'sold.php' ? 'active' : '' ?>">Sold</a>
+                <a href="../index.php">Logout</a>
+            </nav>
+        <?php endif; ?>
     </div>
 </header>
 

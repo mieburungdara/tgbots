@@ -55,46 +55,11 @@ foreach ($media_logs_flat as $log) {
     $grouped_logs[$group_key]['items'][] = $log;
 }
 
+$page_title = 'Log Media';
+require_once __DIR__ . '/../partials/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log Media - Admin Panel</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f6f8; color: #333; }
-        .container { max-width: 1200px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        nav { margin-bottom: 20px; }
-        nav a { text-decoration: none; color: #007bff; padding: 10px; }
-        nav a.active { font-weight: bold; }
-        .log-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .log-table th, .log-table td { padding: 12px 15px; text-align: left; border: 1px solid #ddd; }
-        .log-table th { background-color: #f4f4f4; }
-        .group-header td { background-color: #f9f9f9; font-weight: bold; }
-        .media-item { display: flex; align-items: center; gap: 15px; padding: 5px 0; }
-        .media-icon { font-size: 1.5em; }
-        .btn-forward { padding: 5px 10px; font-size: 0.9em; background-color: #17a2b8; color: white; border: none; border-radius: 4px; cursor: pointer; }
-        .btn-forward:hover { background-color: #117a8b; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <nav>
-            <a href="index.php">Percakapan</a> |
-            <a href="bots.php">Kelola Bot</a> |
-            <a href="users.php">Pengguna</a> |
-            <a href="roles.php">Manajemen Peran</a> |
-            <a href="packages.php">Konten</a> |
-            <a href="media_logs.php" class="active">Log Media</a> |
-            <a href="channels.php">Channel</a> |
-            <a href="database.php">Database</a> |
-            <a href="logs.php">Logs</a> |
-            <a href="telegram_logs.php">Log Error Telegram</a>
-        </nav>
 
-        <h1>Log Media</h1>
+<h1>Log Media</h1>
         <p>Menampilkan media yang dikirim oleh pengguna. Media yang dikirim bersamaan dikelompokkan.</p>
 
         <table class="log-table">
@@ -152,49 +117,49 @@ foreach ($media_logs_flat as $log) {
                 <?php endif; ?>
             </tbody>
         </table>
-    </div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.btn-forward').forEach(button => {
-            button.addEventListener('click', async function() {
-                const groupId = this.dataset.groupId;
-                const botId = this.dataset.botId;
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.btn-forward').forEach(button => {
+        button.addEventListener('click', async function() {
+            const groupId = this.dataset.groupId;
+            const botId = this.dataset.botId;
 
-                if (!confirm('Anda yakin ingin meneruskan media ini ke semua admin?')) {
-                    return;
+            if (!confirm('Anda yakin ingin meneruskan media ini ke semua admin?')) {
+                return;
+            }
+
+            const originalText = this.textContent;
+            this.textContent = 'Mengirim...';
+            this.disabled = true;
+
+            const formData = new FormData();
+            formData.append('group_id', groupId);
+            formData.append('bot_id', botId);
+
+            try {
+                const response = await fetch('forward_manager.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(result.message || 'Server error');
                 }
 
-                const originalText = this.textContent;
-                this.textContent = 'Mengirim...';
-                this.disabled = true;
+                alert('Hasil: ' + result.message);
 
-                const formData = new FormData();
-                formData.append('group_id', groupId);
-                formData.append('bot_id', botId);
-
-                try {
-                    const response = await fetch('forward_manager.php', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    const result = await response.json();
-                    if (!response.ok) {
-                        throw new Error(result.message || 'Server error');
-                    }
-
-                    alert('Hasil: ' + result.message);
-
-                } catch (error) {
-                    alert('Gagal melakukan permintaan: ' + error.message);
-                } finally {
-                    this.textContent = originalText;
-                    this.disabled = false;
-                }
-            });
+            } catch (error) {
+                alert('Gagal melakukan permintaan: ' + error.message);
+            } finally {
+                this.textContent = originalText;
+                this.disabled = false;
+            }
         });
     });
-    </script>
-</body>
-</html>
+});
+</script>
+<?php
+require_once __DIR__ . '/../partials/footer.php';
+?>

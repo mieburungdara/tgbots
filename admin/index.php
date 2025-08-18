@@ -71,7 +71,7 @@ if ($selected_telegram_bot_id) {
 }
 
 $page_title = 'Percakapan';
-include __DIR__ . '/partials/header.php';
+require_once __DIR__ . '/../partials/header.php';
 ?>
 
 <h1>Daftar Percakapan</h1>
@@ -130,4 +130,4 @@ include __DIR__ . '/partials/header.php';
     <p>Silakan pilih bot untuk melihat percakapannya.</p>
 <?php endif; ?>
 
-<?php include __DIR__ . '/partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/footer.php'; ?>

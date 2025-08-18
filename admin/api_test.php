@@ -12,7 +12,7 @@ $bots = $pdo->query("SELECT id, first_name, token FROM bots ORDER BY first_name"
 $selected_bot_id = $_GET['bot_id'] ?? ($bots[0]['id'] ?? null);
 
 $page_title = 'Tes API Langsung';
-include __DIR__ . '/partials/header.php';
+require_once __DIR__ . '/../partials/header.php';
 ?>
 
 <div class="api-tester-container">
@@ -316,4 +316,4 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 </script>
 
-<?php include __DIR__ . '/partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/footer.php'; ?>
