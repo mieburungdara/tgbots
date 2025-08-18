@@ -589,7 +589,6 @@ EOT;
             $stmt_link->execute([$package['id'], $storage_channel_id, $new_storage_message_ids[$i]['message_id'], $original_db_ids[$i]]);
         }
 
-        $escaped_public_id = $this->telegram_api->escapeMarkdown($public_package_id);
-        $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$escaped_public_id}*.", 'Markdown');
+        $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$public_package_id}*.", 'Markdown');
     }
 }
