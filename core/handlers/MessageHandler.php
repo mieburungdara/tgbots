@@ -631,6 +631,9 @@ $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids
         $channel_numeric_id = substr($this->message['forward_from_chat']['id'], 4); // Hapus -100 dari ID
         $comment_url = "https://t.me/c/{$channel_numeric_id}/{$this->message['forward_from_message_id']}";
 
+
+        $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$public_package_id}*.", 'Markdown');
+
         $keyboard = [
             'inline_keyboard' => [
                 [
@@ -652,5 +655,6 @@ $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids
             null, // message_thread_id
             $reply_parameters
         );
+
     }
 }
