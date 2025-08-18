@@ -49,11 +49,11 @@ require_once __DIR__ . '/../partials/header.php';
 <h1>Log Viewer</h1>
 
         <?php if ($message): ?>
-            <div class="alert"><?= htmlspecialchars($message) ?></div>
+    <div class="alert alert-success"><?= htmlspecialchars($message) ?></div>
         <?php endif; ?>
 
         <div class="log-controls">
-            <form action="logs.php" method="get">
+    <form action="logs.php" method="get" class="form-inline">
                 <label for="log_select">Pilih Log:</label>
                 <select name="log" id="log_select" onchange="this.form.submit()">
                     <?php foreach ($log_names as $name): ?>
@@ -76,7 +76,7 @@ require_once __DIR__ . '/../partials/header.php';
 
         <div class="log-viewer">
             <?php if (empty($log_content)): ?>
-                <p class="empty">Log ini kosong.</p>
+        <p class="empty">Log ini kosong atau tidak dapat diakses.</p>
             <?php else: ?>
                 <?php foreach ($log_content as $line): ?>
                     <p><?= htmlspecialchars($line) ?></p>
