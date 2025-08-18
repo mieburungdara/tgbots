@@ -41,72 +41,22 @@ $settings = [
 // Pesan status dari settings_manager.php
 $status_message = $_SESSION['status_message'] ?? null;
 unset($_SESSION['status_message']);
+
+$page_title = 'Edit Bot: ' . htmlspecialchars($bot['first_name']);
+require_once __DIR__ . '/../partials/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edit Bot: <?= htmlspecialchars($bot['first_name']) ?> - Admin Panel</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f6f8; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1, h2 { color: #333; }
-        nav { margin-bottom: 20px; }
-        nav a { text-decoration: none; color: #007bff; padding: 10px; }
-        nav a.active { font-weight: bold; }
-        .bot-info { margin-bottom: 20px; }
-        .bot-info p { margin: 5px 0; }
-        .actions button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            color: white;
-            margin-right: 10px;
-        }
-        .actions .set-webhook { background-color: #007bff; }
-        .actions .set-webhook:hover { background-color: #0056b3; }
-        .actions .check-webhook { background-color: #17a2b8; }
-        .actions .check-webhook:hover { background-color: #117a8b; }
-        .actions .test-webhook { background-color: #ffc107; color: #212529; }
-        .actions .test-webhook:hover { background-color: #e0a800; }
-        .actions .delete-webhook { background-color: #dc3545; }
-        .actions .delete-webhook:hover { background-color: #c82333; }
-        .actions .get-me { background-color: #6c757d; }
-        .actions .get-me:hover { background-color: #5a6268; }
-        .save-settings { background-color: #28a745; }
-        .save-settings:hover { background-color: #218838; }
 
-        .settings { margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px; }
-        .setting-item { margin-bottom: 15px; }
-        .setting-item label { font-weight: normal; display: flex; align-items: center; }
-        .setting-item input { margin-right: 10px; }
+<style>
+    /* Modal Styles */
+    .modal { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
+    .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
+    .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+    .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
+    #modal-body { white-space: pre-wrap; background-color: #eee; padding: 15px; border-radius: 5px; }
+    .actions button { margin-right: 10px; margin-bottom: 10px; }
+</style>
 
-        .alert-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; padding: 15px; border-radius: 4px; margin-bottom: 20px;}
-
-        /* Modal Styles */
-        .modal { display: none; position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4); }
-        .modal-content { background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 600px; border-radius: 8px; }
-        .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
-        .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
-        #modal-body { white-space: pre-wrap; background-color: #eee; padding: 15px; border-radius: 5px; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <nav>
-            <a href="index.php">Percakapan</a> |
-            <a href="bots.php" class="active">Kelola Bot</a> |
-            <a href="users.php">Pengguna</a> |
-            <a href="roles.php">Manajemen Peran</a> |
-            <a href="media_logs.php">Log Media</a> |
-            <a href="channels.php">Channel</a> |
-            <a href="database.php">Database</a> |
-            <a href="logs.php">Logs</a>
-        </nav>
-
-        <h1>Edit Bot: <?= htmlspecialchars($bot['first_name']) ?></h1>
+<h1>Edit Bot: <?= htmlspecialchars($bot['first_name']) ?></h1>
 
         <?php if ($status_message): ?>
             <div class="alert-success"><?= htmlspecialchars($status_message) ?></div>
@@ -166,135 +116,135 @@ unset($_SESSION['status_message']);
             </form>
         </div>
 
+<!-- The Modal -->
+<div id="responseModal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2 id="modal-title">Hasil Aksi</h2>
+        <pre id="modal-body">Memproses...</pre>
     </div>
+</div>
 
-    <!-- The Modal -->
-    <div id="responseModal" class="modal">
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <h2 id="modal-title">Hasil Aksi</h2>
-            <pre id="modal-body">Memproses...</pre>
-        </div>
-    </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('responseModal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const span = document.getElementsByClassName('close')[0];
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const modal = document.getElementById('responseModal');
-            const modalTitle = document.getElementById('modal-title');
-            const modalBody = document.getElementById('modal-body');
-            const span = document.getElementsByClassName('close')[0];
+        function showModal(title, content) {
+            modalTitle.textContent = title;
+            modalBody.textContent = content;
+            modal.style.display = 'block';
+        }
 
-            function showModal(title, content) {
-                modalTitle.textContent = title;
-                modalBody.textContent = content;
-                modal.style.display = 'block';
-            }
-
-            span.onclick = function() {
+        span.onclick = function() {
+            modal.style.display = 'none';
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
                 modal.style.display = 'none';
             }
-            window.onclick = function(event) {
-                if (event.target == modal) {
-                    modal.style.display = 'none';
-                }
+        }
+
+        // Handler untuk aksi webhook standar (set, check, delete)
+        async function handleWebhookAction(action, botId) {
+            let confirmation = true;
+            if (action === 'delete') {
+                confirmation = confirm('Apakah Anda yakin ingin menghapus webhook untuk bot ini?');
             }
+            if (!confirmation) return;
 
-            // Handler untuk aksi webhook standar (set, check, delete)
-            async function handleWebhookAction(action, botId) {
-                let confirmation = true;
-                if (action === 'delete') {
-                    confirmation = confirm('Apakah Anda yakin ingin menghapus webhook untuk bot ini?');
-                }
-                if (!confirmation) return;
-
-                showModal('Hasil ' + action, 'Sedang memproses permintaan...');
-                try {
-                    const response = await fetch('webhook_manager.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `action=${action}&bot_id=${botId}`
-                    });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const result = await response.json();
-                    if (result.status === 'error') throw new Error(result.data);
-                    const formattedResult = JSON.stringify(result.data, null, 2);
-                    showModal('Hasil ' + action, formattedResult);
-                } catch (error) {
-                    showModal('Error', 'Gagal melakukan permintaan: ' + error.message);
-                }
-            }
-
-            // Handler untuk tes POST webhook
-            async function handleTestWebhook(telegramBotId) {
-                // Ambil BASE_URL dari config, jika tidak ada, coba tebak dari URL saat ini
-                const baseUrl = '<?= defined('BASE_URL') && BASE_URL ? rtrim(BASE_URL, '/') : (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] ?>';
-                const webhookUrl = `${baseUrl}/webhook.php?id=${telegramBotId}`;
-
-                showModal('Hasil Test POST', `Mengirim request ke:\n${webhookUrl}\n\nMohon tunggu...`);
-
-                try {
-                    const response = await fetch(webhookUrl, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ "update_id": 0, "message": { "text": "/test" } }) // Kirim update palsu
-                    });
-
-                    let statusText = `Status: ${response.status} ${response.statusText}`;
-                    let bodyText = await response.text();
-
-                    if(response.status === 200) {
-                        showModal('Hasil Test POST: Sukses', `${statusText}\n\nRespons Body:\n${bodyText}\n\nWebhook tampaknya merespons dengan benar (200 OK).`);
-                    } else {
-                        showModal('Hasil Test POST: Gagal', `${statusText}\n\nRespons Body:\n${bodyText}\n\nWebhook mengembalikan error.`);
-                    }
-
-                } catch (error) {
-                    showModal('Error', 'Gagal melakukan permintaan fetch: ' + error.message);
-                }
-            }
-
-            // Handler untuk aksi bot (getMe)
-            async function handleBotAction(action, botId) {
-                showModal('Hasil ' + action, 'Sedang memproses permintaan...');
-                try {
-                    const response = await fetch('bot_manager.php', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `action=${action}&bot_id=${botId}`
-                    });
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                    const result = await response.json();
-                    if (result.status === 'error') throw new Error(result.message);
-
-                    let successMessage = `Sukses! Informasi bot telah diperbarui.\n\nNama: ${result.data.first_name}\nUsername: @${result.data.username}\n\nSilakan muat ulang halaman untuk melihat perubahan.`;
-                    showModal('Hasil ' + action, successMessage);
-
-                } catch (error) {
-                    showModal('Error', 'Gagal melakukan permintaan: ' + error.message);
-                }
-            }
-
-            // Tambahkan event listener ke tombol-tombol
-            document.querySelectorAll('.set-webhook, .check-webhook, .delete-webhook').forEach(button => {
-                button.addEventListener('click', function() {
-                    const action = this.classList.contains('set-webhook') ? 'set' :
-                                   this.classList.contains('check-webhook') ? 'check' : 'delete';
-                    handleWebhookAction(action, this.dataset.botId);
+            showModal('Hasil ' + action, 'Sedang memproses permintaan...');
+            try {
+                const response = await fetch('webhook_manager.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `action=${action}&bot_id=${botId}`
                 });
-            });
-
-            document.querySelector('.get-me').addEventListener('click', function() {
-                handleBotAction('get_me', this.dataset.botId);
-            });
-
-            // The test-webhook button was removed in the previous step by mistake. Let's ensure its listener exists.
-            const testWebhookBtn = document.querySelector('.test-webhook');
-            if (testWebhookBtn) {
-                testWebhookBtn.addEventListener('click', function() {
-                    handleTestWebhook(this.dataset.telegramBotId);
-                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                if (result.status === 'error') throw new Error(result.data);
+                const formattedResult = JSON.stringify(result.data, null, 2);
+                showModal('Hasil ' + action, formattedResult);
+            } catch (error) {
+                showModal('Error', 'Gagal melakukan permintaan: ' + error.message);
             }
+        }
+
+        // Handler untuk tes POST webhook
+        async function handleTestWebhook(telegramBotId) {
+            // Ambil BASE_URL dari config, jika tidak ada, coba tebak dari URL saat ini
+            const baseUrl = '<?= defined('BASE_URL') && BASE_URL ? rtrim(BASE_URL, '/') : (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] ?>';
+            const webhookUrl = `${baseUrl}/webhook.php?id=${telegramBotId}`;
+
+            showModal('Hasil Test POST', `Mengirim request ke:\n${webhookUrl}\n\nMohon tunggu...`);
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ "update_id": 0, "message": { "text": "/test" } }) // Kirim update palsu
+                });
+
+                let statusText = `Status: ${response.status} ${response.statusText}`;
+                let bodyText = await response.text();
+
+                if(response.status === 200) {
+                    showModal('Hasil Test POST: Sukses', `${statusText}\n\nRespons Body:\n${bodyText}\n\nWebhook tampaknya merespons dengan benar (200 OK).`);
+                } else {
+                    showModal('Hasil Test POST: Gagal', `${statusText}\n\nRespons Body:\n${bodyText}\n\nWebhook mengembalikan error.`);
+                }
+
+            } catch (error) {
+                showModal('Error', 'Gagal melakukan permintaan fetch: ' + error.message);
+            }
+        }
+
+        // Handler untuk aksi bot (getMe)
+        async function handleBotAction(action, botId) {
+            showModal('Hasil ' + action, 'Sedang memproses permintaan...');
+            try {
+                const response = await fetch('bot_manager.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `action=${action}&bot_id=${botId}`
+                });
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                if (result.status === 'error') throw new Error(result.message);
+
+                let successMessage = `Sukses! Informasi bot telah diperbarui.\n\nNama: ${result.data.first_name}\nUsername: @${result.data.username}\n\nSilakan muat ulang halaman untuk melihat perubahan.`;
+                showModal('Hasil ' + action, successMessage);
+
+            } catch (error) {
+                showModal('Error', 'Gagal melakukan permintaan: ' + error.message);
+            }
+        }
+
+        // Tambahkan event listener ke tombol-tombol
+        document.querySelectorAll('.set-webhook, .check-webhook, .delete-webhook').forEach(button => {
+            button.addEventListener('click', function() {
+                const action = this.classList.contains('set-webhook') ? 'set' :
+                               this.classList.contains('check-webhook') ? 'check' : 'delete';
+                handleWebhookAction(action, this.dataset.botId);
+            });
         });
-    </script>
-</body>
-</html>
+
+        document.querySelector('.get-me').addEventListener('click', function() {
+            handleBotAction('get_me', this.dataset.botId);
+        });
+
+        // The test-webhook button was removed in the previous step by mistake. Let's ensure its listener exists.
+        const testWebhookBtn = document.querySelector('.test-webhook');
+        if (testWebhookBtn) {
+            testWebhookBtn.addEventListener('click', function() {
+                handleTestWebhook(this.dataset.telegramBotId);
+            });
+        }
+    });
+</script>
+
+<?php
+require_once __DIR__ . '/../partials/footer.php';
+?>

@@ -54,48 +54,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_role'])) {
 // Ambil semua pengguna dari database
 $users = $pdo->query("SELECT id, telegram_id, first_name, username, role FROM users ORDER BY id ASC")->fetchAll(PDO::FETCH_ASSOC);
 
+$page_title = 'Manajemen Peran';
+require_once __DIR__ . '/../partials/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manajemen Peran - Admin Panel</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f6f8; color: #333; }
-        .container { max-width: 960px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; }
-        nav { margin-bottom: 20px; }
-        nav a { text-decoration: none; color: #007bff; padding: 10px; }
-        nav a.active { font-weight: bold; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
-        th { background-color: #f4f4f4; }
-        form { display: flex; align-items: center; gap: 10px; }
-        select, button { padding: 5px 10px; font-size: 0.9em; border-radius: 4px; border: 1px solid #ccc; }
-        button { background-color: #007bff; color: white; cursor: pointer; }
-        button:hover { background-color: #0056b3; }
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-        .alert.success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert.error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <nav>
-            <a href="index.php">Percakapan</a> |
-            <a href="bots.php">Kelola Bot</a> |
-            <a href="users.php">Pengguna</a> |
-            <a href="roles.php" class="active">Manajemen Peran</a> |
-            <a href="packages.php">Konten</a> |
-            <a href="media_logs.php">Log Media</a> |
-            <a href="channels.php">Channel</a> |
-            <a href="database.php">Database</a> |
-            <a href="logs.php">Logs</a> |
-            <a href="telegram_logs.php">Log Error Telegram</a>
-        </nav>
 
-        <h1>Manajemen Peran Pengguna</h1>
+<h1>Manajemen Peran Pengguna</h1>
         <p>Gunakan halaman ini untuk menetapkan peran 'admin' kepada pengguna. Pengguna dengan peran admin akan menerima media yang diteruskan.</p>
 
         <?php if ($status_message): ?>
@@ -133,6 +96,7 @@ $users = $pdo->query("SELECT id, telegram_id, first_name, username, role FROM us
                 <?php endforeach; ?>
             </tbody>
         </table>
-    </div>
-</body>
-</html>
+
+<?php
+require_once __DIR__ . '/../partials/footer.php';
+?>

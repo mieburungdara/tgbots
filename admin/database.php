@@ -64,48 +64,12 @@ if (isset($_SESSION['message'])) {
     $message = $_SESSION['message'];
     unset($_SESSION['message']);
 }
-?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Database - Admin Panel</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; margin: 40px; background-color: #f4f6f8; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1, h2 { color: #333; }
-        nav { margin-bottom: 20px; }
-        nav a { text-decoration: none; color: #007bff; padding: 10px; }
-        nav a.active { font-weight: bold; }
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-        .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        .btn { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
-        .btn:hover { background-color: #0056b3; }
-        .btn-danger { background-color: #dc3545; }
-        .btn-danger:hover { background-color: #c82333; }
-        .description { margin-bottom: 1rem; line-height: 1.6; }
-        .danger-zone { border: 2px solid #dc3545; border-radius: 8px; padding: 1.5rem; margin-top: 2rem; }
-        .danger-zone h2 { color: #dc3545; margin-top: 0; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <nav>
-            <a href="index.php">Percakapan</a> |
-            <a href="bots.php">Kelola Bot</a> |
-            <a href="users.php">Pengguna</a> |
-            <a href="roles.php">Manajemen Peran</a> |
-            <a href="packages.php">Konten</a> |
-            <a href="media_logs.php">Log Media</a> |
-            <a href="channels.php">Channel</a> |
-            <a href="database.php" class="active">Database</a> |
-            <a href="analytics.php">Analitik</a> |
-            <a href="logs.php">Logs</a> |
-            <a href="telegram_logs.php">Log Error Telegram</a>
-        </nav>
 
-        <h1>Manajemen Database</h1>
+$page_title = 'Manajemen Database';
+require_once __DIR__ . '/../partials/header.php';
+?>
+
+<h1>Manajemen Database</h1>
 
         <?php if ($message): ?>
             <div class="alert alert-info">
@@ -135,6 +99,7 @@ if (isset($_SESSION['message'])) {
                 <button type="submit" class="btn btn-danger">Bersihkan Semua Data Transaksional</button>
             </form>
         </div>
-    </div>
-</body>
-</html>
+
+<?php
+require_once __DIR__ . '/../partials/footer.php';
+?>

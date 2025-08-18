@@ -42,58 +42,38 @@ if (isset($_SESSION['message'])) {
 // Ambil data paket yang dijual (yang tidak dihapus)
 $sold_packages = $packageRepo->findAllBySellerId($user_id);
 
+$page_title = 'Konten Dijual';
+require_once __DIR__ . '/../partials/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Konten Dijual - Member Area</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background-color: #f0f2f5; margin: 0; padding: 2rem; color: #1c1e21; }
-        .container { max-width: 960px; margin: auto; }
-        .header { background: white; padding: 1rem 2rem; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; }
-        h1 { font-size: 1.5rem; margin: 0; }
-        nav a { text-decoration: none; color: #007bff; margin-left: 1rem; font-weight: bold; }
-        nav a.active { color: #1c1e21; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
-        .card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
-        .card-thumbnail { width: 100%; height: 180px; background-color: #eee; text-align: center; line-height: 180px; font-size: 2rem; color: #ccc; }
-        .card-body { padding: 1rem; flex-grow: 1; }
-        .card-footer { padding: 0 1rem 1rem 1rem; border-top: 1px solid #eee; margin-top: auto;}
-        .card-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 0.5rem 0; }
-        .card-text { font-size: 0.9rem; color: #606770; margin-bottom: 0.5rem; }
-        .card-price { font-size: 1rem; font-weight: bold; color: #28a745; }
-        .status { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
-        .status-available { background-color: #d4edda; color: #155724; }
-        .status-pending { background-color: #fff3cd; color: #856404; }
-        .status-sold { background-color: #e2e3e5; color: #383d41; }
-        .no-content { background: white; padding: 2rem; text-align: center; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .btn-delete { width: 100%; padding: 0.5rem 1rem; background-color: #dc3545; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem; border: none; cursor: pointer; margin-top: 0.5rem; }
-        .btn-delete:hover { background-color: #c82333; }
-        .alert { padding: 1rem; margin-bottom: 1rem; border-radius: 8px; background-color: #d1ecf1; color: #0c5460; }
-        .protection-toggle { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
-        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
-        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
-        input:checked + .slider { background-color: #28a745; }
-        input:checked + .slider:before { transform: translateX(22px); }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Konten yang Anda Jual</h1>
-            <nav>
-                <a href="dashboard.php">Dashboard</a>
-                <a href="sold.php" class="active">Dijual</a>
-                <a href="purchased.php">Dibeli</a>
-                <a href="dashboard.php?action=logout">Logout</a>
-            </nav>
-        </div>
 
-        <?php if ($message): ?>
+<style>
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
+    .card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; display: flex; flex-direction: column; }
+    .card-thumbnail { width: 100%; height: 180px; background-color: #eee; text-align: center; line-height: 180px; font-size: 2rem; color: #ccc; }
+    .card-body { padding: 1rem; flex-grow: 1; }
+    .card-footer { padding: 0 1rem 1rem 1rem; border-top: 1px solid #eee; margin-top: auto;}
+    .card-title { font-size: 1.1rem; font-weight: bold; margin: 0 0 0.5rem 0; }
+    .card-text { font-size: 0.9rem; color: #606770; margin-bottom: 0.5rem; }
+    .card-price { font-size: 1rem; font-weight: bold; color: #28a745; }
+    .status { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: bold; display: inline-block; }
+    .status-available { background-color: #d4edda; color: #155724; }
+    .status-pending { background-color: #fff3cd; color: #856404; }
+    .status-sold { background-color: #e2e3e5; color: #383d41; }
+    .no-content { background: white; padding: 2rem; text-align: center; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn-delete { width: 100%; padding: 0.5rem 1rem; background-color: #dc3545; color: white; text-decoration: none; border-radius: 4px; font-size: 0.9rem; border: none; cursor: pointer; margin-top: 0.5rem; }
+    .btn-delete:hover { background-color: #c82333; }
+    .protection-toggle { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #28a745; }
+    input:checked + .slider:before { transform: translateX(22px); }
+</style>
+
+<h1>Konten yang Anda Jual</h1>
+
+<?php if ($message): ?>
             <div class="alert" id="status-message"><?= htmlspecialchars($message) ?></div>
         <?php endif; ?>
         <div class="alert" id="ajax-message" style="display: none;"></div>
@@ -143,54 +123,55 @@ $sold_packages = $packageRepo->findAllBySellerId($user_id);
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>
-    </div>
 
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Hide server-side message after a few seconds
-        const statusMessage = document.getElementById('status-message');
-        if (statusMessage) {
-            setTimeout(() => {
-                statusMessage.style.display = 'none';
-            }, 3000);
-        }
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Hide server-side message after a few seconds
+    const statusMessage = document.getElementById('status-message');
+    if (statusMessage) {
+        setTimeout(() => {
+            statusMessage.style.display = 'none';
+        }, 3000);
+    }
 
-        // AJAX handler for protection toggle
-        const ajaxMessage = document.getElementById('ajax-message');
-        document.querySelectorAll('.protect-toggle-checkbox').forEach(toggle => {
-            toggle.addEventListener('change', async function() {
-                const packageId = this.dataset.packageId;
-                const formData = new FormData();
-                formData.append('package_id', packageId);
+    // AJAX handler for protection toggle
+    const ajaxMessage = document.getElementById('ajax-message');
+    document.querySelectorAll('.protect-toggle-checkbox').forEach(toggle => {
+        toggle.addEventListener('change', async function() {
+            const packageId = this.dataset.packageId;
+            const formData = new FormData();
+            formData.append('package_id', packageId);
 
-                try {
-                    const response = await fetch('package_manager.php', {
-                        method: 'POST',
-                        body: formData
-                    });
+            try {
+                const response = await fetch('package_manager.php', {
+                    method: 'POST',
+                    body: formData
+                });
 
-                    const result = await response.json();
+                const result = await response.json();
 
-                    ajaxMessage.textContent = result.message;
-                    ajaxMessage.style.display = 'block';
+                ajaxMessage.textContent = result.message;
+                ajaxMessage.style.display = 'block';
 
-                    if (result.status !== 'success') {
-                        // Revert the toggle if there was an error
-                        this.checked = !this.checked;
-                    }
-
-                    setTimeout(() => {
-                        ajaxMessage.style.display = 'none';
-                    }, 3000);
-
-                } catch (error) {
-                    ajaxMessage.textContent = 'Terjadi kesalahan jaringan.';
-                    ajaxMessage.style.display = 'block';
-                    this.checked = !this.checked; // Revert on network error
+                if (result.status !== 'success') {
+                    // Revert the toggle if there was an error
+                    this.checked = !this.checked;
                 }
-            });
+
+                setTimeout(() => {
+                    ajaxMessage.style.display = 'none';
+                }, 3000);
+
+            } catch (error) {
+                ajaxMessage.textContent = 'Terjadi kesalahan jaringan.';
+                ajaxMessage.style.display = 'block';
+                this.checked = !this.checked; // Revert on network error
+            }
         });
     });
-    </script>
-</body>
-</html>
+});
+</script>
+
+<?php
+require_once __DIR__ . '/../partials/footer.php';
+?>

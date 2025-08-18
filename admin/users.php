@@ -92,7 +92,7 @@ function get_sort_link($column, $current_sort, $current_order) {
 }
 
 $page_title = 'Manajemen Pengguna';
-include __DIR__ . '/partials/header.php';
+require_once __DIR__ . '/../partials/header.php';
 ?>
 
 <h1>Manajemen Pengguna</h1>
@@ -176,4 +176,4 @@ include __DIR__ . '/partials/header.php';
         <?php endif; ?>
     </tbody>
 </table>
-<?php include __DIR__ . '/partials/footer.php'; ?>
+<?php require_once __DIR__ . '/../partials/footer.php'; ?>

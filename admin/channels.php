@@ -54,53 +54,12 @@ if (isset($_SESSION['message'])) {
 
 // Get current channels for display
 $private_channels = $channelRepo->getAllChannels();
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pengaturan Channel - Admin Panel</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 40px; background-color: #f4f6f8; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1, h2 { color: #333; }
-        nav { margin-bottom: 20px; }
-        nav a { text-decoration: none; color: #007bff; padding: 10px; }
-        nav a.active { font-weight: bold; }
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-        .alert-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
-        .btn { padding: 10px 15px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1em; }
-        .btn:hover { background-color: #0056b3; }
-        .btn-danger { background-color: #dc3545; }
-        .btn-danger:hover { background-color: #c82333; }
-        .description { margin-bottom: 20px; line-height: 1.6; }
-        .mt-20 { margin-top: 40px; }
-        .mb-20 { margin-bottom: 20px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; }
-        .form-group input { width: 100%; padding: 8px; box-sizing: border-box; border-radius: 4px; border: 1px solid #ccc; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <nav>
-            <a href="index.php">Percakapan</a> |
-            <a href="bots.php">Kelola Bot</a> |
-            <a href="users.php">Pengguna</a> |
-            <a href="roles.php">Manajemen Peran</a> |
-            <a href="packages.php">Konten</a> |
-            <a href="media_logs.php">Log Media</a> |
-            <a href="channels.php" class="active">Channel</a> |
-            <a href="database.php">Database</a> |
-            <a href="logs.php">Logs</a> |
-            <a href="telegram_logs.php">Log Error Telegram</a>
-        </nav>
 
-        <h1>Kelola Channel Penyimpanan</h1>
+$page_title = 'Kelola Channel';
+require_once __DIR__ . '/../partials/header.php';
+?>
+
+<h1>Kelola Channel Penyimpanan</h1>
 
         <?php if ($message): ?>
             <div class="alert alert-info">
@@ -158,6 +117,7 @@ $private_channels = $channelRepo->getAllChannels();
                 <?php endif; ?>
             </tbody>
         </table>
-    </div>
-</body>
-</html>
+
+<?php
+require_once __DIR__ . '/../partials/footer.php';
+?>

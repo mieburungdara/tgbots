@@ -28,50 +28,11 @@ $total_pages = ceil($total_records / $limit);
 
 $logs = $logRepo->findAll($limit, $offset);
 
+$page_title = 'Log Kesalahan Telegram';
+require_once __DIR__ . '/../partials/header.php';
 ?>
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log Kesalahan Telegram - Admin Panel</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f4f6f8; color: #333; }
-        .main-container { max-width: 1400px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        h1 { color: #333; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; }
-        nav { background-color: #333; padding: 10px 20px; }
-        nav a { text-decoration: none; color: white; padding: 10px 15px; display: inline-block; }
-        nav a:hover, nav a.active { background-color: #555; border-radius: 4px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; table-layout: fixed; }
-        th, td { padding: 12px; border: 1px solid #ddd; text-align: left; font-size: 0.9em; word-wrap: break-word; }
-        th { background-color: #f7f7f7; }
-        .pagination { margin-top: 20px; text-align: center; }
-        .pagination a { text-decoration: none; color: #007bff; padding: 8px 12px; border: 1px solid #ddd; margin: 0 2px; border-radius: 4px; }
-        .pagination a.current { background-color: #007bff; color: white; border-color: #007bff; }
-        .pagination a.disabled { color: #ccc; pointer-events: none; }
-        .pagination a:hover:not(.current):not(.disabled) { background-color: #eee; }
-        .details { max-height: 150px; overflow-y: auto; display: block; background: #efefef; padding: 8px; border-radius: 4px; white-space: pre-wrap; }
-        .status-failed { color: #dc3545; font-weight: bold; }
-        .status-pending_retry { color: #ffc107; font-weight: bold; }
-    </style>
-</head>
-<body>
 
-    <nav>
-        <a href="index.php">Percakapan</a> |
-        <a href="bots.php">Kelola Bot</a> |
-        <a href="users.php">Pengguna</a> |
-        <a href="roles.php">Manajemen Peran</a> |
-        <a href="packages.php">Konten</a> |
-        <a href="media_logs.php">Log Media</a> |
-        <a href="channels.php">Channel</a> |
-        <a href="database.php">Database</a> |
-        <a href="logs.php">Logs</a> |
-        <a href="telegram_logs.php" class="active">Log Error Telegram</a>
-    </nav>
-
-    <div class="main-container">
-        <h1>Log Kesalahan API Telegram</h1>
+<h1>Log Kesalahan API Telegram</h1>
 
         <table>
             <colgroup>
@@ -135,7 +96,7 @@ $logs = $logRepo->findAll($limit, $offset);
                 <a class="disabled">Berikutnya &raquo;</a>
             <?php endif; ?>
         </div>
-    </div>
 
-</body>
-</html>
+<?php
+require_once __DIR__ . '/../partials/footer.php';
+?>
