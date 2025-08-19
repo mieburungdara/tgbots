@@ -6,6 +6,7 @@ require_once __DIR__ . '/../database/MediaFileRepository.php';
 require_once __DIR__ . '/../database/BotChannelUsageRepository.php';
 require_once __DIR__ . '/../database/AnalyticsRepository.php';
 require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
+require_once __DIR__ . '/../database/ChannelPostPackageRepository.php';
 
 class MessageHandler
 {
@@ -18,6 +19,7 @@ class MessageHandler
     private $sale_repo;
     private $analytics_repo;
     private $sales_channel_repo;
+    private $post_package_repo;
     private $current_user;
     private $chat_id;
     private $message;
@@ -33,6 +35,7 @@ class MessageHandler
         $this->sale_repo = new SaleRepository($pdo);
         $this->analytics_repo = new AnalyticsRepository($pdo);
         $this->sales_channel_repo = new SellerSalesChannelRepository($pdo);
+        $this->post_package_repo = new ChannelPostPackageRepository($pdo);
         $this->current_user = $current_user;
         $this->chat_id = $chat_id;
         $this->message = $message;
@@ -40,16 +43,18 @@ class MessageHandler
 
     public function handle()
     {
-        if (!isset($this->message['text'])) {
+        // Fitur baru: Tangani pesan yang di-forward otomatis dari channel ke grup diskusi
+        if (isset($this->message['is_automatic_forward']) && $this->message['is_automatic_forward'] === true) {
+            $this->handleAutomaticForward();
+            return; // Hentikan proses lebih lanjut untuk pesan ini
+        }
+
+        // The rest of the logic requires a text message that is a command.
+        if (!isset($this->message['text']) || strpos($this->message['text'], '/') !== 0) {
             return;
         }
 
         $text = $this->message['text'];
-
-        // Command routing
-        if (strpos($text, '/') !== 0) {
-            return; // Not a command, ignore
-        }
 
         $parts = explode(' ', $text);
         $command = $parts[0];
@@ -589,7 +594,61 @@ EOT;
             $stmt_link->execute([$package['id'], $storage_channel_id, $new_storage_message_ids[$i]['message_id'], $original_db_ids[$i]]);
         }
 
-        $escaped_public_id = $this->telegram_api->escapeMarkdown($public_package_id);
-        $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$escaped_public_id}*.", 'Markdown');
+        $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$public_package_id}*.", 'Markdown');
+    }
+
+    private function handleAutomaticForward()
+    {
+        app_log("[DEBUG] handleAutomaticForward triggered for chat " . $this->chat_id, 'bot_debug');
+
+        // 1. Get the original channel post's details
+        $forward_info = $this->message['forward_from_chat'] ?? null;
+        $original_message_id = $this->message['forward_from_message_id'] ?? null;
+
+        if (!$forward_info || !$original_message_id) {
+            app_log("[DEBUG] Message is not a valid automatic forward. Exiting.", 'bot_debug');
+            return; // Not a valid forward from a channel
+        }
+        $original_channel_id = $forward_info['id'];
+        app_log("[DEBUG] Forward info found: Channel ID {$original_channel_id}, Message ID {$original_message_id}", 'bot_debug');
+
+        // 2. Look up the package_id from the database
+        app_log("[DEBUG] Querying database for package...", 'bot_debug');
+        $package = $this->post_package_repo->findByChannelAndMessage($original_channel_id, $original_message_id);
+
+        if (!$package || $package['status'] !== 'available') {
+            app_log("[DEBUG] No linked package found in DB or package is not available. Exiting.", 'bot_debug');
+            return; // No linked package found, or package is not available
+        }
+
+        $public_id = $package['public_id'];
+        app_log("[DEBUG] Package found: ID {$package['id']}, Public ID {$public_id}. Proceeding to send reply.", 'bot_debug');
+
+        // 3. Create the new keyboard with callback_data
+        $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+        $keyboard = [
+            'inline_keyboard' => [
+                [
+                    ['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$public_id}"]
+                ]
+            ]
+        ];
+        $reply_markup = json_encode($keyboard);
+
+        // 4. Send the reply to the forwarded message in the discussion group
+        $reply_parameters = json_encode(['message_id' => $this->message['message_id']]);
+
+        $reply_text = "Klik untuk membeli atau berdiskusi:";
+
+        $this->telegram_api->sendMessage(
+            $this->chat_id,
+            $reply_text,
+            'Markdown',
+            $reply_markup,
+            null, // message_thread_id
+            $reply_parameters
+        );
+
+        app_log("[DEBUG] Reply message sent successfully to chat " . $this->chat_id . " in reply to " . $this->message['message_id'], 'bot_debug');
     }
 }
