@@ -658,7 +658,7 @@ EOT;
             'chat_id' => $this->chat_id,
             'text' => $reply_text,
             'reply_markup' => json_decode($reply_markup),
-            'reply_parameters' => json_decode($reply_parameters)
+            'reply_parameters' => $reply_parameters
         ];
         app_log("[TRACE] Mencoba mengirim balasan. Detail: " . json_encode($log_details), 'trace');
         $this->telegram_api->sendMessage(
