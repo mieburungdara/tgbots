@@ -6,6 +6,7 @@ require_once __DIR__ . '/../database/MediaFileRepository.php';
 require_once __DIR__ . '/../database/BotChannelUsageRepository.php';
 require_once __DIR__ . '/../database/AnalyticsRepository.php';
 require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
+require_once __DIR__ . '/../database/ChannelPostPackageRepository.php';
 
 class MessageHandler
 {
@@ -18,6 +19,7 @@ class MessageHandler
     private $sale_repo;
     private $analytics_repo;
     private $sales_channel_repo;
+    private $post_package_repo;
     private $current_user;
     private $chat_id;
     private $message;
@@ -33,6 +35,7 @@ class MessageHandler
         $this->sale_repo = new SaleRepository($pdo);
         $this->analytics_repo = new AnalyticsRepository($pdo);
         $this->sales_channel_repo = new SellerSalesChannelRepository($pdo);
+        $this->post_package_repo = new ChannelPostPackageRepository($pdo);
         $this->current_user = $current_user;
         $this->chat_id = $chat_id;
         $this->message = $message;
@@ -591,40 +594,30 @@ EOT;
             $stmt_link->execute([$package['id'], $storage_channel_id, $new_storage_message_ids[$i]['message_id'], $original_db_ids[$i]]);
         }
 
-        // Hapus escaping yang tidak perlu untuk menghindari garis miring terbalik
         $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$public_package_id}*.", 'Markdown');
     }
 
     private function handleAutomaticForward()
     {
-        // 1. Dapatkan URL dari tombol di pesan yang di-forward
-        // Pastikan inline_keyboard dan tombol pertama ada sebelum diakses
-        $url = $this->message['reply_markup']['inline_keyboard'][0][0]['url'] ?? null;
-        if (!$url) {
-            return; // Tidak ada keyboard atau URL, abaikan
-        }
+        // 1. Get the original channel post's details
+        $forward_info = $this->message['forward_from_chat'] ?? null;
+        $original_message_id = $this->message['forward_from_message_id'] ?? null;
 
-        // 2. Ekstrak public_id dari URL
-        // Contoh URL: https://t.me/YourBotName?start=package_ABC_123
-        $url_parts = parse_url($url);
-        if (!isset($url_parts['query'])) {
-            return;
+        if (!$forward_info || !$original_message_id) {
+            return; // Not a valid forward from a channel
         }
-        parse_str($url_parts['query'], $query_params);
-        $start_param = $query_params['start'] ?? null;
+        $original_channel_id = $forward_info['id'];
 
-        if (!$start_param || strpos($start_param, 'package_') !== 0) {
-            return; // Parameter 'start' tidak ada atau tidak valid
-        }
-        $public_id = substr($start_param, strlen('package_'));
+        // 2. Look up the package_id from the database
+        $package = $this->post_package_repo->findByChannelAndMessage($original_channel_id, $original_message_id);
 
-        // 3. Dapatkan info paket untuk memverifikasi dan mendapatkan harga
-        $package = $this->package_repo->findByPublicId($public_id);
         if (!$package || $package['status'] !== 'available') {
-            return; // Paket tidak ditemukan atau tidak tersedia
+            return; // No linked package found, or package is not available
         }
 
-        // 4. Buat keyboard baru dengan callback_data
+        $public_id = $package['public_id'];
+
+        // 3. Create the new keyboard with callback_data
         $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
         $keyboard = [
             'inline_keyboard' => [
@@ -635,10 +628,9 @@ EOT;
         ];
         $reply_markup = json_encode($keyboard);
 
-        // 5. Kirim pesan balasan ke pesan yang di-forward di grup diskusi
+        // 4. Send the reply to the forwarded message in the discussion group
         $reply_parameters = json_encode(['message_id' => $this->message['message_id']]);
 
-        // Teks balasan bisa dikosongkan atau diisi sesuai kebutuhan
         $reply_text = "Klik untuk membeli atau berdiskusi:";
 
         $this->telegram_api->sendMessage(
