@@ -232,14 +232,14 @@ EOT;
     private function handleStartCommand(array $parts)
     {
         if (count($parts) > 1 && strpos($parts[1], 'package_') === 0) {
-            $package_id = substr($parts[1], strlen('package_'));
-            $package = $this->package_repo->find((int)$package_id);
+            $public_id = substr($parts[1], strlen('package_'));
+            $package = $this->package_repo->findByPublicId($public_id);
             if ($package && $package['status'] == 'available') {
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
                 $balance_formatted = "Rp " . number_format($this->current_user['balance'], 0, ',', '.');
                 $escaped_description = $this->telegram_api->escapeMarkdown($package['description']);
                 $reply_text = "Anda tertarik dengan item berikut:\n\n*Deskripsi:* {$escaped_description}\n*Harga:* {$price_formatted}\n\nSaldo Anda saat ini: {$balance_formatted}.";
-                $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang ({$price_formatted})", 'callback_data' => "buy_{$package_id}"]]]];
+                $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang ({$price_formatted})", 'callback_data' => "buy_{$public_id}"]]]];
                 $this->telegram_api->sendMessage($this->chat_id, $reply_text, 'Markdown', json_encode($keyboard));
             } else {
                 $this->telegram_api->sendMessage($this->chat_id, "Maaf, item ini sudah tidak tersedia atau tidak ditemukan.");
