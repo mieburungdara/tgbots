@@ -235,12 +235,31 @@ EOT;
             $public_id = substr($parts[1], strlen('package_'));
             $package = $this->package_repo->findByPublicId($public_id);
             if ($package && $package['status'] == 'available') {
+                // Siapkan teks dan tombol
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
                 $balance_formatted = "Rp " . number_format($this->current_user['balance'], 0, ',', '.');
                 $escaped_description = $this->telegram_api->escapeMarkdown($package['description']);
-                $reply_text = "Anda tertarik dengan item berikut:\n\n*Deskripsi:* {$escaped_description}\n*Harga:* {$price_formatted}\n\nSaldo Anda saat ini: {$balance_formatted}.";
+                $caption = "Anda tertarik dengan item berikut:\n\n*Deskripsi:* {$escaped_description}\n*Harga:* {$price_formatted}\n\nSaldo Anda saat ini: {$balance_formatted}.";
                 $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang ({$price_formatted})", 'callback_data' => "buy_{$public_id}"]]]];
-                $this->telegram_api->sendMessage($this->chat_id, $reply_text, 'Markdown', json_encode($keyboard));
+                $reply_markup = json_encode($keyboard);
+
+                // Dapatkan thumbnail
+                $thumbnail = $this->package_repo->getThumbnailFile($package['id']);
+
+                if ($thumbnail && !empty($thumbnail['storage_channel_id']) && !empty($thumbnail['storage_message_id'])) {
+                    // Jika thumbnail ada, kirim sebagai foto dengan caption
+                    $this->telegram_api->copyMessage(
+                        $this->chat_id,
+                        $thumbnail['storage_channel_id'],
+                        $thumbnail['storage_message_id'],
+                        $caption,
+                        'Markdown',
+                        $reply_markup
+                    );
+                } else {
+                    // Fallback: jika tidak ada thumbnail, kirim pesan teks saja
+                    $this->telegram_api->sendMessage($this->chat_id, $caption, 'Markdown', $reply_markup);
+                }
             } else {
                 $this->telegram_api->sendMessage($this->chat_id, "Maaf, item ini sudah tidak tersedia atau tidak ditemukan.");
             }
