@@ -635,13 +635,15 @@ EOT;
 
         $public_id = $package['public_id'];
 
-        // Buat keyboard seperti yang ditentukan dalam UPDATE.md.
-        // callback_data `buy_{public_id}` digunakan agar konsisten dengan bagian lain dari aplikasi.
+        // Buat tombol URL yang mengarah ke deep link /start bot.
+        $start_payload = "package_{$public_id}";
+        $bot_username = BOT_USERNAME; // Konstanta global dari webhook.php
+        $url = "https://t.me/{$bot_username}?start={$start_payload}";
+
         $keyboard = [
             'inline_keyboard' => [
                 [
-                    // Teks diperbarui sesuai UPDATE.md
-                    ['text' => 'Beli Sekarang', 'callback_data' => "buy_{$public_id}"]
+                    ['text' => 'Beli Sekarang', 'url' => $url]
                 ]
             ]
         ];
