@@ -59,6 +59,7 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
                 <a href="database.php" class="<?= $current_page == 'database.php' ? 'active' : '' ?>">Database</a>
                 <a href="logs.php" class="<?= $current_page == 'logs.php' ? 'active' : '' ?>">Logs</a>
                 <a href="telegram_logs.php" class="<?= $current_page == 'telegram_logs.php' ? 'active' : '' ?>">Log Error Telegram</a>
+                <a href="debug_feed.php" class="<?= $current_page == 'debug_feed.php' ? 'active' : '' ?>">Debug Feed</a>
                 <a href="api_test.php" class="<?= $current_page == 'api_test.php' ? 'active' : '' ?>">Tes API</a>
                 <a href="../index.php">Logout</a>
             </nav>

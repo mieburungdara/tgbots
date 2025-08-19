@@ -618,14 +618,6 @@ EOT;
 
         if (!$package || $package['status'] !== 'available') {
             app_log("[DEBUG] No linked package found in DB or package is not available. Exiting.", 'bot_debug');
-            return; // Not a valid forward from a channel
-        }
-        $original_channel_id = $forward_info['id'];
-
-        // 2. Look up the package_id from the database
-        $package = $this->post_package_repo->findByChannelAndMessage($original_channel_id, $original_message_id);
-
-        if (!$package || $package['status'] !== 'available') {
             return; // No linked package found, or package is not available
         }
 
