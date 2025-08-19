@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.2.11] - 2025-08-18
+
+### Fitur
+- **Balasan Otomatis di Grup Diskusi**: Bot sekarang akan secara otomatis membalas postingan yang di-forward dari channel ke grup diskusi yang terhubung.
+  - **Pemicu**: Fitur ini aktif ketika sebuah pesan `is_automatic_forward` terdeteksi di grup.
+  - **Aksi**: Bot akan membalas dengan pesan "Klik tombol di bawah untuk membeli" dan menyertakan tombol inline "Beli Sekarang".
+
+### Diperbaiki
+- **Logika Pendeteksian Forward Channel**: Memperbaiki logika di `MessageHandler` untuk mendeteksi pesan yang di-forward secara otomatis dari channel.
+  - **Penyebab**: Implementasi sebelumnya salah menggunakan `forward_from_chat` untuk mendapatkan detail pesan asli, padahal spesifikasi dari Telegram untuk jenis forward ini menggunakan objek `forward_origin`.
+  - **Solusi**: Mengubah `handleAutomaticForward` untuk membaca `forward_origin.chat.id` dan `forward_origin.message_id` untuk mencocokkan postingan asli di channel dengan paket yang tersimpan di database.
+
 
 ## [4.2.10] - 2025-08-16
 
