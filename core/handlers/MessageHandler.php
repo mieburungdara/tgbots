@@ -648,7 +648,7 @@ EOT;
         $reply_markup = json_encode($keyboard);
 
         // Siapkan parameter balasan untuk membalas pesan yang diteruskan di grup diskusi.
-        $reply_parameters = json_encode(['message_id' => $this->message['message_id']]);
+        $reply_parameters = ['message_id' => $this->message['message_id']];
 
         // Teks balasan seperti yang ditentukan dalam UPDATE.md.
         $reply_text = "Klik tombol di bawah untuk membeli";
