@@ -10,6 +10,7 @@ require_once __DIR__ . '/core/helpers.php';
 require_once __DIR__ . '/core/database/BotRepository.php';
 require_once __DIR__ . '/core/database/UserRepository.php';
 require_once __DIR__ . '/core/handlers/UpdateHandler.php';
+require_once __DIR__ . '/core/database/RawUpdateRepository.php';
 
 // Bungkus semua dalam try-catch untuk penanganan error terpusat
 try {
@@ -49,6 +50,14 @@ try {
 
     // 3. Baca dan Proses Input dari Telegram
     $update_json = file_get_contents('php://input');
+    if (empty($update_json)) {
+        exit;
+    }
+
+    // Simpan raw update ke database untuk debugging
+    $raw_update_repo = new RawUpdateRepository($pdo);
+    $raw_update_repo->create($update_json);
+
     $update = json_decode($update_json, true);
     if (!$update) {
         exit;
