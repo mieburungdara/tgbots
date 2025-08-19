@@ -45,6 +45,7 @@ class MessageHandler
     {
         // Fitur baru: Tangani pesan yang di-forward otomatis dari channel ke grup diskusi
         if (isset($this->message['is_automatic_forward']) && $this->message['is_automatic_forward'] === true) {
+            app_log("[TRACE] `is_automatic_forward` terdeteksi. Memanggil handleAutomaticForward.", 'trace');
             $this->handleAutomaticForward();
             return; // Hentikan proses lebih lanjut untuk pesan ini
         }
@@ -599,29 +600,38 @@ EOT;
 
     private function handleAutomaticForward()
     {
+        app_log("[TRACE] Memulai handleAutomaticForward.", 'trace');
+
         // Sesuai UPDATE.md, payload berisi `forward_origin`.
         $forward_origin = $this->message['forward_origin'] ?? null;
 
         if (!$forward_origin) {
+            app_log("[TRACE] `forward_origin` tidak ditemukan dalam payload. Mengabaikan.", 'trace');
             return; // Bukan forward yang valid sesuai spesifikasi.
         }
+        app_log("[TRACE] `forward_origin` ditemukan: " . json_encode($forward_origin), 'trace');
 
         // Ekstrak detail dari struktur yang benar.
         $original_channel_id = $forward_origin['chat']['id'] ?? null;
         $original_message_id = $forward_origin['message_id'] ?? null;
+        app_log("[TRACE] Ekstrak: channel_id={$original_channel_id}, message_id={$original_message_id}", 'trace');
 
         // Periksa apakah kedua ID yang dibutuhkan untuk pencarian ada.
         if (!$original_channel_id || !$original_message_id) {
+            app_log("[TRACE] Salah satu atau kedua ID tidak ada. Mengabaikan.", 'trace');
             return;
         }
 
         // Cari paket di database menggunakan ID.
+        app_log("[TRACE] Mencari paket di database...", 'trace');
         $package = $this->post_package_repo->findByChannelAndMessage($original_channel_id, $original_message_id);
 
         // Jika tidak ada paket yang ditemukan atau tidak tersedia, jangan lakukan apa-apa.
         if (!$package || $package['status'] !== 'available') {
+            app_log("[TRACE] Paket tidak ditemukan atau tidak tersedia. Mengabaikan. Hasil: " . json_encode($package), 'trace');
             return;
         }
+        app_log("[TRACE] Paket ditemukan: " . json_encode($package), 'trace');
 
         $public_id = $package['public_id'];
 
@@ -644,6 +654,7 @@ EOT;
         $reply_text = "Klik tombol di bawah untuk membeli";
 
         // Kirim pesan balasan.
+        app_log("[TRACE] Mencoba mengirim balasan ke chat_id: " . $this->chat_id, 'trace');
         $this->telegram_api->sendMessage(
             $this->chat_id,
             $reply_text,
@@ -652,5 +663,6 @@ EOT;
             null, // message_thread_id
             $reply_parameters
         );
+        app_log("[TRACE] Balasan berhasil dikirim.", 'trace');
     }
 }
