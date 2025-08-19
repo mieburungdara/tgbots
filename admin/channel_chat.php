@@ -146,17 +146,22 @@ $telegram_bot_id = explode(':', $bot_info['token'])[0];
             <div class="message-container">
                 <?php foreach ($grouped_messages as $item): ?>
                     <div class="message <?= $item['direction'] ?>">
-                        <div class="sender-info" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9em;">
-                            <?php
-                                if ($item['direction'] === 'outgoing') {
-                                    echo htmlspecialchars($bot_info['first_name'] ?? 'Bot');
-                                } elseif (!empty($item['user_first_name'])) {
-                                    echo htmlspecialchars($item['user_first_name']);
-                                } else {
-                                    // Untuk pesan channel post (user_id IS NULL)
-                                    echo htmlspecialchars($user_info['first_name'] ?? 'Channel Post');
-                                }
-                            ?>
+                        <div class="sender-info" style="font-weight: bold; margin-bottom: 5px; font-size: 0.9em; display: flex; justify-content: space-between; align-items: center;">
+                            <span>
+                                <?php
+                                    if ($item['direction'] === 'outgoing') {
+                                        echo htmlspecialchars($bot_info['first_name'] ?? 'Bot');
+                                    } elseif (!empty($item['user_first_name'])) {
+                                        echo htmlspecialchars($item['user_first_name']);
+                                    } else {
+                                        // Untuk pesan channel post (user_id IS NULL)
+                                        echo htmlspecialchars($user_info['first_name'] ?? 'Channel Post');
+                                    }
+                                ?>
+                            </span>
+                            <span style="font-weight: normal; font-size: 0.9em; color: #666;">
+                                <?= htmlspecialchars($item['update_type'] ?? '') ?> | <?= htmlspecialchars($item['chat_type'] ?? '') ?>
+                            </span>
                         </div>
 
                         <?php if ($item['type'] === 'media_group'): // Render a media group ?>

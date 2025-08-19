@@ -94,12 +94,13 @@ try {
             $timestamp = $channel_post['date'] ?? time();
             $message_date = date('Y-m-d H:i:s', $timestamp);
 
-            // Simpan pesan channel dengan user_id = NULL dan chat_id diisi
+            // Simpan pesan channel dengan tipe yang sesuai
+            $chat_type = $channel_post['chat']['type'] ?? 'channel';
             $stmt = $pdo->prepare(
-                "INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, text, raw_data, direction, telegram_timestamp)
-                 VALUES (NULL, ?, ?, ?, ?, ?, 'incoming', ?)"
+                "INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, chat_type, update_type, text, raw_data, direction, telegram_timestamp)
+                 VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, 'incoming', ?)"
             );
-            $stmt->execute([$internal_bot_id, $telegram_message_id, $chat_id, $text_content, $update_json, $message_date]);
+            $stmt->execute([$internal_bot_id, $telegram_message_id, $chat_id, $chat_type, 'channel_post', $text_content, $update_json, $message_date]);
 
             // Panggil handler jika ada logika spesifik untuk channel post
             require_once __DIR__ . '/core/handlers/ChannelPostHandler.php';
@@ -161,8 +162,9 @@ try {
     $internal_user_id = $current_user['id'];
 
     // 7. Simpan Pesan (jika diaktifkan)
-    $pdo->prepare("INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, text, raw_data, direction, telegram_timestamp) VALUES (?, ?, ?, ?, ?, ?, 'incoming', ?)")
-        ->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $chat_id_from_telegram, $text_content, $update_json, $message_date]);
+    $chat_type = $message_context['chat']['type'] ?? 'unknown';
+    $pdo->prepare("INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, chat_type, update_type, text, raw_data, direction, telegram_timestamp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'incoming', ?)")
+        ->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $chat_id_from_telegram, $chat_type, $update_type, $text_content, $update_json, $message_date]);
 
     // 8. Inisialisasi API dan delegasikan ke Handler yang Tepat
     $telegram_api = new TelegramAPI($bot_token, $pdo, $internal_bot_id);
