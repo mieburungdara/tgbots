@@ -25,24 +25,37 @@ function check_tables_exist(PDO $pdo) {
 }
 
 /**
- * Mencatat pesan ke file log yang ditentukan.
+ * Mencatat pesan ke database.
  *
  * @param string $message Pesan yang akan dicatat.
- * @param string $level Tipe log (misal: 'database', 'bot', 'error'). Ini akan menjadi nama file log.
+ * @param string $level Tipe log (misal: 'info', 'debug', 'error').
+ * @param array|null $context Data kontekstual tambahan dalam bentuk array.
  * @return void
  */
-function app_log(string $message, string $level = 'app'): void {
-    $log_dir = __DIR__ . '/../logs';
-    if (!is_dir($log_dir)) {
-        mkdir($log_dir, 0755, true);
+function app_log(string $message, string $level = 'info', ?array $context = null): void {
+    try {
+        $pdo = get_db_connection();
+        if (!$pdo) {
+            // Fallback to file logging if DB connection fails
+            error_log("DB_LOG_FALLBACK: [$level] $message");
+            return;
+        }
+
+        $sql = "INSERT INTO app_logs (level, message, context) VALUES (:level, :message, :context)";
+        $stmt = $pdo->prepare($sql);
+
+        $context_json = $context ? json_encode($context) : null;
+
+        $stmt->bindParam(':level', $level, PDO::PARAM_STR);
+        $stmt->bindParam(':message', $message, PDO::PARAM_STR);
+        $stmt->bindParam(':context', $context_json, PDO::PARAM_STR);
+
+        $stmt->execute();
+
+    } catch (Throwable $e) {
+        // Fallback to error_log if anything goes wrong with DB logging
+        error_log("Failed to write to DB log. Error: " . $e->getMessage() . ". Original log message: [$level] $message");
     }
-
-    $log_file = $log_dir . '/' . $level . '.log';
-    $timestamp = date('Y-m-d H:i:s');
-    $formatted_message = "[{$timestamp}] " . $message . PHP_EOL;
-
-    // Gunakan FILE_APPEND untuk menambahkan ke file, dan LOCK_EX untuk mencegah penulisan bersamaan.
-    file_put_contents($log_file, $formatted_message, FILE_APPEND | LOCK_EX);
 }
 
 /**
