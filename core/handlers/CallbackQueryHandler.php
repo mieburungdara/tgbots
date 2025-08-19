@@ -247,29 +247,33 @@ class CallbackQueryHandler
         $internal_user_id = $this->current_user['id'];
         $callback_query_id = $this->callback_query['id'];
 
-        $package = $this->package_repo->findByPublicId($public_id);
-        if (!$package) {
-            $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Paket tidak ditemukan.', true);
-            return;
-        }
-        $package_id = $package['id'];
+        // Jawab callback segera untuk menghindari timeout
+        $this->telegram_api->answerCallbackQuery($callback_query_id, 'Memproses pembelian...');
 
-        $package_for_purchase = $this->package_repo->findForPurchase($package_id);
-
-        if ($package_for_purchase && $this->current_user['balance'] >= $package['price']) {
-            $sale_successful = $this->sale_repo->createSale($package_id, $package['seller_user_id'], $internal_user_id, $package['price']);
-
-            if ($sale_successful) {
-                $this->package_repo->markAsSold($package_id);
-
-                // Setelah membeli, langsung tampilkan konten dengan pagination
-                $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian berhasil! Menampilkan konten...');
-                $this->handleViewPage("{$public_id}_0");
-            } else {
-                $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian gagal karena kesalahan internal.', true);
+        try {
+            $package = $this->package_repo->findByPublicId($public_id);
+            if (!$package || $package['status'] !== 'available') {
+                throw new Exception('Paket tidak ditemukan atau sudah tidak tersedia.');
             }
-        } else {
-            $this->telegram_api->answerCallbackQuery($callback_query_id, 'Pembelian gagal. Saldo tidak cukup atau item tidak tersedia.', true);
+            $package_id = $package['id'];
+
+            if ($this->current_user['balance'] < $package['price']) {
+                throw new Exception('Saldo Anda tidak cukup untuk melakukan pembelian ini.');
+            }
+
+            // createSale sekarang akan melempar Exception jika gagal, bukan mengembalikan false
+            $this->sale_repo->createSale($package_id, $package['seller_user_id'], $internal_user_id, $package['price']);
+            $this->package_repo->markAsSold($package_id);
+
+            // Kirim pesan konfirmasi baru karena callback sudah dijawab
+            $this->telegram_api->sendMessage($this->chat_id, '✅ Pembelian berhasil! Menampilkan konten Anda...');
+            $this->handleViewPage("{$public_id}_0");
+
+        } catch (Exception $e) {
+            // Kirim pesan error karena callback sudah dijawab
+            $error_message = "⚠️ Terjadi kesalahan saat memproses pembelian: " . $e->getMessage();
+            $this->telegram_api->sendMessage($this->chat_id, $error_message);
+            app_log("Gagal menangani pembelian untuk public_id {$public_id}: " . $e->getMessage(), 'error');
         }
     }
 }
