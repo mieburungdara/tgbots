@@ -121,6 +121,50 @@ try {
     }
 
     $message_context = UpdateHandler::getMessageContext($update);
+
+    // Handle auto-forwarded messages from discussion groups as a special case
+    if (isset($message_context['is_automatic_forward']) && $message_context['is_automatic_forward'] === true) {
+        $pdo->beginTransaction();
+        try {
+            $chat_id = $message_context['chat']['id'];
+            $telegram_message_id = $message_context['message_id'];
+            $text_content = $message_context['text'] ?? ($message_context['caption'] ?? '');
+            $timestamp = $message_context['date'] ?? time();
+            $message_date = date('Y-m-d H:i:s', $timestamp);
+            $chat_type = $message_context['chat']['type'] ?? 'supergroup';
+
+            // Use the generic 'Telegram' user or a default if 'from' is not available
+            $user_id_from_telegram = $message_context['from']['id'] ?? 777000;
+            $first_name = $message_context['from']['first_name'] ?? 'Telegram';
+
+            $user_repo = new UserRepository($pdo, $internal_bot_id);
+            $current_user = $user_repo->findOrCreateUser($user_id_from_telegram, $first_name, null);
+            $internal_user_id = $current_user['id'];
+
+            // Simpan pesan
+            $stmt = $pdo->prepare(
+                "INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, chat_type, update_type, text, raw_data, direction, telegram_timestamp)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'incoming', ?)"
+            );
+            $stmt->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $chat_id, $chat_type, 'message', $text_content, $update_json, $message_date]);
+
+            // Delegasikan ke MessageHandler, yang akan memanggil handleAutomaticForward secara internal
+            require_once __DIR__ . '/core/handlers/MessageHandler.php';
+            $telegram_api = new TelegramAPI($bot_token, $pdo, $internal_bot_id);
+            $handler = new MessageHandler($pdo, $telegram_api, $user_repo, $current_user, $chat_id, $message_context);
+            $handler->handle();
+
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            app_log("Error handling auto-forwarded message: " . $e->getMessage(), 'error');
+        }
+        http_response_code(200);
+        exit;
+    }
+
     if (!isset($message_context['from']['id']) || !isset($message_context['chat']['id'])) {
         http_response_code(200); // Abaikan update tanpa konteks user/chat
         exit;
