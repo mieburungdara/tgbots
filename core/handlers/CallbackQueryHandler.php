@@ -177,11 +177,9 @@ class CallbackQueryHandler
         }
         $reply_markup = empty($keyboard_buttons) ? null : json_encode(['inline_keyboard' => [$keyboard_buttons]]);
 
-        // Build the caption text
-        $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+        // Build the caption text, without price for subsequent views
         $escaped_description = $this->telegram_api->escapeMarkdown($package['description'] ?? '');
-        $escaped_price = $this->telegram_api->escapeMarkdown($price_formatted);
-        $info_text = "{$escaped_description}\n\nHarga: *{$escaped_price}*";
+        $info_text = $escaped_description;
 
         // Send the content for the current page
         $current_page_content = $pages[$page_index];
@@ -189,9 +187,9 @@ class CallbackQueryHandler
         $protect_content = (bool) $package['protect_content'];
 
         // Hapus pesan navigasi sebelumnya jika ada
-        // if (isset($this->callback_query['message']['message_id'])) {
-        //     $this->telegram_api->deleteMessage($this->chat_id, $this->callback_query['message']['message_id']);
-        // }
+        if (isset($this->callback_query['message']['message_id'])) {
+            $this->telegram_api->deleteMessage($this->chat_id, $this->callback_query['message']['message_id']);
+        }
 
         if (count($current_page_content) === 1) {
             // Single media item, kirim dengan keyboard navigasi
