@@ -599,11 +599,25 @@ EOT;
 
     private function handleAutomaticForward()
     {
+        app_log("[DEBUG] handleAutomaticForward triggered for chat " . $this->chat_id, 'bot_debug');
+
         // 1. Get the original channel post's details
         $forward_info = $this->message['forward_from_chat'] ?? null;
         $original_message_id = $this->message['forward_from_message_id'] ?? null;
 
         if (!$forward_info || !$original_message_id) {
+            app_log("[DEBUG] Message is not a valid automatic forward. Exiting.", 'bot_debug');
+            return; // Not a valid forward from a channel
+        }
+        $original_channel_id = $forward_info['id'];
+        app_log("[DEBUG] Forward info found: Channel ID {$original_channel_id}, Message ID {$original_message_id}", 'bot_debug');
+
+        // 2. Look up the package_id from the database
+        app_log("[DEBUG] Querying database for package...", 'bot_debug');
+        $package = $this->post_package_repo->findByChannelAndMessage($original_channel_id, $original_message_id);
+
+        if (!$package || $package['status'] !== 'available') {
+            app_log("[DEBUG] No linked package found in DB or package is not available. Exiting.", 'bot_debug');
             return; // Not a valid forward from a channel
         }
         $original_channel_id = $forward_info['id'];
@@ -616,6 +630,7 @@ EOT;
         }
 
         $public_id = $package['public_id'];
+        app_log("[DEBUG] Package found: ID {$package['id']}, Public ID {$public_id}. Proceeding to send reply.", 'bot_debug');
 
         // 3. Create the new keyboard with callback_data
         $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
@@ -641,5 +656,7 @@ EOT;
             null, // message_thread_id
             $reply_parameters
         );
+
+        app_log("[DEBUG] Reply message sent successfully to chat " . $this->chat_id . " in reply to " . $this->message['message_id'], 'bot_debug');
     }
 }
