@@ -83,6 +83,42 @@ try {
         exit;
     }
 
+    // Handle channel_post separately as it has no user context ('from')
+    if ($update_type === 'channel_post') {
+        $pdo->beginTransaction();
+        try {
+            $channel_post = $update['channel_post'];
+            $telegram_message_id = $channel_post['message_id'];
+            $chat_id = $channel_post['chat']['id'];
+            $text_content = $channel_post['text'] ?? ($channel_post['caption'] ?? '');
+            $timestamp = $channel_post['date'] ?? time();
+            $message_date = date('Y-m-d H:i:s', $timestamp);
+
+            // Simpan pesan channel dengan user_id = NULL dan chat_id diisi
+            $stmt = $pdo->prepare(
+                "INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, text, raw_data, direction, telegram_timestamp)
+                 VALUES (NULL, ?, ?, ?, ?, ?, 'incoming', ?)"
+            );
+            $stmt->execute([$internal_bot_id, $telegram_message_id, $chat_id, $text_content, $update_json, $message_date]);
+
+            // Panggil handler jika ada logika spesifik untuk channel post
+            require_once __DIR__ . '/core/handlers/ChannelPostHandler.php';
+            // Note: ChannelPostHandler constructor expects a user, which we don't have.
+            // We pass a dummy array for now. This handler is mostly empty anyway.
+            $handler = new ChannelPostHandler($pdo, $api_for_globals, new UserRepository($pdo, $internal_bot_id), [], $chat_id, $channel_post);
+            $handler->handle();
+
+            $pdo->commit();
+        } catch (Throwable $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            app_log("Error handling channel_post: " . $e->getMessage(), 'error');
+        }
+        http_response_code(200);
+        exit;
+    }
+
     $message_context = UpdateHandler::getMessageContext($update);
     if (!isset($message_context['from']['id']) || !isset($message_context['chat']['id'])) {
         http_response_code(200); // Abaikan update tanpa konteks user/chat
@@ -125,8 +161,8 @@ try {
     $internal_user_id = $current_user['id'];
 
     // 7. Simpan Pesan (jika diaktifkan)
-    $pdo->prepare("INSERT INTO messages (user_id, bot_id, telegram_message_id, text, raw_data, direction, telegram_timestamp) VALUES (?, ?, ?, ?, ?, 'incoming', ?)")
-        ->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $text_content, $update_json, $message_date]);
+    $pdo->prepare("INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, text, raw_data, direction, telegram_timestamp) VALUES (?, ?, ?, ?, ?, ?, 'incoming', ?)")
+        ->execute([$internal_user_id, $internal_bot_id, $telegram_message_id, $chat_id_from_telegram, $text_content, $update_json, $message_date]);
 
     // 8. Inisialisasi API dan delegasikan ke Handler yang Tepat
     $telegram_api = new TelegramAPI($bot_token, $pdo, $internal_bot_id);

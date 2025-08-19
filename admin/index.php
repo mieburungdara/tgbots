@@ -67,6 +67,20 @@ if ($selected_telegram_bot_id) {
         );
         $stmt->execute([$internal_bot_id]);
         $conversations = $stmt->fetchAll();
+
+        // Ambil semua channel unik yang memiliki pesan untuk bot yang dipilih
+        $stmt_channels = $pdo->prepare(
+            "SELECT DISTINCT
+                m.chat_id,
+                (SELECT raw_data FROM messages WHERE chat_id = m.chat_id AND bot_id = m.bot_id ORDER BY id DESC LIMIT 1) as last_message_raw,
+                (SELECT text FROM messages WHERE chat_id = m.chat_id AND bot_id = m.bot_id ORDER BY id DESC LIMIT 1) as last_message,
+                (SELECT telegram_timestamp FROM messages WHERE chat_id = m.chat_id AND bot_id = m.bot_id ORDER BY id DESC LIMIT 1) as last_message_time
+            FROM messages m
+            WHERE m.bot_id = ? AND m.user_id IS NULL AND m.chat_id IS NOT NULL
+            ORDER BY last_message_time DESC"
+        );
+        $stmt_channels->execute([$internal_bot_id]);
+        $channel_chats = $stmt_channels->fetchAll();
     }
 }
 
@@ -126,6 +140,47 @@ require_once __DIR__ . '/../partials/header.php';
         </tbody>
     </table>
     <?php endif; ?>
+
+    <h2 style="margin-top: 40px;">Pesan Channel & Grup</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Nama Channel/Grup</th>
+                <th>ID Chat</th>
+                <th>Pesan Terakhir</th>
+                <th>Waktu</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php if (empty($channel_chats)): ?>
+                <tr>
+                    <td colspan="4">Belum ada pesan dari channel atau grup untuk bot ini.</td>
+                </tr>
+            <?php else: ?>
+                <?php foreach ($channel_chats as $chat): ?>
+                    <?php
+                        $chat_title = 'Nama tidak diketahui';
+                        if (!empty($chat['last_message_raw'])) {
+                            $raw = json_decode($chat['last_message_raw'], true);
+                            // Coba dapatkan judul dari berbagai kemungkinan lokasi dalam payload
+                            $chat_title = $raw['channel_post']['chat']['title'] ?? $raw['message']['chat']['title'] ?? $chat_title;
+                        }
+                    ?>
+                    <tr>
+                        <td>
+                            <a href="channel_chat.php?chat_id=<?= $chat['chat_id'] ?>&bot_id=<?= $internal_bot_id ?>">
+                                <?= htmlspecialchars($chat_title) ?>
+                            </a>
+                        </td>
+                        <td><?= htmlspecialchars($chat['chat_id']) ?></td>
+                        <td class="last-message"><?= htmlspecialchars(mb_strimwidth($chat['last_message'] ?? '', 0, 50, "...")) ?></td>
+                        <td><?= htmlspecialchars($chat['last_message_time'] ?? '') ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            <?php endif; ?>
+        </tbody>
+    </table>
+
 <?php else: ?>
     <p>Silakan pilih bot untuk melihat percakapannya.</p>
 <?php endif; ?>
