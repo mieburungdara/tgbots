@@ -4,7 +4,7 @@ CREATE TABLE `channel_post_packages` (
     `id` INT(11) NOT NULL AUTO_INCREMENT,
     `channel_id` BIGINT NOT NULL,
     `message_id` BIGINT NOT NULL,
-    `package_id` INT(11) NOT NULL,
+    `package_id` BIGINT NOT NULL,
     `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
     UNIQUE KEY `channel_message_idx` (`channel_id`, `message_id`),
