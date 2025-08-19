@@ -654,7 +654,13 @@ EOT;
         $reply_text = "Klik tombol di bawah untuk membeli";
 
         // Kirim pesan balasan.
-        app_log("[TRACE] Mencoba mengirim balasan ke chat_id: " . $this->chat_id, 'trace');
+        $log_details = [
+            'chat_id' => $this->chat_id,
+            'text' => $reply_text,
+            'reply_markup' => json_decode($reply_markup),
+            'reply_parameters' => json_decode($reply_parameters)
+        ];
+        app_log("[TRACE] Mencoba mengirim balasan. Detail: " . json_encode($log_details), 'trace');
         $this->telegram_api->sendMessage(
             $this->chat_id,
             $reply_text,
