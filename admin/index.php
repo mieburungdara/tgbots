@@ -76,7 +76,7 @@ if ($selected_telegram_bot_id) {
                 (SELECT text FROM messages WHERE chat_id = m.chat_id AND bot_id = m.bot_id ORDER BY id DESC LIMIT 1) as last_message,
                 (SELECT telegram_timestamp FROM messages WHERE chat_id = m.chat_id AND bot_id = m.bot_id ORDER BY id DESC LIMIT 1) as last_message_time
             FROM messages m
-            WHERE m.bot_id = ? AND m.user_id IS NULL AND m.chat_id IS NOT NULL
+            WHERE m.bot_id = ? AND m.chat_id < 0
             ORDER BY last_message_time DESC"
         );
         $stmt_channels->execute([$internal_bot_id]);
