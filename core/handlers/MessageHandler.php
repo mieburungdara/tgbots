@@ -599,56 +599,58 @@ EOT;
 
     private function handleAutomaticForward()
     {
-        app_log("[DEBUG] handleAutomaticForward triggered for chat " . $this->chat_id, 'bot_debug');
+        // Sesuai UPDATE.md, payload berisi `forward_origin`.
+        $forward_origin = $this->message['forward_origin'] ?? null;
 
-        // 1. Get the original channel post's details
-        $forward_info = $this->message['forward_from_chat'] ?? null;
-        $original_message_id = $this->message['forward_from_message_id'] ?? null;
-
-        if (!$forward_info || !$original_message_id) {
-            app_log("[DEBUG] Message is not a valid automatic forward. Exiting.", 'bot_debug');
-            return; // Not a valid forward from a channel
+        if (!$forward_origin) {
+            return; // Bukan forward yang valid sesuai spesifikasi.
         }
-        $original_channel_id = $forward_info['id'];
-        app_log("[DEBUG] Forward info found: Channel ID {$original_channel_id}, Message ID {$original_message_id}", 'bot_debug');
 
-        // 2. Look up the package_id from the database
-        app_log("[DEBUG] Querying database for package...", 'bot_debug');
+        // Ekstrak detail dari struktur yang benar.
+        $original_channel_id = $forward_origin['chat']['id'] ?? null;
+        $original_message_id = $forward_origin['message_id'] ?? null;
+
+        // Periksa apakah kedua ID yang dibutuhkan untuk pencarian ada.
+        if (!$original_channel_id || !$original_message_id) {
+            return;
+        }
+
+        // Cari paket di database menggunakan ID.
         $package = $this->post_package_repo->findByChannelAndMessage($original_channel_id, $original_message_id);
 
+        // Jika tidak ada paket yang ditemukan atau tidak tersedia, jangan lakukan apa-apa.
         if (!$package || $package['status'] !== 'available') {
-            app_log("[DEBUG] No linked package found in DB or package is not available. Exiting.", 'bot_debug');
-            return; // No linked package found, or package is not available
+            return;
         }
 
         $public_id = $package['public_id'];
-        app_log("[DEBUG] Package found: ID {$package['id']}, Public ID {$public_id}. Proceeding to send reply.", 'bot_debug');
 
-        // 3. Create the new keyboard with callback_data
-        $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+        // Buat keyboard seperti yang ditentukan dalam UPDATE.md.
+        // callback_data `buy_{public_id}` digunakan agar konsisten dengan bagian lain dari aplikasi.
         $keyboard = [
             'inline_keyboard' => [
                 [
-                    ['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$public_id}"]
+                    // Teks diperbarui sesuai UPDATE.md
+                    ['text' => 'Beli Sekarang', 'callback_data' => "buy_{$public_id}"]
                 ]
             ]
         ];
         $reply_markup = json_encode($keyboard);
 
-        // 4. Send the reply to the forwarded message in the discussion group
+        // Siapkan parameter balasan untuk membalas pesan yang diteruskan di grup diskusi.
         $reply_parameters = json_encode(['message_id' => $this->message['message_id']]);
 
-        $reply_text = "Klik untuk membeli atau berdiskusi:";
+        // Teks balasan seperti yang ditentukan dalam UPDATE.md.
+        $reply_text = "Klik tombol di bawah untuk membeli";
 
+        // Kirim pesan balasan.
         $this->telegram_api->sendMessage(
             $this->chat_id,
             $reply_text,
-            'Markdown',
+            null, // Tidak perlu Markdown untuk teks sederhana ini
             $reply_markup,
             null, // message_thread_id
             $reply_parameters
         );
-
-        app_log("[DEBUG] Reply message sent successfully to chat " . $this->chat_id . " in reply to " . $this->message['message_id'], 'bot_debug');
     }
 }
