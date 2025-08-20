@@ -240,17 +240,36 @@ EOT;
                 return;
             }
 
-            // Periksa apakah pengguna sudah membeli item ini
-            $has_purchased = $this->sale_repo->hasUserPurchased($package['id'], $this->current_user['id']);
-            if ($has_purchased) {
-                $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Konten 📂', 'callback_data' => "view_page_{$public_id}_0"]]]];
-                $this->telegram_api->sendMessage($this->chat_id, "Anda sudah memiliki item ini. Klik tombol di bawah untuk melihatnya.", 'Markdown', json_encode($keyboard));
+            $package_id = $package['id'];
+            $internal_user_id = $this->current_user['id'];
+
+            // Tentukan tingkat akses pengguna
+            $is_seller = ($package['seller_user_id'] == $internal_user_id);
+            $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $internal_user_id);
+
+            // Kasus 1: Pengguna adalah pemilik (penjual)
+            if ($is_seller) {
+                $message = "Anda adalah pemilik konten ini. Anda dapat melihat atau mem-postingnya ke channel.";
+                $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$public_id}_0"]]];
+                $sales_channel = $this->sales_channel_repo->findBySellerId($internal_user_id);
+                if ($sales_channel) {
+                    $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$public_id}"];
+                }
+                $keyboard = ['inline_keyboard' => $keyboard_buttons];
+                $this->telegram_api->sendMessage($this->chat_id, $message, 'Markdown', json_encode($keyboard));
                 return;
             }
 
-            // Jika belum dibeli, periksa apakah tersedia untuk dibeli
+            // Kasus 2: Pengguna sudah pernah membeli
+            if ($has_purchased) {
+                $message = "Anda sudah memiliki item ini. Klik tombol di bawah untuk melihatnya.";
+                $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Konten 📂', 'callback_data' => "view_page_{$public_id}_0"]]]];
+                $this->telegram_api->sendMessage($this->chat_id, $message, 'Markdown', json_encode($keyboard));
+                return;
+            }
+
+            // Kasus 3: Pengguna baru, item tersedia untuk dibeli
             if ($package['status'] === 'available') {
-                // Siapkan teks dan tombol
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
                 $balance_formatted = "Rp " . number_format($this->current_user['balance'], 0, ',', '.');
                 $escaped_description = $this->telegram_api->escapeMarkdown($package['description']);
@@ -258,27 +277,19 @@ EOT;
                 $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang ({$price_formatted})", 'callback_data' => "buy_{$public_id}"]]]];
                 $reply_markup = json_encode($keyboard);
 
-                // Dapatkan thumbnail
-                $thumbnail = $this->package_repo->getThumbnailFile($package['id']);
+                $thumbnail = $this->package_repo->getThumbnailFile($package_id);
 
                 if ($thumbnail && !empty($thumbnail['storage_channel_id']) && !empty($thumbnail['storage_message_id'])) {
-                    // Jika thumbnail ada, kirim sebagai foto dengan caption
-                    $this->telegram_api->copyMessage(
-                        $this->chat_id,
-                        $thumbnail['storage_channel_id'],
-                        $thumbnail['storage_message_id'],
-                        $caption,
-                        'Markdown',
-                        $reply_markup
-                    );
+                    $this->telegram_api->copyMessage($this->chat_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $caption, 'Markdown', $reply_markup);
                 } else {
-                    // Fallback: jika tidak ada thumbnail, kirim pesan teks saja
                     $this->telegram_api->sendMessage($this->chat_id, $caption, 'Markdown', $reply_markup);
                 }
-            } else {
-                // Jika statusnya bukan 'available' (misal: 'sold' oleh orang lain, atau 'deleted')
-                $this->telegram_api->sendMessage($this->chat_id, "Maaf, item ini sudah tidak tersedia.");
+                return;
             }
+
+            // Kasus 4: Item tidak tersedia untuk alasan lain
+            $this->telegram_api->sendMessage($this->chat_id, "Maaf, item ini sudah tidak tersedia.");
+
         } else {
             $welcome_message = "👋 *Selamat Datang di Bot Marketplace!* 🤖\n\n" .
                                "Berikut adalah beberapa perintah yang bisa Anda gunakan:\n\n" .
