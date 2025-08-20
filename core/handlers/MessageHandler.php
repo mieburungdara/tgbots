@@ -234,7 +234,22 @@ EOT;
         if (count($parts) > 1 && strpos($parts[1], 'package_') === 0) {
             $public_id = substr($parts[1], strlen('package_'));
             $package = $this->package_repo->findByPublicId($public_id);
-            if ($package && $package['status'] == 'available') {
+
+            if (!$package) {
+                $this->telegram_api->sendMessage($this->chat_id, "Maaf, item ini tidak ditemukan.");
+                return;
+            }
+
+            // Periksa apakah pengguna sudah membeli item ini
+            $has_purchased = $this->sale_repo->hasUserPurchased($package['id'], $this->current_user['id']);
+            if ($has_purchased) {
+                $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Konten 📂', 'callback_data' => "view_page_{$public_id}_0"]]]];
+                $this->telegram_api->sendMessage($this->chat_id, "Anda sudah memiliki item ini. Klik tombol di bawah untuk melihatnya.", 'Markdown', json_encode($keyboard));
+                return;
+            }
+
+            // Jika belum dibeli, periksa apakah tersedia untuk dibeli
+            if ($package['status'] === 'available') {
                 // Siapkan teks dan tombol
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
                 $balance_formatted = "Rp " . number_format($this->current_user['balance'], 0, ',', '.');
@@ -261,7 +276,8 @@ EOT;
                     $this->telegram_api->sendMessage($this->chat_id, $caption, 'Markdown', $reply_markup);
                 }
             } else {
-                $this->telegram_api->sendMessage($this->chat_id, "Maaf, item ini sudah tidak tersedia atau tidak ditemukan.");
+                // Jika statusnya bukan 'available' (misal: 'sold' oleh orang lain, atau 'deleted')
+                $this->telegram_api->sendMessage($this->chat_id, "Maaf, item ini sudah tidak tersedia.");
             }
         } else {
             $welcome_message = "👋 *Selamat Datang di Bot Marketplace!* 🤖\n\n" .
