@@ -51,6 +51,116 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
         .sidebar-nav a:hover { background-color: #f0f0f0; }
         .sidebar-nav a.active { font-weight: bold; background-color: #007bff; color: #fff; }
         .admin-main-content { flex-grow: 1; }
+
+        /* Conversation Page Layout */
+        .conv-layout {
+            display: flex;
+            margin: -20px; /* Counteract padding from .content */
+            height: calc(100vh - 85px); /* Adjust based on your header/footer height */
+        }
+        .conv-sidebar {
+            width: 280px;
+            flex-shrink: 0;
+            background-color: #fff;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+        }
+        .conv-sidebar-header {
+            padding: 15px;
+            border-bottom: 1px solid #dee2e6;
+        }
+        .conv-sidebar-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+        }
+        .conv-bot-list a {
+            display: block;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: #212529;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .conv-bot-list a:hover {
+            background-color: #f8f9fa;
+        }
+        .conv-bot-list a.active {
+            background-color: #007bff;
+            color: #fff;
+            font-weight: 600;
+        }
+        .conv-main {
+            flex-grow: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: #fff;
+        }
+
+        /* Conversation Card List */
+        .conv-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .conv-card {
+            display: flex;
+            align-items: flex-start;
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .conv-card:hover {
+            background-color: #f8f9fa;
+        }
+        .conv-card a {
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            align-items: flex-start;
+            width: 100%;
+        }
+        .conv-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background-color: #007bff;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            flex-shrink: 0;
+            margin-right: 15px;
+        }
+        .conv-details {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        .conv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            width: 100%;
+        }
+        .conv-name {
+            font-weight: 600;
+            font-size: 1rem;
+        }
+        .conv-time {
+            font-size: 0.75rem;
+            color: #6c757d;
+        }
+        .conv-message {
+            font-size: 0.9rem;
+            color: #495057;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 95%;
+        }
     </style>
 </head>
 <body class="<?= $is_admin_page ? 'admin-body' : '' ?>">
