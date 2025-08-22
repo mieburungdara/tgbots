@@ -6,6 +6,10 @@ require_once __DIR__ . '/../database/UserRepository.php';
 require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
 require_once __DIR__ . '/../database/ChannelPostPackageRepository.php';
 
+/**
+ * Menangani logika untuk callback query yang diterima dari tombol inline Telegram.
+ * Ini termasuk melihat konten, membeli paket, mendaftar sebagai penjual, dll.
+ */
 class CallbackQueryHandler
 {
     private $pdo;
@@ -19,6 +23,16 @@ class CallbackQueryHandler
     private $sales_channel_repo;
     private $post_package_repo;
 
+    /**
+     * Membuat instance CallbackQueryHandler.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     * @param TelegramAPI $telegram_api Klien untuk berinteraksi dengan API Telegram.
+     * @param UserRepository $user_repo Repositori untuk operasi terkait pengguna.
+     * @param array $current_user Data pengguna yang memicu callback.
+     * @param int $chat_id ID obrolan tempat callback terjadi.
+     * @param array $callback_query Data callback query lengkap dari Telegram.
+     */
     public function __construct(PDO $pdo, TelegramAPI $telegram_api, UserRepository $user_repo, array $current_user, int $chat_id, array $callback_query)
     {
         $this->pdo = $pdo;
@@ -33,6 +47,10 @@ class CallbackQueryHandler
         $this->post_package_repo = new ChannelPostPackageRepository($pdo);
     }
 
+    /**
+     * Titik masuk utama untuk menangani callback query.
+     * Menganalisis data callback dan mendelegasikannya ke metode yang sesuai.
+     */
     public function handle()
     {
         $callback_data = $this->callback_query['data'];
@@ -46,11 +64,16 @@ class CallbackQueryHandler
         } elseif (strpos($callback_data, 'post_channel_') === 0) {
             $this->handlePostToChannel(substr($callback_data, strlen('post_channel_')));
         } elseif ($callback_data === 'noop') {
-            // Button for display only, like page numbers. Just answer the callback.
+            // Tombol hanya untuk tampilan, seperti nomor halaman. Cukup jawab callback-nya.
             $this->telegram_api->answerCallbackQuery($this->callback_query['id']);
         }
     }
 
+    /**
+     * Menangani permintaan untuk mem-posting pratinjau paket ke channel penjualan penjual.
+     *
+     * @param string $public_id ID publik dari paket yang akan di-posting.
+     */
     private function handlePostToChannel(string $public_id)
     {
         $callback_query_id = $this->callback_query['id'];
@@ -125,6 +148,12 @@ class CallbackQueryHandler
         }
     }
 
+    /**
+     * Menangani permintaan untuk melihat halaman tertentu dari sebuah paket konten.
+     * Metode ini mengirimkan media dan keyboard navigasi halaman.
+     *
+     * @param string $params String yang berisi public_id paket dan indeks halaman.
+     */
     private function handleViewPage(string $params)
     {
         $parts = explode('_', $params);
@@ -218,6 +247,10 @@ class CallbackQueryHandler
         $this->telegram_api->answerCallbackQuery($callback_query_id);
     }
 
+    /**
+     * Menangani permintaan pengguna untuk mendaftar sebagai penjual.
+     * Membuat ID penjual publik untuk pengguna jika belum ada.
+     */
     private function handleRegisterSeller()
     {
         $callback_query_id = $this->callback_query['id'];
@@ -240,6 +273,12 @@ class CallbackQueryHandler
         }
     }
 
+    /**
+     * Menangani permintaan pengguna untuk membeli sebuah paket.
+     * Memverifikasi saldo, membuat catatan penjualan, dan memberikan akses ke konten.
+     *
+     * @param string $public_id ID publik dari paket yang akan dibeli.
+     */
     private function handleBuy(string $public_id)
     {
         $internal_user_id = $this->current_user['id'];

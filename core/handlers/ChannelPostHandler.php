@@ -2,6 +2,10 @@
 
 require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
 
+/**
+ * Menangani pembaruan yang berasal dari sebuah channel (channel post).
+ * Terutama untuk menangani perintah administrasi yang dikirim di channel.
+ */
 class ChannelPostHandler
 {
     private $pdo;
@@ -12,6 +16,16 @@ class ChannelPostHandler
     private $channel_id;
     private $message;
 
+    /**
+     * Membuat instance ChannelPostHandler.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     * @param TelegramAPI $telegram_api Klien untuk berinteraksi dengan API Telegram.
+     * @param UserRepository $user_repo Repositori untuk operasi terkait pengguna.
+     * @param array $current_user Data pengguna yang terkait dengan post (jika ada).
+     * @param int $channel_id ID channel tempat post dibuat.
+     * @param array $message Data post channel lengkap dari Telegram.
+     */
     public function __construct(PDO $pdo, TelegramAPI $telegram_api, UserRepository $user_repo, array $current_user, int $channel_id, array $message)
     {
         $this->pdo = $pdo;
@@ -23,6 +37,10 @@ class ChannelPostHandler
         $this->message = $message;
     }
 
+    /**
+     * Titik masuk utama untuk menangani post dari channel.
+     * Menganalisis teks post untuk perintah dan mendelegasikannya.
+     */
     public function handle()
     {
         if (!isset($this->message['text'])) {
@@ -38,6 +56,10 @@ class ChannelPostHandler
         }
     }
 
+    /**
+     * Menangani perintah `/register_channel` yang dikirim di sebuah channel.
+     * Saat ini, logika ini masih dalam pengembangan dan hanya dapat diakses oleh SUPER_ADMIN.
+     */
     private function handleRegisterChannelCommand()
     {
         // Dalam konteks channel post, 'from' tidak selalu ada.

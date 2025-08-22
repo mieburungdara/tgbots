@@ -2,12 +2,22 @@
 
 require_once __DIR__ . '/../database/PackageRepository.php';
 
+/**
+ * Menangani permintaan inline query dari pengguna.
+ * Memungkinkan pengguna untuk mencari dan berbagi paket konten langsung dari chat manapun.
+ */
 class InlineQueryHandler
 {
     private $pdo;
     private $telegram_api;
     private $package_repo;
 
+    /**
+     * Membuat instance InlineQueryHandler.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     * @param TelegramAPI $telegram_api Klien untuk berinteraksi dengan API Telegram.
+     */
     public function __construct(PDO $pdo, TelegramAPI $telegram_api)
     {
         $this->pdo = $pdo;
@@ -15,6 +25,12 @@ class InlineQueryHandler
         $this->package_repo = new PackageRepository($pdo);
     }
 
+    /**
+     * Titik masuk utama untuk menangani inline query.
+     * Mencari paket berdasarkan query teks dan mengembalikan hasilnya ke Telegram.
+     *
+     * @param array $inline_query Data inline query lengkap dari Telegram.
+     */
     public function handle(array $inline_query)
     {
         $query_id = $inline_query['id'];

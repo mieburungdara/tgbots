@@ -1,9 +1,18 @@
 <?php
 
+/**
+ * Repositori untuk mengambil data analitik dan statistik dari database.
+ * Menyediakan metode untuk mendapatkan ringkasan penjualan, statistik pengguna, dll.
+ */
 class AnalyticsRepository
 {
     private $pdo;
 
+    /**
+     * Membuat instance AnalyticsRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
@@ -11,7 +20,8 @@ class AnalyticsRepository
 
     /**
      * Mengambil ringkasan data penjualan global.
-     * @return array
+     *
+     * @return array Mengembalikan array dengan `total_sales` dan `total_revenue`.
      */
     public function getGlobalSummary(): array
     {
@@ -24,9 +34,10 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil ringkasan data pembelian untuk pengguna tertentu.
-     * @param int $buyerId
-     * @return array
+     * Mengambil ringkasan statistik pembelian untuk seorang pengguna.
+     *
+     * @param int $buyerId ID internal pengguna (pembeli).
+     * @return array Mengembalikan array dengan `total_purchases` dan `total_spent`.
      */
     public function getUserPurchaseStats(int $buyerId): array
     {
@@ -40,9 +51,10 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil ringkasan data penjualan untuk penjual tertentu.
-     * @param int $sellerId
-     * @return array
+     * Mengambil ringkasan statistik penjualan untuk seorang penjual.
+     *
+     * @param int $sellerId ID internal pengguna (penjual).
+     * @return array Mengembalikan array dengan `total_sales` dan `total_revenue`.
      */
     public function getSellerSummary(int $sellerId): array
     {
@@ -56,10 +68,11 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil data penjualan per hari untuk grafik.
-     * @param int|null $sellerId Jika null, ambil data global.
-     * @param int $days Rentang hari ke belakang.
-     * @return array
+     * Mengambil data pendapatan harian untuk ditampilkan dalam grafik.
+     *
+     * @param int|null $sellerId Jika null, ambil data global. Jika diisi, filter berdasarkan ID penjual.
+     * @param int $days Jumlah hari terakhir yang akan diambil datanya.
+     * @return array Daftar data harian, masing-masing berisi `sales_date` dan `daily_revenue`.
      */
     public function getSalesByDay(int $sellerId = null, int $days = 30): array
     {
@@ -84,9 +97,10 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil paket terlaris.
-     * @param int $limit
-     * @return array
+     * Mengambil daftar paket konten terlaris.
+     *
+     * @param int $limit Jumlah maksimum paket yang akan diambil.
+     * @return array Daftar paket terlaris.
      */
     public function getTopSellingPackages(int $limit = 5): array
     {

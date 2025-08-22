@@ -1,11 +1,15 @@
 <?php
 
+/**
+ * Repositori untuk mengelola log kesalahan yang spesifik dari interaksi dengan API Telegram.
+ * Ini membantu dalam melacak dan menganalisis kegagalan panggilan API.
+ */
 class TelegramErrorLogRepository
 {
     private $pdo;
 
     /**
-     * Constructor.
+     * Membuat instance TelegramErrorLogRepository.
      * @param PDO $pdo Objek koneksi database.
      */
     public function __construct(PDO $pdo)

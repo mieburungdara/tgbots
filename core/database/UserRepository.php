@@ -1,10 +1,20 @@
 <?php
 
+/**
+ * Repositori untuk mengelola data pengguna (`users`, `members`, `rel_user_bot`).
+ * Menangani pembuatan pengguna, pencarian, pengelolaan state, dan peran.
+ */
 class UserRepository
 {
     private $pdo;
     private $bot_id;
 
+    /**
+     * Membuat instance UserRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     * @param int $internal_bot_id ID internal bot yang sedang berinteraksi dengan pengguna.
+     */
     public function __construct(PDO $pdo, int $internal_bot_id)
     {
         $this->pdo = $pdo;
@@ -12,13 +22,14 @@ class UserRepository
     }
 
     /**
-     * Cari pengguna berdasarkan ID Telegram, atau buat jika tidak ada.
-     * Mengelola relasi dan peran admin.
+     * Mencari pengguna berdasarkan ID Telegram mereka. Jika tidak ditemukan, pengguna baru
+     * akan dibuat. Metode ini juga memastikan relasi user-bot dan entri member ada,
+     * serta menetapkan peran 'admin' jika ID pengguna cocok dengan SUPER_ADMIN_TELEGRAM_ID.
      *
-     * @param int $telegram_user_id
-     * @param string $first_name
-     * @param string|null $username
-     * @return array|false
+     * @param int $telegram_user_id ID Telegram pengguna.
+     * @param string $first_name Nama depan pengguna.
+     * @param string|null $username Username Telegram pengguna (jika ada).
+     * @return array|false Data pengguna yang lengkap dan terbaru, atau false jika gagal.
      */
     public function findOrCreateUser(int $telegram_user_id, string $first_name, ?string $username)
     {
@@ -62,10 +73,11 @@ class UserRepository
     }
 
     /**
-     * Cari data lengkap pengguna berdasarkan ID Telegram.
+     * Mencari data lengkap pengguna berdasarkan ID Telegram mereka, termasuk data
+     * spesifik bot seperti state percakapan.
      *
-     * @param int $telegram_user_id
-     * @return array|false
+     * @param int $telegram_user_id ID Telegram pengguna.
+     * @return array|false Data pengguna sebagai array asosiatif, atau false jika tidak ditemukan.
      */
     public function findUserByTelegramId(int $telegram_user_id)
     {
@@ -80,11 +92,13 @@ class UserRepository
     }
 
     /**
-     * Atur state percakapan untuk pengguna.
+     * Mengatur state percakapan untuk seorang pengguna dalam konteks bot saat ini.
+     * Berguna untuk alur percakapan multi-langkah, seperti proses penjualan.
      *
-     * @param int $user_id
-     * @param string|null $state
-     * @param array|null $context
+     * @param int $user_id ID internal pengguna.
+     * @param string|null $state State baru (misal: 'awaiting_price') atau null untuk menghapus state.
+     * @param array|null $context Data kontekstual tambahan yang akan disimpan sebagai JSON.
+     * @return void
      */
     public function setUserState(int $user_id, ?string $state, ?array $context = null)
     {
@@ -92,16 +106,22 @@ class UserRepository
         $stmt->execute([$state, $context ? json_encode($context) : null, $user_id, $this->bot_id]);
     }
 
+    /**
+     * Mendapatkan ID internal bot yang terkait dengan instance repositori ini.
+     *
+     * @return int ID internal bot.
+     */
     public function getBotId(): int
     {
         return $this->bot_id;
     }
 
     /**
-     * Menetapkan ID publik yang unik untuk seorang penjual.
+     * Menetapkan ID publik yang unik untuk seorang pengguna, efektif mendaftarkannya sebagai penjual.
+     * Terus mencoba menghasilkan ID unik jika terjadi tabrakan.
      *
      * @param int $userId ID internal pengguna.
-     * @return string ID publik yang baru dibuat.
+     * @return string ID publik yang baru dibuat dan disimpan.
      * @throws Exception Jika gagal membuat ID unik setelah beberapa kali percobaan.
      */
     public function setPublicId(int $userId): string
@@ -128,11 +148,12 @@ class UserRepository
     }
 
     /**
-     * Memperbarui status pengguna berdasarkan ID Telegram mereka.
+     * Memperbarui status pengguna (misalnya, menjadi 'blocked') berdasarkan ID Telegram mereka.
+     * Berguna ketika bot mendeteksi diblokir oleh pengguna.
      *
      * @param int $telegram_user_id ID Telegram pengguna.
-     * @param string $status Status baru ('active' or 'blocked').
-     * @return bool True jika berhasil, false jika gagal.
+     * @param string $status Status baru, harus 'active' atau 'blocked'.
+     * @return bool True jika berhasil, false jika gagal atau status tidak valid.
      */
     public function updateUserStatusByTelegramId(int $telegram_user_id, string $status): bool
     {

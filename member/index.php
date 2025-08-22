@@ -1,4 +1,18 @@
 <?php
+/**
+ * Halaman Login Panel Anggota.
+ *
+ * Halaman ini berfungsi sebagai gerbang masuk ke area anggota.
+ * Login dilakukan menggunakan token sekali pakai yang didapatkan pengguna
+ * dari bot melalui perintah `/login`.
+ *
+ * Logika:
+ * - Jika pengguna sudah login, langsung alihkan ke `dashboard.php`.
+ * - Jika token ada di parameter URL, coba login otomatis.
+ * - Jika tidak, tampilkan formulir untuk memasukkan token secara manual.
+ * - Setelah login berhasil, token ditandai sebagai sudah digunakan (`token_used = 1`)
+ *   dan ID pengguna disimpan di session.
+ */
 session_start();
 
 // Jika sudah login, redirect ke dashboard
@@ -13,27 +27,35 @@ require_once __DIR__ . '/../core/helpers.php'; // Pastikan helpers di-include un
 $error_message = '';
 $token_from_url = isset($_GET['token']) ? trim($_GET['token']) : '';
 
+/**
+ * Memproses token login yang diberikan.
+ *
+ * @param string $token Token yang akan divalidasi.
+ * @param PDO $pdo Objek koneksi database.
+ * @return string|void Mengembalikan pesan error jika gagal, atau mengalihkan jika berhasil.
+ */
 function process_login_token($token, $pdo) {
     if (empty($token)) {
         app_log("Upaya login gagal: Token tidak diberikan.", 'member');
         return "Silakan masukkan token Anda.";
     }
 
+    // Cari token yang valid dan belum digunakan
     $stmt = $pdo->prepare("SELECT * FROM members WHERE login_token = ? AND token_used = 0");
     $stmt->execute([$token]);
     $member = $stmt->fetch();
 
     if ($member) {
-        // Tandai token sebagai sudah digunakan
+        // Jika valid, tandai token sebagai sudah digunakan untuk mencegah replay attack.
         $stmt = $pdo->prepare("UPDATE members SET token_used = 1, login_token = NULL WHERE id = ?");
         $stmt->execute([$member['id']]);
 
-        // Simpan informasi member di session menggunakan user_id
+        // Atur session untuk menandai pengguna sebagai sudah login.
         $_SESSION['member_user_id'] = $member['user_id'];
 
         app_log("Login member berhasil: user_id = {$member['user_id']}", 'member');
 
-        // Redirect ke dashboard
+        // Alihkan ke dasbor.
         header("Location: dashboard.php");
         exit;
     } else {

@@ -1,4 +1,16 @@
 <?php
+/**
+ * Halaman Percakapan Pribadi (Admin).
+ *
+ * Halaman ini menampilkan riwayat percakapan antara bot dan seorang pengguna,
+ * dan memungkinkan administrator untuk mengirim balasan atas nama bot.
+ *
+ * Fitur Utama:
+ * - Mengambil riwayat pesan untuk `user_id` dan `bot_id` tertentu.
+ * - Formulir untuk mengirim pesan balasan ke pengguna melalui bot.
+ * - Menyimpan pesan keluar (balasan admin) ke database.
+ * - Mengelompokkan pesan media yang memiliki `media_group_id` untuk tampilan yang lebih baik.
+ */
 session_start();
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/TelegramAPI.php';
@@ -31,15 +43,15 @@ if (!$user_info || !$bot_info) {
     die("Pengguna atau bot tidak ditemukan.");
 }
 
-// Handle pengiriman balasan
+// Menangani logika pengiriman balasan dari admin
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
     $reply_text = trim($_POST['reply_text']);
     if (!empty($reply_text)) {
+        // 1. Kirim pesan ke pengguna melalui API Telegram
         $telegram_api = new TelegramAPI($bot_info['token']);
-        // Kirim pesan ke ID telegram pengguna
         $result = $telegram_api->sendMessage($user_info['telegram_id'], $reply_text);
 
-        // Simpan pesan keluar ke database dengan user_id, bot_id, dan raw_data
+        // 2. Jika pengiriman berhasil, simpan pesan keluar ke database
         if ($result && $result['ok']) {
             $raw_data_json = json_encode($result['result']);
             $stmt = $pdo->prepare(
@@ -48,13 +60,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
             );
             $stmt->execute([$user_id, $bot_id, $result['result']['message_id'], $reply_text, $raw_data_json]);
         }
-        // Redirect untuk mencegah resubmit dan menampilkan pesan baru
+        // 3. Redirect kembali ke halaman chat untuk mencegah pengiriman ulang formulir (pola PRG)
         header("Location: chat.php?user_id=" . $user_id . "&bot_id=" . $bot_id);
         exit;
     }
 }
 
-// Ambil semua pesan untuk user dan bot ini, gabungkan dengan data media jika ada
+// Mengambil semua pesan untuk percakapan ini, digabungkan dengan data media jika ada
 $sql = "
     SELECT
         m.*,
@@ -71,37 +83,39 @@ $stmt = $pdo->prepare($sql);
 $stmt->execute([$user_id, $bot_id]);
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Kelompokkan pesan berdasarkan media_group_id
+// Logika untuk mengelompokkan pesan.
+// Pesan dengan media_group_id yang sama akan digabungkan menjadi satu entri 'media_group'.
+// Pesan lainnya akan tetap sebagai entri 'single'.
 $grouped_messages = [];
-$processed_message_ids = []; // Lacak ID pesan yang sudah masuk ke dalam grup
+$processed_message_ids = []; // Lacak ID pesan yang sudah dimasukkan ke dalam grup untuk menghindari duplikasi.
 
 foreach ($messages as $message) {
-    // Jika pesan ini sudah diproses sebagai bagian dari grup, lewati
+    // Jika pesan ini sudah diproses sebagai bagian dari sebuah grup, lewati.
     if (in_array($message['id'], $processed_message_ids)) {
         continue;
     }
 
-    // Jika pesan memiliki media_group_id, cari semua anggota grupnya
+    // Jika pesan memiliki media_group_id, cari semua pesan lain yang termasuk dalam grup ini.
     if (!empty($message['media_group_id'])) {
         $current_group_id = $message['media_group_id'];
         $group = [
             'type' => 'media_group',
             'items' => [],
-            'direction' => $message['direction'], // Arah grup sama dengan pesan pertama
+            'direction' => $message['direction'], // Arah grup (incoming/outgoing) sama dengan pesan pertamanya.
             'bot_id' => $message['bot_id'],
             'media_group_id' => $current_group_id
         ];
 
-        // Iterasi ulang untuk menemukan semua item dalam grup ini
+        // Iterasi ulang melalui semua pesan untuk menemukan semua item dalam grup ini.
         foreach ($messages as $item) {
             if (($item['media_group_id'] ?? null) === $current_group_id) {
                 $group['items'][] = $item;
-                $processed_message_ids[] = $item['id']; // Tandai sebagai sudah diproses
+                $processed_message_ids[] = $item['id']; // Tandai pesan ini sebagai sudah diproses.
             }
         }
         $grouped_messages[] = $group;
     } else {
-        // Jika tidak punya grup, ini adalah pesan tunggal
+        // Jika tidak memiliki media_group_id, ini adalah pesan tunggal.
         $message['type'] = 'single';
         $grouped_messages[] = $message;
     }

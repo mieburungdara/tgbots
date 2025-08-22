@@ -1,4 +1,18 @@
 <?php
+/**
+ * Handler Backend untuk Manajemen Bot (Admin).
+ *
+ * File ini menangani permintaan AJAX yang terkait dengan pengelolaan bot,
+ * seperti memperbarui informasi bot dari API Telegram.
+ * Saat ini, hanya mendukung aksi 'get_me'.
+ *
+ * Catatan Keamanan:
+ * - Seharusnya ada pemeriksaan otentikasi admin yang kuat di sini.
+ * - Hanya menerima permintaan POST.
+ *
+ * @vars $_POST['action'] Aksi yang akan dilakukan (misal: 'get_me').
+ * @vars $_POST['bot_id'] ID internal bot yang akan dikelola.
+ */
 session_start();
 header('Content-Type: application/json');
 

@@ -1,4 +1,20 @@
 <?php
+/**
+ * Handler Backend untuk Pengaturan Bot (Admin).
+ *
+ * File ini secara eksklusif menangani permintaan POST dari formulir pengaturan
+ * di halaman `edit_bot.php`. Ini tidak menampilkan HTML apa pun dan hanya
+ * berfungsi sebagai prosesor data.
+ *
+ * Logika:
+ * 1. Validasi permintaan (harus POST, ID bot valid).
+ * 2. Menggunakan daftar `allowed_keys` untuk keamanan, mencegah injeksi kunci tak dikenal.
+ * 3. Loop melalui setiap kunci yang diizinkan dan menentukan nilainya (1 atau 0).
+ * 4. Menggunakan query "UPSERT" (INSERT ... ON DUPLICATE KEY UPDATE) untuk
+ *    membuat atau memperbarui pengaturan di database secara efisien.
+ * 5. Semua operasi dibungkus dalam transaksi database untuk memastikan integritas data.
+ * 6. Mengatur pesan status di session dan mengalihkan kembali ke halaman `edit_bot.php`.
+ */
 session_start();
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';

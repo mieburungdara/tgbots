@@ -1,4 +1,19 @@
 <?php
+/**
+ * Halaman Utama Panel Admin.
+ *
+ * Halaman ini berfungsi sebagai dasbor utama, menampilkan daftar percakapan
+ * (pribadi, grup, dan channel) untuk bot yang dipilih.
+ *
+ * Fitur Utama:
+ * - Pengecekan Database: Otomatis memeriksa apakah tabel dasar ada. Jika tidak,
+ *   mencoba menjalankan `setup.sql` untuk setup awal.
+ * - Pemilihan Bot: Menyediakan dropdown untuk memilih bot mana yang akan dilihat
+ *   percakapannya.
+ * - Daftar Percakapan: Menampilkan daftar percakapan pribadi dengan pesan terakhir.
+ * - Daftar Pesan Channel/Grup: Menampilkan daftar chat dari channel dan grup
+ *   dengan pesan terakhir.
+ */
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
 
@@ -7,7 +22,7 @@ if (!$pdo) {
     die("Koneksi database gagal. Pastikan file `config.php` sudah benar. Periksa file log server untuk detailnya.");
 }
 
-// Cek apakah tabel sudah dibuat
+// Pengecekan awal: Jika tabel inti (misal: `bots`) belum ada, jalankan setup.
 try {
     $tables_exist = check_tables_exist($pdo);
 } catch (PDOException $e) {
@@ -15,14 +30,14 @@ try {
 }
 
 if (!$tables_exist) {
-    // Tabel tidak ada, coba jalankan setup otomatis
+    // Tabel tidak ada, coba jalankan setup dari file setup.sql secara otomatis.
     $setup_success = setup_database($pdo);
     if ($setup_success) {
-        // Setup berhasil, muat ulang halaman untuk melanjutkan
+        // Jika setup berhasil, muat ulang halaman untuk melanjutkan.
         header("Location: " . $_SERVER['REQUEST_URI']);
         exit;
     } else {
-        // Setup gagal, tampilkan pesan error
+        // Jika setup gagal, tampilkan halaman error yang informatif.
         $setup_error_message = "<strong>Gagal melakukan setup database secara otomatis!</strong><br>" .
             "Pastikan kredensial database di `config.php` sudah benar dan server database berjalan.<br><br>" .
             "Anda juga bisa mencoba mengimpor file <code>setup.sql</code> secara manual.";
@@ -40,14 +55,17 @@ $selected_telegram_bot_id = isset($_GET['bot_id']) ? (string)$_GET['bot_id'] : n
 $chats = [];
 $internal_bot_id = null;
 
+// Jika seorang bot telah dipilih dari dropdown...
 if ($selected_telegram_bot_id) {
-    // Cari ID internal bot berdasarkan ID bot telegram
+    // ...cari ID internal bot tersebut di database.
     $stmt = $pdo->prepare("SELECT id FROM bots WHERE token LIKE ?");
     $stmt->execute([$selected_telegram_bot_id . ':%']);
     $internal_bot_id = $stmt->fetchColumn();
 
     if ($internal_bot_id) {
-        // Ambil semua percakapan untuk bot yang dipilih menggunakan skema baru
+        // Ambil semua percakapan PRIBADI untuk bot yang dipilih.
+        // Ini menggabungkan `users` dan `rel_user_bot` untuk menemukan semua pengguna
+        // yang pernah berinteraksi dengan bot ini, lalu subquery mengambil pesan terakhir.
         $stmt = $pdo->prepare(
             "SELECT
                 u.id as user_internal_id,
@@ -68,7 +86,8 @@ if ($selected_telegram_bot_id) {
         $stmt->execute([$internal_bot_id]);
         $conversations = $stmt->fetchAll();
 
-        // Ambil semua channel unik yang memiliki pesan untuk bot yang dipilih
+        // Ambil semua percakapan CHANNEL dan GRUP untuk bot yang dipilih.
+        // Ini mencari chat unik (berdasarkan `chat_id` negatif) dari tabel `messages`.
         $stmt_channels = $pdo->prepare(
             "SELECT DISTINCT
                 m.chat_id,

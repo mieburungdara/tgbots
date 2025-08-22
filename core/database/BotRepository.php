@@ -1,19 +1,28 @@
 <?php
 
+/**
+ * Repositori untuk mengelola data terkait bot, seperti token dan pengaturan.
+ */
 class BotRepository
 {
     private $pdo;
 
+    /**
+     * Membuat instance BotRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
 
     /**
-     * Cari bot berdasarkan ID Telegram-nya dan kembalikan data bot.
+     * Mencari bot berdasarkan ID Telegram-nya dan mengembalikan data bot.
+     * Pencarian dilakukan dengan mencocokkan awalan token bot.
      *
-     * @param int $telegram_bot_id
-     * @return array|false
+     * @param int $telegram_bot_id ID numerik bot di Telegram.
+     * @return array|false Mengembalikan data bot sebagai array asosiatif jika ditemukan, atau `false` jika tidak.
      */
     public function findBotByTelegramId(int $telegram_bot_id)
     {
@@ -23,10 +32,10 @@ class BotRepository
     }
 
     /**
-     * Ambil pengaturan untuk bot tertentu.
+     * Mengambil semua pengaturan untuk bot tertentu, dengan nilai default jika tidak disetel.
      *
-     * @param int $internal_bot_id
-     * @return array
+     * @param int $internal_bot_id ID internal bot dari tabel `bots`.
+     * @return array Pengaturan bot sebagai array asosiatif.
      */
     public function getBotSettings(int $internal_bot_id): array
     {

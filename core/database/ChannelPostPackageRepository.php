@@ -1,21 +1,31 @@
 <?php
 
+/**
+ * Repositori untuk mengelola hubungan antara post di channel dengan paket konten.
+ * Tabel `channel_post_packages` digunakan untuk melacak paket mana yang diiklankan
+ * oleh pesan tertentu di sebuah channel.
+ */
 class ChannelPostPackageRepository
 {
     private $pdo;
 
+    /**
+     * Membuat instance ChannelPostPackageRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
 
     /**
-     * Creates a new record to link a channel post to a package.
+     * Membuat catatan baru untuk menautkan sebuah post di channel ke sebuah paket.
      *
-     * @param int $channel_id The ID of the channel.
-     * @param int $message_id The ID of the message in the channel.
-     * @param int $package_id The ID of the package.
-     * @return bool True on success, false on failure.
+     * @param int $channel_id ID dari channel.
+     * @param int $message_id ID dari pesan di channel.
+     * @param int $package_id ID dari paket yang ditautkan.
+     * @return bool True jika berhasil, false jika gagal.
      */
     public function create(int $channel_id, int $message_id, int $package_id): bool
     {
@@ -31,11 +41,12 @@ class ChannelPostPackageRepository
     }
 
     /**
-     * Finds a package ID by the channel and message ID.
+     * Menemukan detail paket berdasarkan ID channel dan ID pesan.
+     * Berguna untuk menemukan paket mana yang terkait dengan forward otomatis dari channel.
      *
-     * @param int $channel_id The ID of the channel.
-     * @param int $message_id The ID of the message in the channel.
-     * @return array|null The package record or null if not found.
+     * @param int $channel_id ID dari channel tempat pesan asli berada.
+     * @param int $message_id ID dari pesan asli di channel tersebut.
+     * @return array|null Data paket sebagai array asosiatif, atau null jika tidak ditemukan.
      */
     public function findByChannelAndMessage(int $channel_id, int $message_id): ?array
     {

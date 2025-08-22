@@ -2,11 +2,21 @@
 
 require_once __DIR__ . '/PrivateChannelRepository.php';
 
+/**
+ * Repositori untuk mengelola penggunaan channel penyimpanan oleh bot.
+ * Bertanggung jawab untuk melacak channel mana yang terakhir digunakan oleh setiap bot
+ * untuk menerapkan strategi rotasi (round-robin).
+ */
 class BotChannelUsageRepository
 {
     private $pdo;
     private $privateChannelRepo;
 
+    /**
+     * Membuat instance BotChannelUsageRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
@@ -14,11 +24,11 @@ class BotChannelUsageRepository
     }
 
     /**
-     * Mendapatkan channel berikutnya untuk digunakan oleh bot tertentu,
-     * menggunakan strategi round-robin.
+     * Mendapatkan channel penyimpanan berikutnya untuk digunakan oleh bot tertentu,
+     * menerapkan strategi round-robin untuk mendistribusikan beban.
      *
-     * @param int $botId ID dari bot.
-     * @return array|null Detail channel yang dipilih, atau null jika tidak ada channel tersedia.
+     * @param int $botId ID dari bot yang akan menggunakan channel.
+     * @return array|null Detail channel yang dipilih (asosiatif array), atau null jika tidak ada channel yang tersedia.
      */
     public function getNextChannelForBot(int $botId): ?array
     {

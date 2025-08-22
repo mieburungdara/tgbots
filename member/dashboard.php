@@ -1,4 +1,13 @@
 <?php
+/**
+ * Halaman Dasbor Panel Anggota.
+ *
+ * Halaman ini adalah halaman utama yang dilihat pengguna setelah berhasil login.
+ * Ini menampilkan ringkasan statistik penjualan (jika pengguna adalah penjual)
+ * dan informasi dasar akun pengguna.
+ *
+ * Pengguna harus memiliki `member_user_id` dalam session untuk mengakses halaman ini.
+ */
 session_start();
 
 // Jika belum login, redirect ke halaman login

@@ -1,4 +1,18 @@
 <?php
+/**
+ * Halaman Konten Dibeli (Panel Anggota).
+ *
+ * Halaman ini menampilkan daftar semua paket konten yang telah dibeli
+ * oleh pengguna yang sedang login.
+ *
+ * Logika:
+ * - Memastikan pengguna sudah login, jika tidak, alihkan ke halaman login.
+ * - Mengambil semua data penjualan yang terkait dengan `user_id` pengguna
+ *   dari `SaleRepository`.
+ * - Menampilkan setiap paket yang dibeli dalam format kartu (card).
+ * - Tombol "Unduh Konten" memberikan instruksi kepada pengguna untuk menggunakan
+ *   perintah `/konten` di bot.
+ */
 session_start();
 
 // Jika belum login, redirect ke halaman login

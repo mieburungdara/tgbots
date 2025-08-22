@@ -1,19 +1,28 @@
 <?php
 
+/**
+ * Repositori untuk mengelola data file media di database.
+ * Menyimpan metadata untuk setiap foto, video, atau dokumen yang diterima bot.
+ */
 class MediaFileRepository
 {
     private $pdo;
 
+    /**
+     * Membuat instance MediaFileRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
 
     /**
-     * Simpan file media baru ke database.
+     * Menyimpan metadata file media baru ke dalam database.
      *
-     * @param array $params Parameter untuk file media.
-     * @return string ID dari baris yang baru dimasukkan.
+     * @param array $params Parameter untuk file media, berisi kunci seperti 'type', 'file_size', 'user_id', dll.
+     * @return string ID dari baris yang baru disisipkan.
      */
     public function saveMediaFile(array $params): string
     {

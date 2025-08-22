@@ -1,9 +1,18 @@
 <?php
 
+/**
+ * Repositori untuk mengelola channel jualan yang didaftarkan oleh penjual.
+ * Setiap penjual dapat mendaftarkan satu channel untuk mem-posting pratinjau konten.
+ */
 class SellerSalesChannelRepository
 {
     private $pdo;
 
+    /**
+     * Membuat instance SellerSalesChannelRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;

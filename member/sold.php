@@ -1,4 +1,16 @@
 <?php
+/**
+ * Halaman Konten Dijual (Panel Anggota).
+ *
+ * Halaman ini menampilkan daftar semua paket konten yang dijual oleh pengguna
+ * yang sedang login.
+ *
+ * Fitur:
+ * - Menampilkan semua paket yang dimiliki pengguna dalam format kartu.
+ * - Tombol untuk menghapus (soft delete) paket yang belum terjual.
+ * - Toggle switch (AJAX) untuk mengaktifkan/menonaktifkan proteksi konten (`protect_content`).
+ * - Menampilkan status setiap paket (misal: 'available', 'sold').
+ */
 session_start();
 
 // Jika belum login, redirect ke halaman login
@@ -15,11 +27,12 @@ $packageRepo = new PackageRepository($pdo);
 $user_id = $_SESSION['member_user_id'];
 $message = null;
 
-// Handle soft delete
+// Menangani permintaan POST untuk menghapus (soft delete) sebuah paket
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'delete_package') {
     $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
     if ($package_id_to_delete) {
         try {
+            // Memanggil metode repository yang juga memverifikasi kepemilikan
             if ($packageRepo->softDeletePackage($package_id_to_delete, $user_id)) {
                 $_SESSION['message'] = "Konten berhasil dihapus.";
             } else {
@@ -29,17 +42,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $_SESSION['message'] = "Error: " . $e->getMessage();
         }
     }
-    // Redirect untuk menghindari re-submission
+    // Redirect untuk menghindari pengiriman ulang formulir (pola PRG)
     header("Location: sold.php");
     exit;
 }
 
+// Periksa pesan status dari session setelah redirect
 if (isset($_SESSION['message'])) {
     $message = $_SESSION['message'];
     unset($_SESSION['message']);
 }
 
-// Ambil data paket yang dijual (yang tidak dihapus)
+// Ambil semua paket yang dijual oleh pengguna ini (yang belum di-soft-delete)
 $sold_packages = $packageRepo->findAllBySellerId($user_id);
 
 $page_title = 'Konten Dijual';
@@ -126,7 +140,7 @@ require_once __DIR__ . '/../partials/header.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Hide server-side message after a few seconds
+    // Sembunyikan pesan status dari server setelah beberapa detik
     const statusMessage = document.getElementById('status-message');
     if (statusMessage) {
         setTimeout(() => {
@@ -134,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 3000);
     }
 
-    // AJAX handler for protection toggle
+    // Handler AJAX untuk toggle proteksi konten
     const ajaxMessage = document.getElementById('ajax-message');
     document.querySelectorAll('.protect-toggle-checkbox').forEach(toggle => {
         toggle.addEventListener('change', async function() {
@@ -150,14 +164,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const result = await response.json();
 
+                // Tampilkan pesan hasil dari AJAX
                 ajaxMessage.textContent = result.message;
                 ajaxMessage.style.display = 'block';
 
                 if (result.status !== 'success') {
-                    // Revert the toggle if there was an error
+                    // Kembalikan posisi toggle jika terjadi error
                     this.checked = !this.checked;
                 }
 
+                // Sembunyikan pesan setelah beberapa detik
                 setTimeout(() => {
                     ajaxMessage.style.display = 'none';
                 }, 3000);
@@ -165,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 ajaxMessage.textContent = 'Terjadi kesalahan jaringan.';
                 ajaxMessage.style.display = 'block';
-                this.checked = !this.checked; // Revert on network error
+                this.checked = !this.checked; // Kembalikan posisi jika error jaringan
             }
         });
     });
