@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.16] - 2025-08-22
+
+### Fitur
+- **Hapus Pesan Massal**: Menambahkan fungsionalitas untuk menghapus beberapa pesan sekaligus di halaman detail percakapan (`admin/chat.php`).
+  - **Seleksi Pesan**: Admin dapat memilih pesan satu per satu menggunakan checkbox atau memilih semua pesan di halaman dengan satu klik.
+  - **Menu Aksi**: Sebuah menu aksi memungkinkan admin untuk memilih tiga jenis penghapusan: hanya dari database lokal, hanya dari Telegram, atau dari keduanya.
+  - **Implementasi**: Fitur ini didukung oleh handler backend baru (`delete_messages_handler.php`) dan penambahan metode `deleteMessage` pada `TelegramAPI.php`.
+
 ## [4.2.15] - 2025-08-22
 
 ### Diubah
