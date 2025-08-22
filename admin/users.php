@@ -1,4 +1,19 @@
 <?php
+/**
+ * Halaman Manajemen Pengguna (Admin).
+ *
+ * Halaman ini menyediakan antarmuka lengkap untuk mengelola semua pengguna
+ * dalam sistem.
+ *
+ * Fitur:
+ * - Menampilkan daftar semua pengguna dengan detail penting.
+ * - Pencarian pengguna berdasarkan ID, nama, atau username.
+ * - Pengurutan (sorting) tabel berdasarkan berbagai kolom.
+ * - Memperbarui saldo pengguna secara langsung dari tabel.
+ * - Melihat bot mana yang pernah berinteraksi dengan pengguna.
+ * - Memblokir atau membuka blokir pengguna untuk bot tertentu.
+ * - Menggunakan pola PRG (Post/Redirect/Get) untuk menangani aksi form.
+ */
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
 
@@ -9,13 +24,15 @@ if (!$pdo) {
 
 $message = '';
 
-// --- Logic untuk Aksi POST ---
+// --- Logika untuk menangani aksi POST (update saldo, blokir/buka blokir) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    // Aksi untuk mengubah status blokir pengguna pada bot tertentu
     if ($_POST['action'] === 'toggle_block') {
         $user_id_to_toggle = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
         $bot_id_to_toggle = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
 
         if ($user_id_to_toggle && $bot_id_to_toggle) {
+            // Ambil status saat ini, lalu balikkan nilainya (0 -> 1, 1 -> 0)
             $stmt = $pdo->prepare("SELECT is_blocked FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
             $stmt->execute([$user_id_to_toggle, $bot_id_to_toggle]);
             $current_status = $stmt->fetchColumn();
@@ -27,6 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $message = "Status blokir pengguna berhasil diubah.";
             }
         }
+    // Aksi untuk memperbarui saldo pengguna
     } elseif ($_POST['action'] === 'update_balance') {
         $user_id_to_update = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
         $new_balance = isset($_POST['balance']) ? filter_var($_POST['balance'], FILTER_VALIDATE_FLOAT) : false;
@@ -43,7 +61,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         }
     }
 
-    // Redirect to the same page to avoid form resubmission, passing the message
+    // Redirect kembali ke halaman yang sama untuk menghindari pengiriman ulang formulir.
+    // Parameter GET (seperti sort, order, search) dipertahankan.
     $redirect_url = "users.php?" . http_build_query($_GET);
     if (!empty($message)) {
         $_SESSION['flash_message'] = $message;
@@ -52,37 +71,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     exit;
 }
 
-// Check for flash message from redirect
+// Periksa pesan status (flash message) dari session setelah redirect
 if (isset($_SESSION['flash_message'])) {
     $message = $_SESSION['flash_message'];
     unset($_SESSION['flash_message']);
 }
 
 
-// --- Logic untuk Search ---
+// --- Logika untuk Pencarian ---
 $search_term = isset($_GET['search']) ? trim($_GET['search']) : '';
 $where_clause = '';
 $params = [];
 if (!empty($search_term)) {
+    // Bangun klausa WHERE untuk mencari di beberapa kolom
     $where_clause = "WHERE u.id = ? OR u.telegram_id = ? OR u.first_name LIKE ? OR u.last_name LIKE ? OR u.username LIKE ?";
     $params = [$search_term, $search_term, "%$search_term%", "%$search_term%", "%$search_term%"];
 }
 
 
-// --- Logic untuk Sort ---
+// --- Logika untuk Pengurutan ---
 $sort_columns = ['id', 'telegram_id', 'first_name', 'last_name', 'username', 'balance', 'created_at'];
 $sort_by = isset($_GET['sort']) && in_array($_GET['sort'], $sort_columns) ? $_GET['sort'] : 'id';
 $order = isset($_GET['order']) && strtolower($_GET['order']) === 'asc' ? 'ASC' : 'DESC';
 $order_by_clause = "ORDER BY u.{$sort_by} {$order}";
 
-// --- Ambil data pengguna dari database ---
+// --- Ambil data pengguna dari database dengan filter dan urutan yang diterapkan ---
 $stmt = $pdo->prepare("SELECT u.* FROM users u {$where_clause} {$order_by_clause}");
 $stmt->execute($params);
 $users = $stmt->fetchAll();
 
 
-// Helper function untuk membuat link sort
+// Fungsi helper untuk membuat link pengurutan pada header tabel
 function get_sort_link($column, $current_sort, $current_order) {
+    // Balikkan urutan jika kolom yang sama diklik lagi, jika tidak, default ke 'asc'
     $new_order = ($column === $current_sort && $current_order === 'asc') ? 'desc' : 'asc';
     $arrow = '';
     if ($column === $current_sort) {

@@ -1,5 +1,16 @@
 <?php
-// admin/logs.php
+/**
+ * Halaman Penampil Log Database (Admin).
+ *
+ * Halaman ini menampilkan log aplikasi yang disimpan di dalam tabel `app_logs`.
+ * Ini memungkinkan administrator untuk memantau aktivitas sistem, debug, dan error.
+ *
+ * Fitur:
+ * - Menampilkan log dalam format tabel yang mudah dibaca.
+ * - Memfilter log berdasarkan level (misal: 'info', 'error', 'debug').
+ * - Tombol untuk menyegarkan tampilan log.
+ * - Aksi untuk membersihkan (TRUNCATE) semua data log dari tabel.
+ */
 
 // Define ROOT_PATH for reliable file access
 if (!defined('ROOT_PATH')) {
@@ -11,24 +22,24 @@ require_once ROOT_PATH . '/core/helpers.php';
 
 // --- Konfigurasi ---
 $pdo = get_db_connection();
-$lines_to_show = 100; // Jumlah log yang ditampilkan per halaman
+$lines_to_show = 100; // Jumlah baris log yang ditampilkan per halaman
 
-// --- Dapatkan Level Log yang Tersedia ---
+// --- Dapatkan Level Log yang Tersedia dari Database untuk Filter ---
 $stmt_levels = $pdo->query("SELECT DISTINCT level FROM app_logs ORDER BY level ASC");
 $log_levels = $stmt_levels->fetchAll(PDO::FETCH_COLUMN);
 
-// --- Tentukan Filter ---
+// --- Tentukan Filter Level Log yang Aktif ---
 $selected_level = isset($_GET['level']) && in_array($_GET['level'], $log_levels) ? $_GET['level'] : 'all';
 
-// --- Handle Aksi ---
+// --- Menangani Aksi POST (misalnya, membersihkan log) ---
 $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'clear_logs') {
         try {
             $pdo->query("TRUNCATE TABLE app_logs");
-            app_log("Tabel app_logs dibersihkan oleh admin.", 'system');
+            app_log("Tabel app_logs dibersihkan oleh admin.", 'system'); // Mencatat aksi pembersihan itu sendiri
             $message = "Semua log berhasil dibersihkan.";
-            // Redirect to avoid re-posting on refresh
+            // Redirect untuk menghindari pengiriman ulang formulir saat refresh
             header("Location: logs.php?message=" . urlencode($message));
             exit;
         } catch (PDOException $e) {

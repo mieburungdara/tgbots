@@ -1,4 +1,16 @@
 <?php
+/**
+ * Halaman Log Kesalahan API Telegram (Admin).
+ *
+ * Halaman ini menampilkan log kesalahan yang spesifik terjadi saat berinteraksi
+ * dengan API Telegram, yang diambil dari tabel `telegram_error_logs`.
+ * Ini membantu dalam mendiagnosis masalah konektivitas atau permintaan API yang salah.
+ *
+ * Fitur:
+ * - Menampilkan log dalam format tabel yang terstruktur.
+ * - Menyertakan detail penting seperti metode API, kode error, deskripsi, dan data request.
+ * - Implementasi paginasi untuk menavigasi log dalam jumlah besar.
+ */
 session_start();
 
 // Untuk development, kita asumsikan admin sudah login.

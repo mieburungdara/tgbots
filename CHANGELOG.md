@@ -1,5 +1,16 @@
 # Changelog
 
+## [4.2.12] - 2025-08-22
+
+### Dokumentasi
+- **Dokumentasi Kode Komprehensif**: Menambahkan dokumentasi lengkap (docstrings dan komentar sebaris) di seluruh basis kode PHP.
+  - **Tujuan**: Untuk secara signifikan meningkatkan keterbacaan, pemeliharaan, dan kemudahan pemahaman kode bagi pengembang di masa depan.
+  - **Cakupan**:
+    - **Direktori `core/`**: Semua kelas `Handler` dan `Repository`, serta file-file inti seperti `TelegramAPI.php`, `database.php`, dan `helpers.php` telah didokumentasikan sepenuhnya, menjelaskan tujuan setiap kelas, metode, parameter, dan nilai kembalian.
+    - **Direktori `admin/`**: Semua file halaman panel admin (misalnya, `index.php`, `bots.php`, `users.php`) dan file-file handler AJAX terkait telah diberikan blok komentar di tingkat file yang merangkum fungsionalitasnya, serta komentar pada blok logika utama.
+    - **Direktori `member/`**: Semua file di panel anggota telah didokumentasikan dengan cara yang sama seperti direktori `admin`.
+    - **File Root**: File `webhook.php` yang krusial telah didokumentasikan secara mendalam untuk menjelaskan alur kerja pemrosesan pembaruan dari awal hingga akhir.
+
 ## [4.2.11] - 2025-08-18
 
 ### Fitur

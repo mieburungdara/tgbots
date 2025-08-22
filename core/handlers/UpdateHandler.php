@@ -4,16 +4,21 @@ class UpdateHandler
 {
     private $bot_settings;
 
+    /**
+     * Membuat instance baru dari UpdateHandler.
+     *
+     * @param array $bot_settings Pengaturan untuk bot yang sedang menangani pembaruan.
+     */
     public function __construct(array $bot_settings)
     {
         $this->bot_settings = $bot_settings;
     }
 
     /**
-     * Determines the type of the update and checks if it should be processed.
+     * Menentukan jenis pembaruan dan memeriksa apakah harus diproses.
      *
-     * @param array $update The incoming update from Telegram.
-     * @return string|null The type of the update, or null if it should be ignored.
+     * @param array $update Pembaruan yang masuk dari Telegram.
+     * @return string|null Jenis pembaruan, atau null jika harus diabaikan.
      */
     public function getUpdateType(array $update): ?string
     {
@@ -58,10 +63,10 @@ class UpdateHandler
     }
 
     /**
-     * Extracts the primary context from the update (e.g., the message object).
+     * Mengekstrak konteks utama dari pembaruan (misalnya, objek pesan).
      *
-     * @param array $update
-     * @return array|null
+     * @param array $update Data pembaruan lengkap dari Telegram.
+     * @return array|null Konteks pesan yang relevan atau null jika tidak ditemukan.
      */
     public static function getMessageContext(array $update): ?array
     {

@@ -1,19 +1,28 @@
 <?php
 
+/**
+ * Repositori untuk menyimpan dan mengambil data mentah (raw) pembaruan dari Telegram.
+ * Berguna untuk keperluan debugging dan analisis.
+ */
 class RawUpdateRepository
 {
     private $pdo;
 
+    /**
+     * Membuat instance RawUpdateRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
 
     /**
-     * Saves a raw JSON update payload to the database.
+     * Menyimpan payload pembaruan JSON mentah ke dalam database.
      *
-     * @param string $payload The JSON string from Telegram.
-     * @return bool True on success, false on failure.
+     * @param string $payload String JSON yang diterima dari Telegram.
+     * @return bool True jika berhasil, false jika gagal.
      */
     public function create(string $payload): bool
     {
@@ -22,17 +31,17 @@ class RawUpdateRepository
             $stmt = $this->pdo->prepare($sql);
             return $stmt->execute([$payload]);
         } catch (PDOException $e) {
-            // Can't use app_log here easily if the error is DB connection itself
-            // For now, just return false.
+            // Tidak bisa menggunakan app_log dengan mudah jika errornya adalah koneksi DB itu sendiri
+            // Untuk saat ini, kembalikan false saja.
             return false;
         }
     }
 
     /**
-     * Retrieves all raw updates, sorted by most recent first.
+     * Mengambil semua data pembaruan mentah, diurutkan dari yang terbaru.
      *
-     * @param int $limit The maximum number of records to retrieve.
-     * @return array An array of records.
+     * @param int $limit Jumlah maksimum catatan yang akan diambil.
+     * @return array Sebuah array berisi catatan pembaruan.
      */
     public function findAll(int $limit = 100): array
     {

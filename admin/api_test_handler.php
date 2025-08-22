@@ -1,4 +1,15 @@
 <?php
+/**
+ * Handler Backend untuk Halaman Pengujian API (Admin).
+ *
+ * File ini menangani permintaan AJAX dari halaman `api_test.php`.
+ * Ini bertindak sebagai router yang memproses berbagai 'action' seperti:
+ * - `get_methods`: Mengambil daftar metode publik dari kelas TelegramAPI menggunakan Reflection.
+ * - `run_method`: Menjalankan metode API Telegram yang dipilih dengan parameter yang diberikan.
+ * - `get_history`: Mengambil riwayat permintaan API yang telah dijalankan dari database.
+ *
+ * Semua output dari file ini dalam format JSON.
+ */
 header('Content-Type: application/json');
 
 require_once __DIR__ . '/../core/database.php';
@@ -33,6 +44,13 @@ try {
     echo json_encode(['error' => $e->getMessage()]);
 }
 
+/**
+ * Mendefinisikan struktur kustom untuk parameter API dengan nama tertentu.
+ * Ini memungkinkan pembuatan elemen formulir yang lebih canggih (seperti dropdown atau fieldset)
+ * daripada input teks standar untuk parameter seperti 'parse_mode' atau 'reply_parameters'.
+ *
+ * @return array Definisi struktur parameter khusus.
+ */
 function get_special_param_structures() {
     return [
         'parse_mode' => [
@@ -61,6 +79,12 @@ function get_special_param_structures() {
 }
 
 
+/**
+ * Menangani aksi 'get_methods'.
+ * Menggunakan PHP Reflection untuk memeriksa kelas `TelegramAPI` dan mengekstrak
+ * semua metode publik yang dapat dipanggil. Ini juga menggabungkan struktur parameter
+ * khusus dari `get_special_param_structures`.
+ */
 function handle_get_methods() {
     $reflection = new ReflectionClass('TelegramAPI');
     $public_methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
@@ -98,6 +122,15 @@ function handle_get_methods() {
     echo json_encode($methods_data);
 }
 
+/**
+ * Menangani aksi 'run_method'.
+ * Mengambil token bot, membuat instance `TelegramAPI`, membersihkan dan memvalidasi
+ * parameter, memanggil metode yang diminta, dan menyimpan hasilnya ke log.
+ *
+ * @param PDO $pdo Objek koneksi database.
+ * @param array $data Data permintaan yang dikirim dari frontend.
+ * @throws Exception Jika parameter yang diperlukan hilang atau bot tidak ditemukan.
+ */
 function handle_run_method($pdo, $data) {
     $bot_id = $data['bot_id'] ?? null;
     $method = $data['method'] ?? null;
@@ -169,6 +202,15 @@ function handle_run_method($pdo, $data) {
     echo json_encode(['success' => true, 'api_response' => $api_response]);
 }
 
+/**
+ * Menangani aksi 'get_history'.
+ * Mengambil riwayat permintaan API yang telah disimpan untuk bot tertentu
+ * dengan paginasi.
+ *
+ * @param PDO $pdo Objek koneksi database.
+ * @param array $query Parameter GET dari permintaan.
+ * @throws Exception Jika bot ID tidak disediakan.
+ */
 function handle_get_history($pdo, $query) {
     $bot_id = $query['bot_id'] ?? null;
     if (!$bot_id) {

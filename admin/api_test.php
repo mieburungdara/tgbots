@@ -1,13 +1,27 @@
 <?php
+/**
+ * Halaman Pengujian API Telegram (Admin).
+ *
+ * Halaman ini menyediakan antarmuka interaktif bagi administrator untuk
+ * menguji berbagai metode API Bot Telegram secara langsung dari browser.
+ *
+ * Fitur:
+ * - Memilih bot yang akan diuji dari daftar yang ada.
+ * - Memilih metode API dari daftar yang dimuat secara dinamis.
+ * - Formulir parameter yang dibuat secara otomatis berdasarkan metode yang dipilih.
+ * - Menjalankan permintaan API dan menampilkan respons mentah.
+ * - Melihat riwayat permintaan API yang telah dijalankan untuk setiap bot.
+ */
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
 
+// Inisialisasi koneksi database
 $pdo = get_db_connection();
 if (!$pdo) {
     die("Koneksi database gagal.");
 }
 
-// Ambil semua bot untuk dropdown
+// Ambil semua bot dari database untuk ditampilkan di dropdown pemilihan bot.
 $bots = $pdo->query("SELECT id, first_name, token FROM bots ORDER BY first_name")->fetchAll();
 $selected_bot_id = $_GET['bot_id'] ?? ($bots[0]['id'] ?? null);
 
@@ -79,6 +93,7 @@ require_once __DIR__ . '/../partials/header.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Referensi ke elemen-elemen DOM utama
     const botSelector = document.getElementById('bot_id');
     const methodSelector = document.getElementById('api-method-selector');
     const paramsContainer = document.getElementById('params-container');
@@ -90,13 +105,18 @@ document.addEventListener('DOMContentLoaded', function() {
     const historyContainer = document.getElementById('history-table-container');
     const paginationContainer = document.getElementById('history-pagination');
 
-    let methodsData = {};
-    let currentPage = 1;
+    // Variabel state
+    let methodsData = {}; // Menyimpan definisi metode API yang diambil dari backend
+    let currentPage = 1; // Halaman riwayat saat ini
 
     const HANDLER_URL = 'api_test_handler.php';
 
     // --- Fungsi Utama ---
 
+    /**
+     * Mengambil daftar metode API yang tersedia dari backend (api_test_handler.php)
+     * dan mengisi dropdown pemilihan metode.
+     */
     async function fetchMethods() {
         methodSelector.innerHTML = '<option value="">-- Memuat metode... --</option>';
         try {
@@ -116,6 +136,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    /**
+     * Membangun formulir input untuk parameter metode API yang dipilih secara dinamis.
+     * Mendukung berbagai jenis input termasuk teks, angka, dropdown, dan objek bersarang.
+     * @param {HTMLElement} container - Elemen DOM tempat formulir akan dibuat.
+     * @param {Object} params - Objek yang mendefinisikan parameter.
+     * @param {string} prefix - Prefix untuk nama input (untuk menangani objek bersarang).
+     */
     function buildParamsForm(container, params, prefix = '') {
         for (const paramName in params) {
             const param = params[paramName];
@@ -172,6 +199,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    /**
+     * Mengubah data dari formulir parameter menjadi objek JavaScript,
+     * termasuk menangani kunci bersarang (nested keys).
+     * @param {HTMLFormElement} form - Elemen form yang akan di-serialize.
+     * @returns {Object} Objek yang merepresentasikan data formulir.
+     */
     function serializeForm(form) {
         const formData = new FormData(form);
         const obj = {};
@@ -195,7 +228,11 @@ document.addEventListener('DOMContentLoaded', function() {
         return obj;
     }
 
-
+    /**
+     * Menjalankan permintaan API ke backend.
+     * Mengirimkan bot, metode, dan parameter yang dipilih.
+     * @param {Event} event - Event submit formulir.
+     */
     async function runApiRequest(event) {
         event.preventDefault();
         const selectedBotId = botSelector.value;
@@ -229,6 +266,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    /**
+     * Mengambil riwayat permintaan API untuk bot yang dipilih dari backend.
+     * @param {number} page - Nomor halaman untuk paginasi.
+     */
     async function fetchHistory(page = 1) {
         currentPage = page;
         const selectedBotId = botSelector.value;
@@ -245,6 +286,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    /**
+     * Merender tabel riwayat permintaan API ke dalam DOM.
+     * @param {Array} history - Array objek riwayat.
+     */
     function renderHistory(history) {
         if (history.length === 0) {
             historyContainer.innerHTML = '<p>Belum ada riwayat untuk bot ini.</p>';
@@ -267,6 +312,10 @@ document.addEventListener('DOMContentLoaded', function() {
         historyContainer.innerHTML = tableHtml;
     }
 
+    /**
+     * Merender kontrol paginasi untuk tabel riwayat.
+     * @param {Object} pagination - Objek yang berisi informasi paginasi.
+     */
     function renderPagination(pagination) {
         paginationContainer.innerHTML = '';
         if (pagination.total_pages <= 1) return;
@@ -285,8 +334,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- Event Listeners ---
 
+    // Muat ulang riwayat saat bot yang berbeda dipilih.
     botSelector.addEventListener('change', () => fetchHistory(1));
 
+    // Bangun formulir parameter saat metode API dipilih.
     methodSelector.addEventListener('change', () => {
         const methodName = methodSelector.value;
         paramsContainer.innerHTML = ''; // Hapus formulir sebelumnya
@@ -298,8 +349,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // Jalankan permintaan API saat formulir disubmit.
     apiParamsForm.addEventListener('submit', runApiRequest);
 
+    // Tangani klik pada tombol paginasi.
     paginationContainer.addEventListener('click', function(e) {
         if (e.target.matches('.pagination-btn')) {
             e.preventDefault();
@@ -309,6 +362,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // --- Inisialisasi ---
+    // Ambil daftar metode API dan riwayat awal saat halaman dimuat.
     fetchMethods();
     if (botSelector.value) {
         fetchHistory(1);

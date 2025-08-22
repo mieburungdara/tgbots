@@ -1,4 +1,12 @@
 <?php
+/**
+ * Halaman Analitik Penjualan (Admin).
+ *
+ * Halaman ini menampilkan dasbor analitik untuk administrator.
+ * Ini mencakup ringkasan pendapatan dan total penjualan, grafik pendapatan
+ * harian selama 30 hari terakhir, dan tabel konten terlaris.
+ * Data diambil menggunakan AnalyticsRepository.
+ */
 session_start();
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';

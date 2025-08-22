@@ -1,20 +1,29 @@
 <?php
 
+/**
+ * Repositori untuk mengelola data penjualan (`sales`).
+ * Menyediakan metode untuk membuat catatan penjualan, memeriksa riwayat pembelian, dll.
+ */
 class SaleRepository
 {
     private $pdo;
 
+    /**
+     * Membuat instance SaleRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
 
     /**
-     * Periksa apakah pengguna telah membeli paket tertentu.
+     * Memeriksa apakah seorang pengguna telah membeli sebuah paket tertentu.
      *
-     * @param int $package_id
-     * @param int $user_id
-     * @return bool
+     * @param int $package_id ID internal paket.
+     * @param int $user_id ID internal pengguna.
+     * @return bool True jika pengguna sudah pernah membeli, false jika belum.
      */
     public function hasUserPurchased(int $package_id, int $user_id): bool
     {
@@ -24,18 +33,20 @@ class SaleRepository
     }
 
     /**
-     * Buat catatan penjualan baru dan transfer saldo.
+     * Membuat catatan penjualan baru, mengurangi saldo pembeli, dan menambah saldo penjual.
+     * Metode ini harus dijalankan di dalam sebuah transaksi yang dikelola oleh pemanggil.
      *
-     * @param int $package_id
-     * @param int $seller_id
-     * @param int $buyer_id
-     * @param float $price
-     * @return bool
+     * @param int $package_id ID paket yang dijual.
+     * @param int $seller_id ID penjual.
+     * @param int $buyer_id ID pembeli.
+     * @param float $price Harga penjualan.
+     * @return bool True jika operasi database berhasil.
+     * @throws Exception Jika terjadi kesalahan database.
      */
     public function createSale(int $package_id, int $seller_id, int $buyer_id, float $price): bool
     {
         // Transaksi sekarang ditangani oleh pemanggil (webhook.php).
-        // Menghapus beginTransaction/commit/rollback dari sini untuk menghindari nested transactions.
+        // Menghapus beginTransaction/commit/rollback dari sini untuk menghindari transaksi bersarang.
         try {
             // Kurangi saldo pembeli
             $stmt_buyer = $this->pdo->prepare("UPDATE users SET balance = balance - ? WHERE id = ?");
@@ -59,10 +70,10 @@ class SaleRepository
     }
 
     /**
-     * Menemukan semua paket yang dibeli oleh ID pembeli tertentu.
+     * Menemukan semua paket yang telah dibeli oleh seorang pengguna.
      *
-     * @param int $buyerId ID internal pengguna pembeli.
-     * @return array Daftar paket yang dibeli.
+     * @param int $buyerId ID internal pengguna (pembeli).
+     * @return array Daftar paket yang dibeli, termasuk tanggal pembelian.
      */
     public function findPackagesByBuyerId(int $buyerId): array
     {

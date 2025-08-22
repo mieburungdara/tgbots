@@ -1,4 +1,17 @@
 <?php
+/**
+ * Halaman Log Media (Admin).
+ *
+ * Halaman ini menampilkan log dari semua file media yang dikirim oleh pengguna ke bot.
+ * Media yang dikirim bersamaan sebagai album (dengan `media_group_id` yang sama)
+ * akan dikelompokkan menjadi satu entri dalam tabel.
+ *
+ * Fitur:
+ * - Mengambil data media dari tabel `media_files`.
+ * - Menggabungkan (JOIN) dengan data pengguna dan bot untuk informasi kontekstual.
+ * - Mengelompokkan item media berdasarkan `media_group_id`.
+ * - Menyediakan tombol untuk meneruskan media/grup media ke semua admin.
+ */
 session_start();
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
@@ -10,8 +23,9 @@ if (!$pdo) {
 
 // TODO: Tambahkan otentikasi admin di sini
 
-// Ambil semua data media, gabungkan dengan info pengguna dan bot
-// Ini adalah query yang kompleks, mungkin perlu dioptimalkan di masa depan
+// Ambil semua data media, gabungkan dengan info pengguna dan bot.
+// Query ini menggabungkan beberapa tabel untuk mendapatkan konteks lengkap untuk setiap file media.
+// Catatan: Query ini bisa menjadi lambat pada tabel yang sangat besar dan mungkin memerlukan optimasi.
 $sql = "
     SELECT
         mf.id,
@@ -36,10 +50,15 @@ $sql = "
 
 $media_logs_flat = $pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 
-// Kelompokkan media berdasarkan media_group_id
+// Kelompokkan hasil query flat menjadi sebuah struktur data bersarang.
+// Setiap entri di `$grouped_logs` akan mewakili satu media tunggal atau satu album media.
 $grouped_logs = [];
 foreach ($media_logs_flat as $log) {
+    // Gunakan media_group_id sebagai kunci pengelompokan.
+    // Jika tidak ada, buat kunci unik untuk media tunggal agar tidak bertabrakan.
     $group_key = $log['media_group_id'] ?? 'single_' . $log['id'];
+
+    // Jika ini adalah item pertama dari grupnya, inisialisasi entri grup.
     if (!isset($grouped_logs[$group_key])) {
         $grouped_logs[$group_key] = [
             'items' => [],
@@ -52,6 +71,7 @@ foreach ($media_logs_flat as $log) {
             ]
         ];
     }
+    // Tambahkan item media saat ini ke dalam grupnya.
     $grouped_logs[$group_key]['items'][] = $log;
 }
 

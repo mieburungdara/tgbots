@@ -1,4 +1,18 @@
 <?php
+/**
+ * Halaman Manajemen Konten/Paket (Admin).
+ *
+ * Halaman ini menampilkan daftar semua paket konten yang ada di sistem.
+ * Administrator dapat melihat detail setiap paket dan memiliki opsi untuk
+ * melakukan "Hard Delete".
+ *
+ * "Hard Delete" adalah operasi destruktif yang:
+ * 1. Menghapus data paket dari tabel `media_packages`.
+ * 2. Menghapus file media terkait dari tabel `media_files`.
+ * 3. Mencoba menghapus pesan media fisik dari channel penyimpanan di Telegram.
+ *
+ * Operasi ini dibatasi hanya untuk paket yang belum terjual.
+ */
 session_start();
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
@@ -9,13 +23,13 @@ $pdo = get_db_connection();
 $packageRepo = new PackageRepository($pdo);
 $message = null;
 
-// Handle Hard Delete
+// Menangani permintaan "Hard Delete" dari formulir
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'hard_delete_package') {
     $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
 
     if ($package_id_to_delete) {
         try {
-            // Dapatkan info bot dari paket untuk menghapus pesan
+            // 1. Dapatkan informasi bot yang terkait dengan paket untuk inisialisasi TelegramAPI
             $package_info = $packageRepo->find($package_id_to_delete);
             if ($package_info && $package_info['bot_id']) {
                 $stmt_bot = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
@@ -24,13 +38,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
                 if ($bot_token) {
                     $telegram_api = new TelegramAPI($bot_token);
+
+                    // 2. Hapus paket dari database. Metode ini mengembalikan daftar file yang perlu dihapus dari Telegram.
                     $files_to_delete = $packageRepo->hardDeletePackage($package_id_to_delete);
 
-                    // Hapus pesan dari channel penyimpanan
+                    // 3. Hapus setiap pesan media dari channel penyimpanan di Telegram
                     foreach ($files_to_delete as $file) {
                         if ($file['storage_channel_id'] && $file['storage_message_id']) {
                             $telegram_api->deleteMessage($file['storage_channel_id'], $file['storage_message_id']);
-                            // Kita tidak memeriksa hasilnya, coba yang terbaik
+                            // Hasil tidak diperiksa; ini adalah operasi "best effort"
                         }
                     }
                     $_SESSION['message'] = "Paket #{$package_id_to_delete} berhasil dihapus permanen.";
@@ -38,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                     throw new Exception("Token bot tidak ditemukan, tidak dapat menghapus pesan dari Telegram.");
                 }
             } else {
-                 // Jika tidak ada info bot, coba hapus dari DB saja
+                 // Fallback: Jika info bot tidak ditemukan, coba hapus dari DB saja.
                  $packageRepo->hardDeletePackage($package_id_to_delete);
                  $_SESSION['message'] = "Paket #{$package_id_to_delete} berhasil dihapus dari database (pesan di Telegram tidak dapat dihapus).";
             }
@@ -46,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $_SESSION['message'] = "Error: " . $e->getMessage();
         }
     }
+    // Redirect setelah proses untuk mencegah pengiriman ulang formulir (pola PRG)
     header("Location: packages.php");
     exit;
 }

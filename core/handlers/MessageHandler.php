@@ -8,6 +8,11 @@ require_once __DIR__ . '/../database/AnalyticsRepository.php';
 require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
 require_once __DIR__ . '/../database/ChannelPostPackageRepository.php';
 
+/**
+ * Menangani pesan teks yang masuk, terutama perintah (commands).
+ * Kelas ini bertindak sebagai router utama untuk mendelegasikan perintah
+ * ke metode-metode penanganan yang sesuai.
+ */
 class MessageHandler
 {
     private $pdo;
@@ -24,6 +29,16 @@ class MessageHandler
     private $chat_id;
     private $message;
 
+    /**
+     * Membuat instance MessageHandler.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     * @param TelegramAPI $telegram_api Klien untuk berinteraksi dengan API Telegram.
+     * @param UserRepository $user_repo Repositori untuk operasi terkait pengguna.
+     * @param array $current_user Data pengguna yang mengirim pesan.
+     * @param int $chat_id ID obrolan tempat pesan diterima.
+     * @param array $message Data pesan lengkap dari Telegram.
+     */
     public function __construct(PDO $pdo, TelegramAPI $telegram_api, UserRepository $user_repo, array $current_user, int $chat_id, array $message)
     {
         $this->pdo = $pdo;
@@ -41,6 +56,11 @@ class MessageHandler
         $this->message = $message;
     }
 
+    /**
+     * Titik masuk utama untuk menangani pesan.
+     * Mengidentifikasi apakah pesan adalah forward otomatis, perintah, atau lainnya,
+     * lalu mendelegasikannya ke metode yang sesuai.
+     */
     public function handle()
     {
         // Fitur baru: Tangani pesan yang di-forward otomatis dari channel ke grup diskusi
@@ -50,7 +70,7 @@ class MessageHandler
             return; // Hentikan proses lebih lanjut untuk pesan ini
         }
 
-        // The rest of the logic requires a text message that is a command.
+        // Logika selanjutnya memerlukan pesan teks yang merupakan sebuah perintah.
         if (!isset($this->message['text']) || strpos($this->message['text'], '/') !== 0) {
             return;
         }
@@ -60,7 +80,7 @@ class MessageHandler
         $parts = explode(' ', $text);
         $command = $parts[0];
 
-        // This can be further refactored into command classes
+        // Ini dapat direfaktor lebih lanjut menjadi kelas-kelas perintah
         switch ($command) {
             case '/start':
                 $this->handleStartCommand($parts);
@@ -96,6 +116,12 @@ class MessageHandler
         }
     }
 
+    /**
+     * Menangani perintah `/register_channel` untuk mendaftarkan channel jualan.
+     * Memverifikasi bahwa pengguna adalah penjual dan bot adalah admin di channel target.
+     *
+     * @param array $parts Argumen perintah, dengan $parts[1] adalah pengidentifikasi channel.
+     */
     private function handleRegisterChannelCommand(array $parts)
     {
         if (count($parts) < 2) {
@@ -145,12 +171,16 @@ class MessageHandler
         }
     }
 
+    /**
+     * Menangani perintah `/me` untuk menampilkan ringkasan profil pengguna.
+     * Menampilkan nama, ID, status penjual, saldo, dan statistik penjualan.
+     */
     private function handleMeCommand()
     {
         $user_id = $this->current_user['id'];
 
         // Mengambil statistik
-        $sales_stats = $this->analytics_repo->getSellerSummary($user_id); // Reusing existing method
+        $sales_stats = $this->analytics_repo->getSellerSummary($user_id); // Menggunakan kembali metode yang ada
 
         // Format pesan
         $user_name = $this->telegram_api->escapeMarkdown(trim($this->current_user['first_name'] . ' ' . ($this->current_user['last_name'] ?? '')));
@@ -175,6 +205,10 @@ class MessageHandler
         $this->telegram_api->sendMessage($this->chat_id, $message, 'Markdown');
     }
 
+    /**
+     * Menangani perintah `/help` untuk menampilkan pesan bantuan.
+     * Menampilkan daftar perintah yang tersedia untuk pengguna biasa dan admin.
+     */
     private function handleHelpCommand()
     {
         $help_text = <<<EOT
@@ -229,6 +263,13 @@ EOT;
         $this->telegram_api->sendLongMessage($this->chat_id, $help_text, 'Markdown');
     }
 
+    /**
+     * Menangani perintah `/start`.
+     * Menampilkan pesan selamat datang umum atau, jika deep link digunakan,
+     * menampilkan detail paket tertentu.
+     *
+     * @param array $parts Argumen perintah, dengan $parts[1] mungkin berisi payload deep link.
+     */
     private function handleStartCommand(array $parts)
     {
         if (count($parts) > 1 && strpos($parts[1], 'package_') === 0) {
@@ -306,6 +347,11 @@ EOT;
         }
     }
 
+    /**
+     * Menangani perintah `/sell` yang digunakan sebagai balasan (reply) ke sebuah media.
+     * Memulai proses penjualan dengan mengatur status pengguna ke 'awaiting_price'
+     * dan meminta pengguna untuk memasukkan harga.
+     */
     private function handleSellCommand()
     {
         if (!isset($this->message['reply_to_message'])) {
@@ -402,6 +448,12 @@ EOT;
         $this->telegram_api->sendMessage($this->chat_id, $message_text, 'Markdown');
     }
 
+    /**
+     * Menangani perintah `/konten <ID_PAKET>` untuk melihat detail paket.
+     * Menampilkan pratinjau media dan tombol aksi (lihat/beli) berdasarkan status akses pengguna.
+     *
+     * @param array $parts Argumen perintah, dengan $parts[1] adalah ID publik paket.
+     */
     private function handleKontenCommand(array $parts)
     {
         $internal_user_id = $this->current_user['id'];
@@ -491,12 +543,18 @@ EOT;
         }
     }
 
+    /**
+     * Menangani perintah `/balance` untuk memeriksa saldo pengguna.
+     */
     private function handleBalanceCommand()
     {
         $balance = "Rp " . number_format($this->current_user['balance'], 2, ',', '.');
         $this->telegram_api->sendMessage($this->chat_id, "Saldo Anda saat ini: {$balance}");
     }
 
+    /**
+     * Menangani perintah `/login` untuk memberikan tautan login sekali pakai ke panel web.
+     */
     private function handleLoginCommand()
     {
         if (!defined('BASE_URL') || empty(BASE_URL)) {
@@ -511,29 +569,46 @@ EOT;
         $this->telegram_api->sendMessage($this->chat_id, "Klik tombol di bawah ini untuk masuk ke Panel Member Anda. Tombol ini hanya dapat digunakan satu kali.", null, json_encode($keyboard));
     }
 
+    /**
+     * Menangani perintah khusus admin seperti `/dev_addsaldo` dan `/feature`.
+     * Placeholder untuk logika perintah admin.
+     *
+     * @param string $command Perintah yang dipanggil.
+     * @param array $parts Argumen perintah.
+     */
     private function handleAdminCommands(string $command, array $parts)
     {
         if ($this->current_user['role'] !== 'admin') {
-            return; // Not an admin
+            return; // Bukan admin
         }
-        // ... Logic for admin commands, still using direct PDO.
-        // This can also be refactored.
+        // ... Logika untuk perintah admin, masih menggunakan PDO langsung.
+        // Ini juga bisa direfaktor.
     }
 
+    /**
+     * Router untuk perintah `/addmedia`.
+     * Membedakan antara menambahkan media ke paket baru (dalam proses pembuatan)
+     * atau ke paket yang sudah ada berdasarkan ada atau tidaknya ID paket.
+     */
     private function handleAddMediaCommand()
     {
         $parts = explode(' ', $this->message['text']);
         $has_id = count($parts) > 1;
 
         if ($has_id) {
-            // Logic for adding media to an existing package
+            // Logika untuk menambahkan media ke paket yang sudah ada
             $this->addMediaToExistingPackage($parts[1]);
         } else {
-            // Logic for adding media to a new package being created
+            // Logika untuk menambahkan media ke paket baru yang sedang dibuat
             $this->addMediaToNewPackage();
         }
     }
 
+    /**
+     * Menambahkan media ke paket baru yang sedang dalam proses pembuatan.
+     * Metode ini dipanggil ketika `/addmedia` digunakan tanpa ID paket,
+     * saat pengguna dalam status 'awaiting_price'.
+     */
     private function addMediaToNewPackage()
     {
         if ($this->current_user['state'] !== 'awaiting_price') {
@@ -574,6 +649,12 @@ EOT;
         $this->telegram_api->sendMessage($this->chat_id, "✅ Media berhasil ditambahkan. Silakan tambah media lagi dengan /addmedia, atau masukkan harga untuk menyelesaikan.");
     }
 
+    /**
+     * Menambahkan media ke paket yang sudah ada.
+     * Metode ini dipanggil ketika `/addmedia` digunakan dengan ID paket.
+     *
+     * @param string $public_package_id ID publik dari paket yang akan ditambahkan media.
+     */
     private function addMediaToExistingPackage($public_package_id)
     {
         if (!isset($this->message['reply_to_message'])) {
@@ -644,6 +725,10 @@ EOT;
         $this->telegram_api->sendMessage($this->chat_id, "✅ " . count($original_db_ids) . " media baru telah ditambahkan ke paket *{$public_package_id}*.", 'Markdown');
     }
 
+    /**
+     * Menangani pesan yang merupakan forward otomatis dari channel yang terhubung ke grup diskusi.
+     * Mencari paket terkait berdasarkan pesan asli dan membalas dengan tombol "Beli Sekarang".
+     */
     private function handleAutomaticForward()
     {
         app_log("[TRACE] Memulai handleAutomaticForward.", 'trace');

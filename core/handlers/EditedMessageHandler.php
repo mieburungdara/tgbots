@@ -1,20 +1,34 @@
 <?php
 
+/**
+ * Menangani pembaruan ketika sebuah pesan diedit.
+ * Saat ini, fokus utamanya adalah memperbarui caption dari media yang telah diedit.
+ */
 class EditedMessageHandler
 {
     private $pdo;
     private $edited_message;
 
+    /**
+     * Membuat instance EditedMessageHandler.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     * @param array $edited_message Data pesan yang diedit dari Telegram.
+     */
     public function __construct(PDO $pdo, array $edited_message)
     {
         $this->pdo = $pdo;
         $this->edited_message = $edited_message;
     }
 
+    /**
+     * Titik masuk utama untuk menangani pesan yang diedit.
+     * Memeriksa adanya caption baru dan memperbarui catatan media di database.
+     */
     public function handle()
     {
-        // We only care about edits that have text/caption content.
-        // For edited media captions, the new caption is in the 'caption' field.
+        // Kita hanya peduli pada editan yang memiliki konten teks/caption.
+        // Untuk caption media yang diedit, caption baru ada di field 'caption'.
         if (!isset($this->edited_message['caption'])) {
             return;
         }

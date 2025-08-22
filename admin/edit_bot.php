@@ -1,4 +1,14 @@
 <?php
+/**
+ * Halaman Edit Bot (Admin).
+ *
+ * Halaman ini menyediakan antarmuka untuk mengelola satu bot secara spesifik.
+ * Administrator dapat melihat informasi bot, mengelola webhook (set, check, delete),
+ * dan mengubah pengaturan penyimpanan pesan untuk bot tersebut.
+ *
+ * Aksi-aksi (seperti manajemen webhook dan pengaturan) ditangani oleh file-file
+ * handler terpisah (`webhook_manager.php`, `settings_manager.php`).
+ */
 session_start();
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
@@ -7,30 +17,32 @@ $pdo = get_db_connection();
 $bot = null;
 $error = null;
 
-// Validasi ID Bot Telegram dari URL
+// Validasi ID Bot Telegram dari parameter URL.
 if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
     header("Location: bots.php");
     exit;
 }
 $telegram_bot_id = $_GET['id'];
 
-// Ambil data bot dari database menggunakan ID bot dari token
+// Ambil data bot dari database. Pencarian dilakukan menggunakan ID Telegram,
+// yang merupakan bagian pertama dari token bot.
 $stmt = $pdo->prepare("SELECT id, first_name, username, token, created_at FROM bots WHERE token LIKE ?");
 $stmt->execute(["{$telegram_bot_id}:%"]);
 $bot = $stmt->fetch();
 
-// Jika bot tidak ditemukan, kembali ke halaman daftar bot
+// Jika bot tidak ditemukan, alihkan kembali ke halaman daftar bot.
 if (!$bot) {
     header("Location: bots.php");
     exit;
 }
 
-// Ambil pengaturan bot
+// Ambil pengaturan spesifik untuk bot ini dari tabel `bot_settings`.
 $stmt_settings = $pdo->prepare("SELECT setting_key, setting_value FROM bot_settings WHERE bot_id = ?");
 $stmt_settings->execute([$bot['id']]);
 $bot_settings_raw = $stmt_settings->fetchAll(PDO::FETCH_KEY_PAIR);
 
-// Tetapkan pengaturan default jika tidak ada di database
+// Tetapkan nilai default untuk setiap pengaturan jika belum ada di database,
+// untuk memastikan semua checkbox memiliki status yang benar.
 $settings = [
     'save_text_messages'    => $bot_settings_raw['save_text_messages'] ?? '1', // Default on
     'save_media_messages'   => $bot_settings_raw['save_media_messages'] ?? '1', // Default on
@@ -127,17 +139,24 @@ require_once __DIR__ . '/../partials/header.php';
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Referensi ke elemen-elemen modal
         const modal = document.getElementById('responseModal');
         const modalTitle = document.getElementById('modal-title');
         const modalBody = document.getElementById('modal-body');
         const span = document.getElementsByClassName('close')[0];
 
+        /**
+         * Menampilkan modal dengan judul dan konten yang ditentukan.
+         * @param {string} title - Judul modal.
+         * @param {string} content - Konten yang akan ditampilkan di body modal.
+         */
         function showModal(title, content) {
             modalTitle.textContent = title;
             modalBody.textContent = content;
             modal.style.display = 'block';
         }
 
+        // Fungsionalitas untuk menutup modal
         span.onclick = function() {
             modal.style.display = 'none';
         }
@@ -147,7 +166,11 @@ require_once __DIR__ . '/../partials/header.php';
             }
         }
 
-        // Handler untuk aksi webhook standar (set, check, delete)
+        /**
+         * Menangani aksi terkait webhook (set, check, delete) dengan memanggil webhook_manager.php.
+         * @param {string} action - Aksi yang akan dilakukan ('set', 'check', 'delete').
+         * @param {number} botId - ID internal bot.
+         */
         async function handleWebhookAction(action, botId) {
             let confirmation = true;
             if (action === 'delete') {
@@ -172,7 +195,10 @@ require_once __DIR__ . '/../partials/header.php';
             }
         }
 
-        // Handler untuk tes POST webhook
+        /**
+         * Menangani aksi pengujian webhook dengan mengirimkan POST request kosong ke URL webhook.
+         * @param {number} telegramBotId - ID Telegram dari bot.
+         */
         async function handleTestWebhook(telegramBotId) {
             // Ambil BASE_URL dari config, jika tidak ada, coba tebak dari URL saat ini
             const baseUrl = '<?= defined('BASE_URL') && BASE_URL ? rtrim(BASE_URL, '/') : (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] ?>';
@@ -201,7 +227,11 @@ require_once __DIR__ . '/../partials/header.php';
             }
         }
 
-        // Handler untuk aksi bot (getMe)
+        /**
+         * Menangani aksi terkait bot, seperti 'get_me', dengan memanggil bot_manager.php.
+         * @param {string} action - Aksi yang akan dilakukan.
+         * @param {number} botId - ID internal bot.
+         */
         async function handleBotAction(action, botId) {
             showModal('Hasil ' + action, 'Sedang memproses permintaan...');
             try {
@@ -222,7 +252,7 @@ require_once __DIR__ . '/../partials/header.php';
             }
         }
 
-        // Tambahkan event listener ke tombol-tombol
+        // Tambahkan event listener ke tombol-tombol manajemen webhook dan bot.
         document.querySelectorAll('.set-webhook, .check-webhook, .delete-webhook').forEach(button => {
             button.addEventListener('click', function() {
                 const action = this.classList.contains('set-webhook') ? 'set' :
@@ -235,7 +265,6 @@ require_once __DIR__ . '/../partials/header.php';
             handleBotAction('get_me', this.dataset.botId);
         });
 
-        // The test-webhook button was removed in the previous step by mistake. Let's ensure its listener exists.
         const testWebhookBtn = document.querySelector('.test-webhook');
         if (testWebhookBtn) {
             testWebhookBtn.addEventListener('click', function() {

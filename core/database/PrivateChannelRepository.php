@@ -1,9 +1,19 @@
 <?php
 
+/**
+ * Repositori untuk mengelola channel pribadi yang digunakan sebagai penyimpanan media.
+ * Channel-channel ini tidak terkait langsung dengan penjual, melainkan digunakan oleh bot
+ * secara umum untuk menyimpan file.
+ */
 class PrivateChannelRepository
 {
     private $pdo;
 
+    /**
+     * Membuat instance PrivateChannelRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;

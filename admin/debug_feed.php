@@ -1,5 +1,13 @@
 <?php
-// admin/debug_feed.php
+/**
+ * Halaman Feed Debug (Admin).
+ *
+ * Halaman ini berfungsi sebagai alat debugging untuk administrator.
+ * Ini menampilkan 100 payload JSON mentah terakhir yang diterima dari Telegram,
+ * yang disimpan dalam tabel `raw_updates`.
+ * Sangat berguna untuk memeriksa data yang masuk saat terjadi masalah atau
+ * saat mengembangkan fitur baru.
+ */
 
 // Define ROOT_PATH for reliable file access
 if (!defined('ROOT_PATH')) {

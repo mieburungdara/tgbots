@@ -1,4 +1,16 @@
 <?php
+/**
+ * Halaman Manajemen Peran Pengguna (Admin).
+ *
+ * Halaman ini memungkinkan administrator untuk mengubah peran pengguna lain
+ * antara 'user' dan 'admin'.
+ *
+ * Fitur:
+ * - Menampilkan daftar semua pengguna beserta peran mereka saat ini.
+ * - Menyediakan formulir untuk setiap pengguna untuk mengubah peran mereka.
+ * - Logika keamanan untuk mencegah penghapusan peran dari admin terakhir,
+ *   guna menghindari terkuncinya akses admin.
+ */
 session_start();
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
@@ -14,29 +26,34 @@ if (!$pdo) {
 $status_message = '';
 $status_type = '';
 
-// Handle permintaan untuk memperbarui peran pengguna
+// Menangani permintaan POST untuk memperbarui peran pengguna
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_role'])) {
     $user_id_to_update = filter_input(INPUT_POST, 'user_id', FILTER_VALIDATE_INT);
     $new_role = $_POST['role'] ?? '';
-    $allowed_roles = ['user', 'admin'];
+    $allowed_roles = ['user', 'admin']; // Daftar peran yang diizinkan
 
     if ($user_id_to_update && in_array($new_role, $allowed_roles)) {
         try {
-            // Jangan izinkan admin terakhir menghapus perannya sendiri
+            // Logika pengaman: Jangan izinkan admin terakhir menghapus perannya sendiri.
+            // Ini mencegah situasi di mana tidak ada admin yang bisa mengakses panel lagi.
             if ($new_role === 'user') {
+                // Hitung jumlah admin saat ini
                 $stmt_count = $pdo->prepare("SELECT COUNT(*) FROM users WHERE role = 'admin'");
                 $stmt_count->execute();
                 $admin_count = $stmt_count->fetchColumn();
 
+                // Periksa peran pengguna yang akan diubah
                 $stmt_user = $pdo->prepare("SELECT role FROM users WHERE id = ?");
                 $stmt_user->execute([$user_id_to_update]);
                 $current_role = $stmt_user->fetchColumn();
 
+                // Jika hanya ada satu admin dan pengguna yang diubah adalah admin tersebut, lempar error.
                 if ($admin_count <= 1 && $current_role === 'admin') {
                     throw new Exception("Tidak dapat menghapus peran admin terakhir.");
                 }
             }
 
+            // Lanjutkan dengan pembaruan jika aman
             $stmt = $pdo->prepare("UPDATE users SET role = ? WHERE id = ?");
             $stmt->execute([$new_role, $user_id_to_update]);
             $status_message = "Peran berhasil diperbarui.";

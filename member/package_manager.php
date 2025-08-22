@@ -1,4 +1,18 @@
 <?php
+/**
+ * Handler Backend untuk Manajemen Paket (Anggota).
+ *
+ * File ini menangani permintaan AJAX dari halaman `sold.php` di panel anggota.
+ * Secara spesifik, ini memproses aksi untuk mengubah status proteksi konten
+ * (`protect_content`) dari sebuah paket.
+ *
+ * Logika:
+ * 1. Verifikasi bahwa pengguna sudah login (session check).
+ * 2. Validasi permintaan (harus POST, `package_id` harus ada).
+ * 3. Panggil `PackageRepository->toggleProtection()` yang berisi logika bisnis
+ *    untuk mengubah status dan memverifikasi kepemilikan.
+ * 4. Kembalikan respons JSON yang berisi status operasi dan status proteksi baru.
+ */
 session_start();
 header('Content-Type: application/json');
 

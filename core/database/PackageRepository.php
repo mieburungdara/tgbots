@@ -1,14 +1,29 @@
 <?php
 
+/**
+ * Repositori untuk mengelola paket media (`media_packages`).
+ * Menyediakan semua operasi CRUD dan query terkait untuk paket konten.
+ */
 class PackageRepository
 {
     private $pdo;
 
+    /**
+     * Membuat instance PackageRepository.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     */
     public function __construct(PDO $pdo)
     {
         $this->pdo = $pdo;
     }
 
+    /**
+     * Menemukan sebuah paket berdasarkan ID internalnya.
+     *
+     * @param int $id ID internal paket.
+     * @return array|false Data paket atau false jika tidak ditemukan.
+     */
     public function find(int $id)
     {
         $stmt = $this->pdo->prepare("SELECT * FROM media_packages WHERE id = ?");
@@ -16,6 +31,12 @@ class PackageRepository
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Mengambil semua file yang tersimpan (di channel penyimpanan) yang terkait dengan sebuah paket.
+     *
+     * @param int $package_id ID internal paket.
+     * @return array Daftar file, masing-masing berisi `storage_channel_id` dan `storage_message_id`.
+     */
     public function getPackageFiles(int $package_id): array
     {
         $stmt = $this->pdo->prepare("SELECT storage_channel_id, storage_message_id FROM media_files WHERE package_id = ? AND storage_message_id IS NOT NULL ORDER BY storage_message_id ASC");
@@ -76,6 +97,13 @@ class PackageRepository
         return $pages;
     }
 
+    /**
+     * Menemukan paket yang tersedia untuk dibeli berdasarkan ID-nya.
+     * Hanya mengembalikan paket dengan status 'available'.
+     *
+     * @param int $package_id ID internal paket.
+     * @return array|false Data harga dan penjual, atau false jika tidak tersedia untuk dibeli.
+     */
     public function findForPurchase(int $package_id)
     {
         $stmt = $this->pdo->prepare("SELECT price, seller_user_id FROM media_packages WHERE id = ? AND status = 'available'");
@@ -83,6 +111,12 @@ class PackageRepository
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Menandai sebuah paket sebagai 'terjual' (sold).
+     *
+     * @param int $package_id ID internal paket yang akan ditandai.
+     * @return void
+     */
     public function markAsSold(int $package_id)
     {
         $stmt = $this->pdo->prepare("UPDATE media_packages SET status = 'sold' WHERE id = ?");
@@ -140,11 +174,12 @@ class PackageRepository
     }
 
     /**
-     * Menghapus paket secara permanen dari database.
+     * Menghapus paket secara permanen dari database, termasuk file media terkait.
+     * Metode ini sebaiknya dijalankan dalam sebuah transaksi.
      *
      * @param int $packageId ID paket yang akan dihapus.
-     * @return array Informasi file yang disimpan untuk dihapus dari Telegram.
-     * @throws Exception Jika paket tidak ditemukan atau sudah terjual.
+     * @return array Informasi file media yang dihapus, untuk keperluan pembersihan di Telegram.
+     * @throws Exception Jika paket tidak ditemukan atau sudah terjual (untuk melindungi riwayat).
      */
     public function hardDeletePackage(int $packageId): array
     {
@@ -179,11 +214,12 @@ class PackageRepository
     }
 
     /**
-     * Menemukan semua paket untuk ditampilkan di admin panel.
+     * Menemukan semua paket dengan paginasi, biasanya untuk panel admin.
+     * Menggabungkan dengan data pengguna untuk menampilkan username penjual.
      *
-     * @param int $limit
-     * @param int $offset
-     * @return array
+     * @param int $limit Jumlah maksimum paket per halaman.
+     * @param int $offset Jumlah paket yang akan dilewati (untuk paginasi).
+     * @return array Daftar paket.
      */
     public function findAll(int $limit = 100, int $offset = 0): array
     {
@@ -201,6 +237,12 @@ class PackageRepository
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
+    /**
+     * Menemukan sebuah paket berdasarkan ID publiknya yang unik.
+     *
+     * @param string $publicId ID publik paket (misal: 'ABCD_0001').
+     * @return array|false Data paket atau false jika tidak ditemukan.
+     */
     public function findByPublicId(string $publicId)
     {
         $stmt = $this->pdo->prepare("SELECT * FROM media_packages WHERE public_id = ?");
@@ -209,12 +251,12 @@ class PackageRepository
     }
 
     /**
-     * Mengubah status proteksi konten sebuah paket.
+     * Mengubah status proteksi konten (`protect_content`) sebuah paket.
      *
      * @param int $packageId ID paket yang akan diubah.
-     * @param int $sellerId ID penjual untuk verifikasi kepemilikan.
-     * @return bool Status proteksi yang baru.
-     * @throws Exception Jika paket tidak ditemukan atau bukan milik penjual.
+     * @param int $sellerId ID penjual yang meminta, untuk verifikasi kepemilikan.
+     * @return bool Status proteksi konten yang baru (true jika aktif, false jika tidak).
+     * @throws Exception Jika paket tidak ditemukan atau pengguna bukan pemiliknya.
      */
     public function toggleProtection(int $packageId, int $sellerId): bool
     {
@@ -239,14 +281,16 @@ class PackageRepository
     }
 
     /**
-     * Membuat paket baru dengan ID publik yang diformat.
+     * Membuat paket baru dengan ID publik yang unik dan diformat secara otomatis.
+     * Metode ini secara atomik menaikkan nomor urut paket penjual dan membuat ID.
+     * Sebaiknya dijalankan di dalam sebuah transaksi.
      *
-     * @param int $seller_user_id
-     * @param int $bot_id
-     * @param string $description
-     * @param int $thumbnail_media_id
+     * @param int $seller_user_id ID internal penjual.
+     * @param int $bot_id ID internal bot yang digunakan untuk membuat paket.
+     * @param string $description Deskripsi paket.
+     * @param int $thumbnail_media_id ID internal dari file media yang dijadikan thumbnail.
      * @return int ID internal dari paket yang baru dibuat.
-     * @throws Exception
+     * @throws Exception Jika terjadi kegagalan dalam transaksi atau jika penjual tidak valid.
      */
     public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id): int
     {
@@ -286,10 +330,12 @@ class PackageRepository
     }
 
     /**
-     * Mendapatkan file media yang dijadikan thumbnail untuk sebuah paket.
+     * Mendapatkan data file media yang dijadikan thumbnail untuk sebuah paket.
+     * Jika thumbnail spesifik telah diatur, metode ini akan mengembalikannya.
+     * Jika tidak, metode ini akan mengembalikan file media pertama yang ditambahkan ke paket.
      *
-     * @param int $package_id ID paket.
-     * @return array|false Data file thumbnail atau false jika tidak ditemukan.
+     * @param int $package_id ID internal paket.
+     * @return array|false Data file thumbnail sebagai array asosiatif, atau false jika tidak ditemukan.
      */
     public function getThumbnailFile(int $package_id)
     {

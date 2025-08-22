@@ -2,6 +2,10 @@
 
 require_once __DIR__ . '/../database/MediaFileRepository.php';
 
+/**
+ * Menangani pesan yang berisi media (foto, video, dokumen, dll.).
+ * Tugas utamanya adalah mengekstrak metadata media dan menyimpannya ke database.
+ */
 class MediaHandler
 {
     private $pdo;
@@ -11,6 +15,15 @@ class MediaHandler
     private $telegram_message_id;
     private $media_repo;
 
+    /**
+     * Membuat instance MediaHandler.
+     *
+     * @param PDO $pdo Objek koneksi database.
+     * @param array $message Data pesan lengkap dari Telegram.
+     * @param int $user_id_from_telegram ID Telegram pengguna yang mengirim media.
+     * @param int $chat_id_from_telegram ID obrolan tempat media dikirim.
+     * @param int $telegram_message_id ID pesan media di Telegram.
+     */
     public function __construct(PDO $pdo, array $message, int $user_id_from_telegram, int $chat_id_from_telegram, int $telegram_message_id)
     {
         $this->pdo = $pdo;
@@ -21,6 +34,10 @@ class MediaHandler
         $this->media_repo = new MediaFileRepository($pdo);
     }
 
+    /**
+     * Titik masuk utama untuk menangani pesan media.
+     * Mengidentifikasi jenis media, mengumpulkan metadata, dan menyimpannya.
+     */
     public function handle()
     {
         $media_type = null;

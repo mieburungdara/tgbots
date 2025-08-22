@@ -1,4 +1,16 @@
 <?php
+/**
+ * Halaman Manajemen Channel Penyimpanan (Admin).
+ *
+ * Halaman ini memungkinkan administrator untuk mengelola daftar channel pribadi
+ * yang digunakan oleh bot untuk menyimpan file media. Bot akan menggunakan
+ * channel-channel ini dalam mode rotasi (round-robin) untuk mendistribusikan file.
+ *
+ * Fitur:
+ * - Formulir untuk menambah channel baru dengan nama referensi dan ID channel Telegram.
+ * - Logika untuk menangani penghapusan channel.
+ * - Menampilkan daftar semua channel penyimpanan yang saat ini terdaftar.
+ */
 session_start();
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
@@ -12,10 +24,12 @@ if (!$pdo) {
 $channelRepo = new PrivateChannelRepository($pdo);
 $message = null;
 
-// Handle form submissions
+// Menangani pengiriman formulir untuk menambah atau menghapus channel.
+// Menggunakan pola Post/Redirect/Get (PRG) untuk menghindari pengiriman ulang formulir.
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
 
+    // Aksi untuk menambah channel baru
     if ($action === 'add_channel') {
         $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
         $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
@@ -32,6 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         exit;
     }
 
+    // Aksi untuk menghapus channel yang ada
     if ($action === 'delete_channel') {
         $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
         if ($id) {

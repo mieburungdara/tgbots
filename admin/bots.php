@@ -1,4 +1,16 @@
 <?php
+/**
+ * Halaman Manajemen Bot (Admin).
+ *
+ * Halaman ini memungkinkan administrator untuk menambah dan melihat daftar
+ * bot Telegram yang dikelola oleh sistem.
+ *
+ * Fitur:
+ * - Formulir untuk menambahkan bot baru menggunakan token API-nya.
+ * - Validasi token dengan memanggil metode `getMe` dari API Telegram.
+ * - Menyimpan informasi bot (nama, username, token) ke database.
+ * - Menampilkan daftar semua bot yang sudah ada dalam sebuah tabel.
+ */
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
 require_once __DIR__ . '/../core/TelegramAPI.php';
@@ -11,7 +23,7 @@ if (!$pdo) {
     die("Koneksi database gagal. Pastikan file `config.php` sudah benar. Periksa file log server untuk detailnya.");
 }
 
-// Handle penambahan bot baru
+// Menangani logika penambahan bot baru saat formulir disubmit
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bot'])) {
     $token = trim($_POST['token']);
 
@@ -19,6 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bot'])) {
         $error = "Token tidak boleh kosong.";
     } else {
         try {
+            // 1. Validasi token dengan menghubungi API Telegram
             $telegram_api = new TelegramAPI($token);
             $bot_info = $telegram_api->getMe();
 
@@ -28,13 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bot'])) {
                 $username = $bot_result['username'] ?? null;
                 $telegram_id = $bot_result['id'];
 
-                // Cek apakah token sudah ada
+                // 2. Cek duplikasi token di database untuk menghindari entri ganda
                 $stmt_check = $pdo->prepare("SELECT id FROM bots WHERE token = ?");
                 $stmt_check->execute([$token]);
                 if ($stmt_check->fetch()) {
-                     throw new Exception("Token ini sudah ada di database.", 23000);
+                     throw new Exception("Token ini sudah ada di database.", 23000); // Kode 23000 untuk error integritas
                 }
 
+                // 3. Simpan bot baru ke database
                 $stmt = $pdo->prepare("INSERT INTO bots (first_name, username, token) VALUES (?, ?, ?)");
                 $stmt->execute([$first_name, $username, $token]);
 
@@ -42,10 +56,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bot'])) {
                 $success = "Bot '{$first_name}' (@{$username}) berhasil ditambahkan!";
 
             } else {
+                // Jika `getMe` gagal, token tidak valid
                 throw new Exception("Token tidak valid atau gagal menghubungi API Telegram. " . ($bot_info['description'] ?? ''));
             }
         } catch (Exception $e) {
-            if ($e->getCode() == 23000) {
+            // Tangani error, termasuk error duplikasi dari database
+            if ($e->getCode() == 23000) { // SQLSTATE 23000: Integrity constraint violation
                 $error = "Error: " . $e->getMessage();
             } else {
                 $error = "Gagal menambahkan bot: " . $e->getMessage();
