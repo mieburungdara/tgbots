@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.14] - 2025-08-22
+
+### Peningkatan
+- **Desain Ulang Halaman Percakapan**: Merombak total halaman daftar percakapan (`admin/index.php`) untuk pengalaman pengguna yang lebih baik dan lebih informatif.
+  - **Tata Letak Dua Kolom**: Mengganti pemilihan bot berbasis dropdown dengan tata letak dua kolom yang persisten. Sidebar kiri sekarang menampilkan daftar semua bot, memungkinkan admin untuk beralih antar bot dengan cepat.
+  - **Daftar Percakapan Berbasis Kartu**: Mengubah tampilan daftar percakapan dari tabel HTML standar menjadi daftar berbasis kartu yang modern.
+  - **Fitur Informatif**: Setiap kartu sekarang menampilkan avatar berbasis inisial, nama pengguna, cuplikan pesan terakhir, dan waktu, sehingga lebih mudah untuk memindai dan mengidentifikasi percakapan penting.
+
 ## [4.2.13] - 2025-08-22
 
 ### Diubah
