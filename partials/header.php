@@ -161,6 +161,76 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
             text-overflow: ellipsis;
             max-width: 95%;
         }
+
+        /* Chat Log Table */
+        .chat-log-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .chat-log-table th, .chat-log-table td {
+            border: 1px solid #dee2e6;
+            padding: 8px 12px;
+            text-align: left;
+            vertical-align: top;
+        }
+        .chat-log-table th {
+            background-color: #f8f9fa;
+        }
+        .chat-log-table .col-id { width: 5%; }
+        .chat-log-table .col-time { width: 15%; }
+        .chat-log-table .col-direction { width: 10%; }
+        .chat-log-table .col-type { width: 10%; }
+        .chat-log-table .col-content { width: 50%; word-break: break-word; }
+        .chat-log-table .direction-incoming { color: #007bff; }
+        .chat-log-table .direction-outgoing { color: #28a745; }
+        .chat-log-table .json-toggle {
+             font-size: 0.8em;
+             cursor: pointer;
+             color: #007bff;
+        }
+        .chat-log-table .raw-json {
+            display: none;
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #2d2d2d;
+            color: #f1f1f1;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow-y: auto;
+            font-size: 0.85em;
+        }
+
+        /* Pagination Controls */
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+        .pagination a, .pagination span {
+            text-decoration: none;
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            color: #007bff;
+            border-radius: 4px;
+        }
+        .pagination a:hover {
+            background-color: #e9ecef;
+        }
+        .pagination .current-page {
+            background-color: #007bff;
+            color: #fff;
+            border-color: #007bff;
+            font-weight: bold;
+        }
+        .pagination .disabled {
+            color: #6c757d;
+            pointer-events: none;
+            background-color: #e9ecef;
+        }
     </style>
 </head>
 <body class="<?= $is_admin_page ? 'admin-body' : '' ?>">
