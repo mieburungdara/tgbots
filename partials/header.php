@@ -40,30 +40,30 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
         .btn-edit:hover { background-color: #218838; }
         .btn-delete { background-color: #dc3545; }
         .btn-delete:hover { background-color: #c82333; }
+
+        /* Admin Layout */
+        body.admin-body { display: flex; }
+        .sidebar { width: 240px; flex-shrink: 0; background-color: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.1); min-height: 100vh; }
+        .sidebar-header { padding: 20px; font-size: 1.5em; font-weight: bold; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .sidebar-header a { text-decoration: none; color: inherit; }
+        .sidebar-nav { display: flex; flex-direction: column; padding: 15px; }
+        .sidebar-nav a { text-decoration: none; color: #333; padding: 12px 15px; border-radius: 5px; margin-bottom: 5px; }
+        .sidebar-nav a:hover { background-color: #f0f0f0; }
+        .sidebar-nav a.active { font-weight: bold; background-color: #007bff; color: #fff; }
+        .admin-main-content { flex-grow: 1; }
     </style>
 </head>
-<body>
+<body class="<?= $is_admin_page ? 'admin-body' : '' ?>">
 
-<header class="header">
-    <div class="nav-container">
-        <?php if ($is_admin_page): ?>
-            <h1><a href="index.php" style="text-decoration: none; color: inherit;">Admin Panel</a></h1>
-            <nav>
-                <a href="index.php" class="<?= $current_page == 'index.php' ? 'active' : '' ?>">Percakapan</a>
-                <a href="bots.php" class="<?= $current_page == 'bots.php' || $current_page == 'edit_bot.php' ? 'active' : '' ?>">Kelola Bot</a>
-                <a href="users.php" class="<?= $current_page == 'users.php' ? 'active' : '' ?>">Pengguna</a>
-                <a href="roles.php" class="<?= $current_page == 'roles.php' ? 'active' : '' ?>">Manajemen Peran</a>
-                <a href="packages.php" class="<?= $current_page == 'packages.php' ? 'active' : '' ?>">Konten</a>
-                <a href="media_logs.php" class="<?= $current_page == 'media_logs.php' ? 'active' : '' ?>">Log Media</a>
-                <a href="channels.php" class="<?= $current_page == 'channels.php' ? 'active' : '' ?>">Channel</a>
-                <a href="database.php" class="<?= $current_page == 'database.php' ? 'active' : '' ?>">Database</a>
-                <a href="logs.php" class="<?= $current_page == 'logs.php' ? 'active' : '' ?>">Logs</a>
-                <a href="telegram_logs.php" class="<?= $current_page == 'telegram_logs.php' ? 'active' : '' ?>">Log Error Telegram</a>
-                <a href="debug_feed.php" class="<?= $current_page == 'debug_feed.php' ? 'active' : '' ?>">Debug Feed</a>
-                <a href="api_test.php" class="<?= $current_page == 'api_test.php' ? 'active' : '' ?>">Tes API</a>
-                <a href="../index.php">Logout</a>
-            </nav>
-        <?php else: // Member page ?>
+<?php if ($is_admin_page): ?>
+    <?php require_once __DIR__ . '/sidebar.php'; ?>
+    <div class="admin-main-content">
+        <main class="container">
+            <div class="content">
+                <!-- Konten utama halaman akan dimulai di sini -->
+<?php else: // Member page ?>
+    <header class="header">
+        <div class="nav-container">
             <h1><a href="index.php" style="text-decoration: none; color: inherit;">Member Area</a></h1>
             <nav>
                 <a href="dashboard.php" class="<?= $current_page == 'dashboard.php' ? 'active' : '' ?>">Dashboard</a>
@@ -72,10 +72,9 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
                 <a href="sold.php" class="<?= $current_page == 'sold.php' ? 'active' : '' ?>">Sold</a>
                 <a href="../index.php">Logout</a>
             </nav>
-        <?php endif; ?>
-    </div>
-</header>
-
-<main class="container">
-    <div class="content">
-        <!-- Konten utama halaman akan dimulai di sini -->
+        </div>
+    </header>
+    <main class="container">
+        <div class="content">
+            <!-- Konten utama halaman akan dimulai di sini -->
+<?php endif; ?>
