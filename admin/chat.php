@@ -72,7 +72,7 @@ $sql = "
         m.*,
         mf.type as media_type
     FROM messages m
-    LEFT JOIN media_files mf ON m.telegram_message_id = mf.message_id AND m.bot_id = mf.bot_id
+    LEFT JOIN media_files mf ON m.telegram_message_id = mf.message_id AND m.chat_id = mf.chat_id
     WHERE m.user_id = ? AND m.bot_id = ?
     ORDER BY m.created_at DESC
     LIMIT ? OFFSET ?

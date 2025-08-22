@@ -8,6 +8,11 @@
   - **Tampilan Tabel**: Pesan sekarang ditampilkan dalam tabel dengan kolom untuk ID, Waktu, Arah (Masuk/Keluar), Tipe, dan Konten.
   - **Fitur Pagination**: Mengimplementasikan pagination sisi server untuk menangani riwayat percakapan yang panjang secara efisien. Pesan ditampilkan per 50 item, dengan kontrol navigasi "Sebelumnya" dan "Berikutnya".
 
+### Diperbaiki
+- **Fatal Error di Halaman Detail Chat**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mf.bot_id'` yang terjadi saat melihat riwayat chat.
+  - **Penyebab**: Kondisi `JOIN` pada query SQL salah, mencoba menghubungkan tabel `messages` dan `media_files` menggunakan `bot_id` yang tidak ada di tabel media.
+  - **Solusi**: Mengubah kondisi `JOIN` untuk menggunakan `m.chat_id = mf.chat_id`, yang secara akurat menautkan pesan ke media yang sesuai berdasarkan ID chat yang sama.
+
 ## [4.2.14] - 2025-08-22
 
 ### Peningkatan
