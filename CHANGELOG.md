@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.2.13] - 2025-08-22
+
+### Diubah
+- **Tata Letak Panel Admin**: Merombak total tata letak panel admin dengan memindahkan navigasi utama dari header ke sidebar vertikal di sisi kiri.
+  - **Tujuan**: Untuk meningkatkan pengalaman pengguna dengan menyediakan navigasi yang lebih terstruktur, mudah diakses, dan dapat diskalakan seiring penambahan fitur baru.
+  - **Implementasi**:
+    - Membuat file `partials/sidebar.php` baru untuk menampung menu navigasi admin.
+    - Mengubah `partials/header.php` dan `partials/footer.php` untuk secara kondisional menerapkan tata letak dua kolom (sidebar dan konten utama) hanya untuk halaman admin, tanpa memengaruhi panel member.
+
 ## [4.2.12] - 2025-08-22
 
 ### Dokumentasi
