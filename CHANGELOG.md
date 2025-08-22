@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.15] - 2025-08-22
+
+### Diubah
+- **Tampilan Detail Chat menjadi Tabel**: Mengubah total halaman detail percakapan (`admin/chat.php`) dari format obrolan menjadi tampilan tabel yang padat informasi, sesuai permintaan pengguna.
+  - **Integrasi Tata Letak**: Halaman sekarang terintegrasi penuh dengan tata letak admin utama, menampilkan sidebar navigasi yang konsisten.
+  - **Tampilan Tabel**: Pesan sekarang ditampilkan dalam tabel dengan kolom untuk ID, Waktu, Arah (Masuk/Keluar), Tipe, dan Konten.
+  - **Fitur Pagination**: Mengimplementasikan pagination sisi server untuk menangani riwayat percakapan yang panjang secara efisien. Pesan ditampilkan per 50 item, dengan kontrol navigasi "Sebelumnya" dan "Berikutnya".
+
 ## [4.2.14] - 2025-08-22
 
 ### Peningkatan

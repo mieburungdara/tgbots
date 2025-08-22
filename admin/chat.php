@@ -1,15 +1,8 @@
 <?php
 /**
- * Halaman Percakapan Pribadi (Admin).
+ * Halaman Percakapan Pribadi (Admin) - Tampilan Tabel.
  *
- * Halaman ini menampilkan riwayat percakapan antara bot dan seorang pengguna,
- * dan memungkinkan administrator untuk mengirim balasan atas nama bot.
- *
- * Fitur Utama:
- * - Mengambil riwayat pesan untuk `user_id` dan `bot_id` tertentu.
- * - Formulir untuk mengirim pesan balasan ke pengguna melalui bot.
- * - Menyimpan pesan keluar (balasan admin) ke database.
- * - Mengelompokkan pesan media yang memiliki `media_group_id` untuk tampilan yang lebih baik.
+ * Halaman ini menampilkan riwayat percakapan dalam bentuk tabel dengan pagination.
  */
 session_start();
 require_once __DIR__ . '/../core/database.php';
@@ -20,7 +13,7 @@ if (!$pdo) {
     die("Koneksi database gagal.");
 }
 
-// Menggunakan ID internal dari database, bukan ID telegram
+// Validasi input
 $user_id = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
 $bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
 
@@ -29,29 +22,26 @@ if (!$user_id || !$bot_id) {
     exit;
 }
 
-// Ambil info pengguna
-$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->execute([$user_id]);
-$user_info = $stmt->fetch();
+// Ambil info pengguna dan bot
+$stmt_user = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt_user->execute([$user_id]);
+$user_info = $stmt_user->fetch();
 
-// Ambil info bot
-$stmt = $pdo->prepare("SELECT * FROM bots WHERE id = ?");
-$stmt->execute([$bot_id]);
-$bot_info = $stmt->fetch();
+$stmt_bot = $pdo->prepare("SELECT * FROM bots WHERE id = ?");
+$stmt_bot->execute([$bot_id]);
+$bot_info = $stmt_bot->fetch();
 
 if (!$user_info || !$bot_info) {
     die("Pengguna atau bot tidak ditemukan.");
 }
 
-// Menangani logika pengiriman balasan dari admin
+// Logika Balasan Admin
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
     $reply_text = trim($_POST['reply_text']);
     if (!empty($reply_text)) {
-        // 1. Kirim pesan ke pengguna melalui API Telegram
         $telegram_api = new TelegramAPI($bot_info['token']);
         $result = $telegram_api->sendMessage($user_info['telegram_id'], $reply_text);
 
-        // 2. Jika pengiriman berhasil, simpan pesan keluar ke database
         if ($result && $result['ok']) {
             $raw_data_json = json_encode($result['result']);
             $stmt = $pdo->prepare(
@@ -60,247 +50,135 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
             );
             $stmt->execute([$user_id, $bot_id, $result['result']['message_id'], $reply_text, $raw_data_json]);
         }
-        // 3. Redirect kembali ke halaman chat untuk mencegah pengiriman ulang formulir (pola PRG)
-        header("Location: chat.php?user_id=" . $user_id . "&bot_id=" . $bot_id);
+        header("Location: " . $_SERVER['REQUEST_URI']);
         exit;
     }
 }
 
-// Mengambil semua pesan untuk percakapan ini, digabungkan dengan data media jika ada
+// --- LOGIKA PAGINATION ---
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit = 50; // Jumlah pesan per halaman
+$offset = ($page - 1) * $limit;
+
+// Query untuk menghitung total pesan
+$count_stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE user_id = ? AND bot_id = ?");
+$count_stmt->execute([$user_id, $bot_id]);
+$total_messages = $count_stmt->fetchColumn();
+$total_pages = ceil($total_messages / $limit);
+
+// Query untuk mengambil pesan dengan limit dan offset
 $sql = "
     SELECT
         m.*,
-        mf.type as media_type,
-        mf.file_name as media_file_name,
-        mf.id as media_id,
-        mf.media_group_id
+        mf.type as media_type
     FROM messages m
-    LEFT JOIN media_files mf ON m.telegram_message_id = mf.message_id
+    LEFT JOIN media_files mf ON m.telegram_message_id = mf.message_id AND m.bot_id = mf.bot_id
     WHERE m.user_id = ? AND m.bot_id = ?
-    ORDER BY m.created_at ASC
+    ORDER BY m.created_at DESC
+    LIMIT ? OFFSET ?
 ";
 $stmt = $pdo->prepare($sql);
-$stmt->execute([$user_id, $bot_id]);
+// Bind values sebagai integer
+$stmt->bindValue(1, $user_id, PDO::PARAM_INT);
+$stmt->bindValue(2, $bot_id, PDO::PARAM_INT);
+$stmt->bindValue(3, $limit, PDO::PARAM_INT);
+$stmt->bindValue(4, $offset, PDO::PARAM_INT);
+$stmt->execute();
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// --- AKHIR LOGIKA PAGINATION ---
 
-// Logika untuk mengelompokkan pesan.
-// Pesan dengan media_group_id yang sama akan digabungkan menjadi satu entri 'media_group'.
-// Pesan lainnya akan tetap sebagai entri 'single'.
-$grouped_messages = [];
-$processed_message_ids = []; // Lacak ID pesan yang sudah dimasukkan ke dalam grup untuk menghindari duplikasi.
+$telegram_bot_id_for_back_link = explode(':', $bot_info['token'])[0];
+$page_title = "Chat dengan " . htmlspecialchars($user_info['first_name']);
+require_once __DIR__ . '/../partials/header.php';
+?>
 
-foreach ($messages as $message) {
-    // Jika pesan ini sudah diproses sebagai bagian dari sebuah grup, lewati.
-    if (in_array($message['id'], $processed_message_ids)) {
-        continue;
-    }
+<div class="chat-container">
+    <div class="chat-header">
+        <a href="index.php?bot_id=<?= $telegram_bot_id_for_back_link ?>" class="btn">&larr; Kembali</a>
+        <h3>
+            Riwayat Chat dengan <?= htmlspecialchars($user_info['first_name'] ?? '') ?>
+        </h3>
+        <p>Total Pesan: <?= $total_messages ?></p>
+    </div>
 
-    // Jika pesan memiliki media_group_id, cari semua pesan lain yang termasuk dalam grup ini.
-    if (!empty($message['media_group_id'])) {
-        $current_group_id = $message['media_group_id'];
-        $group = [
-            'type' => 'media_group',
-            'items' => [],
-            'direction' => $message['direction'], // Arah grup (incoming/outgoing) sama dengan pesan pertamanya.
-            'bot_id' => $message['bot_id'],
-            'media_group_id' => $current_group_id
-        ];
+    <div class="table-responsive">
+        <table class="chat-log-table">
+            <thead>
+                <tr>
+                    <th class="col-id">ID</th>
+                    <th class="col-time">Waktu</th>
+                    <th class="col-direction">Arah</th>
+                    <th class="col-type">Tipe</th>
+                    <th class="col-content">Konten</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($messages)): ?>
+                    <tr>
+                        <td colspan="5" style="text-align: center;">Tidak ada pesan ditemukan.</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($messages as $msg): ?>
+                        <tr>
+                            <td class="col-id"><?= $msg['id'] ?></td>
+                            <td class="col-time"><?= htmlspecialchars($msg['created_at']) ?></td>
+                            <td class="col-direction">
+                                <span class="direction-<?= htmlspecialchars($msg['direction']) ?>">
+                                    <?= htmlspecialchars(ucfirst($msg['direction'])) ?>
+                                </span>
+                            </td>
+                            <td class="col-type"><?= htmlspecialchars($msg['media_type'] ?? 'Teks') ?></td>
+                            <td class="col-content">
+                                <?php if (!empty($msg['text'])): ?>
+                                    <p><?= nl2br(htmlspecialchars($msg['text'])) ?></p>
+                                <?php endif; ?>
+                                <span class="json-toggle" onclick="toggleJson(this, 'msg-json-<?= $msg['id'] ?>')">
+                                    Lihat Raw Data
+                                </span>
+                                <pre class="raw-json" id="msg-json-<?= $msg['id'] ?>"><?= htmlspecialchars(json_encode(json_decode($msg['raw_data']), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?></pre>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
+    </div>
 
-        // Iterasi ulang melalui semua pesan untuk menemukan semua item dalam grup ini.
-        foreach ($messages as $item) {
-            if (($item['media_group_id'] ?? null) === $current_group_id) {
-                $group['items'][] = $item;
-                $processed_message_ids[] = $item['id']; // Tandai pesan ini sebagai sudah diproses.
-            }
-        }
-        $grouped_messages[] = $group;
+    <div class="pagination">
+        <?php if ($page > 1): ?>
+            <a href="?user_id=<?= $user_id ?>&bot_id=<?= $bot_id ?>&page=<?= $page - 1 ?>">&laquo; Sebelumnya</a>
+        <?php else: ?>
+            <span class="disabled">&laquo; Sebelumnya</span>
+        <?php endif; ?>
+
+        <span class="current-page">Halaman <?= $page ?> dari <?= $total_pages ?></span>
+
+        <?php if ($page < $total_pages): ?>
+            <a href="?user_id=<?= $user_id ?>&bot_id=<?= $bot_id ?>&page=<?= $page + 1 ?>">Berikutnya &raquo;</a>
+        <?php else: ?>
+            <span class="disabled">Berikutnya &raquo;</span>
+        <?php endif; ?>
+    </div>
+
+    <div class="chat-reply-form">
+        <form action="chat.php?user_id=<?= $user_id ?>&bot_id=<?= $bot_id ?>" method="post">
+            <textarea name="reply_text" rows="3" placeholder="Ketik balasan Anda..." required></textarea>
+            <button type="submit" name="reply_message" class="btn">Kirim</button>
+        </form>
+    </div>
+</div>
+
+<script>
+function toggleJson(element, id) {
+    const pre = document.getElementById(id);
+    if (pre.style.display === 'none' || pre.style.display === '') {
+        pre.style.display = 'block';
+        element.textContent = 'Sembunyikan JSON';
     } else {
-        // Jika tidak memiliki media_group_id, ini adalah pesan tunggal.
-        $message['type'] = 'single';
-        $grouped_messages[] = $message;
+        pre.style.display = 'none';
+        element.textContent = 'Tampilkan JSON';
     }
 }
+</script>
 
-
-// Dapatkan ID bot telegram dari token untuk link "kembali"
-$telegram_bot_id = explode(':', $bot_info['token'])[0];
-
-?>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chat dengan <?= htmlspecialchars($user_info['first_name']) ?> - Admin Panel</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #f4f6f8; color: #333; }
-        .container { max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; height: 100vh; }
-        header { background-color: #fff; padding: 15px 20px; border-bottom: 1px solid #ddd; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        h1 { margin: 0; font-size: 1.2em; }
-        .chat-window { flex-grow: 1; padding: 20px; overflow-y: auto; background-color: #e5ddd5; }
-        .message { margin-bottom: 15px; max-width: 70%; padding: 10px 15px; border-radius: 15px; line-height: 1.4; }
-        .message.incoming { background-color: #fff; align-self: flex-start; border-bottom-left-radius: 2px; }
-        .message.outgoing { background-color: #dcf8c6; align-self: flex-end; border-bottom-right-radius: 2px; margin-left: auto; }
-        .message-container { display: flex; flex-direction: column; }
-        .reply-form { padding: 20px; background-color: #f0f0f0; border-top: 1px solid #ccc; }
-        textarea { width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 1em; resize: vertical; }
-        button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; float: right; margin-top: 10px; }
-        nav { margin-bottom: 10px; }
-        nav a { text-decoration: none; color: #007bff; }
-        .message-meta { font-size: 0.8em; color: #888; margin-top: 5px; text-align: right; }
-        .json-toggle { color: #007bff; cursor: pointer; text-decoration: none; }
-        .json-toggle:hover { text-decoration: underline; }
-        .raw-json { display: none; margin-top: 10px; padding: 10px; background-color: #2d2d2d; color: #f1f1f1; border-radius: 5px; white-space: pre-wrap; word-break: break-all; max-height: 300px; overflow-y: auto; }
-        .media-display { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .media-icon { font-size: 1.8em; }
-        .caption { margin-top: 5px; font-style: italic; }
-        .message-meta .btn-forward { font-size: 0.9em; padding: 2px 8px; background-color: #17a2b8; color: white; border: none; border-radius: 3px; cursor: pointer; margin-right: 10px; }
-        .media-group-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 5px; }
-        .media-group-item { text-align: center; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <header>
-            <nav style="display: flex; justify-content: space-between; align-items: center;">
-                <a href="index.php?bot_id=<?= $telegram_bot_id ?>">&larr; Kembali ke Daftar Percakapan</a>
-                <a href="index.php" style="font-weight: bold;">ADMIN HOME</a>
-            </nav>
-            <h1 style="margin-top: 10px;">Chat dengan <?= htmlspecialchars($user_info['first_name'] ?? '') ?> (@<?= htmlspecialchars($user_info['username'] ?? '') ?>) di Bot <?= htmlspecialchars($bot_info['first_name'] ?? '') ?></h1>
-        </header>
-        <div class="chat-window">
-            <div class="message-container">
-                <?php foreach ($grouped_messages as $item): ?>
-                    <div class="message <?= $item['direction'] ?>">
-                        <?php if ($item['type'] === 'media_group'): // Render a media group ?>
-                            <div class="media-group-container">
-                                <?php foreach ($item['items'] as $media_item): ?>
-                                    <div class="media-group-item">
-                                        <span class="media-icon">
-                                            <?php
-                                                $icons = ['photo' => '🖼️', 'video' => '🎬', 'audio' => '🎵', 'voice' => '🎤', 'document' => '📄', 'animation' => '✨', 'video_note' => '📹'];
-                                                echo $icons[$media_item['media_type']] ?? '❔';
-                                            ?>
-                                        </span>
-                                        <div><small><?= htmlspecialchars($media_item['media_type']) ?></small></div>
-                                    </div>
-                                <?php endforeach; ?>
-                            </div>
-                            <?php
-                                // Show the caption from the first item in the group
-                                $first_item_caption = $item['items'][0]['text'] ?? null;
-                                if ($first_item_caption):
-                            ?>
-                                <p class="caption"><?= nl2br(htmlspecialchars($first_item_caption)) ?></p>
-                            <?php endif; ?>
-                            <div class="message-meta">
-                                <button class="btn-forward"
-                                        data-group-id="<?= htmlspecialchars($item['media_group_id']) ?>"
-                                        data-bot-id="<?= htmlspecialchars($item['bot_id']) ?>">
-                                    Teruskan Grup
-                                </button>
-                                <span class="json-toggle" onclick="toggleJson(this)">Tampilkan JSON</span>
-                            </div>
-                            <pre class="raw-json"><?= htmlspecialchars(json_encode(array_column($item['items'], 'raw_data'), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?></pre>
-
-                        <?php else: // Render a single message (text or single media) ?>
-                            <?php if ($item['media_type']): ?>
-                                <div class="media-display">
-                                    <span class="media-icon">
-                                        <?php
-                                            $icons = ['photo' => '🖼️', 'video' => '🎬', 'audio' => '🎵', 'voice' => '🎤', 'document' => '📄', 'animation' => '✨', 'video_note' => '📹'];
-                                            echo $icons[$item['media_type']] ?? '❔';
-                                        ?>
-                                    </span>
-                                    <span class="media-info">
-                                        <strong><?= htmlspecialchars(ucfirst($item['media_type'])) ?></strong>
-                                        <?= $item['media_file_name'] ? '<br><small>' . htmlspecialchars($item['media_file_name']) . '</small>' : '' ?>
-                                    </span>
-                                </div>
-                                <?php if (!empty($item['text'])): ?>
-                                    <p class="caption"><?= nl2br(htmlspecialchars($item['text'])) ?></p>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <?= nl2br(htmlspecialchars($item['text'])) ?>
-                            <?php endif; ?>
-
-                            <?php if (!empty($item['raw_data'])): ?>
-                                <div class="message-meta">
-                                    <?php if ($item['direction'] === 'incoming' && $item['media_type']): ?>
-                                        <button class="btn-forward"
-                                                data-group-id="<?= htmlspecialchars('single_' . $item['media_id']) ?>"
-                                                data-bot-id="<?= htmlspecialchars($item['bot_id']) ?>">
-                                            Teruskan
-                                        </button>
-                                    <?php endif; ?>
-                                    <span class="json-toggle" onclick="toggleJson(this)">Tampilkan JSON</span>
-                                </div>
-                                <pre class="raw-json"><?= htmlspecialchars(json_encode(json_decode($item['raw_data']), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) ?></pre>
-                            <?php endif; ?>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
-        </div>
-        <div class="reply-form">
-            <form action="chat.php?user_id=<?= $user_id ?>&bot_id=<?= $bot_id ?>" method="post">
-                <textarea name="reply_text" rows="3" placeholder="Ketik balasan Anda..." required></textarea>
-                <button type="submit" name="reply_message">Kirim</button>
-            </form>
-        </div>
-    </div>
-    <script>
-        function toggleJson(element) {
-            const pre = element.closest('.message').querySelector('.raw-json');
-            if (pre.style.display === 'none' || pre.style.display === '') {
-                pre.style.display = 'block';
-                element.textContent = 'Sembunyikan JSON';
-            } else {
-                pre.style.display = 'none';
-                element.textContent = 'Tampilkan JSON';
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.btn-forward').forEach(button => {
-                button.addEventListener('click', async function() {
-                    const groupId = this.dataset.groupId;
-                    const botId = this.dataset.botId;
-
-                    if (!confirm('Anda yakin ingin meneruskan media ini ke semua admin?')) {
-                        return;
-                    }
-
-                    const originalText = this.textContent;
-                    this.textContent = 'Mengirim...';
-                    this.disabled = true;
-
-                    const formData = new FormData();
-                    formData.append('group_id', groupId);
-                    formData.append('bot_id', botId);
-
-                    try {
-                        const response = await fetch('forward_manager.php', {
-                            method: 'POST',
-                            body: formData
-                        });
-
-                        const result = await response.json();
-                        if (!response.ok) {
-                            throw new Error(result.message || 'Server error');
-                        }
-
-                        alert('Hasil: ' + result.message);
-
-                    } catch (error) {
-                        alert('Gagal melakukan permintaan: ' + error.message);
-                    } finally {
-                        this.textContent = originalText;
-                        this.disabled = false;
-                    }
-                });
-            });
-        });
-    </script>
-</body>
-</html>
+<?php require_once __DIR__ . '/../partials/footer.php'; ?>
