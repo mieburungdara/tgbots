@@ -2,17 +2,17 @@
 /**
  * Handler Backend untuk Meneruskan Media (Admin).
  *
- * File ini menangani permintaan AJAX dari halaman `chat.php` untuk meneruskan
- * sebuah media atau grup media dari seorang pengguna ke semua pengguna
- * dengan peran 'admin'.
+ * File ini menangani permintaan AJAX untuk meneruskan sebuah media atau grup media
+ * dari seorang pengguna ke semua pengguna dengan peran 'admin'.
  *
  * Logika:
- * 1. Validasi permintaan (harus POST, parameter `group_id` dan `bot_id` ada).
- * 2. Ambil token bot dan daftar ID admin dari database.
- * 3. Ambil detail file media berdasarkan `group_id`.
- * 4. Buat caption informasi yang berisi detail pengirim.
- * 5. Iterasi melalui setiap admin dan kirim media (sebagai sendMediaGroup atau send<Type>).
- * 6. Kembalikan respons JSON yang merangkum hasil operasi.
+ * 1. Validasi permintaan.
+ * 2. Ambil token bot dan daftar ID admin.
+ * 3. Ambil detail media (storage_channel_id, storage_message_id) dari database.
+ * 4. Buat caption informasi.
+ * 5. Iterasi melalui setiap admin dan kirim media menggunakan copyMessage (untuk tunggal)
+ *    atau sendMessage + copyMessages (untuk grup) untuk menjaga fungsionalitas.
+ * 6. Kembalikan respons JSON.
  */
 header('Content-Type: application/json');
 session_start();
@@ -23,7 +23,6 @@ require_once __DIR__ . '/../core/helpers.php';
 $response = ['status' => 'error', 'message' => 'Permintaan tidak valid.'];
 
 try {
-    // Validasi dasar permintaan
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         throw new Exception("Metode permintaan tidak valid.");
     }
@@ -40,7 +39,7 @@ try {
         throw new Exception("Koneksi database gagal.");
     }
 
-    // 1. Ambil token bot yang akan digunakan untuk mengirim
+    // 1. Ambil token bot
     $bot_stmt = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
     $bot_stmt->execute([$bot_id]);
     $bot_token = $bot_stmt->fetchColumn();
@@ -48,50 +47,48 @@ try {
         throw new Exception("Bot tidak ditemukan.");
     }
 
-    // 2. Ambil daftar semua pengguna admin sebagai tujuan
+    // 2. Ambil daftar admin
     $admins_stmt = $pdo->query("
-        SELECT u.telegram_id
-        FROM users u
+        SELECT u.telegram_id FROM users u
         JOIN user_roles ur ON u.id = ur.user_id
         JOIN roles r ON ur.role_id = r.id
         WHERE r.name = 'Admin'
     ");
     $admin_ids = $admins_stmt->fetchAll(PDO::FETCH_COLUMN);
     if (empty($admin_ids)) {
-        throw new Exception("Tidak ada pengguna dengan peran admin yang ditemukan.");
+        throw new Exception("Tidak ada admin yang ditemukan.");
     }
 
-    // 3. Ambil semua file media yang terkait dengan grup/item yang diteruskan
+    // 3. Ambil detail file media
     $is_single = strpos($group_id, 'single_') === 0;
     $db_id = $is_single ? (int)substr($group_id, 7) : $group_id;
 
     $base_sql = "
-        SELECT mf.file_id, mf.type, mf.caption, mf.created_at, mf.file_size,
+        SELECT mf.storage_channel_id, mf.storage_message_id, mf.caption, mf.created_at, mf.file_size,
                u.first_name, u.username, u.telegram_id
         FROM media_files mf
-        LEFT JOIN users u ON mf.user_id = u.telegram_id
+        LEFT JOIN users u ON mf.user_id = u.id
     ";
     $sql = $is_single
-        ? $base_sql . " WHERE mf.id = ?" // Ambil satu file jika ini media tunggal
-        : $base_sql . " WHERE mf.media_group_id = ? ORDER BY mf.id ASC"; // Ambil semua file jika ini grup
+        ? $base_sql . " WHERE mf.id = ?"
+        : $base_sql . " WHERE mf.media_group_id = ? ORDER BY mf.id ASC";
 
     $media_stmt = $pdo->prepare($sql);
     $media_stmt->execute([$db_id]);
     $media_files = $media_stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if (empty($media_files)) {
-        throw new Exception("File media tidak ditemukan untuk grup ini.");
+        throw new Exception("File media tidak ditemukan.");
     }
 
-    // 4. Buat caption informasi untuk ditambahkan ke pesan
-    $sender_info = $media_files[0]; // Info pengirim sama untuk semua item dalam grup
+    // 4. Buat caption informasi
+    $sender_info = $media_files[0];
     $file_size_kb = $sender_info['file_size'] ? round($sender_info['file_size'] / 1024, 2) . ' KB' : 'N/A';
     $info_caption = "
 --- ℹ️ Info Media ---
 Pengirim: " . htmlspecialchars($sender_info['first_name']) . ($sender_info['username'] ? " (@" . htmlspecialchars($sender_info['username']) . ")" : "") . "
 ID Pengirim: `{$sender_info['telegram_id']}`
 Waktu Kirim: {$sender_info['created_at']}
-Ukuran File: {$file_size_kb}
 --------------------
 ";
 
@@ -100,43 +97,28 @@ Ukuran File: {$file_size_kb}
     $success_count = 0;
     $total_admins = count($admin_ids);
 
+    $storage_channel_id = $media_files[0]['storage_channel_id'];
+
     foreach ($admin_ids as $admin_chat_id) {
-        $result = false;
-        // Jika ada lebih dari satu file, kirim sebagai media group
+        $result_ok = false;
         if (count($media_files) > 1) {
-            $media_group = [];
-            $first = true;
-            foreach ($media_files as $file) {
-                $media_item = ['type' => strtolower($file['type']), 'media' => $file['file_id']];
-                // Tambahkan caption hanya ke item pertama dalam grup
-                if ($first) {
-                    $full_caption = $info_caption;
-                    if (!empty($file['caption'])) {
-                        $full_caption .= "\n" . $file['caption'];
-                    }
-                    $media_item['caption'] = $full_caption;
-                    $media_item['parse_mode'] = 'Markdown';
-                    $first = false;
-                }
-                $media_group[] = $media_item;
-            }
-            $result = $api->sendMediaGroup($admin_chat_id, json_encode($media_group));
+            // Grup media: kirim info dulu, baru album
+            $api->sendMessage($admin_chat_id, $info_caption, 'Markdown');
+            $message_ids = array_column($media_files, 'storage_message_id');
+            $result = $api->copyMessages($admin_chat_id, $storage_channel_id, json_encode($message_ids));
+            $result_ok = $result && ($result['ok'] ?? false);
         } else {
-            // Jika hanya satu file, kirim sebagai media tunggal
+            // Media tunggal: kirim dengan caption gabungan
             $file = $media_files[0];
             $full_caption = $info_caption;
             if (!empty($file['caption'])) {
                 $full_caption .= "\n" . $file['caption'];
             }
-
-            // Panggil metode yang sesuai (sendPhoto, sendVideo, dll.)
-            $type = ucfirst(strtolower($file['type']));
-            $method_name = "send" . $type;
-            if (method_exists($api, $method_name)) {
-                $result = $api->$method_name($admin_chat_id, $file['file_id'], $full_caption);
-            }
+            $result = $api->copyMessage($admin_chat_id, $storage_channel_id, $file['storage_message_id'], $full_caption, 'Markdown');
+            $result_ok = $result && ($result['ok'] ?? false);
         }
-        if ($result && ($result['ok'] ?? false)) {
+
+        if ($result_ok) {
             $success_count++;
         }
     }
