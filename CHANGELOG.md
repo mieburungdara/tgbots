@@ -8,6 +8,11 @@
   - **Tabel Ringkasan**: Menampilkan tabel paginasi dari semua pengguna yang menunjukkan saldo mereka saat ini, total pemasukan (dari penjualan konten), dan total pengeluaran (dari pembelian konten).
   - **Navigasi**: Menambahkan tautan "Manajemen Saldo" ke sidebar utama admin untuk akses mudah.
 
+### Diperbaiki
+- **Error Migrasi `balance_transactions`**: Memperbaiki error `errno: 150 "Foreign key constraint is incorrectly formed"` saat menjalankan migrasi untuk membuat tabel `balance_transactions`.
+  - **Penyebab**: Tipe data kolom `user_id` di tabel baru (`BIGINT`) tidak cocok dengan tipe data kolom `id` di tabel `users` (`INT(11)`).
+  - **Solusi**: Menyamakan tipe data `user_id` di file migrasi menjadi `INT(11)` agar sesuai dengan kolom yang direferensikan.
+
 ## [4.2.18] - 2025-08-23
 
 ### Peningkatan

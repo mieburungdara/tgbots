@@ -4,7 +4,7 @@
 
 CREATE TABLE `balance_transactions` (
   `id` BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT 'ID unik transaksi.',
-  `user_id` BIGINT NOT NULL COMMENT 'ID pengguna yang saldonya diubah.',
+  `user_id` INT(11) NOT NULL COMMENT 'ID pengguna yang saldonya diubah, merujuk ke users.id.',
   `amount` DECIMAL(15, 2) NOT NULL COMMENT 'Jumlah yang ditambahkan (positif) atau dikurangi (negatif).',
   `type` VARCHAR(50) NOT NULL DEFAULT 'admin_adjustment' COMMENT 'Jenis transaksi (misal: admin_adjustment, refund, etc).',
   `description` TEXT NULL COMMENT 'Catatan atau alasan dari admin untuk transaksi ini.',
