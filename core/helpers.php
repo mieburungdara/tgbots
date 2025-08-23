@@ -82,3 +82,18 @@ function generate_random_string(int $length, string $characters): string {
 function generate_seller_id(): string {
     return generate_random_string(4, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
 }
+
+/**
+ * Memformat angka menjadi string mata uang Rupiah (IDR).
+ *
+ * @param float|int|string $number Angka yang akan diformat.
+ * @param string $currency Simbol mata uang (default: 'Rp').
+ * @return string String mata uang yang diformat.
+ */
+function format_currency($number, string $currency = 'Rp'): string {
+    if (!is_numeric($number)) {
+        // Kembalikan nilai asli jika bukan angka, atau bisa juga return default value
+        return $number;
+    }
+    return $currency . ' ' . number_format($number, 0, ',', '.');
+}

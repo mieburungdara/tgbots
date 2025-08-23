@@ -15,6 +15,9 @@
 - **Fatal Error di Halaman Saldo**: Memperbaiki error `SQLSTATE[42S22]: Unknown column 'seller_id'` yang terjadi saat memuat halaman `admin/balance.php`.
   - **Penyebab**: Subquery untuk menghitung total pemasukan dan pengeluaran menggunakan nama kolom yang salah (`seller_id`, `buyer_id`).
   - **Solusi**: Mengubah nama kolom di dalam query menjadi `seller_user_id` dan `buyer_user_id` agar cocok dengan skema tabel `sales`.
+- **Fatal Error `format_currency()`**: Memperbaiki error `Call to undefined function format_currency()` di halaman `admin/balance.php`.
+  - **Penyebab**: Fungsi helper untuk memformat mata uang dipanggil tetapi belum pernah didefinisikan.
+  - **Solusi**: Menambahkan fungsi `format_currency()` baru ke dalam `core/helpers.php` agar tersedia secara global.
 
 ## [4.2.18] - 2025-08-23
 
