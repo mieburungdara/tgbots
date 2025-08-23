@@ -51,8 +51,8 @@ function run_migration_031(PDO $pdo): void
     if ($check_column_stmt->fetch()) {
         echo "  - Kolom 'role' lama ditemukan. Memulai migrasi data pengguna...\n";
 
-        // Get role IDs
-        $roles_stmt = $pdo->query("SELECT id, name FROM roles")->fetchAll(PDO::FETCH_KEY_PAIR);
+        // Get role IDs. The first column (name) becomes the key, the second (id) becomes the value.
+        $roles_stmt = $pdo->query("SELECT name, id FROM roles")->fetchAll(PDO::FETCH_KEY_PAIR);
         $admin_role_id = $roles_stmt['Admin'] ?? null;
         $user_role_id = $roles_stmt['User'] ?? null;
 
