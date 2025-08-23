@@ -67,7 +67,7 @@ try {
         SELECT mf.chat_id, mf.message_id, mf.caption, mf.created_at,
                u.first_name, u.username, u.telegram_id
         FROM media_files mf
-        LEFT JOIN users u ON mf.user_id = u.id
+        LEFT JOIN users u ON mf.user_id = u.telegram_id
     ";
     $sql = $is_single
         ? $base_sql . " WHERE mf.id = ?"
