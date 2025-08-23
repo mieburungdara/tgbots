@@ -8,6 +8,9 @@
   - **Implementasi**: Backend API dan panggilan AJAX di frontend pada halaman `admin/balance.php` telah disesuaikan untuk menggunakan `telegram_id`.
 
 ### Diperbaiki
+- **Fatal Error di Halaman Pengguna**: Memperbaiki error `SQLSTATE[HY093]: Invalid parameter number` yang terjadi saat menggunakan fungsi pencarian di halaman `admin/users.php`.
+  - **Penyebab**: Penggunaan placeholder bernama yang sama untuk beberapa kondisi `WHERE` dan `LIKE` dalam query pencarian tidak didukung secara konsisten oleh semua driver PDO.
+  - **Solusi**: Mengubah query untuk menggunakan placeholder bernama yang unik untuk setiap kondisi, memastikan query berjalan dengan benar.
 - **Fatal Error `Cannot redeclare get_sort_link()`**: Memperbaiki error fatal yang terjadi di halaman `admin/users.php`.
   - **Penyebab**: Fungsi `get_sort_link()` didefinisikan secara lokal di `admin/users.php` dan juga di `core/helpers.php`, menyebabkan konflik saat kedua file di-include.
   - **Solusi**: Menghapus definisi fungsi yang duplikat dari `admin/users.php` dan memastikan halaman tersebut menggunakan versi global dari `core/helpers.php`.
