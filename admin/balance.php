@@ -67,8 +67,12 @@ $offset = ($page - 1) * $limit;
 $where_clause = '';
 $params = [];
 if (!empty($search_term)) {
-    $where_clause = "WHERE u.first_name LIKE :search OR u.last_name LIKE :search OR u.username LIKE :search";
-    $params[':search'] = "%$search_term%";
+    $where_clause = "WHERE u.first_name LIKE :search1 OR u.last_name LIKE :search2 OR u.username LIKE :search3";
+    $params = [
+        ':search1' => "%$search_term%",
+        ':search2' => "%$search_term%",
+        ':search3' => "%$search_term%"
+    ];
 }
 
 $count_sql = "SELECT COUNT(*) FROM users u {$where_clause}";
