@@ -6,6 +6,11 @@
 - **Alur Kerja Penyesuaian Saldo**: Mengubah alur kerja pada halaman Manajemen Saldo (`admin/balance.php`) untuk meningkatkan efisiensi.
   - **Formulir Berbasis Modal**: Mengganti form di bagian atas halaman dengan tombol "Ubah Saldo" di setiap baris pengguna. Tombol ini akan membuka jendela modal (pop-up) untuk memasukkan jumlah penyesuaian saldo, membuat proses lebih cepat dan lebih terkontekstual.
 
+### Diperbaiki
+- **Fatal Error di Halaman Saldo**: Memperbaiki error `SQLSTATE[HY093]: Invalid parameter number` yang terjadi saat menggunakan fungsi pencarian di halaman `admin/balance.php`.
+  - **Penyebab**: Penggunaan placeholder bernama yang sama (`:search`) untuk beberapa kondisi `LIKE` dalam query pencarian tidak didukung secara konsisten oleh semua driver PDO.
+  - **Solusi**: Mengubah query untuk menggunakan placeholder bernama yang unik (`:search1`, `:search2`, `:search3`) untuk setiap kondisi `LIKE`, memastikan query berjalan dengan benar.
+
 ## [4.2.19] - 2025-08-23
 
 ### Fitur
