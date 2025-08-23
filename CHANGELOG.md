@@ -7,6 +7,11 @@
   - **Alasan**: Meningkatkan konsistensi dan keamanan dengan menggunakan ID publik yang tidak mengekspos struktur database internal.
   - **Implementasi**: Backend API dan panggilan AJAX di frontend pada halaman `admin/balance.php` telah disesuaikan untuk menggunakan `telegram_id`.
 
+### Diperbaiki
+- **Fatal Error `Cannot redeclare get_sort_link()`**: Memperbaiki error fatal yang terjadi di halaman `admin/users.php`.
+  - **Penyebab**: Fungsi `get_sort_link()` didefinisikan secara lokal di `admin/users.php` dan juga di `core/helpers.php`, menyebabkan konflik saat kedua file di-include.
+  - **Solusi**: Menghapus definisi fungsi yang duplikat dari `admin/users.php` dan memastikan halaman tersebut menggunakan versi global dari `core/helpers.php`.
+
 ## [4.2.22] - 2025-08-23
 
 ### Fitur
