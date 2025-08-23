@@ -8,10 +8,10 @@
  * Logika:
  * 1. Validasi permintaan.
  * 2. Ambil token bot dan daftar ID admin.
- * 3. Ambil detail media (storage_channel_id, storage_message_id) dari database.
+ * 3. Ambil detail media (chat_id, message_id) dari database.
  * 4. Buat caption informasi.
- * 5. Iterasi melalui setiap admin dan kirim media menggunakan copyMessage (untuk tunggal)
- *    atau sendMessage + copyMessages (untuk grup) untuk menjaga fungsionalitas.
+ * 5. Iterasi melalui setiap admin dan kirim media menggunakan copyMessage/copyMessages
+ *    langsung dari chat sumber.
  * 6. Kembalikan respons JSON.
  */
 header('Content-Type: application/json');
@@ -59,12 +59,12 @@ try {
         throw new Exception("Tidak ada admin yang ditemukan.");
     }
 
-    // 3. Ambil detail file media
+    // 3. Ambil detail file media, fokus pada chat_id dan message_id asli
     $is_single = strpos($group_id, 'single_') === 0;
     $db_id = $is_single ? (int)substr($group_id, 7) : $group_id;
 
     $base_sql = "
-        SELECT mf.storage_channel_id, mf.storage_message_id, mf.caption, mf.created_at, mf.file_size,
+        SELECT mf.chat_id, mf.message_id, mf.caption, mf.created_at,
                u.first_name, u.username, u.telegram_id
         FROM media_files mf
         LEFT JOIN users u ON mf.user_id = u.id
@@ -81,14 +81,13 @@ try {
         throw new Exception("File media tidak ditemukan.");
     }
 
-    // Validasi bahwa media memiliki data penyimpanan yang diperlukan
-    if (empty($media_files[0]['storage_channel_id']) || empty($media_files[0]['storage_message_id'])) {
-        throw new Exception("Media ini tidak dapat diteruskan karena data penyimpanannya tidak lengkap. Ini mungkin terjadi pada media versi lama.");
+    // Validasi bahwa media memiliki data sumber yang diperlukan
+    if (empty($media_files[0]['chat_id']) || empty($media_files[0]['message_id'])) {
+        throw new Exception("Media ini tidak dapat diteruskan karena data sumbernya (chat atau pesan) tidak lengkap.");
     }
 
     // 4. Buat caption informasi
     $sender_info = $media_files[0];
-    $file_size_kb = $sender_info['file_size'] ? round($sender_info['file_size'] / 1024, 2) . ' KB' : 'N/A';
     $sender_name = htmlspecialchars($sender_info['first_name'] ?? 'Pengguna Tidak Dikenal');
     $sender_username = $sender_info['username'] ? " (@" . htmlspecialchars($sender_info['username']) . ")" : "";
     $info_caption = "
@@ -104,15 +103,15 @@ Waktu Kirim: {$sender_info['created_at']}
     $success_count = 0;
     $total_admins = count($admin_ids);
 
-    $storage_channel_id = $media_files[0]['storage_channel_id'];
+    $from_chat_id = $media_files[0]['chat_id'];
 
     foreach ($admin_ids as $admin_chat_id) {
         $result_ok = false;
         if (count($media_files) > 1) {
             // Grup media: kirim info dulu, baru album
             $api->sendMessage($admin_chat_id, $info_caption, 'Markdown');
-            $message_ids = array_column($media_files, 'storage_message_id');
-            $result = $api->copyMessages($admin_chat_id, $storage_channel_id, json_encode($message_ids));
+            $message_ids = array_column($media_files, 'message_id');
+            $result = $api->copyMessages($admin_chat_id, $from_chat_id, json_encode($message_ids));
             $result_ok = $result && ($result['ok'] ?? false);
         } else {
             // Media tunggal: kirim dengan caption gabungan
@@ -121,7 +120,7 @@ Waktu Kirim: {$sender_info['created_at']}
             if (!empty($file['caption'])) {
                 $full_caption .= "\n" . $file['caption'];
             }
-            $result = $api->copyMessage($admin_chat_id, $storage_channel_id, $file['storage_message_id'], $full_caption, 'Markdown');
+            $result = $api->copyMessage($admin_chat_id, $from_chat_id, $file['message_id'], $full_caption, 'Markdown');
             $result_ok = $result && ($result['ok'] ?? false);
         }
 
