@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.17] - 2025-08-22
+
+### Peningkatan
+- **Konsistensi UI untuk Channel Chat**: Halaman riwayat pesan untuk channel dan grup (`admin/channel_chat.php`) telah diperbarui agar memiliki tampilan dan fungsionalitas yang sama dengan halaman riwayat pesan pengguna.
+  - **Tampilan Tabel & Pagination**: Mengganti antarmuka lama dengan tampilan tabel yang padat informasi dan menyertakan pagination sisi server.
+  - **Fitur Hapus Massal**: Menambahkan fungsionalitas hapus massal dengan checkbox dan menu aksi, sama seperti pada halaman chat pengguna.
+  - **Konsistensi Kode**: `delete_messages_handler.php` telah digeneralisasi untuk menangani permintaan hapus dari kedua jenis halaman (pengguna dan channel), mengurangi duplikasi kode.
+
 ## [4.2.16] - 2025-08-22
 
 ### Fitur

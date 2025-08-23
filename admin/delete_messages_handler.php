@@ -20,14 +20,25 @@ if (!$pdo) {
 // Ambil data dari form
 $message_ids = $_POST['message_ids'] ?? [];
 $action = $_POST['action'] ?? '';
-$user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
 $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
-$redirect_url = "chat.php?user_id=$user_id&bot_id=$bot_id";
+
+// Logika untuk menangani sumber halaman yang berbeda (user chat vs channel chat)
+$user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+$chat_id_param = isset($_POST['chat_id']) ? (int)$_POST['chat_id'] : 0;
+$source_page = $_POST['source_page'] ?? 'user_chat';
+
+// Tentukan URL redirect berdasarkan sumber
+if ($source_page === 'channel_chat') {
+    $redirect_url = "channel_chat.php?chat_id=$chat_id_param&bot_id=$bot_id";
+    $is_valid = !empty($message_ids) && is_array($message_ids) && !empty($action) && $chat_id_param && $bot_id;
+} else {
+    $redirect_url = "chat.php?user_id=$user_id&bot_id=$bot_id";
+    $is_valid = !empty($message_ids) && is_array($message_ids) && !empty($action) && $user_id && $bot_id;
+}
 
 // Validasi input
-if (empty($message_ids) || !is_array($message_ids) || empty($action) || !$user_id || !$bot_id) {
-    // Seharusnya ada pesan error, tapi untuk sekarang redirect saja
-    header("Location: $redirect_url");
+if (!$is_valid) {
+    header("Location: index.php"); // Redirect ke index jika parameter dasar hilang
     exit;
 }
 
