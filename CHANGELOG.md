@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.21] - 2025-08-23
+
+### Peningkatan
+- **Sorting di Halaman Saldo**: Menambahkan fungsionalitas pengurutan pada tabel di halaman `admin/balance.php`.
+  - Admin sekarang dapat mengurutkan daftar pengguna berdasarkan `Saldo Saat Ini`, `Total Pemasukan`, dan `Total Pengeluaran` dengan mengklik header kolom.
+  - **Dukungan Kolom Terhitung**: Logika pengurutan diimplementasikan untuk bekerja dengan benar pada kolom yang nilainya dihitung melalui subquery (aliased columns).
+  - **Helper Terpusat**: Membuat fungsi `get_sort_link()` yang dapat digunakan kembali di `core/helpers.php` untuk menyederhanakan pembuatan tautan pengurutan di seluruh panel admin.
+
 ## [4.2.20] - 2025-08-23
 
 ### Peningkatan
