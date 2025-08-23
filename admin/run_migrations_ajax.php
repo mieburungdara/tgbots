@@ -2,17 +2,11 @@
 /**
  * AJAX Handler untuk Menjalankan Migrasi Database.
  *
- * Menerima permintaan POST, menjalankan migrasi yang tertunda, dan
- * mengembalikan hasilnya dalam format JSON.
- * Direvisi untuk menangani output mentah dari skrip migrasi dengan andal.
+ * Versi sederhana: Menjalankan migrasi dan menampilkan output mentah sebagai text/plain.
  */
-header('Content-Type: application/json');
+header('Content-Type: text/plain; charset=utf-8');
 session_start();
 
-// Buat respons default
-$response = ['status' => 'error', 'message' => 'Terjadi kesalahan yang tidak diketahui.'];
-
-// Gunakan blok try/catch tingkat atas untuk menangkap semuanya, termasuk error parsing
 try {
     require_once __DIR__ . '/../core/database.php';
     require_once __DIR__ . '/../core/helpers.php';
@@ -45,63 +39,48 @@ try {
     sort($migrations_to_run);
 
     if (empty($migrations_to_run)) {
-        $response = ['status' => 'success', 'message' => "Database sudah paling baru. Tidak ada migrasi yang perlu dijalankan."];
+        echo "Database sudah paling baru. Tidak ada migrasi yang perlu dijalankan.";
     } else {
-        $results = [];
+        echo "Memulai proses migrasi...\n\n";
         foreach ($migrations_to_run as $migration_file) {
+            echo "==================================================\n";
+            echo "Menjalankan migrasi: {$migration_file}\n";
+            echo "==================================================\n";
+
             $file_path = $migration_files_path . $migration_file;
             $extension = pathinfo($file_path, PATHINFO_EXTENSION);
 
             $pdo->beginTransaction();
-            ob_start(); // Mulai output buffering di sini, sebelum try/catch
             try {
-                $migration_output = '';
                 if ($extension === 'sql') {
                     $sql = file_get_contents($file_path);
                     $pdo->exec($sql);
+                    echo "Skrip SQL berhasil dieksekusi.\n";
                 } elseif ($extension === 'php') {
-                    // Cukup require file. Kode top-level akan dieksekusi.
-                    // Fungsi di dalamnya juga akan didefinisikan.
-                    require $file_path;
-
-                    // Cek apakah ada fungsi migrasi konvensional untuk dijalankan
-                    // Ini untuk kompatibilitas mundur dengan migrasi berbasis fungsi.
-                    $function_name = 'run_migration_' . str_pad((int) filter_var($migration_file, FILTER_SANITIZE_NUMBER_INT), 3, '0', STR_PAD_LEFT);
-                    if (function_exists($function_name)) {
-                        $function_name($pdo);
-                    }
+                    require $file_path; // Output dari skrip ini akan langsung di-echo
                 }
 
-                // Tangkap semua output dari buffer
-                $migration_output = ob_get_clean();
-
-                // Catat migrasi yang berhasil
                 $stmt = $pdo->prepare("INSERT INTO migrations (migration_file) VALUES (?)");
                 $stmt->execute([$migration_file]);
                 $pdo->commit();
+                echo "\nStatus: SUKSES\n\n";
 
-                $result_message = "OK: " . $migration_file;
-                if (!empty(trim($migration_output))) {
-                    $result_message .= "\n--- Output ---\n" . trim($migration_output);
-                }
-                $results[] = $result_message;
-
-            } catch (Throwable $e) { // Tangkap Throwable untuk semua jenis error
+            } catch (Throwable $e) {
                 if ($pdo->inTransaction()) {
                     $pdo->rollBack();
                 }
-                // Pastikan buffer dibersihkan bahkan saat error
-                $error_output = ob_get_clean();
-                $results[] = "ERROR: " . $migration_file . " - " . $e->getMessage() . "\n" . $error_output;
-                throw new Exception("Gagal pada migrasi: " . $migration_file . ". Lihat log di atas untuk detail.");
+                echo "\n!!! ERROR !!!\n";
+                echo "Gagal pada migrasi: " . $migration_file . "\n";
+                echo "Pesan Error: " . $e->getMessage() . "\n";
+                echo "\nProses migrasi dihentikan.\n";
+                exit; // Hentikan jika ada error
             }
         }
-        $response = ['status' => 'success', 'message' => "Proses migrasi selesai:\n" . implode("\n\n", $results)];
+        echo "Semua migrasi berhasil dijalankan.";
     }
-} catch (Throwable $e) { // Tangkap Throwable di tingkat atas juga
-    $response['status'] = 'error';
-    $response['message'] = "Error Kritis: " . $e->getMessage();
+} catch (Throwable $e) {
+    http_response_code(500);
+    echo "Error Kritis: " . $e->getMessage();
 }
 
-echo json_encode($response);
 exit;
