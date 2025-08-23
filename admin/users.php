@@ -93,17 +93,6 @@ $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 $users = $stmt->fetchAll();
 
-// Fungsi helper untuk membuat link pengurutan
-function get_sort_link($column, $current_sort, $current_order) {
-    $new_order = ($column === $current_sort && $current_order === 'asc') ? 'desc' : 'asc';
-    $arrow = ($column === $current_sort) ? ($current_order === 'asc' ? ' &#9650;' : ' &#9660;') : '';
-    // Pertahankan parameter GET yang ada
-    $query_params = $_GET;
-    $query_params['sort'] = $column;
-    $query_params['order'] = $new_order;
-    return "users.php?" . http_build_query($query_params) . $arrow;
-}
-
 $page_title = 'Manajemen Pengguna';
 require_once __DIR__ . '/../partials/header.php';
 ?>
