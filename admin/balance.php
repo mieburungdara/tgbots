@@ -13,27 +13,21 @@ if (!$pdo) {
 
 // --- Logika untuk menangani form penyesuaian saldo (dari modal) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
+    // ... (logic remains the same) ...
     $user_id = (int)($_POST['user_id'] ?? 0);
     $amount = filter_var($_POST['amount'] ?? 0, FILTER_VALIDATE_FLOAT);
     $description = trim($_POST['description'] ?? '');
     $action = $_POST['action'];
-
     $message = '';
     $message_type = 'danger';
-
     if ($user_id && $amount > 0) {
         $transaction_amount = ($action === 'add_balance') ? $amount : -$amount;
-
         $pdo->beginTransaction();
         try {
             $stmt_update_user = $pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
             $stmt_update_user->execute([$transaction_amount, $user_id]);
-
-            $stmt_insert_trans = $pdo->prepare(
-                "INSERT INTO balance_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)"
-            );
+            $stmt_insert_trans = $pdo->prepare("INSERT INTO balance_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)");
             $stmt_insert_trans->execute([$user_id, $transaction_amount, 'admin_adjustment', $description]);
-
             $pdo->commit();
             $message = "Saldo pengguna berhasil diperbarui.";
             $message_type = 'success';
@@ -42,12 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $message = "Terjadi kesalahan: " . $e->getMessage();
         }
     } else {
-        $message = "Input tidak valid. Pastikan pengguna dipilih dan jumlah adalah angka positif.";
+        $message = "Input tidak valid.";
     }
-
     $_SESSION['flash_message'] = $message;
     $_SESSION['flash_message_type'] = $message_type;
-    // Redirect untuk mencegah resubmission, pertahankan parameter GET
     $redirect_url = "balance.php?" . http_build_query($_GET);
     header("Location: $redirect_url");
     exit;
@@ -58,21 +50,25 @@ $flash_message = $_SESSION['flash_message'] ?? '';
 $flash_message_type = $_SESSION['flash_message_type'] ?? 'success';
 unset($_SESSION['flash_message'], $_SESSION['flash_message_type']);
 
-// --- Logika Pagination & Pencarian ---
+// --- Logika
 $search_term = $_GET['search'] ?? '';
 $page = (int)($_GET['page'] ?? 1);
+$sort_by = $_GET['sort'] ?? 'id';
+$order = strtolower($_GET['order'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
 $limit = 50;
 $offset = ($page - 1) * $limit;
+
+// Validasi kolom sort
+$allowed_sort_columns = ['id', 'first_name', 'username', 'balance', 'total_income', 'total_spending'];
+if (!in_array($sort_by, $allowed_sort_columns)) {
+    $sort_by = 'id';
+}
 
 $where_clause = '';
 $params = [];
 if (!empty($search_term)) {
     $where_clause = "WHERE u.first_name LIKE :search1 OR u.last_name LIKE :search2 OR u.username LIKE :search3";
-    $params = [
-        ':search1' => "%$search_term%",
-        ':search2' => "%$search_term%",
-        ':search3' => "%$search_term%"
-    ];
+    $params = [':search1' => "%$search_term%", ':search2' => "%$search_term%", ':search3' => "%$search_term%"];
 }
 
 $count_sql = "SELECT COUNT(*) FROM users u {$where_clause}";
@@ -88,7 +84,7 @@ $sql = "
         (SELECT SUM(price) FROM sales WHERE buyer_user_id = u.id) as total_spending
     FROM users u
     {$where_clause}
-    ORDER BY u.id DESC
+    ORDER BY {$sort_by} {$order}
     LIMIT :limit OFFSET :offset
 ";
 $stmt = $pdo->prepare($sql);
@@ -127,12 +123,12 @@ require_once __DIR__ . '/../partials/header.php';
         <table class="chat-log-table">
             <thead>
                 <tr>
-                    <th>ID</th>
-                    <th>Nama</th>
-                    <th>Username</th>
-                    <th>Saldo Saat Ini</th>
-                    <th>Total Pemasukan</th>
-                    <th>Total Pengeluaran</th>
+                    <th><a href="<?= get_sort_link('id', $sort_by, $order, $_GET) ?>">ID</a></th>
+                    <th><a href="<?= get_sort_link('first_name', $sort_by, $order, $_GET) ?>">Nama</a></th>
+                    <th><a href="<?= get_sort_link('username', $sort_by, $order, $_GET) ?>">Username</a></th>
+                    <th><a href="<?= get_sort_link('balance', $sort_by, $order, $_GET) ?>">Saldo Saat Ini</a></th>
+                    <th><a href="<?= get_sort_link('total_income', $sort_by, $order, $_GET) ?>">Total Pemasukan</a></th>
+                    <th><a href="<?= get_sort_link('total_spending', $sort_by, $order, $_GET) ?>">Total Pengeluaran</a></th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -166,7 +162,6 @@ require_once __DIR__ . '/../partials/header.php';
 
     <div class="pagination">
         <?php
-        // (Pagination logic remains the same)
         $query_params = $_GET;
         if ($page > 1) {
             $query_params['page'] = $page - 1;
@@ -174,9 +169,7 @@ require_once __DIR__ . '/../partials/header.php';
         } else {
             echo '<span class="disabled">&laquo; Sebelumnya</span>';
         }
-
         echo '<span class="current-page">Halaman ' . $page . ' dari ' . $total_pages . '</span>';
-
         if ($page < $total_pages) {
             $query_params['page'] = $page + 1;
             echo '<a href="?' . http_build_query($query_params) . '">Berikutnya &raquo;</a>';
@@ -224,10 +217,8 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', function() {
             const userId = this.dataset.userId;
             const userName = this.dataset.userName;
-
             modalTitle.textContent = 'Ubah Saldo untuk ' + userName;
             modalUserIdInput.value = userId;
-
             modal.style.display = 'flex';
         });
     });
@@ -240,7 +231,6 @@ document.addEventListener('DOMContentLoaded', function() {
         button.addEventListener('click', closeModal);
     });
 
-    // Close modal if overlay is clicked
     modal.addEventListener('click', function(event) {
         if (event.target === modal) {
             closeModal();
