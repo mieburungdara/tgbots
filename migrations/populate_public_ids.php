@@ -81,7 +81,4 @@ try {
         $pdo->rollBack();
     }
     echo "Terjadi error: " . $e->getMessage() . "\n";
-    exit(1);
 }
-
-exit(0);

@@ -98,27 +98,21 @@ document.addEventListener('DOMContentLoaded', function() {
         resultsPre.textContent = 'Memproses permintaan...';
 
         fetch('run_migrations_ajax.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            // Tidak perlu body jika tidak ada data yg dikirim, tapi bisa ditambahkan jika perlu
-            // body: new URLSearchParams({ 'action': 'run_migrations' })
+            method: 'POST'
         })
         .then(response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.statusText);
-            }
-            return response.json();
+            // Cek apakah response OK, tapi tetap proses sebagai teks apapun hasilnya
+            return response.text().then(text => {
+                if (!response.ok) {
+                    // Lemparkan error dengan teks dari server untuk debugging
+                    throw new Error('Network response was not ok (' + response.status + ').\n\n' + text);
+                }
+                return text;
+            });
         })
-        .then(data => {
-            let message = data.message || 'Tidak ada pesan dari server.';
-            if (data.status === 'error') {
-                resultsPre.style.color = '#e74c3c'; // Merah untuk error
-            } else {
-                resultsPre.style.color = '#2ecc71'; // Hijau untuk sukses
-            }
-            resultsPre.textContent = message;
+        .then(text => {
+            resultsPre.style.color = '#f1f1f1'; // Warna default untuk output mentah
+            resultsPre.textContent = text;
         })
         .catch(error => {
             resultsPre.style.color = '#e74c3c';
