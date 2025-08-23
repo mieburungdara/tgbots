@@ -561,12 +561,26 @@ EOT;
             $this->telegram_api->sendMessage($this->chat_id, "Maaf, terjadi kesalahan teknis (ERR:CFG01).");
             return;
         }
+
+        // Generate a single-use login token
         $login_token = bin2hex(random_bytes(32));
         $this->pdo->prepare("UPDATE members SET login_token = ?, token_created_at = NOW(), token_used = 0 WHERE user_id = ?")
              ->execute([$login_token, $this->current_user['id']]);
-        $login_link = rtrim(BASE_URL, '/') . '/member/index.php?token=' . $login_token;
-        $keyboard = ['inline_keyboard' => [[['text' => 'Login ke Panel Member', 'url' => $login_link]]]];
-        $this->telegram_api->sendMessage($this->chat_id, "Klik tombol di bawah ini untuk masuk ke Panel Member Anda. Tombol ini hanya dapat digunakan satu kali.", null, json_encode($keyboard));
+
+        // Check user role to determine the login destination
+        if ($this->current_user['role'] === 'Admin') {
+            // Admin gets a choice page
+            $login_link = rtrim(BASE_URL, '/') . '/login_choice.php?token=' . $login_token;
+            $message = "Anda adalah seorang Admin. Silakan pilih panel yang ingin Anda masuki.";
+            $keyboard = ['inline_keyboard' => [[['text' => 'Pilih Panel Login', 'url' => $login_link]]]];
+            $this->telegram_api->sendMessage($this->chat_id, $message, null, json_encode($keyboard));
+        } else {
+            // Regular members go directly to the member panel
+            $login_link = rtrim(BASE_URL, '/') . '/member/index.php?token=' . $login_token;
+            $message = "Klik tombol di bawah ini untuk masuk ke Panel Member Anda. Tombol ini hanya dapat digunakan satu kali.";
+            $keyboard = ['inline_keyboard' => [[['text' => 'Login ke Panel Member', 'url' => $login_link]]]];
+            $this->telegram_api->sendMessage($this->chat_id, $message, null, json_encode($keyboard));
+        }
     }
 
     /**

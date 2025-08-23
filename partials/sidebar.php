@@ -20,6 +20,14 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <a href="telegram_logs.php" class="<?= $current_page == 'telegram_logs.php' ? 'active' : '' ?>">Log Error Telegram</a>
         <a href="debug_feed.php" class="<?= $current_page == 'debug_feed.php' ? 'active' : '' ?>">Debug Feed</a>
         <a href="api_test.php" class="<?= $current_page == 'api_test.php' ? 'active' : '' ?>">Tes API</a>
-        <a href="../index.php">Logout</a>
     </nav>
+    <div class="sidebar-footer" style="padding: 15px; border-top: 1px solid #f0f0f0; margin-top: 15px;">
+        <?php if (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true): ?>
+            <div style="font-size: 14px; color: #6c757d; margin-bottom: 10px;">
+                Masuk sebagai:<br>
+                <strong style="color: #333;"><?= htmlspecialchars($_SESSION['user_first_name'] ?? 'Admin') ?></strong>
+            </div>
+            <a href="logout.php" style="display: block; text-align: center; background: #f8d7da; color: #721c24; padding: 8px; border-radius: 4px; text-decoration: none; font-weight: bold;">Logout</a>
+        <?php endif; ?>
+    </div>
 </aside>
