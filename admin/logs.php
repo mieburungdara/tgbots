@@ -22,7 +22,7 @@ require_once ROOT_PATH . '/core/helpers.php';
 
 // --- Konfigurasi ---
 $pdo = get_db_connection();
-$lines_to_show = 100; // Jumlah baris log yang ditampilkan per halaman
+$items_per_page = 50; // Jumlah log per halaman
 
 // --- Dapatkan Level Log yang Tersedia dari Database untuk Filter ---
 $stmt_levels = $pdo->query("SELECT DISTINCT level FROM app_logs ORDER BY level ASC");
@@ -39,7 +39,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
             $pdo->query("TRUNCATE TABLE app_logs");
             app_log("Tabel app_logs dibersihkan oleh admin.", 'system'); // Mencatat aksi pembersihan itu sendiri
             $message = "Semua log berhasil dibersihkan.";
-            // Redirect untuk menghindari pengiriman ulang formulir saat refresh
             header("Location: logs.php?message=" . urlencode($message));
             exit;
         } catch (PDOException $e) {
@@ -52,20 +51,42 @@ if (isset($_GET['message'])) {
     $message = htmlspecialchars($_GET['message']);
 }
 
+// --- Logika Paginasi ---
+// 1. Hitung total log sesuai filter
+$count_sql = "SELECT COUNT(*) FROM app_logs";
+if ($selected_level !== 'all') {
+    $count_sql .= " WHERE level = :level";
+}
+$count_stmt = $pdo->prepare($count_sql);
+if ($selected_level !== 'all') {
+    $count_stmt->bindParam(':level', $selected_level, PDO::PARAM_STR);
+}
+$count_stmt->execute();
+$total_items = $count_stmt->fetchColumn();
 
-// --- Baca isi log dari DB ---
+// 2. Tentukan halaman saat ini
+$total_pages = ceil($total_items / $items_per_page);
+$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$current_page = max(1, min($current_page, $total_pages)); // Pastikan halaman valid
+
+// 3. Hitung offset
+$offset = ($current_page - 1) * $items_per_page;
+
+
+// --- Baca isi log dari DB dengan paginasi ---
 $sql = "SELECT * FROM app_logs";
 if ($selected_level !== 'all') {
     $sql .= " WHERE level = :level";
 }
-$sql .= " ORDER BY id DESC LIMIT :limit";
+$sql .= " ORDER BY id DESC LIMIT :limit OFFSET :offset";
 
 $stmt = $pdo->prepare($sql);
 
 if ($selected_level !== 'all') {
     $stmt->bindParam(':level', $selected_level, PDO::PARAM_STR);
 }
-$stmt->bindParam(':limit', $lines_to_show, PDO::PARAM_INT);
+$stmt->bindParam(':limit', $items_per_page, PDO::PARAM_INT);
+$stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
 $stmt->execute();
 $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -142,6 +163,53 @@ include_once ROOT_PATH . '/partials/header.php';
                 <?php endif; ?>
             </tbody>
         </table>
+    </div>
+
+    <!-- Kontrol Paginasi -->
+    <div class="mt-4 flex justify-center">
+        <nav class="inline-flex rounded-md shadow">
+            <?php if ($total_pages > 1): ?>
+                <?php
+                // Pertahankan parameter query yang ada (misal: filter level)
+                $query_params = [];
+                if ($selected_level !== 'all') {
+                    $query_params['level'] = $selected_level;
+                }
+                ?>
+
+                <!-- Tombol Previous -->
+                <a href="?<?= http_build_query(array_merge($query_params, ['page' => $current_page - 1])) ?>"
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($current_page <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                    &laquo; Previous
+                </a>
+
+                <?php
+                // Logika untuk menampilkan rentang halaman
+                $window = 2; // Jumlah halaman di sekitar halaman saat ini
+                for ($i = 1; $i <= $total_pages; $i++):
+                    if ($i == 1 || $i == $total_pages || ($i >= $current_page - $window && $i <= $current_page + $window)):
+                ?>
+                    <a href="?<?= http_build_query(array_merge($query_params, ['page' => $i])) ?>"
+                       class="px-4 py-2 text-sm font-medium <?= ($i == $current_page) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-t border-b border-gray-300' ?> hover:bg-gray-50">
+                        <?= $i ?>
+                    </a>
+                <?php
+                    // Tampilkan elipsis jika ada jeda halaman
+                    elseif ($i == $current_page - $window - 1 || $i == $current_page + $window + 1):
+                ?>
+                    <span class="px-4 py-2 text-sm font-medium bg-white text-gray-500 border-t border-b border-gray-300">...</span>
+                <?php
+                    endif;
+                endfor;
+                ?>
+
+                <!-- Tombol Next -->
+                <a href="?<?= http_build_query(array_merge($query_params, ['page' => $current_page + 1])) ?>"
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($current_page >= $total_pages) ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                    Next &raquo;
+                </a>
+            <?php endif; ?>
+        </nav>
     </div>
 </div>
 
