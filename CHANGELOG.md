@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.19] - 2025-08-23
+
+### Fitur
+- **Halaman Manajemen Saldo**: Menambahkan halaman baru (`admin/balance.php`) yang didedikasikan untuk manajemen saldo pengguna.
+  - **Penyesuaian Saldo**: Admin dapat menambah atau mengurangi saldo pengguna secara manual melalui form. Setiap transaksi dicatat dalam tabel `balance_transactions` yang baru.
+  - **Tabel Ringkasan**: Menampilkan tabel paginasi dari semua pengguna yang menunjukkan saldo mereka saat ini, total pemasukan (dari penjualan konten), dan total pengeluaran (dari pembelian konten).
+  - **Navigasi**: Menambahkan tautan "Manajemen Saldo" ke sidebar utama admin untuk akses mudah.
+
 ## [4.2.18] - 2025-08-23
 
 ### Peningkatan
