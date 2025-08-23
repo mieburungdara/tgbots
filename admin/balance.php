@@ -89,8 +89,8 @@ $sql = "
         u.last_name,
         u.username,
         u.balance,
-        (SELECT SUM(price) FROM sales WHERE seller_id = u.id) as total_income,
-        (SELECT SUM(price) FROM sales WHERE buyer_id = u.id) as total_spending
+        (SELECT SUM(price) FROM sales WHERE seller_user_id = u.id) as total_income,
+        (SELECT SUM(price) FROM sales WHERE buyer_user_id = u.id) as total_spending
     FROM users u
     {$where_clause}
     ORDER BY u.id DESC
