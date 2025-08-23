@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.2.18] - 2025-08-23
+
+### Peningkatan
+- **Peningkatan Halaman Manajemen Pengguna**: Merombak halaman `admin/users.php` untuk meningkatkan fungsionalitas dan kegunaan.
+  - **Pagination**: Mengimplementasikan pagination sisi server untuk menangani daftar pengguna yang besar secara efisien.
+  - **Pencarian & Pengurutan**: Mempertahankan dan mengintegrasikan fungsionalitas pencarian dan pengurutan yang ada dengan sistem pagination baru.
+  - **Tombol Aksi yang Terintegrasi**: Menambahkan tombol "Lihat Percakapan" yang mengarahkan admin ke dasbor percakapan (`index.php`) dengan filter pengguna yang sudah diterapkan, menyederhanakan alur kerja untuk melihat riwayat chat pengguna.
+
 ## [4.2.17] - 2025-08-22
 
 ### Peningkatan
