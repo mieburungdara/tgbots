@@ -32,9 +32,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         ensure_migrations_table_exists($pdo);
         // 2. Dapatkan migrasi yang sudah pernah dijalankan
         $executed_migrations = $pdo->query("SELECT migration_file FROM migrations")->fetchAll(PDO::FETCH_COLUMN);
-        // 3. Dapatkan semua file migrasi yang ada di direktori
+        // 3. Dapatkan semua file migrasi yang ada di direktori (SQL dan PHP)
         $migration_files_path = __DIR__ . '/../migrations/';
-        $all_migration_files = glob($migration_files_path . '*.sql');
+        $all_migration_files = glob($migration_files_path . '*.{sql,php}', GLOB_BRACE);
 
         // 4. Filter untuk mendapatkan migrasi yang belum dijalankan
         $migrations_to_run = [];
@@ -51,11 +51,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         if (empty($migrations_to_run)) {
             $_SESSION['message'] = "Database sudah paling baru. Tidak ada migrasi yang perlu dijalankan.";
         } else {
-            // 5. Jalankan setiap migrasi baru dalam satu transaksi (jika memungkinkan)
+            // 5. Jalankan setiap migrasi baru
             foreach ($migrations_to_run as $migration_file) {
+                $file_path = $migration_files_path . $migration_file;
+                $extension = pathinfo($file_path, PATHINFO_EXTENSION);
+
                 try {
-                    $sql = file_get_contents($migration_files_path . $migration_file);
-                    $pdo->exec($sql);
+                    if ($extension === 'sql') {
+                        // Jalankan file SQL
+                        $sql = file_get_contents($file_path);
+                        $pdo->exec($sql);
+                    } elseif ($extension === 'php') {
+                        // Jalankan file PHP
+                        require_once $file_path;
+                        // Buat nama fungsi dari nama file, misal: "031_... .php" -> "run_migration_031"
+                        $function_name = 'run_migration_' . str_pad((int) filter_var($migration_file, FILTER_SANITIZE_NUMBER_INT), 3, '0', STR_PAD_LEFT);
+                        if (function_exists($function_name)) {
+                            $function_name($pdo);
+                        } else {
+                            throw new Exception("Fungsi migrasi '{$function_name}' tidak ditemukan di file '{$migration_file}'.");
+                        }
+                    }
+
                     // Catat migrasi yang berhasil ke tabel `migrations`
                     $stmt = $pdo->prepare("INSERT INTO migrations (migration_file) VALUES (?)");
                     $stmt->execute([$migration_file]);
