@@ -49,7 +49,13 @@ try {
     }
 
     // 2. Ambil daftar semua pengguna admin sebagai tujuan
-    $admins_stmt = $pdo->query("SELECT telegram_id FROM users WHERE role = 'admin'");
+    $admins_stmt = $pdo->query("
+        SELECT u.telegram_id
+        FROM users u
+        JOIN user_roles ur ON u.id = ur.user_id
+        JOIN roles r ON ur.role_id = r.id
+        WHERE r.name = 'Admin'
+    ");
     $admin_ids = $admins_stmt->fetchAll(PDO::FETCH_COLUMN);
     if (empty($admin_ids)) {
         throw new Exception("Tidak ada pengguna dengan peran admin yang ditemukan.");
