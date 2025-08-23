@@ -13,7 +13,6 @@ if (!$pdo) {
 
 // --- Logika untuk menangani form penyesuaian saldo (dari modal) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    // ... (logic remains the same) ...
     $user_id = (int)($_POST['user_id'] ?? 0);
     $amount = filter_var($_POST['amount'] ?? 0, FILTER_VALIDATE_FLOAT);
     $description = trim($_POST['description'] ?? '');
@@ -58,7 +57,6 @@ $order = strtolower($_GET['order'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
 $limit = 50;
 $offset = ($page - 1) * $limit;
 
-// Validasi kolom sort
 $allowed_sort_columns = ['id', 'first_name', 'username', 'balance', 'total_income', 'total_spending'];
 if (!in_array($sort_by, $allowed_sort_columns)) {
     $sort_by = 'id';
@@ -126,9 +124,9 @@ require_once __DIR__ . '/../partials/header.php';
                     <th><a href="<?= get_sort_link('id', $sort_by, $order, $_GET) ?>">ID</a></th>
                     <th><a href="<?= get_sort_link('first_name', $sort_by, $order, $_GET) ?>">Nama</a></th>
                     <th><a href="<?= get_sort_link('username', $sort_by, $order, $_GET) ?>">Username</a></th>
-                    <th><a href="<?= get_sort_link('balance', $sort_by, $order, $_GET) ?>">Saldo Saat Ini</a></th>
-                    <th><a href="<?= get_sort_link('total_income', $sort_by, $order, $_GET) ?>">Total Pemasukan</a></th>
-                    <th><a href="<?= get_sort_link('total_spending', $sort_by, $order, $_GET) ?>">Total Pengeluaran</a></th>
+                    <th class="sortable"><a href="<?= get_sort_link('balance', $sort_by, $order, $_GET) ?>">Saldo Saat Ini</a></th>
+                    <th class="sortable"><a href="<?= get_sort_link('total_income', $sort_by, $order, $_GET) ?>">Total Pemasukan</a></th>
+                    <th class="sortable"><a href="<?= get_sort_link('total_spending', $sort_by, $order, $_GET) ?>">Total Pengeluaran</a></th>
                     <th>Aksi</th>
                 </tr>
             </thead>
@@ -143,9 +141,9 @@ require_once __DIR__ . '/../partials/header.php';
                             <td><?= htmlspecialchars($user_data['id']) ?></td>
                             <td><?= htmlspecialchars(trim($user_data['first_name'] . ' ' . $user_data['last_name'])) ?></td>
                             <td>@<?= htmlspecialchars($user_data['username'] ?? 'N/A') ?></td>
-                            <td><?= format_currency($user_data['balance']) ?></td>
-                            <td><?= format_currency($user_data['total_income'] ?? 0) ?></td>
-                            <td><?= format_currency($user_data['total_spending'] ?? 0) ?></td>
+                            <td class="clickable-log" data-log-type="balance" data-user-id="<?= $user_data['id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['balance']) ?></td>
+                            <td class="clickable-log" data-log-type="sales" data-user-id="<?= $user_data['id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['total_income'] ?? 0) ?></td>
+                            <td class="clickable-log" data-log-type="purchases" data-user-id="<?= $user_data['id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['total_spending'] ?? 0) ?></td>
                             <td>
                                 <button class="btn btn-sm btn-edit open-balance-modal"
                                         data-user-id="<?= $user_data['id'] ?>"
@@ -184,8 +182,8 @@ require_once __DIR__ . '/../partials/header.php';
 <div id="balance-modal" class="modal-overlay">
     <div class="modal-content">
         <div class="modal-header">
-            <h2 id="modal-title">Ubah Saldo untuk Pengguna</h2>
-            <button class="modal-close">&times;</button>
+            <h2 id="modal-title-adjust">Ubah Saldo untuk Pengguna</h2>
+            <button class="modal-close-adjust">&times;</button>
         </div>
         <form action="balance.php?<?= http_build_query($_GET) ?>" method="post" class="balance-adjustment-form" style="padding: 0; border: none; background: none; margin-top: 0;">
             <input type="hidden" name="user_id" id="modal-user-id">
@@ -205,37 +203,123 @@ require_once __DIR__ . '/../partials/header.php';
     </div>
 </div>
 
+<!-- Modal untuk Log Transaksi -->
+<div id="log-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h2 id="log-modal-title">Riwayat Transaksi</h2>
+            <button class="modal-close-log">&times;</button>
+        </div>
+        <div id="log-modal-body" style="max-height: 60vh; overflow-y: auto;">
+            <p>Memuat data...</p>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('balance-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalUserIdInput = document.getElementById('modal-user-id');
-    const openModalButtons = document.querySelectorAll('.open-balance-modal');
-    const closeModalButtons = document.querySelectorAll('.modal-close');
-
-    openModalButtons.forEach(button => {
+    // --- Modal untuk Ubah Saldo ---
+    const balanceModal = document.getElementById('balance-modal');
+    const balanceModalTitle = document.getElementById('modal-title-adjust');
+    const balanceModalUserIdInput = document.getElementById('modal-user-id');
+    document.querySelectorAll('.open-balance-modal').forEach(button => {
         button.addEventListener('click', function() {
-            const userId = this.dataset.userId;
-            const userName = this.dataset.userName;
-            modalTitle.textContent = 'Ubah Saldo untuk ' + userName;
-            modalUserIdInput.value = userId;
-            modal.style.display = 'flex';
+            balanceModalTitle.textContent = 'Ubah Saldo untuk ' + this.dataset.userName;
+            balanceModalUserIdInput.value = this.dataset.userId;
+            balanceModal.style.display = 'flex';
         });
     });
+    document.querySelectorAll('.modal-close-adjust').forEach(button => button.addEventListener('click', () => balanceModal.style.display = 'none'));
+    balanceModal.addEventListener('click', e => { if (e.target === balanceModal) balanceModal.style.display = 'none'; });
 
-    function closeModal() {
-        modal.style.display = 'none';
+    // --- Modal untuk Log Transaksi ---
+    const logModal = document.getElementById('log-modal');
+    const logModalTitle = document.getElementById('log-modal-title');
+    const logModalBody = document.getElementById('log-modal-body');
+    document.querySelectorAll('.clickable-log').forEach(cell => {
+        cell.addEventListener('click', async function() {
+            const userId = this.dataset.userId;
+            const userName = this.dataset.userName;
+            const logType = this.dataset.logType;
+
+            logModalBody.innerHTML = '<p>Memuat data...</p>';
+            logModal.style.display = 'flex';
+
+            let apiUrl = '';
+            let title = '';
+            let headers = [];
+            let dataBuilder;
+
+            switch (logType) {
+                case 'balance':
+                    apiUrl = `api/get_balance_log.php?user_id=${userId}`;
+                    title = `Riwayat Penyesuaian Saldo untuk ${userName}`;
+                    headers = ['Waktu', 'Tipe', 'Jumlah', 'Deskripsi'];
+                    dataBuilder = (item) => `
+                        <td>${item.created_at}</td>
+                        <td>${item.type}</td>
+                        <td>${formatCurrency(item.amount)}</td>
+                        <td>${item.description || ''}</td>`;
+                    break;
+                case 'sales':
+                    apiUrl = `api/get_sales_log.php?user_id=${userId}`;
+                    title = `Riwayat Pemasukan (Penjualan) untuk ${userName}`;
+                    headers = ['Waktu', 'Konten', 'Pembeli', 'Harga'];
+                    dataBuilder = (item) => `
+                        <td>${item.purchased_at}</td>
+                        <td>${item.package_title || 'N/A'}</td>
+                        <td>${item.buyer_name || 'N/A'}</td>
+                        <td>${formatCurrency(item.price)}</td>`;
+                    break;
+                case 'purchases':
+                    apiUrl = `api/get_purchases_log.php?user_id=${userId}`;
+                    title = `Riwayat Pengeluaran (Pembelian) untuk ${userName}`;
+                    headers = ['Waktu', 'Konten', 'Harga'];
+                    dataBuilder = (item) => `
+                        <td>${item.purchased_at}</td>
+                        <td>${item.package_title || 'N/A'}</td>
+                        <td>${formatCurrency(item.price)}</td>`;
+                    break;
+            }
+
+            logModalTitle.textContent = title;
+
+            try {
+                const response = await fetch(apiUrl);
+                const data = await response.json();
+
+                if (data.error) {
+                    logModalBody.innerHTML = `<p class="alert alert-danger">${data.error}</p>`;
+                    return;
+                }
+
+                if (data.length === 0) {
+                    logModalBody.innerHTML = '<p>Tidak ada riwayat ditemukan.</p>';
+                    return;
+                }
+
+                let tableHTML = '<table class="chat-log-table"><thead><tr>';
+                headers.forEach(h => tableHTML += `<th>${h}</th>`);
+                tableHTML += '</tr></thead><tbody>';
+                data.forEach(item => {
+                    tableHTML += `<tr>${dataBuilder(item)}</tr>`;
+                });
+                tableHTML += '</tbody></table>';
+                logModalBody.innerHTML = tableHTML;
+
+            } catch (error) {
+                logModalBody.innerHTML = `<p class="alert alert-danger">Gagal memuat data. Silakan coba lagi.</p>`;
+            }
+        });
+    });
+    document.querySelectorAll('.modal-close-log').forEach(button => button.addEventListener('click', () => logModal.style.display = 'none'));
+    logModal.addEventListener('click', e => { if (e.target === logModal) logModal.style.display = 'none'; });
+
+    // Helper function to format currency inside JS
+    function formatCurrency(number, currency = 'Rp') {
+        if (isNaN(parseFloat(number))) return number;
+        return currency + ' ' + parseFloat(number).toLocaleString('id-ID');
     }
-
-    closeModalButtons.forEach(button => {
-        button.addEventListener('click', closeModal);
-    });
-
-    modal.addEventListener('click', function(event) {
-        if (event.target === modal) {
-            closeModal();
-        }
-    });
 });
 </script>
 

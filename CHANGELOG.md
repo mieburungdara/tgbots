@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.2.22] - 2025-08-23
+
+### Fitur
+- **Log Transaksi Interaktif**: Menambahkan modal pop-up interaktif di halaman `admin/balance.php` untuk melihat riwayat transaksi secara detail.
+  - **Riwayat Saldo**: Mengklik jumlah "Saldo Saat Ini" akan menampilkan riwayat penyesuaian saldo oleh admin, lengkap dengan deskripsi.
+  - **Riwayat Pemasukan**: Mengklik "Total Pemasukan" akan menampilkan daftar konten yang telah dijual oleh pengguna.
+  - **Riwayat Pengeluaran**: Mengklik "Total Pengeluaran" akan menampilkan daftar konten yang telah dibeli oleh pengguna.
+  - **Implementasi AJAX**: Data untuk modal ini diambil secara dinamis menggunakan API endpoint baru di `admin/api/`, sehingga tidak memperlambat waktu muat halaman awal.
+
 ## [4.2.21] - 2025-08-23
 
 ### Peningkatan
