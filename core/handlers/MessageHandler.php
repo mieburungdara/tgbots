@@ -245,7 +245,7 @@ Cek saldo Anda saat ini.
 Dapatkan tautan unik untuk masuk ke panel member di web.
 EOT;
 
-        if ($this->current_user['role'] === 'admin') {
+        if ($this->current_user['role'] === 'Admin') {
             $admin_help_text = <<<EOT
 
 
@@ -492,7 +492,7 @@ EOT;
             return;
         }
 
-        $is_admin = ($this->current_user['role'] === 'admin');
+        $is_admin = ($this->current_user['role'] === 'Admin');
         $is_seller = ($package['seller_user_id'] == $internal_user_id);
 
         // Defensive check: Inexplicably, sale_repo is sometimes null here.
@@ -592,7 +592,7 @@ EOT;
      */
     private function handleAdminCommands(string $command, array $parts)
     {
-        if ($this->current_user['role'] !== 'admin') {
+        if ($this->current_user['role'] !== 'Admin') {
             return; // Bukan admin
         }
         // ... Logika untuk perintah admin, masih menggunakan PDO langsung.
