@@ -58,8 +58,15 @@ $search_term = $_GET['search'] ?? '';
 $where_clause = '';
 $params = [];
 if (!empty($search_term)) {
-    $where_clause = "WHERE u.id = :search_term OR u.telegram_id = :search_term OR u.first_name LIKE :like_search OR u.last_name LIKE :like_search OR u.username LIKE :like_search";
-    $params = [':search_term' => $search_term, ':like_search' => "%$search_term%"];
+    // Menggunakan placeholder unik untuk setiap kondisi untuk menghindari error di beberapa driver PDO
+    $where_clause = "WHERE u.id = :search_id OR u.telegram_id = :search_telegram_id OR u.first_name LIKE :like_fn OR u.last_name LIKE :like_ln OR u.username LIKE :like_un";
+    $params = [
+        ':search_id' => $search_term,
+        ':search_telegram_id' => $search_term,
+        ':like_fn' => "%$search_term%",
+        ':like_ln' => "%$search_term%",
+        ':like_un' => "%$search_term%"
+    ];
 }
 
 // --- Logika Pengurutan ---
