@@ -11,9 +11,8 @@ if (!$pdo) {
     die("Koneksi database gagal.");
 }
 
-// --- Logika untuk menangani form penyesuaian saldo ---
+// --- Logika untuk menangani form penyesuaian saldo (dari modal) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    // (Logic from previous step remains the same)
     $user_id = (int)($_POST['user_id'] ?? 0);
     $amount = filter_var($_POST['amount'] ?? 0, FILTER_VALIDATE_FLOAT);
     $description = trim($_POST['description'] ?? '');
@@ -48,7 +47,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
 
     $_SESSION['flash_message'] = $message;
     $_SESSION['flash_message_type'] = $message_type;
-    header("Location: balance.php");
+    // Redirect untuk mencegah resubmission, pertahankan parameter GET
+    $redirect_url = "balance.php?" . http_build_query($_GET);
+    header("Location: $redirect_url");
     exit;
 }
 
@@ -63,7 +64,6 @@ $page = (int)($_GET['page'] ?? 1);
 $limit = 50;
 $offset = ($page - 1) * $limit;
 
-// Bangun klausa WHERE untuk pencarian
 $where_clause = '';
 $params = [];
 if (!empty($search_term)) {
@@ -71,24 +71,15 @@ if (!empty($search_term)) {
     $params[':search'] = "%$search_term%";
 }
 
-// Query untuk menghitung total pengguna (dengan filter)
 $count_sql = "SELECT COUNT(*) FROM users u {$where_clause}";
 $count_stmt = $pdo->prepare($count_sql);
 $count_stmt->execute($params);
 $total_users = $count_stmt->fetchColumn();
 $total_pages = ceil($total_users / $limit);
 
-// Ambil semua pengguna untuk dropdown form (tidak terpengaruh pagination/pencarian)
-$all_users_for_form = $pdo->query("SELECT id, first_name, last_name, username FROM users ORDER BY first_name ASC, last_name ASC")->fetchAll();
-
-// Query utama untuk mendapatkan data pengguna dengan agregat dan pagination
 $sql = "
     SELECT
-        u.id,
-        u.first_name,
-        u.last_name,
-        u.username,
-        u.balance,
+        u.id, u.first_name, u.last_name, u.username, u.balance,
         (SELECT SUM(price) FROM sales WHERE seller_user_id = u.id) as total_income,
         (SELECT SUM(price) FROM sales WHERE buyer_user_id = u.id) as total_spending
     FROM users u
@@ -105,7 +96,6 @@ foreach ($params as $key => $value) {
 $stmt->execute();
 $users_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-
 $page_title = 'Manajemen Saldo';
 require_once __DIR__ . '/../partials/header.php';
 ?>
@@ -117,35 +107,6 @@ require_once __DIR__ . '/../partials/header.php';
 <?php endif; ?>
 
 <div class="content-box">
-    <h2>Ubah Saldo Pengguna</h2>
-    <form action="balance.php" method="post" class="balance-adjustment-form">
-        <div class="form-group">
-            <label for="user_id">Pilih Pengguna:</label>
-            <select name="user_id" id="user_id" required>
-                <option value="">-- Pilih Pengguna --</option>
-                <?php foreach ($all_users_for_form as $user): ?>
-                    <option value="<?= $user['id'] ?>">
-                        <?= htmlspecialchars(trim($user['first_name'] . ' ' . $user['last_name'])) ?> (@<?= htmlspecialchars($user['username'] ?? 'N/A') ?>)
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="amount">Jumlah:</label>
-            <input type="number" name="amount" id="amount" step="0.01" min="0.01" required placeholder="Contoh: 50000">
-        </div>
-        <div class="form-group">
-            <label for="description">Deskripsi (Opsional):</label>
-            <textarea name="description" id="description" rows="2" placeholder="Contoh: Hadiah topup, koreksi, dll."></textarea>
-        </div>
-        <div class="form-actions">
-            <button type="submit" name="action" value="add_balance" class="btn btn-edit">Tambah Saldo</button>
-            <button type="submit" name="action" value="subtract_balance" class="btn btn-delete">Kurangi Saldo</button>
-        </div>
-    </form>
-</div>
-
-<div class="content-box" style="margin-top: 20px;">
     <h2>Daftar Saldo Pengguna</h2>
 
     <div class="search-form" style="margin-bottom: 20px;">
@@ -168,12 +129,13 @@ require_once __DIR__ . '/../partials/header.php';
                     <th>Saldo Saat Ini</th>
                     <th>Total Pemasukan</th>
                     <th>Total Pengeluaran</th>
+                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (empty($users_data)): ?>
                     <tr>
-                        <td colspan="6" style="text-align:center;">Tidak ada pengguna ditemukan.</td>
+                        <td colspan="7" style="text-align:center;">Tidak ada pengguna ditemukan.</td>
                     </tr>
                 <?php else: ?>
                     <?php foreach ($users_data as $user_data): ?>
@@ -184,6 +146,13 @@ require_once __DIR__ . '/../partials/header.php';
                             <td><?= format_currency($user_data['balance']) ?></td>
                             <td><?= format_currency($user_data['total_income'] ?? 0) ?></td>
                             <td><?= format_currency($user_data['total_spending'] ?? 0) ?></td>
+                            <td>
+                                <button class="btn btn-sm btn-edit open-balance-modal"
+                                        data-user-id="<?= $user_data['id'] ?>"
+                                        data-user-name="<?= htmlspecialchars(trim($user_data['first_name'] . ' ' . $user_data['last_name'])) ?>">
+                                    Ubah Saldo
+                                </button>
+                            </td>
                         </tr>
                     <?php endforeach; ?>
                 <?php endif; ?>
@@ -193,6 +162,7 @@ require_once __DIR__ . '/../partials/header.php';
 
     <div class="pagination">
         <?php
+        // (Pagination logic remains the same)
         $query_params = $_GET;
         if ($page > 1) {
             $query_params['page'] = $page - 1;
@@ -212,5 +182,67 @@ require_once __DIR__ . '/../partials/header.php';
         ?>
     </div>
 </div>
+
+<!-- Modal untuk Ubah Saldo -->
+<div id="balance-modal" class="modal-overlay">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modal-title">Ubah Saldo untuk Pengguna</h2>
+            <button class="modal-close">&times;</button>
+        </div>
+        <form action="balance.php?<?= http_build_query($_GET) ?>" method="post" class="balance-adjustment-form" style="padding: 0; border: none; background: none; margin-top: 0;">
+            <input type="hidden" name="user_id" id="modal-user-id">
+            <div class="form-group">
+                <label for="modal-amount">Jumlah:</label>
+                <input type="number" name="amount" id="modal-amount" step="0.01" min="0.01" required placeholder="Contoh: 50000">
+            </div>
+            <div class="form-group">
+                <label for="modal-description">Deskripsi (Opsional):</label>
+                <textarea name="description" id="modal-description" rows="2" placeholder="Contoh: Hadiah topup, koreksi, dll."></textarea>
+            </div>
+            <div class="form-actions">
+                <button type="submit" name="action" value="add_balance" class="btn btn-edit">Tambah Saldo</button>
+                <button type="submit" name="action" value="subtract_balance" class="btn btn-delete">Kurangi Saldo</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('balance-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalUserIdInput = document.getElementById('modal-user-id');
+    const openModalButtons = document.querySelectorAll('.open-balance-modal');
+    const closeModalButtons = document.querySelectorAll('.modal-close');
+
+    openModalButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const userId = this.dataset.userId;
+            const userName = this.dataset.userName;
+
+            modalTitle.textContent = 'Ubah Saldo untuk ' + userName;
+            modalUserIdInput.value = userId;
+
+            modal.style.display = 'flex';
+        });
+    });
+
+    function closeModal() {
+        modal.style.display = 'none';
+    }
+
+    closeModalButtons.forEach(button => {
+        button.addEventListener('click', closeModal);
+    });
+
+    // Close modal if overlay is clicked
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+});
+</script>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>

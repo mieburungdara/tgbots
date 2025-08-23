@@ -1,5 +1,11 @@
 # Changelog
 
+## [4.2.20] - 2025-08-23
+
+### Peningkatan
+- **Alur Kerja Penyesuaian Saldo**: Mengubah alur kerja pada halaman Manajemen Saldo (`admin/balance.php`) untuk meningkatkan efisiensi.
+  - **Formulir Berbasis Modal**: Mengganti form di bagian atas halaman dengan tombol "Ubah Saldo" di setiap baris pengguna. Tombol ini akan membuka jendela modal (pop-up) untuk memasukkan jumlah penyesuaian saldo, membuat proses lebih cepat dan lebih terkontekstual.
+
 ## [4.2.19] - 2025-08-23
 
 ### Fitur
