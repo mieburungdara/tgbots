@@ -81,12 +81,19 @@ try {
         throw new Exception("File media tidak ditemukan.");
     }
 
+    // Validasi bahwa media memiliki data penyimpanan yang diperlukan
+    if (empty($media_files[0]['storage_channel_id']) || empty($media_files[0]['storage_message_id'])) {
+        throw new Exception("Media ini tidak dapat diteruskan karena data penyimpanannya tidak lengkap. Ini mungkin terjadi pada media versi lama.");
+    }
+
     // 4. Buat caption informasi
     $sender_info = $media_files[0];
     $file_size_kb = $sender_info['file_size'] ? round($sender_info['file_size'] / 1024, 2) . ' KB' : 'N/A';
+    $sender_name = htmlspecialchars($sender_info['first_name'] ?? 'Pengguna Tidak Dikenal');
+    $sender_username = $sender_info['username'] ? " (@" . htmlspecialchars($sender_info['username']) . ")" : "";
     $info_caption = "
 --- ℹ️ Info Media ---
-Pengirim: " . htmlspecialchars($sender_info['first_name']) . ($sender_info['username'] ? " (@" . htmlspecialchars($sender_info['username']) . ")" : "") . "
+Pengirim: {$sender_name}{$sender_username}
 ID Pengirim: `{$sender_info['telegram_id']}`
 Waktu Kirim: {$sender_info['created_at']}
 --------------------
