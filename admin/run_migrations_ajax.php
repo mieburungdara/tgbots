@@ -53,26 +53,47 @@ try {
             // Mulai transaksi per file untuk keamanan
             $pdo->beginTransaction();
             try {
+                $migration_output = '';
                 if ($extension === 'sql') {
                     $sql = file_get_contents($file_path);
                     $pdo->exec($sql);
                 } elseif ($extension === 'php') {
-                    require_once $file_path;
+                    ob_start();
+                    // Sertakan file. Jika ada fungsi, itu akan didefinisikan.
+                    // Jika ada kode top-level, itu akan dieksekusi.
+                    require $file_path;
+
+                    // Cek apakah ada fungsi migrasi konvensional untuk dijalankan
                     $function_name = 'run_migration_' . str_pad((int) filter_var($migration_file, FILTER_SANITIZE_NUMBER_INT), 3, '0', STR_PAD_LEFT);
                     if (function_exists($function_name)) {
                         $function_name($pdo);
-                    } else {
-                        throw new Exception("Fungsi migrasi '{$function_name}' tidak ditemukan.");
                     }
+
+                    // Tangkap semua output dari file (baik dari echo langsung atau dari fungsi)
+                    $migration_output = ob_get_contents();
+                    ob_end_clean();
                 }
 
+                // Catat migrasi yang berhasil
                 $stmt = $pdo->prepare("INSERT INTO migrations (migration_file) VALUES (?)");
                 $stmt->execute([$migration_file]);
                 $pdo->commit();
-                $results[] = "OK: " . $migration_file;
+
+                // Bangun pesan hasil, termasuk output yang ditangkap
+                $result_message = "OK: " . $migration_file;
+                if (!empty(trim($migration_output))) {
+                    $result_message .= "\n--- Output ---\n" . trim($migration_output) . "\n--------------";
+                }
+                $results[] = $result_message;
 
             } catch (Exception $e) {
-                $pdo->rollBack();
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                // Jika output buffer masih aktif karena error, bersihkan
+                if (ob_get_level() > 0) {
+                    ob_end_clean();
+                }
                 $results[] = "ERROR: " . $migration_file . " - " . $e->getMessage();
                 throw new Exception("Gagal pada migrasi: " . $migration_file . "\n" . $e->getMessage());
             }
