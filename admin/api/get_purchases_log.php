@@ -6,10 +6,10 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../core/database.php';
 
-$user_id = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
+$telegram_id = isset($_GET['telegram_id']) ? (int)$_GET['telegram_id'] : 0;
 
-if (!$user_id) {
-    echo json_encode(['error' => 'User ID tidak valid.']);
+if (!$telegram_id) {
+    echo json_encode(['error' => 'Telegram ID tidak valid.']);
     exit;
 }
 
@@ -20,6 +20,16 @@ if (!$pdo) {
 }
 
 try {
+    // Cari user_id internal berdasarkan telegram_id
+    $stmt_user = $pdo->prepare("SELECT id FROM users WHERE telegram_id = ?");
+    $stmt_user->execute([$telegram_id]);
+    $user_id = $stmt_user->fetchColumn();
+
+    if (!$user_id) {
+        echo json_encode(['error' => 'Pengguna tidak ditemukan.']);
+        exit;
+    }
+
     $stmt = $pdo->prepare(
         "SELECT s.price, s.purchased_at, mp.title as package_title
          FROM sales s

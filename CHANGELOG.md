@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.2.23] - 2025-08-23
+
+### Peningkatan
+- **Refactoring API Log Transaksi**: Mengubah semua endpoint API log transaksi (`get_balance_log.php`, `get_sales_log.php`, `get_purchases_log.php`) untuk menggunakan `telegram_id` sebagai parameter identifikasi pengguna, bukan `id` internal database.
+  - **Alasan**: Meningkatkan konsistensi dan keamanan dengan menggunakan ID publik yang tidak mengekspos struktur database internal.
+  - **Implementasi**: Backend API dan panggilan AJAX di frontend pada halaman `admin/balance.php` telah disesuaikan untuk menggunakan `telegram_id`.
+
 ## [4.2.22] - 2025-08-23
 
 ### Fitur

@@ -77,7 +77,7 @@ $total_pages = ceil($total_users / $limit);
 
 $sql = "
     SELECT
-        u.id, u.first_name, u.last_name, u.username, u.balance,
+        u.id, u.telegram_id, u.first_name, u.last_name, u.username, u.balance,
         (SELECT SUM(price) FROM sales WHERE seller_user_id = u.id) as total_income,
         (SELECT SUM(price) FROM sales WHERE buyer_user_id = u.id) as total_spending
     FROM users u
@@ -141,9 +141,9 @@ require_once __DIR__ . '/../partials/header.php';
                             <td><?= htmlspecialchars($user_data['id']) ?></td>
                             <td><?= htmlspecialchars(trim($user_data['first_name'] . ' ' . $user_data['last_name'])) ?></td>
                             <td>@<?= htmlspecialchars($user_data['username'] ?? 'N/A') ?></td>
-                            <td class="clickable-log" data-log-type="balance" data-user-id="<?= $user_data['id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['balance']) ?></td>
-                            <td class="clickable-log" data-log-type="sales" data-user-id="<?= $user_data['id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['total_income'] ?? 0) ?></td>
-                            <td class="clickable-log" data-log-type="purchases" data-user-id="<?= $user_data['id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['total_spending'] ?? 0) ?></td>
+                            <td class="clickable-log" data-log-type="balance" data-telegram-id="<?= $user_data['telegram_id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['balance']) ?></td>
+                            <td class="clickable-log" data-log-type="sales" data-telegram-id="<?= $user_data['telegram_id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['total_income'] ?? 0) ?></td>
+                            <td class="clickable-log" data-log-type="purchases" data-telegram-id="<?= $user_data['telegram_id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['total_spending'] ?? 0) ?></td>
                             <td>
                                 <button class="btn btn-sm btn-edit open-balance-modal"
                                         data-user-id="<?= $user_data['id'] ?>"
@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const logModalBody = document.getElementById('log-modal-body');
     document.querySelectorAll('.clickable-log').forEach(cell => {
         cell.addEventListener('click', async function() {
-            const userId = this.dataset.userId;
+            const telegramId = this.dataset.telegramId;
             const userName = this.dataset.userName;
             const logType = this.dataset.logType;
 
@@ -252,7 +252,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             switch (logType) {
                 case 'balance':
-                    apiUrl = `api/get_balance_log.php?user_id=${userId}`;
+                    apiUrl = `api/get_balance_log.php?telegram_id=${telegramId}`;
                     title = `Riwayat Penyesuaian Saldo untuk ${userName}`;
                     headers = ['Waktu', 'Tipe', 'Jumlah', 'Deskripsi'];
                     dataBuilder = (item) => `
@@ -262,7 +262,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${item.description || ''}</td>`;
                     break;
                 case 'sales':
-                    apiUrl = `api/get_sales_log.php?user_id=${userId}`;
+                    apiUrl = `api/get_sales_log.php?telegram_id=${telegramId}`;
                     title = `Riwayat Pemasukan (Penjualan) untuk ${userName}`;
                     headers = ['Waktu', 'Konten', 'Pembeli', 'Harga'];
                     dataBuilder = (item) => `
@@ -272,7 +272,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${formatCurrency(item.price)}</td>`;
                     break;
                 case 'purchases':
-                    apiUrl = `api/get_purchases_log.php?user_id=${userId}`;
+                    apiUrl = `api/get_purchases_log.php?telegram_id=${telegramId}`;
                     title = `Riwayat Pengeluaran (Pembelian) untuk ${userName}`;
                     headers = ['Waktu', 'Konten', 'Harga'];
                     dataBuilder = (item) => `
