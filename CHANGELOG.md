@@ -12,6 +12,9 @@
 - **Error Migrasi `balance_transactions`**: Memperbaiki error `errno: 150 "Foreign key constraint is incorrectly formed"` saat menjalankan migrasi untuk membuat tabel `balance_transactions`.
   - **Penyebab**: Tipe data kolom `user_id` di tabel baru (`BIGINT`) tidak cocok dengan tipe data kolom `id` di tabel `users` (`INT(11)`).
   - **Solusi**: Menyamakan tipe data `user_id` di file migrasi menjadi `INT(11)` agar sesuai dengan kolom yang direferensikan.
+- **Fatal Error di Halaman Saldo**: Memperbaiki error `SQLSTATE[42S22]: Unknown column 'seller_id'` yang terjadi saat memuat halaman `admin/balance.php`.
+  - **Penyebab**: Subquery untuk menghitung total pemasukan dan pengeluaran menggunakan nama kolom yang salah (`seller_id`, `buyer_id`).
+  - **Solusi**: Mengubah nama kolom di dalam query menjadi `seller_user_id` dan `buyer_user_id` agar cocok dengan skema tabel `sales`.
 
 ## [4.2.18] - 2025-08-23
 
