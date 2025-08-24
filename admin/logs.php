@@ -140,7 +140,16 @@ include_once ROOT_PATH . '/partials/header.php';
                     </tr>
                 <?php else: ?>
                     <?php foreach ($logs as $log): ?>
-                        <tr class="border-b">
+                        <?php
+                            $level_color = match($log['level']) {
+                                'error' => '#ef4444', // red-500
+                                'system' => '#a855f7', // purple-500
+                                'debug' => '#3b82f6', // blue-500
+                                'info' => '#22c55e', // green-500
+                                default => '#6b7280', // gray-500
+                            };
+                        ?>
+                        <tr class="border-b" style="border-left: 4px solid <?= $level_color ?>;">
                             <td class="px-4 py-2"><?= htmlspecialchars($log['id']) ?></td>
                             <td class="px-4 py-2 whitespace-nowrap"><?= htmlspecialchars($log['created_at']) ?></td>
                             <td class="px-4 py-2">
@@ -152,7 +161,8 @@ include_once ROOT_PATH . '/partials/header.php';
                             <td class="px-4 py-2"><?= htmlspecialchars($log['message']) ?></td>
                             <td class="px-4 py-2">
                                 <?php if (!empty($log['context'])): ?>
-                                    <pre class="bg-gray-100 p-2 rounded-md text-xs"><code><?php
+                                    <button class="text-blue-500 text-xs context-toggle-button" data-target="context-<?= $log['id'] ?>">Show</button>
+                                    <pre id="context-<?= $log['id'] ?>" class="bg-gray-100 p-2 rounded-md text-xs" style="display: none;"><code><?php
                                         $context_data = json_decode($log['context']);
                                         echo htmlspecialchars(json_encode($context_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
                                     ?></code></pre>
@@ -212,6 +222,23 @@ include_once ROOT_PATH . '/partials/header.php';
         </nav>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const toggleButtons = document.querySelectorAll('.context-toggle-button');
+    toggleButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const targetId = this.getAttribute('data-target');
+            const targetPre = document.getElementById(targetId);
+            if (targetPre) {
+                const isHidden = targetPre.style.display === 'none';
+                targetPre.style.display = isHidden ? 'block' : 'none';
+                this.textContent = isHidden ? 'Hide' : 'Show';
+            }
+        });
+    });
+});
+</script>
 
 <?php
 include_once ROOT_PATH . '/partials/footer.php';
