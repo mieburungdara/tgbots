@@ -12,9 +12,5 @@ $is_admin_page_footer = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
     </div> <!-- .admin-main-content -->
 <?php endif; ?>
 
-<!-- Prism.js for Syntax Highlighting -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
-
 </body>
 </html>
