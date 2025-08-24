@@ -273,7 +273,7 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
         }
     </style>
     <!-- Prism.js for Syntax Highlighting -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" integrity="sha512-mIs9kKbaw6JutVRFHx9NKuIyC9wb9SQOCyrBIljwOtODcBiFeLrYoHtMDOFEVJNsZQdcEcRySWRFnZNWOAZIwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" />
 </head>
 <body class="<?= $is_admin_page ? 'admin-body' : '' ?>">
 
