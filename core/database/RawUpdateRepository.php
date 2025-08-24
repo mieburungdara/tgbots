@@ -38,17 +38,30 @@ class RawUpdateRepository
     }
 
     /**
-     * Mengambil semua data pembaruan mentah, diurutkan dari yang terbaru.
+     * Mengambil semua data pembaruan mentah dengan paginasi, diurutkan dari yang terbaru.
      *
-     * @param int $limit Jumlah maksimum catatan yang akan diambil.
+     * @param int $limit Jumlah maksimum catatan per halaman.
+     * @param int $offset Jumlah catatan yang akan dilewati (untuk paginasi).
      * @return array Sebuah array berisi catatan pembaruan.
      */
-    public function findAll(int $limit = 100): array
+    public function findAll(int $limit, int $offset): array
     {
-        $sql = "SELECT * FROM raw_updates ORDER BY id DESC LIMIT :limit";
+        $sql = "SELECT * FROM raw_updates ORDER BY id DESC LIMIT :limit OFFSET :offset";
         $stmt = $this->pdo->prepare($sql);
         $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Menghitung jumlah total semua catatan pembaruan mentah.
+     *
+     * @return int Jumlah total catatan.
+     */
+    public function countAll(): int
+    {
+        $stmt = $this->pdo->query("SELECT COUNT(*) FROM raw_updates");
+        return (int) $stmt->fetchColumn();
     }
 }
