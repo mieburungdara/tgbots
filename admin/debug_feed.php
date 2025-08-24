@@ -46,29 +46,37 @@ include_once ROOT_PATH . '/partials/header.php';
     <h1 class="text-2xl font-bold mb-4"><?php echo $page_title; ?></h1>
     <p class="mb-4">This page displays the last 100 raw JSON payloads received from Telegram in real-time. Newest updates appear first.</p>
 
-    <div class="space-y-2">
-        <?php if (empty($updates)): ?>
-            <div class="bg-white shadow-md rounded-lg p-4 text-center text-gray-500">
-                No updates received yet.
-            </div>
-        <?php else: ?>
-            <?php foreach ($updates as $update): ?>
-                <div class="bg-white shadow-md rounded-lg">
-                    <div class="p-4 cursor-pointer debug-header hover:bg-gray-50 transition-colors">
-                        <div class="flex justify-between items-center">
-                            <h2 class="text-lg font-semibold">Update #<?php echo htmlspecialchars($update['id']); ?></h2>
-                            <span class="text-sm text-gray-500"><?php echo htmlspecialchars($update['created_at']); ?></span>
-                        </div>
-                    </div>
-                    <div class="debug-content border-t border-gray-200" style="display: none;">
-                        <pre class="!p-0 !m-0"><code class="language-json" style="font-size: 0.875rem;"><?php
-                            $json_data = json_decode($update['payload']);
-                            echo htmlspecialchars(json_encode($json_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-                        ?></code></pre>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+    <div class="bg-white shadow-md rounded-lg overflow-hidden">
+        <table class="min-w-full">
+            <thead class="bg-gray-200">
+                <tr>
+                    <th class="px-4 py-2 text-left">ID</th>
+                    <th class="px-4 py-2 text-left">Timestamp</th>
+                    <th class="px-4 py-2 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($updates)): ?>
+                    <tr>
+                        <td colspan="3" class="text-center py-4 text-gray-500">No updates received yet.</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($updates as $update): ?>
+                        <tr class="border-b hover:bg-gray-50">
+                            <td class="px-4 py-2 font-mono"><?= htmlspecialchars($update['id']) ?></td>
+                            <td class="px-4 py-2 font-mono"><?= htmlspecialchars($update['created_at']) ?></td>
+                            <td class="px-4 py-2">
+                                <button class="btn btn-sm view-json-btn"
+                                        data-update-id="<?= htmlspecialchars($update['id']) ?>"
+                                        data-payload="<?= htmlspecialchars($update['payload']) ?>">
+                                    View JSON
+                                </button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
 
     <!-- Kontrol Paginasi -->
@@ -109,20 +117,74 @@ include_once ROOT_PATH . '/partials/header.php';
     </div>
 </div>
 
+<!-- Modal Structure -->
+<div id="json-modal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 800px;">
+        <div class="modal-header">
+            <h2 id="modal-title" class="text-xl font-bold">JSON Payload</h2>
+            <button id="modal-close-btn" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+            <pre><code id="modal-json-content" class="language-json"></code></pre>
+        </div>
+    </div>
+</div>
+
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const headers = document.querySelectorAll('.debug-header');
-    headers.forEach(header => {
-        header.addEventListener('click', function() {
-            const content = this.nextElementSibling;
-            if (content) {
-                const isHidden = content.style.display === 'none';
-                content.style.display = isHidden ? 'block' : 'none';
-                if (isHidden) {
-                    Prism.highlightAllUnder(content);
-                }
+    const modal = document.getElementById('json-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalJsonContent = document.getElementById('modal-json-content');
+    const closeModalBtn = document.getElementById('modal-close-btn');
+    const viewJsonButtons = document.querySelectorAll('.view-json-btn');
+
+    function openModal() {
+        modal.style.display = 'flex';
+    }
+
+    function closeModal() {
+        modal.style.display = 'none';
+        modalJsonContent.textContent = ''; // Clear content
+    }
+
+    viewJsonButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const updateId = this.getAttribute('data-update-id');
+            const payloadString = this.getAttribute('data-payload');
+
+            modalTitle.textContent = `JSON Payload for Update #${updateId}`;
+
+            try {
+                // Parse and re-stringify for pretty printing
+                const payloadJson = JSON.parse(payloadString);
+                const prettyPayload = JSON.stringify(payloadJson, null, 2);
+                modalJsonContent.textContent = prettyPayload;
+            } catch (e) {
+                // If parsing fails, show the raw string
+                modalJsonContent.textContent = payloadString;
+                console.error("Failed to parse JSON payload:", e);
             }
+
+            // Apply syntax highlighting
+            Prism.highlightElement(modalJsonContent);
+
+            openModal();
         });
+    });
+
+    // Event listeners for closing the modal
+    closeModalBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function(event) {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape' && modal.style.display === 'flex') {
+            closeModal();
+        }
     });
 });
 </script>
