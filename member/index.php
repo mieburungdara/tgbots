@@ -53,7 +53,18 @@ function process_login_token($token, $pdo) {
         // Atur session untuk menandai pengguna sebagai sudah login.
         $_SESSION['member_user_id'] = $member['user_id'];
 
-        app_log("Login member berhasil: user_id = {$member['user_id']}", 'member');
+        // Ambil info pengguna untuk logging yang lebih baik
+        $user_info_stmt = $pdo->prepare("SELECT telegram_id, first_name, username FROM users WHERE id = ?");
+        $user_info_stmt->execute([$member['user_id']]);
+        $user_info = $user_info_stmt->fetch(PDO::FETCH_ASSOC);
+
+        $log_message = "Login member berhasil: ";
+        if ($user_info) {
+            $log_message .= "Name: {$user_info['first_name']}, Username: @{$user_info['username']}, TelegramID: {$user_info['telegram_id']}";
+        } else {
+            $log_message .= "user_id = {$member['user_id']} (Info pengguna tidak ditemukan)";
+        }
+        app_log($log_message, 'member');
 
         // Alihkan ke dasbor.
         header("Location: dashboard.php");
