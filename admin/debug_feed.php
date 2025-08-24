@@ -44,7 +44,7 @@ include_once ROOT_PATH . '/partials/header.php';
 
 <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4"><?php echo $page_title; ?></h1>
-    <p class="mb-4">This page displays the last 100 raw JSON payloads received from Telegram in real-time. Newest updates appear first.</p>
+    <p class="mb-4">This page displays raw JSON payloads received from Telegram. Newest updates appear first.</p>
 
     <div class="bg-white shadow-md rounded-lg overflow-hidden">
         <table class="min-w-full">
@@ -68,7 +68,7 @@ include_once ROOT_PATH . '/partials/header.php';
                             <td class="px-4 py-2">
                                 <button class="btn btn-sm view-json-btn"
                                         data-update-id="<?= htmlspecialchars($update['id']) ?>"
-                                        data-payload="<?= htmlspecialchars($update['payload']) ?>">
+                                        data-payload="<?= base64_encode($update['payload']) ?>">
                                     View JSON
                                 </button>
                             </td>
@@ -83,12 +83,10 @@ include_once ROOT_PATH . '/partials/header.php';
     <div class="mt-6 flex justify-center">
         <nav class="inline-flex rounded-md shadow">
             <?php if ($total_pages > 1): ?>
-                <!-- Tombol Previous -->
                 <a href="?page=<?= $current_page - 1 ?>"
                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($current_page <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">
                     &laquo; Previous
                 </a>
-
                 <?php
                 $window = 2;
                 for ($i = 1; $i <= $total_pages; $i++):
@@ -106,8 +104,6 @@ include_once ROOT_PATH . '/partials/header.php';
                     endif;
                 endfor;
                 ?>
-
-                <!-- Tombol Next -->
                 <a href="?page=<?= $current_page + 1 ?>"
                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($current_page >= $total_pages) ? 'opacity-50 cursor-not-allowed' : '' ?>">
                     Next &raquo;
@@ -150,23 +146,30 @@ document.addEventListener('DOMContentLoaded', function() {
     viewJsonButtons.forEach(button => {
         button.addEventListener('click', function() {
             const updateId = this.getAttribute('data-update-id');
-            const payloadString = this.getAttribute('data-payload');
+            const base64Payload = this.getAttribute('data-payload');
 
             modalTitle.textContent = `JSON Payload for Update #${updateId}`;
 
             try {
-                // Parse and re-stringify for pretty printing
+                // Decode from base64, then parse and re-stringify for pretty printing
+                const payloadString = atob(base64Payload);
                 const payloadJson = JSON.parse(payloadString);
                 const prettyPayload = JSON.stringify(payloadJson, null, 2);
                 modalJsonContent.textContent = prettyPayload;
             } catch (e) {
-                // If parsing fails, show the raw string
-                modalJsonContent.textContent = payloadString;
+                // If parsing fails, show the raw decoded string
+                try {
+                    modalJsonContent.textContent = atob(base64Payload);
+                } catch (e2) {
+                    modalJsonContent.textContent = "Error decoding payload.";
+                }
                 console.error("Failed to parse JSON payload:", e);
             }
 
             // Apply syntax highlighting
-            Prism.highlightElement(modalJsonContent);
+            if (window.Prism) {
+                Prism.highlightElement(modalJsonContent);
+            }
 
             openModal();
         });
