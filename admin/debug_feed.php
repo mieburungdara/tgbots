@@ -1,12 +1,6 @@
 <?php
 /**
  * Halaman Feed Debug (Admin).
- *
- * Halaman ini berfungsi sebagai alat debugging untuk administrator.
- * Ini menampilkan 100 payload JSON mentah terakhir yang diterima dari Telegram,
- * yang disimpan dalam tabel `raw_updates`.
- * Sangat berguna untuk memeriksa data yang masuk saat terjadi masalah atau
- * saat mengembangkan fitur baru.
  */
 
 // Define ROOT_PATH for reliable file access
@@ -17,9 +11,8 @@ if (!defined('ROOT_PATH')) {
 require_once ROOT_PATH . '/core/database.php';
 require_once ROOT_PATH . '/core/database/RawUpdateRepository.php';
 
-// Check for admin role (implement proper session/role check later)
-// For now, this is a placeholder. In a real app, you'd have a robust auth check.
-$is_admin = true; // Assuming admin for now
+// Placeholder for real authentication
+$is_admin = true;
 if (!$is_admin) {
     die('Unauthorized');
 }
@@ -27,15 +20,14 @@ if (!$is_admin) {
 $pdo = get_db_connection();
 $raw_update_repo = new RawUpdateRepository($pdo);
 
-// --- Logika Paginasi ---
-$items_per_page = 25; // Tampilkan 25 update per halaman
+// --- Pagination Logic ---
+$items_per_page = 25;
 $total_items = $raw_update_repo->countAll();
 $total_pages = ceil($total_items / $items_per_page);
 $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $current_page = max(1, min($current_page, $total_pages));
 $offset = ($current_page - 1) * $items_per_page;
 
-// Ambil data untuk halaman saat ini
 $updates = $raw_update_repo->findAll($items_per_page, $offset);
 
 $page_title = "Raw Telegram Update Feed";
@@ -44,34 +36,41 @@ include_once ROOT_PATH . '/partials/header.php';
 
 <div class="container mx-auto p-4">
     <h1 class="text-2xl font-bold mb-4"><?php echo $page_title; ?></h1>
-    <p class="mb-4">This page displays raw JSON payloads received from Telegram. Click on an update header to expand/collapse the content.</p>
+    <p class="mb-4">This page displays raw JSON payloads received from Telegram. Newest updates appear first.</p>
 
-    <div class="space-y-2">
-        <?php if (empty($updates)): ?>
-            <div class="bg-white shadow-md rounded-lg p-4 text-center text-gray-500">
-                No updates received yet.
-            </div>
-        <?php else: ?>
-            <?php foreach ($updates as $update): ?>
-                <div class="bg-white shadow-md rounded-lg">
-                    <div class="p-4 cursor-pointer debug-header hover:bg-gray-50 transition-colors">
-                        <div class="flex justify-between items-center">
-                            <h2 class="text-lg font-semibold">Update #<?php echo htmlspecialchars($update['id']); ?></h2>
-                            <span class="text-sm text-gray-500"><?php echo htmlspecialchars($update['created_at']); ?></span>
-                        </div>
-                    </div>
-                    <div class="debug-content border-t border-gray-200" style="display: none;">
-                        <pre class="!p-0 !m-0"><code class="language-json" style="font-size: 0.875rem;"><?php
-                            $json_data = json_decode($update['payload']);
-                            echo htmlspecialchars(json_encode($json_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-                        ?></code></pre>
-                    </div>
-                </div>
-            <?php endforeach; ?>
-        <?php endif; ?>
+    <div class="bg-white shadow-md rounded-lg overflow-x-auto">
+        <table class="min-w-full">
+            <thead class="bg-gray-200">
+                <tr>
+                    <th class="px-4 py-2 text-left w-1/12">ID</th>
+                    <th class="px-4 py-2 text-left w-2/12">Timestamp</th>
+                    <th class="px-4 py-2 text-left w-9/12">Payload</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php if (empty($updates)): ?>
+                    <tr>
+                        <td colspan="3" class="text-center py-4 text-gray-500">No updates received yet.</td>
+                    </tr>
+                <?php else: ?>
+                    <?php foreach ($updates as $update): ?>
+                        <tr class="border-b">
+                            <td class="px-4 py-2 align-top font-mono"><?= htmlspecialchars($update['id']) ?></td>
+                            <td class="px-4 py-2 align-top font-mono"><?= htmlspecialchars($update['created_at']) ?></td>
+                            <td class="px-4 py-2">
+                                <pre style="max-height: 400px; overflow-y: auto;"><code class="language-json"><?php
+                                    $json_data = json_decode($update['payload']);
+                                    echo htmlspecialchars(json_encode($json_data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+                                ?></code></pre>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php endif; ?>
+            </tbody>
+        </table>
     </div>
 
-    <!-- Kontrol Paginasi -->
+    <!-- Pagination Controls -->
     <div class="mt-6 flex justify-center">
         <nav class="inline-flex rounded-md shadow">
             <?php if ($total_pages > 1): ?>
@@ -96,28 +95,8 @@ include_once ROOT_PATH . '/partials/header.php';
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const headers = document.querySelectorAll('.debug-header');
-    headers.forEach(header => {
-        header.addEventListener('click', function() {
-            const content = this.nextElementSibling;
-            if (content) {
-                const isHidden = content.style.display === 'none';
-                content.style.display = isHidden ? 'block' : 'none';
-                // Only highlight when showing for the first time to avoid re-highlighting
-                if (isHidden && !content.dataset.highlighted) {
-                    if (window.Prism) {
-                        Prism.highlightAllUnder(content);
-                    }
-                    content.dataset.highlighted = 'true';
-                }
-            }
-        });
-    });
-});
-</script>
-
 <?php
+// No custom JavaScript needed for this simple table view.
+// Prism.js will be initialized automatically by the autoloader script in the header.
 include_once ROOT_PATH . '/partials/footer.php';
 ?>
