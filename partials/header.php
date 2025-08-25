@@ -73,6 +73,8 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
             padding: 20px;
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            position: relative;
+            height: 400px;
         }
         .list-table {
             width: 100%;
