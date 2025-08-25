@@ -135,11 +135,11 @@ class AnalyticsRepository
     public function getTopSellingPackagesForSeller(int $sellerId, int $limit = 5): array
     {
         $sql = "
-            SELECT p.id, p.description, COUNT(s.id) as sales_count, SUM(s.price) as total_revenue
+            SELECT p.id, p.public_id, p.description, COUNT(s.id) as sales_count, SUM(s.price) as total_revenue
             FROM sales s
             JOIN media_packages p ON s.package_id = p.id
             WHERE s.seller_user_id = ?
-            GROUP BY p.id, p.description
+            GROUP BY p.id, p.public_id, p.description
             ORDER BY sales_count DESC, total_revenue DESC
             LIMIT ?
         ";
