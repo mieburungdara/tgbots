@@ -6,5 +6,6 @@
 6. code always wrapped in a try-catch block to handle and log potential errors.
 7. lakukan publish agar saya dapat mengecek kode langsung.
 8. Kirim perubahan: Setelah perubahan diverifikasi, kirimkan perubahan dengan pesan commit yang jelas dengan bahasa indonesia.
+9. fungsi yg disable pada PHP: symlink,exec,popen,dl,passthru,escapeshellarg,escapeshellcmd,show_source,pcntl_exec.
 
 
