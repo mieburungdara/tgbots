@@ -27,67 +27,75 @@ $success_message = null;
 $all_bots = get_all_bots($pdo);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])) {
-    $selected_bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
-    $channel_identifier = trim($_POST['channel_identifier']);
-    $group_identifier = trim($_POST['group_identifier'] ?? '');
-
-    if (empty($channel_identifier) || !$selected_bot_id) {
-        $error_message = "Harap pilih bot dan isi ID atau username channel.";
+    // Rate limiting: 1 attempt per 60 seconds
+    $last_check_time = $_SESSION['last_channel_check'] ?? 0;
+    if (time() - $last_check_time < 60) {
+        $error_message = "Anda terlalu cepat mencoba. Harap tunggu 60 detik sebelum mencoba lagi.";
     } else {
-        try {
-            $bot_token = get_bot_token($pdo, $selected_bot_id);
-            if (!$bot_token) {
-                throw new Exception("Bot yang dipilih tidak valid atau tidak memiliki token.");
-            }
-            $telegram_api = new TelegramAPI($bot_token);
-            $bot_telegram_id = $telegram_api->getBotId();
+        $_SESSION['last_channel_check'] = time(); // Set time immediately
 
-            // 1. Verifikasi Channel
-            $bot_member_channel = $telegram_api->getChatMember($channel_identifier, $bot_telegram_id);
-            if (!$bot_member_channel || !$bot_member_channel['ok'] || !in_array($bot_member_channel['result']['status'], ['administrator', 'creator'])) {
-                throw new Exception("Verifikasi Channel Gagal: Pastikan bot yang dipilih telah ditambahkan sebagai *admin* di channel `{$channel_identifier}`.");
-            }
-            if (!($bot_member_channel['result']['can_post_messages'] ?? false)) {
-                throw new Exception("Verifikasi Channel Gagal: Bot yang dipilih memerlukan izin untuk *'Post Messages'* di channel.");
-            }
-            $channel_info = $telegram_api->getChat($channel_identifier);
-            if (!$channel_info || !$channel_info['ok']) {
-                throw new Exception("Verifikasi Channel Gagal: Tidak dapat mengambil informasi untuk channel `{$channel_identifier}`.");
-            }
-            $numeric_channel_id = $channel_info['result']['id'];
-            $channel_title = $channel_info['result']['title'];
-            $linked_chat_id = $channel_info['result']['linked_chat_id'] ?? null;
+        $selected_bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
+        $channel_identifier = trim($_POST['channel_identifier']);
+        $group_identifier = trim($_POST['group_identifier'] ?? '');
 
-            // 2. Verifikasi Grup Diskusi
-            $numeric_group_id = null;
-            if (!empty($group_identifier)) {
-                $group_info = $telegram_api->getChat($group_identifier);
-                if (!$group_info || !$group_info['ok']) throw new Exception("Verifikasi Grup Gagal: Tidak dapat mengambil informasi untuk grup `{$group_identifier}`.");
-                $numeric_group_id = $group_info['result']['id'];
-                if ($numeric_group_id != $linked_chat_id) throw new Exception("Verifikasi Grup Gagal: Grup `{$group_identifier}` tidak terhubung dengan channel `{$channel_identifier}` di pengaturan Telegram.");
-            } elseif ($linked_chat_id) {
-                $numeric_group_id = $linked_chat_id;
-            }
-
-            // 3. Verifikasi Bot adalah admin di Grup Diskusi (jika ada)
-            if ($numeric_group_id) {
-                $bot_member_group = $telegram_api->getChatMember($numeric_group_id, $bot_telegram_id);
-                if (!$bot_member_group || !$bot_member_group['ok'] || !in_array($bot_member_group['result']['status'], ['administrator', 'creator'])) {
-                    throw new Exception("Verifikasi Grup Gagal: Pastikan bot yang dipilih juga merupakan *admin* di grup diskusi.");
+        if (empty($channel_identifier) || !$selected_bot_id) {
+            $error_message = "Harap pilih bot dan isi ID atau username channel.";
+        } else {
+            try {
+                $bot_token = get_bot_token($pdo, $selected_bot_id);
+                if (!$bot_token) {
+                    throw new Exception("Bot yang dipilih tidak valid atau tidak memiliki token.");
                 }
+                $telegram_api = new TelegramAPI($bot_token);
+                $bot_telegram_id = $telegram_api->getBotId();
+
+                // 1. Verifikasi Channel
+                $bot_member_channel = $telegram_api->getChatMember($channel_identifier, $bot_telegram_id);
+                if (!$bot_member_channel || !$bot_member_channel['ok'] || !in_array($bot_member_channel['result']['status'], ['administrator', 'creator'])) {
+                    throw new Exception("Verifikasi Channel Gagal: Pastikan bot yang dipilih telah ditambahkan sebagai *admin* di channel `{$channel_identifier}`.");
+                }
+                if (!($bot_member_channel['result']['can_post_messages'] ?? false)) {
+                    throw new Exception("Verifikasi Channel Gagal: Bot yang dipilih memerlukan izin untuk *'Post Messages'* di channel.");
+                }
+                $channel_info = $telegram_api->getChat($channel_identifier);
+                if (!$channel_info || !$channel_info['ok']) {
+                    throw new Exception("Verifikasi Channel Gagal: Tidak dapat mengambil informasi untuk channel `{$channel_identifier}`.");
+                }
+                $numeric_channel_id = $channel_info['result']['id'];
+                $channel_title = $channel_info['result']['title'];
+                $linked_chat_id = $channel_info['result']['linked_chat_id'] ?? null;
+
+                // 2. Verifikasi Grup Diskusi
+                $numeric_group_id = null;
+                if (!empty($group_identifier)) {
+                    $group_info = $telegram_api->getChat($group_identifier);
+                    if (!$group_info || !$group_info['ok']) throw new Exception("Verifikasi Grup Gagal: Tidak dapat mengambil informasi untuk grup `{$group_identifier}`.");
+                    $numeric_group_id = $group_info['result']['id'];
+                    if ($numeric_group_id != $linked_chat_id) throw new Exception("Verifikasi Grup Gagal: Grup `{$group_identifier}` tidak terhubung dengan channel `{$channel_identifier}` di pengaturan Telegram.");
+                } elseif ($linked_chat_id) {
+                    $numeric_group_id = $linked_chat_id;
+                }
+
+                // 3. Verifikasi Bot adalah admin di Grup Diskusi (jika ada)
+                if ($numeric_group_id) {
+                    $bot_member_group = $telegram_api->getChatMember($numeric_group_id, $bot_telegram_id);
+                    if (!$bot_member_group || !$bot_member_group['ok'] || !in_array($bot_member_group['result']['status'], ['administrator', 'creator'])) {
+                        throw new Exception("Verifikasi Grup Gagal: Pastikan bot yang dipilih juga merupakan *admin* di grup diskusi.");
+                    }
+                }
+
+                // 4. Simpan ke database
+                $success = $channelRepo->createOrUpdate($user_id, $selected_bot_id, $numeric_channel_id, $numeric_group_id);
+
+                if ($success) {
+                    $success_message = "Selamat! Channel '{$channel_title}' telah berhasil dikonfigurasi.";
+                } else {
+                    $error_message = "Terjadi kesalahan database saat mencoba menyimpan konfigurasi.";
+                }
+
+            } catch (Exception $e) {
+                $error_message = "Terjadi error: " . $e->getMessage();
             }
-
-            // 4. Simpan ke database
-            $success = $channelRepo->createOrUpdate($user_id, $selected_bot_id, $numeric_channel_id, $numeric_group_id);
-
-            if ($success) {
-                $success_message = "Selamat! Channel '{$channel_title}' telah berhasil dikonfigurasi.";
-            } else {
-                $error_message = "Terjadi kesalahan database saat mencoba menyimpan konfigurasi.";
-            }
-
-        } catch (Exception $e) {
-            $error_message = "Terjadi error: " . $e->getMessage();
         }
     }
 }
