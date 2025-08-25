@@ -5,6 +5,8 @@
  * Halaman ini menangani dua hal:
  * 1. Menampilkan form untuk mengedit detail paket (deskripsi, harga) saat diakses dengan metode GET.
  * 2. Memproses data dari form tersebut saat dikirim dengan metode POST.
+ *
+ * Pencarian paket dilakukan menggunakan public_id.
  */
 session_start();
 
@@ -23,16 +25,16 @@ $user_id = $_SESSION['member_user_id'];
 $error_message = null;
 $success_message = null;
 
-// Ambil ID paket dari URL
-$package_id = filter_input(INPUT_GET, 'id', FILTER_VALIDATE_INT);
-if (!$package_id) {
+// Ambil ID publik paket dari URL
+$public_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+if (!$public_id) {
     header("Location: my_content.php"); // Redirect jika ID tidak valid
     exit;
 }
 
-// Ambil data paket untuk memastikan pemiliknya adalah pengguna yang sedang login
+// Ambil data paket menggunakan public_id untuk memastikan pemiliknya adalah pengguna yang sedang login
 try {
-    $package = $packageRepo->find($package_id);
+    $package = $packageRepo->findByPublicId($public_id);
     if (!$package || $package['seller_user_id'] != $user_id) {
         // Jika paket tidak ada atau bukan milik user, redirect
         $_SESSION['flash_message'] = "Error: Paket tidak ditemukan atau Anda tidak memiliki izin.";
@@ -45,6 +47,9 @@ try {
     exit;
 }
 
+// Simpan ID internal untuk proses update
+$package_id = $package['id'];
+
 // Handle POST request (form submission)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $description = trim($_POST['description'] ?? '');
@@ -55,6 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error_message = "Deskripsi tidak boleh kosong.";
     } else {
         try {
+            // Gunakan ID internal untuk update
             $result = $packageRepo->updatePackageDetails($package_id, $user_id, $description, $price);
             if ($result) {
                 $_SESSION['flash_message'] = "Paket '" . htmlspecialchars($package['public_id']) . "' berhasil diperbarui.";
@@ -80,7 +86,7 @@ require_once __DIR__ . '/../partials/header.php';
     <div class="alert alert-danger"><?= $error_message ?></div>
 <?php endif; ?>
 
-<form action="edit_package.php?id=<?= $package_id ?>" method="POST">
+<form action="edit_package.php?id=<?= htmlspecialchars($public_id) ?>" method="POST">
     <div style="margin-bottom: 15px;">
         <label for="description"><strong>Deskripsi</strong></label>
         <textarea id="description" name="description" rows="4" required><?= htmlspecialchars($package['description']) ?></textarea>
