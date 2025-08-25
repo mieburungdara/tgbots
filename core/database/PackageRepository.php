@@ -281,6 +281,34 @@ class PackageRepository
     }
 
     /**
+     * Memperbarui detail sebuah paket (deskripsi dan harga).
+     *
+     * @param int $packageId ID paket yang akan diperbarui.
+     * @param int $sellerId ID penjual yang meminta, untuk verifikasi kepemilikan.
+     * @param string $description Deskripsi baru untuk paket.
+     * @param int|null $price Harga baru untuk paket (bisa null jika tidak diubah).
+     * @return bool True jika berhasil, false jika gagal.
+     * @throws Exception Jika paket tidak ditemukan atau pengguna bukan pemiliknya.
+     */
+    public function updatePackageDetails(int $packageId, int $sellerId, string $description, ?int $price): bool
+    {
+        $package = $this->find($packageId);
+
+        if (!$package) {
+            throw new Exception("Paket tidak ditemukan.");
+        }
+
+        if ($package['seller_user_id'] != $sellerId) {
+            throw new Exception("Anda tidak memiliki izin untuk mengubah paket ini.");
+        }
+
+        $stmt = $this->pdo->prepare(
+            "UPDATE media_packages SET description = ?, price = ? WHERE id = ?"
+        );
+        return $stmt->execute([$description, $price, $packageId]);
+    }
+
+    /**
      * Membuat paket baru dengan ID publik yang unik dan diformat secara otomatis.
      * Metode ini secara atomik menaikkan nomor urut paket penjual dan membuat ID.
      * Sebaiknya dijalankan di dalam sebuah transaksi.

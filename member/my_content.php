@@ -56,7 +56,7 @@ require_once __DIR__ . '/../partials/header.php';
                         <td><span class="status-badge status-<?= htmlspecialchars($package['status']) ?>"><?= ucfirst(htmlspecialchars($package['status'])) ?></span></td>
                         <td><?= htmlspecialchars(date('d M Y H:i', strtotime($package['created_at']))) ?></td>
                         <td>
-                            <a href="#" class="btn btn-edit btn-sm">Edit</a>
+                            <a href="edit_package.php?id=<?= $package['id'] ?>" class="btn btn-edit btn-sm">Edit</a>
                             <a href="#" class="btn btn-delete btn-sm">Hapus</a>
                         </td>
                     </tr>
