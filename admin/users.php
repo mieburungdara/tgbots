@@ -259,7 +259,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function populateCheckboxes(assignedRoleIds) {
         checkboxContainer.innerHTML = '';
         allRoles.forEach(role => {
-            const isChecked = assignedRoleIds.includes(role.id);
+            const isChecked = assignedRoleIds.includes(parseInt(role.id, 10));
             const checkboxWrapper = document.createElement('div');
             checkboxWrapper.className = 'checkbox-wrapper';
             checkboxWrapper.innerHTML = `
