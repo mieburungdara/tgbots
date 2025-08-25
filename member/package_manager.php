@@ -14,6 +14,13 @@
  * 4. Kembalikan respons JSON yang berisi status operasi dan status proteksi baru.
  */
 session_start();
+
+// Jika diakses langsung (GET), redirect ke halaman yang lebih sesuai
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    header("Location: sold.php");
+    exit;
+}
+
 header('Content-Type: application/json');
 
 // Respon default jika terjadi error
