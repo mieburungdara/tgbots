@@ -40,14 +40,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])
                 throw new Exception("Bot yang dipilih tidak valid atau tidak memiliki token.");
             }
             $telegram_api = new TelegramAPI($bot_token);
+            $bot_telegram_id = $telegram_api->getBotId();
 
-            // Verifikasi Channel
-            $bot_member_channel = $telegram_api->getChatMember($channel_identifier, $telegram_api->getBotId());
+            // 1. Verifikasi Channel
+            $bot_member_channel = $telegram_api->getChatMember($channel_identifier, $bot_telegram_id);
             if (!$bot_member_channel || !$bot_member_channel['ok'] || !in_array($bot_member_channel['result']['status'], ['administrator', 'creator'])) {
-                throw new Exception("Verifikasi Channel Gagal: Pastikan bot yang dipilih telah ditambahkan sebagai admin di channel `{$channel_identifier}`.");
+                throw new Exception("Verifikasi Channel Gagal: Pastikan bot yang dipilih telah ditambahkan sebagai *admin* di channel `{$channel_identifier}`.");
             }
             if (!($bot_member_channel['result']['can_post_messages'] ?? false)) {
-                throw new Exception("Verifikasi Channel Gagal: Bot yang dipilih memerlukan izin untuk 'Post Messages' di channel.");
+                throw new Exception("Verifikasi Channel Gagal: Bot yang dipilih memerlukan izin untuk *'Post Messages'* di channel.");
             }
             $channel_info = $telegram_api->getChat($channel_identifier);
             if (!$channel_info || !$channel_info['ok']) {
@@ -57,7 +58,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])
             $channel_title = $channel_info['result']['title'];
             $linked_chat_id = $channel_info['result']['linked_chat_id'] ?? null;
 
-            // Verifikasi Grup Diskusi
+            // 2. Verifikasi Grup Diskusi
             $numeric_group_id = null;
             if (!empty($group_identifier)) {
                 $group_info = $telegram_api->getChat($group_identifier);
@@ -68,7 +69,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])
                 $numeric_group_id = $linked_chat_id;
             }
 
-            // Simpan ke database
+            // 3. Verifikasi Bot adalah admin di Grup Diskusi (jika ada)
+            if ($numeric_group_id) {
+                $bot_member_group = $telegram_api->getChatMember($numeric_group_id, $bot_telegram_id);
+                if (!$bot_member_group || !$bot_member_group['ok'] || !in_array($bot_member_group['result']['status'], ['administrator', 'creator'])) {
+                    throw new Exception("Verifikasi Grup Gagal: Pastikan bot yang dipilih juga merupakan *admin* di grup diskusi.");
+                }
+            }
+
+            // 4. Simpan ke database
             $success = $channelRepo->createOrUpdate($user_id, $selected_bot_id, $numeric_channel_id, $numeric_group_id);
 
             if ($success) {
