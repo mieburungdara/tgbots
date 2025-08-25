@@ -345,6 +345,7 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
             <nav>
                 <a href="dashboard.php" class="<?= $current_page == 'dashboard.php' ? 'active' : '' ?>">Dashboard</a>
                 <a href="my_content.php" class="<?= $current_page == 'my_content.php' ? 'active' : '' ?>">My Content</a>
+                <a href="channels.php" class="<?= $current_page == 'channels.php' ? 'active' : '' ?>">Channel</a>
                 <a href="purchased.php" class="<?= $current_page == 'purchased.php' ? 'active' : '' ?>">Purchased</a>
                 <a href="sold.php" class="<?= $current_page == 'sold.php' ? 'active' : '' ?>">Sold</a>
                 <a href="../index.php">Logout</a>
