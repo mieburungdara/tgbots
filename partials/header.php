@@ -41,6 +41,57 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
         .btn-delete { background-color: #dc3545; }
         .btn-delete:hover { background-color: #c82333; }
 
+        /* Dashboard Specific Styles */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .dashboard-card {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+        }
+        .dashboard-card h3 {
+            margin-top: 0;
+            border-bottom: 1px solid #e0e0e0;
+            padding-bottom: 10px;
+            font-size: 1.1em;
+            color: #555;
+        }
+        .dashboard-card .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            margin: 10px 0 0;
+            color: #007bff;
+        }
+        .chart-container {
+            grid-column: 1 / -1; /* Span full width */
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .list-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .list-table th, .list-table td {
+            text-align: left;
+            padding: 12px 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .list-table th {
+            font-size: 0.9em;
+            color: #666;
+            font-weight: 600;
+        }
+        .list-table tr:last-child td {
+            border-bottom: none;
+        }
+
         /* Admin Layout */
         body.admin-body { display: flex; }
         .sidebar { width: 240px; flex-shrink: 0; background-color: #fff; box-shadow: 2px 0 5px rgba(0,0,0,0.1); min-height: 100vh; }

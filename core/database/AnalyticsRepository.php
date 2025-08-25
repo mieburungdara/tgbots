@@ -117,4 +117,29 @@ class AnalyticsRepository
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Mengambil daftar paket konten terlaris untuk seorang penjual.
+     *
+     * @param int $sellerId ID penjual.
+     * @param int $limit Jumlah maksimum paket yang akan diambil.
+     * @return array Daftar paket terlaris.
+     */
+    public function getTopSellingPackagesForSeller(int $sellerId, int $limit = 5): array
+    {
+        $sql = "
+            SELECT p.id, p.description, COUNT(s.id) as sales_count, SUM(s.price) as total_revenue
+            FROM sales s
+            JOIN media_packages p ON s.package_id = p.id
+            WHERE s.seller_user_id = ?
+            GROUP BY p.id, p.description
+            ORDER BY sales_count DESC, total_revenue DESC
+            LIMIT ?
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(1, $sellerId, PDO::PARAM_INT);
+        $stmt->bindParam(2, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
