@@ -13,3 +13,7 @@ Berikut adalah daftar fitur atau perbaikan yang perlu dipertimbangkan untuk peng
 
 - **Manajemen Notifikasi**:
   - Pengaturan untuk mengaktifkan/menonaktifkan notifikasi tertentu dari bot.
+
+
+Akses Ditolak. Silakan login melalui bot Telegram menggunakan perintah /login.
+buat agar yg tak punya hak akses diarahkan ke halaman tertenut yg mengatakan jika perlu login atau sesi anda berakhir, gunakan bot dibawah ini untuk login
