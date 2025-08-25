@@ -344,7 +344,7 @@ $is_admin_page = strpos($_SERVER['PHP_SELF'], '/admin/') !== false;
             <h1><a href="index.php" style="text-decoration: none; color: inherit;">Member Area</a></h1>
             <nav>
                 <a href="dashboard.php" class="<?= $current_page == 'dashboard.php' ? 'active' : '' ?>">Dashboard</a>
-                <a href="package_manager.php" class="<?= $current_page == 'package_manager.php' ? 'active' : '' ?>">My Content</a>
+                <a href="my_content.php" class="<?= $current_page == 'my_content.php' ? 'active' : '' ?>">My Content</a>
                 <a href="purchased.php" class="<?= $current_page == 'purchased.php' ? 'active' : '' ?>">Purchased</a>
                 <a href="sold.php" class="<?= $current_page == 'sold.php' ? 'active' : '' ?>">Sold</a>
                 <a href="../index.php">Logout</a>
