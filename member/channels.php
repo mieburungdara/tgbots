@@ -85,6 +85,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])
 // Ambil channel yang terdaftar saat ini untuk ditampilkan
 $current_channel = $channelRepo->findBySellerId($user_id);
 if ($current_channel) {
+    // Inisialisasi kunci array untuk menghindari warning
+    $current_channel['title'] = 'Info tidak tersedia';
+    $current_channel['username'] = null;
+
     // Jika channel ada, coba dapatkan info terbarunya dari Telegram
     try {
         if (!isset($telegram_api)) { throw new Exception("API Telegram tidak terinisialisasi."); }
@@ -92,10 +96,9 @@ if ($current_channel) {
         if ($chat_info && $chat_info['ok']) {
             $current_channel['title'] = $chat_info['result']['title'];
             $current_channel['username'] = $chat_info['result']['username'] ?? null;
-        } else {
-            $current_channel['title'] = 'Info tidak tersedia';
         }
     } catch (Exception $e) {
+        // Biarkan title default, karena sudah diatur sebagai 'Info tidak tersedia' atau 'Gagal mengambil'
         $current_channel['title'] = 'Gagal mengambil info channel.';
         $error_message = $error_message ?? "Gagal menghubungi Telegram: " . $e->getMessage();
     }
