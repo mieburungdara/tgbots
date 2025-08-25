@@ -55,7 +55,8 @@ require_once __DIR__ . '/../partials/header.php';
                         <td>Rp <?= number_format($package['price'] ?? 0, 0, ',', '.') ?></td>
                         <td><span class="status-badge status-<?= htmlspecialchars($package['status']) ?>"><?= ucfirst(htmlspecialchars($package['status'])) ?></span></td>
                         <td><?= htmlspecialchars(date('d M Y H:i', strtotime($package['created_at']))) ?></td>
-                        <td>
+                        <td style="white-space: nowrap;">
+                            <a href="view_package.php?id=<?= $package['public_id'] ?>" class="btn btn-sm">Lihat</a>
                             <a href="edit_package.php?id=<?= $package['public_id'] ?>" class="btn btn-edit btn-sm">Edit</a>
                             <a href="#" class="btn btn-delete btn-sm">Hapus</a>
                         </td>

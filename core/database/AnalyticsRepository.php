@@ -149,4 +149,45 @@ class AnalyticsRepository
         $stmt->execute();
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Mengambil ringkasan statistik untuk satu paket konten.
+     *
+     * @param int $packageId ID internal paket.
+     * @return array Mengembalikan array dengan `total_sales` dan `total_revenue`.
+     */
+    public function getSummaryForPackage(int $packageId): array
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(id) as total_sales, SUM(price) as total_revenue FROM sales WHERE package_id = ?");
+        $stmt->execute([$packageId]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        return [
+            'total_sales' => $result['total_sales'] ?? 0,
+            'total_revenue' => $result['total_revenue'] ?? 0,
+        ];
+    }
+
+    /**
+     * Mengambil daftar penjualan terakhir untuk sebuah paket.
+     *
+     * @param int $packageId ID internal paket.
+     * @param int $limit Jumlah maksimum data penjualan yang akan diambil.
+     * @return array Daftar penjualan terakhir.
+     */
+    public function getRecentSalesForPackage(int $packageId, int $limit = 10): array
+    {
+        $sql = "
+            SELECT s.purchased_at, s.price, u.username as buyer_username
+            FROM sales s
+            JOIN users u ON s.buyer_user_id = u.id
+            WHERE s.package_id = ?
+            ORDER BY s.purchased_at DESC
+            LIMIT ?
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(1, $packageId, PDO::PARAM_INT);
+        $stmt->bindParam(2, $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }
