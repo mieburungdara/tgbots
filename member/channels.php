@@ -27,12 +27,17 @@ $success_message = null;
 // Ambil bot_id dari session atau dari sumber lain jika tersedia
 // Untuk saat ini, kita asumsikan ada bot default atau bot pertama yang terdaftar
 // Ini mungkin perlu disesuaikan tergantung pada logika aplikasi yang lebih luas
+$bot_details = null;
 try {
     $default_bot_id = get_default_bot_id($pdo);
     if (!$default_bot_id) {
         throw new Exception("Tidak ada bot yang terkonfigurasi di sistem.");
     }
-    $telegram_api = new TelegramAPI(get_bot_token($pdo, $default_bot_id));
+    $bot_details = get_bot_details($pdo, $default_bot_id);
+    if (!$bot_details || !isset($bot_details['token'])) {
+        throw new Exception("Gagal mengambil detail atau token untuk bot default.");
+    }
+    $telegram_api = new TelegramAPI($bot_details['token']);
 } catch (Exception $e) {
     $error_message = "Error inisialisasi sistem: " . $e->getMessage();
 }
@@ -128,6 +133,9 @@ require_once __DIR__ . '/../partials/header.php';
             <strong>ID Channel:</strong> <code><?= htmlspecialchars($current_channel['channel_id']) ?></code><br>
             <?php if ($current_channel['username']): ?>
                 <strong>Username:</strong> @<?= htmlspecialchars($current_channel['username']) ?><br>
+            <?php endif; ?>
+            <?php if ($bot_details && isset($bot_details['username'])): ?>
+                <strong>Terhubung dengan Bot:</strong> @<?= htmlspecialchars($bot_details['username']) ?><br>
             <?php endif; ?>
             <strong>Status:</strong> <span style="color: green; font-weight: bold;">Aktif</span>
         </p>
