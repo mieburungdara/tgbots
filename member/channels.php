@@ -38,8 +38,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])
         $channel_identifier = trim($_POST['channel_identifier']);
         $group_identifier = trim($_POST['group_identifier'] ?? '');
 
-        if (empty($channel_identifier) || !$selected_bot_id) {
-            $error_message = "Harap pilih bot dan isi ID atau username channel.";
+        if (empty($channel_identifier) || !$selected_bot_id || empty($group_identifier)) {
+            $error_message = "Harap pilih bot, isi ID/username channel, dan ID/username grup diskusi.";
         } else {
             try {
                 $bot_token = get_bot_token($pdo, $selected_bot_id);
@@ -65,30 +65,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])
                 $channel_title = $channel_info['result']['title'];
                 $linked_chat_id = $channel_info['result']['linked_chat_id'] ?? null;
 
-                // 2. Verifikasi Grup Diskusi
-                $numeric_group_id = null;
-                if (!empty($group_identifier)) {
-                    $group_info = $telegram_api->getChat($group_identifier);
-                    if (!$group_info || !$group_info['ok']) throw new Exception("Verifikasi Grup Gagal: Tidak dapat mengambil informasi untuk grup `{$group_identifier}`.");
-                    $numeric_group_id = $group_info['result']['id'];
-                    if ($numeric_group_id != $linked_chat_id) throw new Exception("Verifikasi Grup Gagal: Grup `{$group_identifier}` tidak terhubung dengan channel `{$channel_identifier}` di pengaturan Telegram.");
-                } elseif ($linked_chat_id) {
-                    $numeric_group_id = $linked_chat_id;
+                if (!$linked_chat_id) {
+                    throw new Exception("Verifikasi Gagal: Channel `{$channel_identifier}` tidak memiliki grup diskusi yang terhubung di pengaturan Telegram.");
                 }
 
-                // 3. Verifikasi Bot adalah admin di Grup Diskusi (jika ada)
-                if ($numeric_group_id) {
-                    $bot_member_group = $telegram_api->getChatMember($numeric_group_id, $bot_telegram_id);
-                    if (!$bot_member_group || !$bot_member_group['ok'] || !in_array($bot_member_group['result']['status'], ['administrator', 'creator'])) {
-                        throw new Exception("Verifikasi Grup Gagal: Pastikan bot yang dipilih juga merupakan *admin* di grup diskusi.");
-                    }
+                // 2. Verifikasi Grup Diskusi
+                $group_info = $telegram_api->getChat($group_identifier);
+                if (!$group_info || !$group_info['ok']) {
+                    throw new Exception("Verifikasi Grup Gagal: Tidak dapat mengambil informasi untuk grup `{$group_identifier}`.");
+                }
+                $numeric_group_id = $group_info['result']['id'];
+
+                if ($numeric_group_id != $linked_chat_id) {
+                    throw new Exception("Verifikasi Grup Gagal: Grup `{$group_identifier}` (ID: {$numeric_group_id}) tidak cocok dengan grup yang terhubung ke channel (ID: {$linked_chat_id}).");
+                }
+
+                // 3. Verifikasi Bot adalah admin di Grup Diskusi
+                $bot_member_group = $telegram_api->getChatMember($numeric_group_id, $bot_telegram_id);
+                if (!$bot_member_group || !$bot_member_group['ok'] || !in_array($bot_member_group['result']['status'], ['administrator', 'creator'])) {
+                    throw new Exception("Verifikasi Grup Gagal: Pastikan bot yang dipilih juga merupakan *admin* di grup diskusi.");
                 }
 
                 // 4. Simpan ke database
                 $success = $channelRepo->createOrUpdate($user_id, $selected_bot_id, $numeric_channel_id, $numeric_group_id);
 
                 if ($success) {
-                    $success_message = "Selamat! Channel '{$channel_title}' telah berhasil dikonfigurasi.";
+                    $success_message = "Selamat! Channel '{$channel_title}' dan grup diskusinya telah berhasil dikonfigurasi.";
                 } else {
                     $error_message = "Terjadi kesalahan database saat mencoba menyimpan konfigurasi.";
                 }
@@ -113,7 +115,7 @@ if ($current_channel && !empty($current_channel['bot_id'])) {
 
             if (!empty($current_channel['discussion_group_id'])) {
                  $group_info = $telegram_api_for_info->getChat($current_channel['discussion_group_id']);
-                 $current_channel['group_title'] = ($group_info && $group_info['ok']) ? $group_info['result']['title'] : null;
+                 $current_channel['group_title'] = ($group_info && $group_info['ok']) ? $group_info['result']['title'] : 'Info tidak tersedia';
             }
         }
     } catch (Exception $e) {
@@ -141,9 +143,7 @@ require_once __DIR__ . '/../partials/header.php';
         <p>
             <strong>Bot Terhubung:</strong> @<?= htmlspecialchars($bot_details['username'] ?? 'N/A') ?><br>
             <strong>Channel Jualan:</strong> <?= htmlspecialchars($current_channel['title'] ?? 'N/A') ?> (<code><?= htmlspecialchars($current_channel['channel_id']) ?></code>)<br>
-            <?php if (!empty($current_channel['group_title'])): ?>
-                <strong>Grup Diskusi:</strong> <?= htmlspecialchars($current_channel['group_title']) ?><br>
-            <?php endif; ?>
+            <strong>Grup Diskusi:</strong> <?= htmlspecialchars($current_channel['group_title'] ?? 'N/A') ?> (<code><?= htmlspecialchars($current_channel['discussion_group_id']) ?></code>)<br>
         </p>
         <hr>
         <p>Untuk mengubah konfigurasi, silakan gunakan formulir di bawah ini.</p>
@@ -152,12 +152,13 @@ require_once __DIR__ . '/../partials/header.php';
     <!-- Wizard/Setup View -->
     <div class="dashboard-card" style="margin-top: 20px;">
         <h3>Panduan Konfigurasi Channel</h3>
-        <p>Hubungkan bot dengan channel jualan Anda untuk mulai mem-posting konten.</p>
+        <p>Hubungkan bot dengan channel jualan dan grup diskusi Anda untuk mulai mem-posting konten.</p>
         <ol>
             <li>Pilih salah satu bot yang tersedia dari daftar.</li>
-            <li>Tambahkan bot yang Anda pilih sebagai <strong>Admin</strong> di channel Telegram Anda.</li>
-            <li>Beri bot tersebut izin untuk <strong>'Post Messages'</strong>.</li>
-            <li>(Opsional) Tautkan Grup Diskusi ke channel Anda melalui Pengaturan Channel di Telegram.</li>
+            <li>Buat Channel dan Grup Diskusi di Telegram.</li>
+            <li>Tautkan Grup Diskusi ke Channel Anda (melalui Pengaturan Channel &rarr; Diskusi).</li>
+            <li>Jadikan bot yang Anda pilih sebagai <strong>Admin</strong> di Channel <strong>DAN</strong> di Grup Diskusi.</li>
+            <li>Pastikan bot memiliki izin untuk <strong>'Post Messages'</strong> di Channel.</li>
             <li>Isi formulir di bawah ini dan simpan.</li>
         </ol>
     </div>
@@ -182,9 +183,9 @@ require_once __DIR__ . '/../partials/header.php';
             <input type="text" id="channel_identifier" name="channel_identifier" required value="<?= htmlspecialchars($current_channel['channel_id'] ?? '') ?>" placeholder="@channel_jualan_anda">
         </div>
         <div style="margin-bottom: 15px;">
-            <label for="group_identifier"><strong>ID atau Username Grup Diskusi (Opsional)</strong></label>
-            <input type="text" id="group_identifier" name="group_identifier" value="<?= htmlspecialchars($current_channel['discussion_group_id'] ?? '') ?>" placeholder="@grup_diskusi_anda">
-            <small>Kosongkan untuk deteksi otomatis jika grup sudah terhubung di pengaturan Telegram.</small>
+            <label for="group_identifier"><strong>ID atau Username Grup Diskusi</strong></label>
+            <input type="text" id="group_identifier" name="group_identifier" required value="<?= htmlspecialchars($current_channel['discussion_group_id'] ?? '') ?>" placeholder="@grup_diskusi_anda">
+            <small>Grup ini harus sudah terhubung ke channel Anda di pengaturan Telegram.</small>
         </div>
         <div>
             <button type="submit" class="btn">Simpan Konfigurasi</button>
