@@ -43,14 +43,49 @@ try {
     exit;
 }
 
-// Ambil data analitik untuk paket ini
+// -- Start Chart Logic --
 $package_id = $package['id'];
+
+// Tentukan periode waktu untuk analitik
+$periods = [
+    '7' => '7 Hari',
+    '30' => '30 Hari',
+    '90' => '90 Hari',
+    '365' => '1 Tahun',
+];
+$current_period = isset($_GET['period']) && isset($periods[$_GET['period']]) ? $_GET['period'] : '30';
+
+// Ambil data analitik untuk paket ini
 $package_summary = $analyticsRepo->getSummaryForPackage($package_id);
-$recent_sales = $analyticsRepo->getRecentSalesForPackage($package_id, 10);
+$sales_by_day = $analyticsRepo->getSalesByDay(null, $current_period, $package_id);
+
+// Siapkan data untuk grafik
+$chart_labels = [];
+$chart_data = [];
+$label_format = ($current_period > 90) ? 'M Y' : 'd M';
+foreach ($sales_by_day as $day) {
+    $chart_labels[] = date($label_format, strtotime($day['sales_date']));
+    $chart_data[] = $day['daily_revenue'];
+}
+$chart_title = 'Tren Pendapatan ' . $periods[$current_period];
+// -- End Chart Logic --
+
 
 $page_title = 'Detail Konten: ' . htmlspecialchars($package['public_id']);
 require_once __DIR__ . '/../partials/header.php';
 ?>
+
+<!-- Style untuk pemilih periode, jika belum ada di header.php -->
+<style>
+.period-selector { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+.period-selector a { text-decoration: none; padding: 8px 12px; border-radius: 5px; background-color: #f0f0f0; color: #333; font-size: 0.9em; border: 1px solid #ddd; }
+.period-selector a.active { background-color: #007bff; color: #fff; font-weight: bold; border-color: #007bff; }
+.status-badge { padding: 4px 8px; border-radius: 12px; font-size: 0.8em; font-weight: bold; color: #fff; text-transform: uppercase; }
+.status-available { background-color: #28a745; }
+.status-pending { background-color: #ffc107; color: #333; }
+.status-sold { background-color: #dc3545; }
+.status-deleted { background-color: #6c757d; }
+</style>
 
 <h2>Detail Konten: <?= htmlspecialchars($package['public_id']) ?></h2>
 <p><?= htmlspecialchars($package['description']) ?></p>
@@ -77,51 +112,69 @@ require_once __DIR__ . '/../partials/header.php';
     </div>
 </div>
 
-<div class="dashboard-card" style="margin-top: 20px;">
-    <h3>10 Penjualan Terakhir</h3>
-    <?php if (empty($recent_sales)): ?>
-        <p>Belum ada riwayat penjualan untuk konten ini.</p>
-    <?php else: ?>
-        <table class="list-table">
-            <thead>
-                <tr>
-                    <th>Tanggal Pembelian</th>
-                    <th>Harga</th>
-                    <th>Dibeli oleh</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($recent_sales as $sale): ?>
-                    <tr>
-                        <td><?= htmlspecialchars(date('d M Y H:i', strtotime($sale['purchased_at']))) ?></td>
-                        <td>Rp <?= number_format($sale['price'], 0, ',', '.') ?></td>
-                        <td>@<?= htmlspecialchars($sale['buyer_username']) ?></td>
-                    </tr>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    <?php endif; ?>
+<!-- Sales Chart for this package -->
+<div class="chart-container dashboard-card" style="margin-top: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h3><?= htmlspecialchars($chart_title) ?></h3>
+        <div class="period-selector">
+            <?php foreach ($periods as $days => $label): ?>
+                <a href="?id=<?= htmlspecialchars($public_id) ?>&period=<?= $days ?>" class="<?= $current_period == $days ? 'active' : '' ?>"><?= $label ?></a>
+            <?php endforeach; ?>
+        </div>
+    </div>
+    <canvas id="packageSalesChart"></canvas>
 </div>
+
 
 <div style="margin-top: 20px;">
     <a href="my_content.php" class="btn">Kembali ke Konten Saya</a>
 </div>
 
-<!-- CSS untuk status badge, jika belum ada di header -->
-<style>
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.8em;
-    font-weight: bold;
-    color: #fff;
-    text-transform: uppercase;
-}
-.status-available { background-color: #28a745; }
-.status-pending { background-color: #ffc107; color: #333; }
-.status-sold { background-color: #dc3545; }
-.status-deleted { background-color: #6c757d; }
-</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ctx = document.getElementById('packageSalesChart').getContext('2d');
+    const salesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: <?= json_encode($chart_labels) ?>,
+            datasets: [{
+                label: 'Pendapatan (Rp)',
+                data: <?= json_encode($chart_data) ?>,
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderColor: 'rgba(40, 167, 69, 1)',
+                borderWidth: 2,
+                tension: 0.3,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { callback: function(value) { return 'Rp ' + new Intl.NumberFormat('id-ID').format(value); } }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let label = context.dataset.label || '';
+                            if (label) { label += ': '; }
+                            if (context.parsed.y !== null) {
+                                label += 'Rp ' + new Intl.NumberFormat('id-ID').format(context.parsed.y);
+                            }
+                            return label;
+                        }
+                    }
+                }
+            }
+        }
+    });
+});
+</script>
 
 <?php
 require_once __DIR__ . '/../partials/footer.php';

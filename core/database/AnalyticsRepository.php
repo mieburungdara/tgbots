@@ -73,9 +73,10 @@ class AnalyticsRepository
      *
      * @param int|null $sellerId Jika null, ambil data global. Jika diisi, filter berdasarkan ID penjual.
      * @param int $days Jumlah hari terakhir yang akan diambil datanya.
+     * @param int|null $packageId Jika diisi, filter berdasarkan ID paket.
      * @return array Daftar data, masing-masing berisi `sales_date` dan `daily_revenue`.
      */
-    public function getSalesByDay(int $sellerId = null, int $days = 30): array
+    public function getSalesByDay(int $sellerId = null, int $days = 30, int $packageId = null): array
     {
         $params = [date('Y-m-d H:i:s', strtotime("-{$days} days"))];
 
@@ -93,6 +94,11 @@ class AnalyticsRepository
         if ($sellerId !== null) {
             $sql .= " AND seller_user_id = ?";
             $params[] = $sellerId;
+        }
+
+        if ($packageId !== null) {
+            $sql .= " AND package_id = ?";
+            $params[] = $packageId;
         }
 
         $sql .= " GROUP BY sales_date ORDER BY sales_date ASC";
