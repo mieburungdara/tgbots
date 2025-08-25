@@ -23,7 +23,7 @@ $analyticsRepo = new AnalyticsRepository($pdo);
 $user_id = $_SESSION['member_user_id'];
 
 // Ambil informasi pengguna dari tabel users
-$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT * FROM users WHERE telegram_id = ?");
 $stmt->execute([$user_id]);
 $user_info = $stmt->fetch();
 

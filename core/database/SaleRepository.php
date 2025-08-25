@@ -22,13 +22,13 @@ class SaleRepository
      * Memeriksa apakah seorang pengguna telah membeli sebuah paket tertentu.
      *
      * @param int $package_id ID internal paket.
-     * @param int $user_id ID internal pengguna.
+     * @param int $telegram_id ID Telegram pengguna.
      * @return bool True jika pengguna sudah pernah membeli, false jika belum.
      */
-    public function hasUserPurchased(int $package_id, int $user_id): bool
+    public function hasUserPurchased(int $package_id, int $telegram_id): bool
     {
         $stmt = $this->pdo->prepare("SELECT id FROM sales WHERE package_id = ? AND buyer_user_id = ?");
-        $stmt->execute([$package_id, $user_id]);
+        $stmt->execute([$package_id, $telegram_id]);
         return $stmt->fetch() !== false;
     }
 
@@ -37,28 +37,28 @@ class SaleRepository
      * Metode ini harus dijalankan di dalam sebuah transaksi yang dikelola oleh pemanggil.
      *
      * @param int $package_id ID paket yang dijual.
-     * @param int $seller_id ID penjual.
-     * @param int $buyer_id ID pembeli.
+     * @param int $seller_telegram_id ID Telegram penjual.
+     * @param int $buyer_telegram_id ID Telegram pembeli.
      * @param float $price Harga penjualan.
      * @return bool True jika operasi database berhasil.
      * @throws Exception Jika terjadi kesalahan database.
      */
-    public function createSale(int $package_id, int $seller_id, int $buyer_id, float $price): bool
+    public function createSale(int $package_id, int $seller_telegram_id, int $buyer_telegram_id, float $price): bool
     {
         // Transaksi sekarang ditangani oleh pemanggil (webhook.php).
         // Menghapus beginTransaction/commit/rollback dari sini untuk menghindari transaksi bersarang.
         try {
             // Kurangi saldo pembeli
-            $stmt_buyer = $this->pdo->prepare("UPDATE users SET balance = balance - ? WHERE id = ?");
-            $stmt_buyer->execute([$price, $buyer_id]);
+            $stmt_buyer = $this->pdo->prepare("UPDATE users SET balance = balance - ? WHERE telegram_id = ?");
+            $stmt_buyer->execute([$price, $buyer_telegram_id]);
 
             // Tambah saldo penjual
-            $stmt_seller = $this->pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
-            $stmt_seller->execute([$price, $seller_id]);
+            $stmt_seller = $this->pdo->prepare("UPDATE users SET balance = balance + ? WHERE telegram_id = ?");
+            $stmt_seller->execute([$price, $seller_telegram_id]);
 
             // Catat penjualan
             $stmt_sale = $this->pdo->prepare("INSERT INTO sales (package_id, seller_user_id, buyer_user_id, price) VALUES (?, ?, ?, ?)");
-            $stmt_sale->execute([$package_id, $seller_id, $buyer_id, $price]);
+            $stmt_sale->execute([$package_id, $seller_telegram_id, $buyer_telegram_id, $price]);
 
             return true;
         } catch (Exception $e) {
@@ -72,10 +72,10 @@ class SaleRepository
     /**
      * Menemukan semua paket yang telah dibeli oleh seorang pengguna.
      *
-     * @param int $buyerId ID internal pengguna (pembeli).
+     * @param int $buyerTelegramId ID Telegram pengguna (pembeli).
      * @return array Daftar paket yang dibeli, termasuk tanggal pembelian.
      */
-    public function findPackagesByBuyerId(int $buyerId): array
+    public function findPackagesByBuyerId(int $buyerTelegramId): array
     {
         $stmt = $this->pdo->prepare(
             "SELECT s.purchased_at, mp.*
@@ -84,7 +84,7 @@ class SaleRepository
              WHERE s.buyer_user_id = ?
              ORDER BY s.purchased_at DESC"
         );
-        $stmt->execute([$buyerId]);
+        $stmt->execute([$buyerTelegramId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

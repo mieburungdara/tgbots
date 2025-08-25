@@ -77,17 +77,17 @@ class CallbackQueryHandler
     private function handlePostToChannel(string $public_id)
     {
         $callback_query_id = $this->callback_query['id'];
-        $internal_user_id = $this->current_user['id'];
+        $telegram_user_id = $this->current_user['telegram_id'];
 
         // 1. Get package and verify ownership
         $package = $this->package_repo->findByPublicId($public_id);
-        if (!$package || $package['seller_user_id'] != $internal_user_id) {
+        if (!$package || $package['seller_user_id'] != $telegram_user_id) {
             $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Anda tidak memiliki izin untuk mem-posting konten ini.', true);
             return;
         }
 
         // 2. Get seller's registered channel
-        $sales_channel = $this->sales_channel_repo->findBySellerId($internal_user_id);
+        $sales_channel = $this->sales_channel_repo->findBySellerId($telegram_user_id);
         if (!$sales_channel) {
             $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Anda belum mendaftarkan channel jualan.', true);
             return;
@@ -136,14 +136,14 @@ class CallbackQueryHandler
         } catch (Exception $e) {
              // Check for a specific error message indicating the bot was kicked or permissions were lost
             if (stripos($e->getMessage(), 'bot was kicked') !== false || stripos($e->getMessage(), 'not a member') !== false) {
-                $this->sales_channel_repo->deactivate($internal_user_id);
+                $this->sales_channel_repo->deactivate($telegram_user_id);
                 $error_message = "❌ Gagal: Bot bukan lagi admin di channel. Channel Anda telah di-unregister secara otomatis.";
                 $this->telegram_api->answerCallbackQuery($callback_query_id, $error_message, true);
-                app_log("Deactivating channel {$channel_id} for user {$internal_user_id} due to being kicked.", 'bot_error');
+                app_log("Deactivating channel {$channel_id} for user {$telegram_user_id} due to being kicked.", 'bot_error');
             } else {
                 $error_message = "❌ Gagal mem-posting ke channel. Pastikan bot adalah admin dan memiliki izin yang benar.";
                 $this->telegram_api->answerCallbackQuery($callback_query_id, $error_message, true);
-                app_log("Gagal post ke channel {$channel_id} untuk user {$internal_user_id}: " . $e->getMessage(), 'bot_error');
+                app_log("Gagal post ke channel {$channel_id} untuk user {$telegram_user_id}: " . $e->getMessage(), 'bot_error');
             }
         }
     }
@@ -166,7 +166,7 @@ class CallbackQueryHandler
         $page_index = (int)array_pop($parts);
         $public_id = implode('_', $parts);
 
-        $internal_user_id = $this->current_user['id'];
+        $telegram_user_id = $this->current_user['telegram_id'];
         $callback_query_id = $this->callback_query['id'];
 
         $package = $this->package_repo->findByPublicId($public_id);
@@ -176,8 +176,8 @@ class CallbackQueryHandler
         }
         $package_id = $package['id'];
 
-        $is_seller = ($package['seller_user_id'] == $internal_user_id);
-        $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $internal_user_id);
+        $is_seller = ($package['seller_user_id'] == $telegram_user_id);
+        $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $telegram_user_id);
 
         if (!$is_seller && !$has_purchased) {
             $this->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Anda tidak memiliki akses ke konten ini.', true);
@@ -254,7 +254,7 @@ class CallbackQueryHandler
     private function handleRegisterSeller()
     {
         $callback_query_id = $this->callback_query['id'];
-        $user_id = $this->current_user['id'];
+        $telegram_user_id = $this->current_user['telegram_id'];
 
         if (!empty($this->current_user['public_seller_id'])) {
             $this->telegram_api->answerCallbackQuery($callback_query_id, 'Anda sudah terdaftar sebagai penjual.', true);
@@ -262,7 +262,7 @@ class CallbackQueryHandler
         }
 
         try {
-            $public_id = $this->user_repo->setPublicId($user_id);
+            $public_id = $this->user_repo->setPublicId($telegram_user_id);
             $escaped_public_id = $this->telegram_api->escapeMarkdown($public_id);
             $message = "Selamat! Anda berhasil terdaftar sebagai penjual.\n\nID Penjual Publik Anda adalah: *{$escaped_public_id}*\n\nSekarang Anda dapat menggunakan perintah /sell dengan me-reply media yang ingin Anda jual.";
             $this->telegram_api->sendMessage($this->chat_id, $message, 'Markdown');
@@ -281,7 +281,7 @@ class CallbackQueryHandler
      */
     private function handleBuy(string $public_id)
     {
-        $internal_user_id = $this->current_user['id'];
+        $telegram_user_id = $this->current_user['telegram_id'];
         $callback_query_id = $this->callback_query['id'];
 
         // Jawab callback segera untuk menghindari timeout
@@ -299,7 +299,7 @@ class CallbackQueryHandler
             }
 
             // createSale sekarang akan melempar Exception jika gagal, bukan mengembalikan false
-            $this->sale_repo->createSale($package_id, $package['seller_user_id'], $internal_user_id, $package['price']);
+            $this->sale_repo->createSale($package_id, $package['seller_user_id'], $telegram_user_id, $package['price']);
             $this->package_repo->markAsSold($package_id);
 
             // Kirim pesan konfirmasi baru karena callback sudah dijawab

@@ -33,8 +33,8 @@ if (isset($_GET['token'])) {
         $stmt = $pdo->prepare(
             "SELECT m.user_id, u.first_name
              FROM members m
-             JOIN users u ON m.user_id = u.id
-             JOIN user_roles ur ON u.id = ur.user_id
+             JOIN users u ON m.user_id = u.telegram_id
+             JOIN user_roles ur ON u.telegram_id = ur.user_id
              JOIN roles r ON ur.role_id = r.id
              WHERE m.login_token = ? AND m.token_used = 0 AND m.token_created_at >= NOW() - INTERVAL 5 MINUTE AND r.name = 'Admin'"
         );
@@ -47,7 +47,7 @@ if (isset($_GET['token'])) {
 
             session_regenerate_id(true); // Keamanan: cegah session fixation
             $_SESSION['is_admin'] = true;
-            $_SESSION['user_id'] = $user['user_id'];
+            $_SESSION['telegram_id'] = $user['user_id']; // user_id dari tabel members sekarang adalah telegram_id
             $_SESSION['user_first_name'] = $user['first_name'];
 
             // Redirect untuk membersihkan token dari URL

@@ -20,25 +20,16 @@ if (!$pdo) {
 }
 
 try {
-    // Cari user_id internal berdasarkan telegram_id
-    $stmt_user = $pdo->prepare("SELECT id FROM users WHERE telegram_id = ?");
-    $stmt_user->execute([$telegram_id]);
-    $user_id = $stmt_user->fetchColumn();
-
-    if (!$user_id) {
-        echo json_encode(['error' => 'Pengguna tidak ditemukan.']);
-        exit;
-    }
-
+    // Langsung gunakan telegram_id untuk query
     $stmt = $pdo->prepare(
         "SELECT s.price, s.purchased_at, mp.title as package_title, u_buyer.first_name as buyer_name
          FROM sales s
          JOIN media_packages mp ON s.package_id = mp.id
-         JOIN users u_buyer ON s.buyer_user_id = u_buyer.id
+         JOIN users u_buyer ON s.buyer_user_id = u_buyer.telegram_id
          WHERE s.seller_user_id = ?
          ORDER BY s.purchased_at DESC"
     );
-    $stmt->execute([$user_id]);
+    $stmt->execute([$telegram_id]);
     $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode($logs);

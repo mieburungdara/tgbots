@@ -126,10 +126,10 @@ class PackageRepository
     /**
      * Menemukan semua paket yang dijual oleh ID penjual tertentu.
      *
-     * @param int $sellerId ID internal pengguna penjual.
+     * @param int $sellerTelegramId ID Telegram pengguna penjual.
      * @return array Daftar paket yang dijual.
      */
-    public function findAllBySellerId(int $sellerId): array
+    public function findAllBySellerId(int $sellerTelegramId): array
     {
         $stmt = $this->pdo->prepare(
             "SELECT mp.*
@@ -137,7 +137,7 @@ class PackageRepository
              WHERE mp.seller_user_id = ? AND mp.status != 'deleted'
              ORDER BY mp.created_at DESC"
         );
-        $stmt->execute([$sellerId]);
+        $stmt->execute([$sellerTelegramId]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
@@ -145,11 +145,11 @@ class PackageRepository
      * Melakukan soft delete pada sebuah paket dengan mengubah statusnya menjadi 'deleted'.
      *
      * @param int $packageId ID paket yang akan dihapus.
-     * @param int $sellerId ID penjual yang meminta penghapusan, untuk verifikasi kepemilikan.
+     * @param int $sellerTelegramId ID Telegram penjual yang meminta penghapusan, untuk verifikasi kepemilikan.
      * @return bool True jika berhasil, false jika gagal.
      * @throws Exception Jika paket tidak ditemukan, bukan milik penjual, atau sudah terjual.
      */
-    public function softDeletePackage(int $packageId, int $sellerId): bool
+    public function softDeletePackage(int $packageId, int $sellerTelegramId): bool
     {
         $package = $this->find($packageId);
 
@@ -157,7 +157,7 @@ class PackageRepository
             throw new Exception("Paket tidak ditemukan.");
         }
 
-        if ($package['seller_user_id'] != $sellerId) {
+        if ($package['seller_user_id'] != $sellerTelegramId) {
             throw new Exception("Anda tidak memiliki izin untuk menghapus paket ini.");
         }
 
@@ -226,7 +226,7 @@ class PackageRepository
         $sql = "
             SELECT mp.*, u.username as seller_username
             FROM media_packages mp
-            JOIN users u ON mp.seller_user_id = u.id
+            JOIN users u ON mp.seller_user_id = u.telegram_id
             ORDER BY mp.created_at DESC
             LIMIT :limit OFFSET :offset
         ";
@@ -254,11 +254,11 @@ class PackageRepository
      * Mengubah status proteksi konten (`protect_content`) sebuah paket.
      *
      * @param int $packageId ID paket yang akan diubah.
-     * @param int $sellerId ID penjual yang meminta, untuk verifikasi kepemilikan.
+     * @param int $sellerTelegramId ID Telegram penjual yang meminta, untuk verifikasi kepemilikan.
      * @return bool Status proteksi konten yang baru (true jika aktif, false jika tidak).
      * @throws Exception Jika paket tidak ditemukan atau pengguna bukan pemiliknya.
      */
-    public function toggleProtection(int $packageId, int $sellerId): bool
+    public function toggleProtection(int $packageId, int $sellerTelegramId): bool
     {
         $package = $this->find($packageId);
 
@@ -266,7 +266,7 @@ class PackageRepository
             throw new Exception("Paket tidak ditemukan.");
         }
 
-        if ($package['seller_user_id'] != $sellerId) {
+        if ($package['seller_user_id'] != $sellerTelegramId) {
             throw new Exception("Anda tidak memiliki izin untuk mengubah paket ini.");
         }
 
@@ -284,13 +284,13 @@ class PackageRepository
      * Memperbarui detail sebuah paket (deskripsi dan harga).
      *
      * @param int $packageId ID paket yang akan diperbarui.
-     * @param int $sellerId ID penjual yang meminta, untuk verifikasi kepemilikan.
+     * @param int $sellerTelegramId ID Telegram penjual yang meminta, untuk verifikasi kepemilikan.
      * @param string $description Deskripsi baru untuk paket.
      * @param int|null $price Harga baru untuk paket (bisa null jika tidak diubah).
      * @return bool True jika berhasil, false jika gagal.
      * @throws Exception Jika paket tidak ditemukan atau pengguna bukan pemiliknya.
      */
-    public function updatePackageDetails(int $packageId, int $sellerId, string $description, ?int $price): bool
+    public function updatePackageDetails(int $packageId, int $sellerTelegramId, string $description, ?int $price): bool
     {
         $package = $this->find($packageId);
 
@@ -298,7 +298,7 @@ class PackageRepository
             throw new Exception("Paket tidak ditemukan.");
         }
 
-        if ($package['seller_user_id'] != $sellerId) {
+        if ($package['seller_user_id'] != $sellerTelegramId) {
             throw new Exception("Anda tidak memiliki izin untuk mengubah paket ini.");
         }
 
@@ -313,20 +313,20 @@ class PackageRepository
      * Metode ini secara atomik menaikkan nomor urut paket penjual dan membuat ID.
      * Sebaiknya dijalankan di dalam sebuah transaksi.
      *
-     * @param int $seller_user_id ID internal penjual.
-     * @param int $bot_id ID internal bot yang digunakan untuk membuat paket.
+     * @param int $seller_telegram_id ID Telegram penjual.
+     * @param int $telegram_bot_id ID Telegram bot yang digunakan untuk membuat paket.
      * @param string $description Deskripsi paket.
      * @param int $thumbnail_media_id ID internal dari file media yang dijadikan thumbnail.
      * @return int ID internal dari paket yang baru dibuat.
      * @throws Exception Jika terjadi kegagalan dalam transaksi atau jika penjual tidak valid.
      */
-    public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id): int
+    public function createPackageWithPublicId(int $seller_telegram_id, int $telegram_bot_id, string $description, int $thumbnail_media_id): int
     {
         try {
             // 1. Ambil dan kunci baris pengguna untuk mendapatkan urutan & ID publik
             // Catatan: FOR UPDATE memerlukan transaksi aktif, yang sekarang ditangani oleh webhook.php
-            $stmt_user = $this->pdo->prepare("SELECT public_seller_id, seller_package_sequence FROM users WHERE id = ? FOR UPDATE");
-            $stmt_user->execute([$seller_user_id]);
+            $stmt_user = $this->pdo->prepare("SELECT public_seller_id, seller_package_sequence FROM users WHERE telegram_id = ? FOR UPDATE");
+            $stmt_user->execute([$seller_telegram_id]);
             $seller_info = $stmt_user->fetch(PDO::FETCH_ASSOC);
 
             if (!$seller_info || !$seller_info['public_seller_id']) {
@@ -335,8 +335,8 @@ class PackageRepository
 
             // 2. Tingkatkan nomor urut
             $new_sequence = $seller_info['seller_package_sequence'] + 1;
-            $stmt_update_seq = $this->pdo->prepare("UPDATE users SET seller_package_sequence = ? WHERE id = ?");
-            $stmt_update_seq->execute([$new_sequence, $seller_user_id]);
+            $stmt_update_seq = $this->pdo->prepare("UPDATE users SET seller_package_sequence = ? WHERE telegram_id = ?");
+            $stmt_update_seq->execute([$new_sequence, $seller_telegram_id]);
 
             // 3. Buat ID publik
             $public_id = $seller_info['public_seller_id'] . '_' . str_pad($new_sequence, 4, '0', STR_PAD_LEFT);
@@ -346,7 +346,7 @@ class PackageRepository
                 "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id)
                  VALUES (?, ?, ?, ?, 'pending', ?)"
             );
-            $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $public_id]);
+            $stmt_package->execute([$seller_telegram_id, $telegram_bot_id, $description, $thumbnail_media_id, $public_id]);
             $package_id = $this->pdo->lastInsertId();
 
             return $package_id;

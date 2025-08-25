@@ -15,21 +15,21 @@ if (!$pdo) {
 }
 
 // Validasi input
-$user_id = isset($_GET['user_id']) ? (int)$_GET['user_id'] : 0;
-$bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
+$telegram_id = isset($_GET['telegram_id']) ? (int)$_GET['telegram_id'] : 0;
+$telegram_bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
 
-if (!$user_id || !$bot_id) {
+if (!$telegram_id || !$telegram_bot_id) {
     header("Location: index.php");
     exit;
 }
 
 // Ambil info pengguna dan bot
-$stmt_user = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-$stmt_user->execute([$user_id]);
+$stmt_user = $pdo->prepare("SELECT * FROM users WHERE telegram_id = ?");
+$stmt_user->execute([$telegram_id]);
 $user_info = $stmt_user->fetch();
 
-$stmt_bot = $pdo->prepare("SELECT * FROM bots WHERE id = ?");
-$stmt_bot->execute([$bot_id]);
+$stmt_bot = $pdo->prepare("SELECT * FROM bots WHERE telegram_bot_id = ?");
+$stmt_bot->execute([$telegram_bot_id]);
 $bot_info = $stmt_bot->fetch();
 
 if (!$user_info || !$bot_info) {
@@ -40,17 +40,10 @@ if (!$user_info || !$bot_info) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
     $reply_text = trim($_POST['reply_text']);
     if (!empty($reply_text)) {
-        $telegram_api = new TelegramAPI($bot_info['token']);
+        $telegram_api = new TelegramAPI($bot_info['token'], $pdo, $telegram_bot_id);
         $result = $telegram_api->sendMessage($user_info['telegram_id'], $reply_text);
 
-        if ($result && $result['ok']) {
-            $raw_data_json = json_encode($result['result']);
-            $stmt = $pdo->prepare(
-                "INSERT INTO messages (user_id, bot_id, telegram_message_id, text, raw_data, direction, telegram_timestamp)
-                 VALUES (?, ?, ?, ?, ?, 'outgoing', NOW())"
-            );
-            $stmt->execute([$user_id, $bot_id, $result['result']['message_id'], $reply_text, $raw_data_json]);
-        }
+        // sendMessage in TelegramAPI now handles logging outgoing messages
         header("Location: " . $_SERVER['REQUEST_URI']);
         exit;
     }
@@ -62,7 +55,7 @@ $limit = 50;
 $offset = ($page - 1) * $limit;
 
 $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE user_id = ? AND bot_id = ?");
-$count_stmt->execute([$user_id, $bot_id]);
+$count_stmt->execute([$telegram_id, $telegram_bot_id]);
 $total_messages = $count_stmt->fetchColumn();
 $total_pages = ceil($total_messages / $limit);
 
@@ -73,29 +66,28 @@ $sql = "SELECT m.*, mf.type as media_type
         ORDER BY m.created_at DESC
         LIMIT ? OFFSET ?";
 $stmt = $pdo->prepare($sql);
-$stmt->bindValue(1, $user_id, PDO::PARAM_INT);
-$stmt->bindValue(2, $bot_id, PDO::PARAM_INT);
+$stmt->bindValue(1, $telegram_id, PDO::PARAM_INT);
+$stmt->bindValue(2, $telegram_bot_id, PDO::PARAM_INT);
 $stmt->bindValue(3, $limit, PDO::PARAM_INT);
 $stmt->bindValue(4, $offset, PDO::PARAM_INT);
 $stmt->execute();
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // --- AKHIR LOGIKA PAGINATION ---
 
-$telegram_bot_id_for_back_link = explode(':', $bot_info['token'])[0];
 $page_title = "Chat dengan " . htmlspecialchars($user_info['first_name']);
 require_once __DIR__ . '/../partials/header.php';
 ?>
 
 <div class="chat-container">
     <div class="chat-header">
-        <a href="index.php?bot_id=<?= $telegram_bot_id_for_back_link ?>" class="btn">&larr; Kembali</a>
+        <a href="index.php?bot_id=<?= $telegram_bot_id ?>" class="btn">&larr; Kembali</a>
         <h3>Riwayat Chat dengan <?= htmlspecialchars($user_info['first_name'] ?? '') ?></h3>
         <p>Total Pesan: <?= $total_messages ?></p>
     </div>
 
     <form id="bulk-action-form" action="delete_messages_handler.php" method="post">
-        <input type="hidden" name="user_id" value="<?= $user_id ?>">
-        <input type="hidden" name="bot_id" value="<?= $bot_id ?>">
+        <input type="hidden" name="user_id" value="<?= $telegram_id ?>">
+        <input type="hidden" name="bot_id" value="<?= $telegram_bot_id ?>">
 
         <div class="bulk-actions-bar">
             <button type="submit" name="action" value="delete_db" class="btn btn-warning" disabled>Hapus dari DB</button>
@@ -152,7 +144,7 @@ require_once __DIR__ . '/../partials/header.php';
 
     <div class="pagination">
         <?php if ($page > 1): ?>
-            <a href="?user_id=<?= $user_id ?>&bot_id=<?= $bot_id ?>&page=<?= $page - 1 ?>">&laquo; Sebelumnya</a>
+            <a href="?telegram_id=<?= $telegram_id ?>&bot_id=<?= $telegram_bot_id ?>&page=<?= $page - 1 ?>">&laquo; Sebelumnya</a>
         <?php else: ?>
             <span class="disabled">&laquo; Sebelumnya</span>
         <?php endif; ?>
@@ -160,14 +152,14 @@ require_once __DIR__ . '/../partials/header.php';
         <span class="current-page">Halaman <?= $page ?> dari <?= $total_pages ?></span>
 
         <?php if ($page < $total_pages): ?>
-            <a href="?user_id=<?= $user_id ?>&bot_id=<?= $bot_id ?>&page=<?= $page + 1 ?>">Berikutnya &raquo;</a>
+            <a href="?telegram_id=<?= $telegram_id ?>&bot_id=<?= $telegram_bot_id ?>&page=<?= $page + 1 ?>">Berikutnya &raquo;</a>
         <?php else: ?>
             <span class="disabled">Berikutnya &raquo;</span>
         <?php endif; ?>
     </div>
 
     <div class="chat-reply-form">
-        <form action="chat.php?user_id=<?= $user_id ?>&bot_id=<?= $bot_id ?>" method="post">
+        <form action="chat.php?telegram_id=<?= $telegram_id ?>&bot_id=<?= $telegram_bot_id ?>" method="post">
             <textarea name="reply_text" rows="3" placeholder="Ketik balasan Anda..." required></textarea>
             <button type="submit" name="reply_message" class="btn">Kirim</button>
         </form>

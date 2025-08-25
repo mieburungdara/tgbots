@@ -16,16 +16,16 @@ if (!$pdo) {
 
 // Validasi input
 $chat_id = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
-$bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
+$telegram_bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
 
-if (!$chat_id || !$bot_id) {
+if (!$chat_id || !$telegram_bot_id) {
     header("Location: index.php");
     exit;
 }
 
 // Ambil info bot
-$stmt_bot = $pdo->prepare("SELECT * FROM bots WHERE id = ?");
-$stmt_bot->execute([$bot_id]);
+$stmt_bot = $pdo->prepare("SELECT * FROM bots WHERE telegram_bot_id = ?");
+$stmt_bot->execute([$telegram_bot_id]);
 $bot_info = $stmt_bot->fetch();
 
 if (!$bot_info) {
@@ -34,7 +34,7 @@ if (!$bot_info) {
 
 // Ambil info chat dari pesan terakhir untuk judul halaman
 $stmt_chat_info = $pdo->prepare("SELECT raw_data FROM messages WHERE chat_id = ? AND bot_id = ? ORDER BY id DESC LIMIT 1");
-$stmt_chat_info->execute([$chat_id, $bot_id]);
+$stmt_chat_info->execute([$chat_id, $telegram_bot_id]);
 $last_message_raw = $stmt_chat_info->fetchColumn();
 $chat_title = "Chat ID: $chat_id";
 if ($last_message_raw) {
@@ -48,7 +48,7 @@ $limit = 50;
 $offset = ($page - 1) * $limit;
 
 $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE chat_id = ? AND bot_id = ?");
-$count_stmt->execute([$chat_id, $bot_id]);
+$count_stmt->execute([$chat_id, $telegram_bot_id]);
 $total_messages = $count_stmt->fetchColumn();
 $total_pages = ceil($total_messages / $limit);
 
@@ -56,27 +56,26 @@ $total_pages = ceil($total_messages / $limit);
 $sql = "SELECT m.*, mf.type as media_type, u.first_name as sender_first_name
         FROM messages m
         LEFT JOIN media_files mf ON m.telegram_message_id = mf.message_id AND m.chat_id = mf.chat_id
-        LEFT JOIN users u ON m.user_id = u.id
+        LEFT JOIN users u ON m.user_id = u.telegram_id
         WHERE m.chat_id = ? AND m.bot_id = ?
         ORDER BY m.created_at DESC
         LIMIT ? OFFSET ?";
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(1, $chat_id, PDO::PARAM_INT);
-$stmt->bindValue(2, $bot_id, PDO::PARAM_INT);
+$stmt->bindValue(2, $telegram_bot_id, PDO::PARAM_INT);
 $stmt->bindValue(3, $limit, PDO::PARAM_INT);
 $stmt->bindValue(4, $offset, PDO::PARAM_INT);
 $stmt->execute();
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // --- AKHIR LOGIKA PAGINATION ---
 
-$telegram_bot_id_for_back_link = explode(':', $bot_info['token'])[0];
 $page_title = "Riwayat Chat: " . htmlspecialchars($chat_title);
 require_once __DIR__ . '/../partials/header.php';
 ?>
 
 <div class="chat-container">
     <div class="chat-header">
-        <a href="index.php?bot_id=<?= $telegram_bot_id_for_back_link ?>" class="btn">&larr; Kembali</a>
+        <a href="index.php?bot_id=<?= $telegram_bot_id ?>" class="btn">&larr; Kembali</a>
         <h3>Riwayat Chat: <?= htmlspecialchars($chat_title) ?></h3>
         <p>Total Pesan: <?= $total_messages ?></p>
     </div>
@@ -84,7 +83,7 @@ require_once __DIR__ . '/../partials/header.php';
     <form id="bulk-action-form" action="delete_messages_handler.php" method="post">
         <!-- Kirim chat_id karena ini bukan halaman user-specific -->
         <input type="hidden" name="chat_id" value="<?= $chat_id ?>">
-        <input type="hidden" name="bot_id" value="<?= $bot_id ?>">
+        <input type="hidden" name="bot_id" value="<?= $telegram_bot_id ?>">
         <input type="hidden" name="source_page" value="channel_chat">
 
 

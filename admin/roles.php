@@ -5,22 +5,19 @@ require_once __DIR__ . '/../core/helpers.php';
 
 session_start();
 
-// Simple admin check. In a real app, this would be more robust.
-// We assume the new role system is in place, so we might need a new is_admin() helper.
-// For now, let's assume a session variable `is_admin` is set upon login.
-if (!isset($_SESSION['is_admin']) || !$_SESSION['is_admin']) {
-    // A fallback check on the old session might be needed temporarily if login isn't updated yet.
-    if (!isset($_SESSION['user_id'])) {
-        header('Location: /login.php');
-        exit;
-    }
-}
-
+// This page relies on the admin authentication logic from auth.php
+// which should be included by the header.
+require_once __DIR__ . '/auth.php';
 
 $pdo = get_db_connection();
 
 // Handle POST request to add/delete role
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Extra check to ensure only admins can perform this action
+    if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
+        die("Akses ditolak.");
+    }
+
     if (isset($_POST['add_role']) && !empty($_POST['role_name'])) {
         $role_name = trim($_POST['role_name']);
         $stmt = $pdo->prepare("INSERT INTO roles (name) VALUES (?) ON DUPLICATE KEY UPDATE name=name");
@@ -39,23 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Fetch all roles
 $roles = $pdo->query("SELECT * FROM roles ORDER BY name ASC")->fetchAll();
-
-// This is a temporary way to check for admin. This should be replaced with a proper role check.
-function is_admin_temp_check(PDO $pdo, $user_id) {
-    $stmt = $pdo->prepare("
-        SELECT COUNT(*)
-        FROM user_roles ur
-        JOIN roles r ON ur.role_id = r.id
-        WHERE ur.user_id = ? AND r.name = 'Admin'
-    ");
-    $stmt->execute([$user_id]);
-    return $stmt->fetchColumn() > 0;
-}
-
-if (isset($_SESSION['user_id']) && !is_admin_temp_check($pdo, $_SESSION['user_id'])) {
-     header('Location: /login.php');
-     exit;
-}
 
 
 $page_title = 'Manajemen Peran';

@@ -161,7 +161,7 @@ class MessageHandler
         $channel_title = $channel_info['result']['title'];
 
         // 5. Save to database
-        $success = $this->sales_channel_repo->createOrUpdate($this->current_user['id'], $numeric_channel_id);
+        $success = $this->sales_channel_repo->createOrUpdate($this->current_user['telegram_id'], $numeric_channel_id);
 
         if ($success) {
             $escaped_title = $this->telegram_api->escapeMarkdown($channel_title);
@@ -177,7 +177,7 @@ class MessageHandler
      */
     private function handleMeCommand()
     {
-        $user_id = $this->current_user['id'];
+        $user_id = $this->current_user['telegram_id'];
 
         // Mengambil statistik
         $sales_stats = $this->analytics_repo->getSellerSummary($user_id); // Menggunakan kembali metode yang ada
@@ -282,17 +282,17 @@ EOT;
             }
 
             $package_id = $package['id'];
-            $internal_user_id = $this->current_user['id'];
+            $telegram_user_id = $this->current_user['telegram_id'];
 
             // Tentukan tingkat akses pengguna
-            $is_seller = ($package['seller_user_id'] == $internal_user_id);
-            $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $internal_user_id);
+            $is_seller = ($package['seller_user_id'] == $telegram_user_id);
+            $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $telegram_user_id);
 
             // Kasus 1: Pengguna adalah pemilik (penjual)
             if ($is_seller) {
                 $message = "Anda adalah pemilik konten ini. Anda dapat melihat atau mem-postingnya ke channel.";
                 $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$public_id}_0"]]];
-                $sales_channel = $this->sales_channel_repo->findBySellerId($internal_user_id);
+                $sales_channel = $this->sales_channel_repo->findBySellerId($telegram_user_id);
                 if ($sales_channel) {
                     $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$public_id}"];
                 }
@@ -433,7 +433,7 @@ EOT;
                 ]
             ]
         ];
-        $this->user_repo->setUserState($this->current_user['id'], 'awaiting_price', $state_context);
+        $this->user_repo->setUserState($this->current_user['telegram_id'], 'awaiting_price', $state_context);
 
         // Buat dan kirim pesan yang informatif
         $message_text = "✅ Media telah siap untuk dijual.\n\n";
@@ -456,7 +456,7 @@ EOT;
      */
     private function handleKontenCommand(array $parts)
     {
-        $internal_user_id = $this->current_user['id'];
+        $telegram_user_id = $this->current_user['telegram_id'];
         if (count($parts) !== 2) {
             $this->telegram_api->sendMessage($this->chat_id, "Format perintah salah. Gunakan: /konten <ID Konten>");
             return;
@@ -493,7 +493,7 @@ EOT;
         }
 
         $is_admin = ($this->current_user['role'] === 'Admin');
-        $is_seller = ($package['seller_user_id'] == $internal_user_id);
+        $is_seller = ($package['seller_user_id'] == $telegram_user_id);
 
         // Defensive check: Inexplicably, sale_repo is sometimes null here.
         // Re-initialize it to prevent a fatal error.
@@ -502,7 +502,7 @@ EOT;
             $this->sale_repo = new SaleRepository($this->pdo);
         }
 
-        $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $internal_user_id);
+        $has_purchased = $this->sale_repo->hasUserPurchased($package_id, $telegram_user_id);
 
         $has_access = $is_admin || $is_seller || $has_purchased;
 
@@ -512,7 +512,7 @@ EOT;
 
             // Tambahkan tombol "Post ke Channel" jika pengguna adalah penjual dan punya channel terdaftar
             if ($is_seller) {
-                $sales_channel = $this->sales_channel_repo->findBySellerId($internal_user_id);
+                $sales_channel = $this->sales_channel_repo->findBySellerId($telegram_user_id);
                 if ($sales_channel) {
                     $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
                 }
@@ -565,7 +565,7 @@ EOT;
         // Generate a single-use login token
         $login_token = bin2hex(random_bytes(32));
         $this->pdo->prepare("UPDATE members SET login_token = ?, token_created_at = NOW(), token_used = 0 WHERE user_id = ?")
-             ->execute([$login_token, $this->current_user['id']]);
+             ->execute([$login_token, $this->current_user['telegram_id']]);
 
         // Check user role to determine the login destination
         if ($this->current_user['role'] === 'Admin') {
@@ -658,7 +658,7 @@ EOT;
             'chat_id' => $replied_message['chat']['id']
         ];
 
-        $this->user_repo->setUserState($this->current_user['id'], 'awaiting_price', $state_context);
+        $this->user_repo->setUserState($this->current_user['telegram_id'], 'awaiting_price', $state_context);
 
         $this->telegram_api->sendMessage($this->chat_id, "✅ Media berhasil ditambahkan. Silakan tambah media lagi dengan /addmedia, atau masukkan harga untuk menyelesaikan.");
     }
@@ -682,7 +682,7 @@ EOT;
             $this->telegram_api->sendMessage($this->chat_id, "⚠️ Paket dengan ID `{$public_package_id}` tidak ditemukan.", 'Markdown');
             return;
         }
-        if ($package['seller_user_id'] != $this->current_user['id']) {
+        if ($package['seller_user_id'] != $this->current_user['telegram_id']) {
             $this->telegram_api->sendMessage($this->chat_id, "⚠️ Anda tidak memiliki izin untuk mengubah paket ini.");
             return;
         }

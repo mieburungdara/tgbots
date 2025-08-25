@@ -43,26 +43,34 @@ function process_login_token($token, $pdo) {
     // Cari token yang valid dan belum digunakan
     $stmt = $pdo->prepare("SELECT * FROM members WHERE login_token = ? AND token_used = 0");
     $stmt->execute([$token]);
-    $member = $stmt->fetch();
+    $member = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    // Cek apakah token kedaluwarsa (lebih dari 5 menit)
+    if ($member && isset($member['token_created_at']) && strtotime($member['token_created_at']) < time() - (5 * 60)) {
+        app_log("Upaya login gagal: Token kedaluwarsa. Token: {$token}", 'member');
+        return "Token yang Anda gunakan sudah kedaluwarsa. Silakan minta yang baru dari bot.";
+    }
 
     if ($member) {
+        $user_telegram_id = $member['user_id']; // Kolom user_id sekarang berisi telegram_id
+
         // Jika valid, tandai token sebagai sudah digunakan untuk mencegah replay attack.
-        $stmt = $pdo->prepare("UPDATE members SET token_used = 1, login_token = NULL WHERE id = ?");
-        $stmt->execute([$member['id']]);
+        $update_stmt = $pdo->prepare("UPDATE members SET token_used = 1, login_token = NULL WHERE user_id = ?");
+        $update_stmt->execute([$user_telegram_id]);
 
         // Atur session untuk menandai pengguna sebagai sudah login.
-        $_SESSION['member_user_id'] = $member['user_id'];
+        $_SESSION['member_user_id'] = $user_telegram_id;
 
         // Ambil info pengguna untuk logging yang lebih baik
-        $user_info_stmt = $pdo->prepare("SELECT telegram_id, first_name, username FROM users WHERE id = ?");
-        $user_info_stmt->execute([$member['user_id']]);
+        $user_info_stmt = $pdo->prepare("SELECT first_name, username FROM users WHERE telegram_id = ?");
+        $user_info_stmt->execute([$user_telegram_id]);
         $user_info = $user_info_stmt->fetch(PDO::FETCH_ASSOC);
 
         $log_message = "Login member berhasil: ";
         if ($user_info) {
-            $log_message .= "Name: {$user_info['first_name']}, Username: @{$user_info['username']}, TelegramID: {$user_info['telegram_id']}";
+            $log_message .= "Name: {$user_info['first_name']}, Username: @{$user_info['username']}, TelegramID: {$user_telegram_id}";
         } else {
-            $log_message .= "user_id = {$member['user_id']} (Info pengguna tidak ditemukan)";
+            $log_message .= "telegram_id = {$user_telegram_id} (Info pengguna tidak ditemukan)";
         }
         app_log($log_message, 'member');
 
