@@ -159,7 +159,7 @@ require_once __DIR__ . '/../partials/header.php';
             <table class="list-table">
                 <thead>
                     <tr>
-                        <th>ID</th>
+                        <th>ID Konten</th>
                         <th>Deskripsi Konten</th>
                         <th>Jumlah Terjual</th>
                         <th>Total Pendapatan</th>
@@ -168,7 +168,7 @@ require_once __DIR__ . '/../partials/header.php';
                 <tbody>
                     <?php foreach ($top_selling_items as $item): ?>
                         <tr>
-                            <td><?= htmlspecialchars($item['id']) ?></td>
+                            <td><?= htmlspecialchars($item['public_id']) ?></td>
                             <td><?= htmlspecialchars($item['description']) ?></td>
                             <td><?= number_format($item['sales_count']) ?></td>
                             <td>Rp <?= number_format($item['total_revenue'], 0, ',', '.') ?></td>
