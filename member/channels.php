@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])
             $telegram_api = new TelegramAPI($bot_token);
 
             // Verifikasi Channel
-            $bot_member_channel = $telegram_api->getChatMember($channel_identifier, $selected_bot_id);
+            $bot_member_channel = $telegram_api->getChatMember($channel_identifier, $telegram_api->getBotId());
             if (!$bot_member_channel || !$bot_member_channel['ok'] || !in_array($bot_member_channel['result']['status'], ['administrator', 'creator'])) {
                 throw new Exception("Verifikasi Channel Gagal: Pastikan bot yang dipilih telah ditambahkan sebagai admin di channel `{$channel_identifier}`.");
             }
