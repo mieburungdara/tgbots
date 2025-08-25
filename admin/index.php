@@ -51,37 +51,37 @@ try {
 }
 
 // Ambil semua bot untuk sidebar
-$bots = $pdo->query("SELECT id, first_name, token FROM bots ORDER BY first_name ASC")->fetchAll();
+$bots = $pdo->query("SELECT telegram_bot_id, first_name FROM bots ORDER BY first_name ASC")->fetchAll();
 
 // Dapatkan parameter dari URL
-$selected_telegram_bot_id = $_GET['bot_id'] ?? null;
+$selected_telegram_bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : null;
 $search_user = trim($_GET['search_user'] ?? '');
 
 $conversations = [];
 $channel_chats = [];
-$internal_bot_id = null;
+$bot_exists = false;
 
 if ($selected_telegram_bot_id) {
-    // Dapatkan ID internal bot
-    $stmt = $pdo->prepare("SELECT id FROM bots WHERE token LIKE ?");
-    $stmt->execute([$selected_telegram_bot_id . ':%']);
-    $internal_bot_id = $stmt->fetchColumn();
+    // Verifikasi bot ada
+    $stmt = $pdo->prepare("SELECT 1 FROM bots WHERE telegram_bot_id = ?");
+    $stmt->execute([$selected_telegram_bot_id]);
+    $bot_exists = $stmt->fetchColumn();
 
-    if ($internal_bot_id) {
+    if ($bot_exists) {
         // --- Ambil percakapan PRIBADI ---
-        $params = [$internal_bot_id];
+        $params = [$selected_telegram_bot_id];
         $user_where_clause = '';
         if (!empty($search_user)) {
-            $user_where_clause = "AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.username LIKE ?)";
-            $params = array_merge($params, ["%$search_user%", "%$search_user%", "%$search_user%"]);
+            $user_where_clause = "AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.username LIKE ? OR u.telegram_id = ?)";
+            $params = array_merge($params, ["%$search_user%", "%$search_user%", "%$search_user%", $search_user]);
         }
 
         $sql_users = "
-            SELECT u.id as user_internal_id, u.telegram_id, u.first_name, u.username,
-                (SELECT text FROM messages WHERE user_id = u.id AND bot_id = r.bot_id ORDER BY id DESC LIMIT 1) as last_message,
-                (SELECT telegram_timestamp FROM messages WHERE user_id = u.id AND bot_id = r.bot_id ORDER BY id DESC LIMIT 1) as last_message_time
+            SELECT u.telegram_id, u.first_name, u.username,
+                   (SELECT text FROM messages m WHERE m.user_id = u.telegram_id AND m.bot_id = r.bot_id ORDER BY m.id DESC LIMIT 1) as last_message,
+                   (SELECT telegram_timestamp FROM messages m WHERE m.user_id = u.telegram_id AND m.bot_id = r.bot_id ORDER BY m.id DESC LIMIT 1) as last_message_time
             FROM users u
-            JOIN rel_user_bot r ON u.id = r.user_id
+            JOIN rel_user_bot r ON u.telegram_id = r.user_id
             WHERE r.bot_id = ? {$user_where_clause}
             ORDER BY last_message_time DESC";
 
@@ -99,7 +99,7 @@ if ($selected_telegram_bot_id) {
                 FROM messages m
                 WHERE m.bot_id = ? AND m.chat_id < 0 ORDER BY last_message_time DESC"
             );
-            $stmt_channels->execute([$internal_bot_id]);
+            $stmt_channels->execute([$selected_telegram_bot_id]);
             $channel_chats = $stmt_channels->fetchAll();
         }
     }
@@ -120,13 +120,12 @@ require_once __DIR__ . '/../partials/header.php';
             <?php else: ?>
                 <?php foreach ($bots as $bot): ?>
                     <?php
-                        $telegram_bot_id_loop = explode(':', $bot['token'])[0];
-                        $link_params = ['bot_id' => $telegram_bot_id_loop];
+                        $link_params = ['bot_id' => $bot['telegram_bot_id']];
                         if (!empty($search_user)) {
                             $link_params['search_user'] = $search_user;
                         }
                     ?>
-                    <a href="index.php?<?= http_build_query($link_params) ?>" class="<?= ($selected_telegram_bot_id == $telegram_bot_id_loop) ? 'active' : '' ?>">
+                    <a href="index.php?<?= http_build_query($link_params) ?>" class="<?= ($selected_telegram_bot_id == $bot['telegram_bot_id']) ? 'active' : '' ?>">
                         <?= htmlspecialchars($bot['first_name'] ?? 'Bot Tanpa Nama') ?>
                     </a>
                 <?php endforeach; ?>
@@ -149,7 +148,7 @@ require_once __DIR__ . '/../partials/header.php';
         </div>
 
         <?php if ($selected_telegram_bot_id): ?>
-            <?php if (!$internal_bot_id): ?>
+            <?php if (!$bot_exists): ?>
                 <div class="alert alert-danger">Bot dengan ID <?= htmlspecialchars($selected_telegram_bot_id) ?> tidak ditemukan.</div>
             <?php else: ?>
 
@@ -160,7 +159,7 @@ require_once __DIR__ . '/../partials/header.php';
                     <?php else: ?>
                         <?php foreach ($conversations as $conv): ?>
                             <li class="conv-card">
-                                <a href="chat.php?user_id=<?= $conv['user_internal_id'] ?>&bot_id=<?= $internal_bot_id ?>">
+                                <a href="chat.php?telegram_id=<?= $conv['telegram_id'] ?>&bot_id=<?= $selected_telegram_bot_id ?>">
                                     <div class="conv-avatar"><?= get_initials($conv['first_name'] ?? '?') ?></div>
                                     <div class="conv-details">
                                         <div class="conv-header">
@@ -190,7 +189,7 @@ require_once __DIR__ . '/../partials/header.php';
                                 }
                             ?>
                             <li class="conv-card">
-                                <a href="channel_chat.php?chat_id=<?= $chat['chat_id'] ?>&bot_id=<?= $internal_bot_id ?>">
+                                <a href="channel_chat.php?chat_id=<?= $chat['chat_id'] ?>&bot_id=<?= $selected_telegram_bot_id ?>">
                                     <div class="conv-avatar" style="background-color: #6c757d;"><?= get_initials($chat_title) ?></div>
                                     <div class="conv-details">
                                         <div class="conv-header">

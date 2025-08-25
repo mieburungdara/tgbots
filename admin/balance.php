@@ -13,20 +13,20 @@ if (!$pdo) {
 
 // --- Logika untuk menangani form penyesuaian saldo (dari modal) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $user_id = (int)($_POST['user_id'] ?? 0);
+    $telegram_id = (int)($_POST['user_id'] ?? 0); // Input field is still named user_id, but now holds telegram_id
     $amount = filter_var($_POST['amount'] ?? 0, FILTER_VALIDATE_FLOAT);
     $description = trim($_POST['description'] ?? '');
     $action = $_POST['action'];
     $message = '';
     $message_type = 'danger';
-    if ($user_id && $amount > 0) {
+    if ($telegram_id && $amount > 0) {
         $transaction_amount = ($action === 'add_balance') ? $amount : -$amount;
         $pdo->beginTransaction();
         try {
-            $stmt_update_user = $pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
-            $stmt_update_user->execute([$transaction_amount, $user_id]);
+            $stmt_update_user = $pdo->prepare("UPDATE users SET balance = balance + ? WHERE telegram_id = ?");
+            $stmt_update_user->execute([$transaction_amount, $telegram_id]);
             $stmt_insert_trans = $pdo->prepare("INSERT INTO balance_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)");
-            $stmt_insert_trans->execute([$user_id, $transaction_amount, 'admin_adjustment', $description]);
+            $stmt_insert_trans->execute([$telegram_id, $transaction_amount, 'admin_adjustment', $description]);
             $pdo->commit();
             $message = "Saldo pengguna berhasil diperbarui.";
             $message_type = 'success';
@@ -77,9 +77,9 @@ $total_pages = ceil($total_users / $limit);
 
 $sql = "
     SELECT
-        u.id, u.telegram_id, u.first_name, u.last_name, u.username, u.balance,
-        (SELECT SUM(price) FROM sales WHERE seller_user_id = u.id) as total_income,
-        (SELECT SUM(price) FROM sales WHERE buyer_user_id = u.id) as total_spending
+        u.telegram_id, u.first_name, u.last_name, u.username, u.balance,
+        (SELECT SUM(price) FROM sales WHERE seller_user_id = u.telegram_id) as total_income,
+        (SELECT SUM(price) FROM sales WHERE buyer_user_id = u.telegram_id) as total_spending
     FROM users u
     {$where_clause}
     ORDER BY {$sort_by} {$order}
@@ -121,7 +121,7 @@ require_once __DIR__ . '/../partials/header.php';
         <table class="chat-log-table">
             <thead>
                 <tr>
-                    <th><a href="<?= get_sort_link('id', $sort_by, $order, $_GET) ?>">ID</a></th>
+                    <th><a href="<?= get_sort_link('telegram_id', $sort_by, $order, $_GET) ?>">Telegram ID</a></th>
                     <th><a href="<?= get_sort_link('first_name', $sort_by, $order, $_GET) ?>">Nama</a></th>
                     <th><a href="<?= get_sort_link('username', $sort_by, $order, $_GET) ?>">Username</a></th>
                     <th class="sortable"><a href="<?= get_sort_link('balance', $sort_by, $order, $_GET) ?>">Saldo Saat Ini</a></th>
@@ -138,7 +138,7 @@ require_once __DIR__ . '/../partials/header.php';
                 <?php else: ?>
                     <?php foreach ($users_data as $user_data): ?>
                         <tr>
-                            <td><?= htmlspecialchars($user_data['id']) ?></td>
+                            <td><?= htmlspecialchars($user_data['telegram_id']) ?></td>
                             <td><?= htmlspecialchars(trim($user_data['first_name'] . ' ' . $user_data['last_name'])) ?></td>
                             <td>@<?= htmlspecialchars($user_data['username'] ?? 'N/A') ?></td>
                             <td class="clickable-log" data-log-type="balance" data-telegram-id="<?= $user_data['telegram_id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['balance']) ?></td>
@@ -146,7 +146,7 @@ require_once __DIR__ . '/../partials/header.php';
                             <td class="clickable-log" data-log-type="purchases" data-telegram-id="<?= $user_data['telegram_id'] ?>" data-user-name="<?= htmlspecialchars($user_data['first_name']) ?>"><?= format_currency($user_data['total_spending'] ?? 0) ?></td>
                             <td>
                                 <button class="btn btn-sm btn-edit open-balance-modal"
-                                        data-user-id="<?= $user_data['id'] ?>"
+                                        data-telegram-id="<?= $user_data['telegram_id'] ?>"
                                         data-user-name="<?= htmlspecialchars(trim($user_data['first_name'] . ' ' . $user_data['last_name'])) ?>">
                                     Ubah Saldo
                                 </button>
@@ -225,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.open-balance-modal').forEach(button => {
         button.addEventListener('click', function() {
             balanceModalTitle.textContent = 'Ubah Saldo untuk ' + this.dataset.userName;
-            balanceModalUserIdInput.value = this.dataset.userId;
+            balanceModalUserIdInput.value = this.dataset.telegramId; // Changed from userId
             balanceModal.style.display = 'flex';
         });
     });

@@ -34,23 +34,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])
     } else {
         $_SESSION['last_channel_check'] = time(); // Set time immediately
 
-        $selected_bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
+        $selected_telegram_bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
         $channel_identifier = trim($_POST['channel_identifier']);
         $group_identifier = trim($_POST['group_identifier'] ?? '');
 
-        if (empty($channel_identifier) || !$selected_bot_id || empty($group_identifier)) {
+        if (empty($channel_identifier) || !$selected_telegram_bot_id || empty($group_identifier)) {
             $error_message = "Harap pilih bot, isi ID/username channel, dan ID/username grup diskusi.";
         } else {
             try {
-                $bot_token = get_bot_token($pdo, $selected_bot_id);
+                $bot_token = get_bot_token($pdo, $selected_telegram_bot_id);
                 if (!$bot_token) {
                     throw new Exception("Bot yang dipilih tidak valid atau tidak memiliki token.");
                 }
                 $telegram_api = new TelegramAPI($bot_token);
-                $bot_telegram_id = $telegram_api->getBotId();
+                // $bot_telegram_id is already the selected ID.
+                // $bot_telegram_id = $telegram_api->getBotId();
 
                 // 1. Verifikasi Channel
-                $bot_member_channel = $telegram_api->getChatMember($channel_identifier, $bot_telegram_id);
+                $bot_member_channel = $telegram_api->getChatMember($channel_identifier, $selected_telegram_bot_id);
                 if (!$bot_member_channel || !$bot_member_channel['ok'] || !in_array($bot_member_channel['result']['status'], ['administrator', 'creator'])) {
                     throw new Exception("Verifikasi Channel Gagal: Pastikan bot yang dipilih telah ditambahkan sebagai *admin* di channel `{$channel_identifier}`.");
                 }
@@ -81,13 +82,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])
                 }
 
                 // 3. Verifikasi Bot adalah admin di Grup Diskusi
-                $bot_member_group = $telegram_api->getChatMember($numeric_group_id, $bot_telegram_id);
+                $bot_member_group = $telegram_api->getChatMember($numeric_group_id, $selected_telegram_bot_id);
                 if (!$bot_member_group || !$bot_member_group['ok'] || !in_array($bot_member_group['result']['status'], ['administrator', 'creator'])) {
                     throw new Exception("Verifikasi Grup Gagal: Pastikan bot yang dipilih juga merupakan *admin* di grup diskusi.");
                 }
 
                 // 4. Simpan ke database
-                $success = $channelRepo->createOrUpdate($user_id, $selected_bot_id, $numeric_channel_id, $numeric_group_id);
+                $success = $channelRepo->createOrUpdate($user_id, $selected_telegram_bot_id, $numeric_channel_id, $numeric_group_id);
 
                 if ($success) {
                     $success_message = "Selamat! Channel '{$channel_title}' dan grup diskusinya telah berhasil dikonfigurasi.";
@@ -172,7 +173,7 @@ require_once __DIR__ . '/../partials/header.php';
             <select id="bot_id" name="bot_id" required>
                 <option value="">-- Pilih Bot --</option>
                 <?php foreach ($all_bots as $bot): ?>
-                    <option value="<?= $bot['id'] ?>" <?= (isset($current_channel['bot_id']) && $current_channel['bot_id'] == $bot['id']) ? 'selected' : '' ?>>
+                    <option value="<?= $bot['telegram_bot_id'] ?>" <?= (isset($current_channel['bot_id']) && $current_channel['bot_id'] == $bot['telegram_bot_id']) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($bot['name']) ?> (@<?= htmlspecialchars($bot['username']) ?>)
                     </option>
                 <?php endforeach; ?>

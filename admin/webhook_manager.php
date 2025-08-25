@@ -17,10 +17,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action']) || !isset(
 }
 
 $action = $_POST['action'];
-$bot_id = filter_var($_POST['bot_id'], FILTER_VALIDATE_INT); // Ini adalah ID dari database
+$telegram_bot_id = filter_var($_POST['bot_id'], FILTER_VALIDATE_INT); // This field now contains the telegram_bot_id
 
-if (!$bot_id) {
-    json_response('error', 'ID Bot internal tidak valid.');
+if (!$telegram_bot_id) {
+    json_response('error', 'ID Bot tidak valid.');
 }
 
 // 2. Dapatkan Token Bot dari Database
@@ -29,12 +29,12 @@ if (!$pdo) {
     json_response('error', 'Koneksi database gagal.');
 }
 
-$stmt = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
-$stmt->execute([$bot_id]);
+$stmt = $pdo->prepare("SELECT token FROM bots WHERE telegram_bot_id = ?");
+$stmt->execute([$telegram_bot_id]);
 $bot = $stmt->fetch();
 
 if (!$bot) {
-    json_response('error', "Bot dengan ID internal {$bot_id} tidak ditemukan.");
+    json_response('error', "Bot dengan ID Telegram {$telegram_bot_id} tidak ditemukan.");
 }
 $bot_token = $bot['token'];
 
@@ -46,13 +46,7 @@ $result = null;
 try {
     switch ($action) {
         case 'set':
-            // Ekstrak ID bot numerik dari token
-            $telegram_bot_id = explode(':', $bot_token)[0];
-            if (!is_numeric($telegram_bot_id)) {
-                json_response('error', 'Format token tidak valid, tidak bisa mengekstrak ID bot.');
-            }
-
-            // Buat URL webhook secara dinamis menggunakan ID bot dari token
+            // Buat URL webhook secara dinamis menggunakan ID bot yang diterima.
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
             $domain = $_SERVER['HTTP_HOST'];
             // Buat path relatif yang benar dari /admin/ ke /webhook.php

@@ -39,20 +39,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bot'])) {
                 $bot_result = $bot_info['result'];
                 $first_name = $bot_result['first_name'];
                 $username = $bot_result['username'] ?? null;
-                $telegram_id = $bot_result['id'];
+                $telegram_bot_id = $bot_result['id'];
 
-                // 2. Cek duplikasi token di database untuk menghindari entri ganda
-                $stmt_check = $pdo->prepare("SELECT id FROM bots WHERE token = ?");
-                $stmt_check->execute([$token]);
-                if ($stmt_check->fetch()) {
-                     throw new Exception("Token ini sudah ada di database.", 23000); // Kode 23000 untuk error integritas
+                // 2. Cek duplikasi (token atau ID bot) di database
+                $stmt_check_token = $pdo->prepare("SELECT telegram_bot_id FROM bots WHERE token = ?");
+                $stmt_check_token->execute([$token]);
+                if ($stmt_check_token->fetch()) {
+                     throw new Exception("Token ini sudah ada di database.", 23000);
+                }
+
+                $stmt_check_id = $pdo->prepare("SELECT telegram_bot_id FROM bots WHERE telegram_bot_id = ?");
+                $stmt_check_id->execute([$telegram_bot_id]);
+                if ($stmt_check_id->fetch()) {
+                     throw new Exception("Bot dengan ID Telegram {$telegram_bot_id} ini sudah terdaftar.", 23000);
                 }
 
                 // 3. Simpan bot baru ke database
-                $stmt = $pdo->prepare("INSERT INTO bots (first_name, username, token) VALUES (?, ?, ?)");
-                $stmt->execute([$first_name, $username, $token]);
+                $stmt = $pdo->prepare("INSERT INTO bots (telegram_bot_id, first_name, username, token) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$telegram_bot_id, $first_name, $username, $token]);
 
-                $bot_id_from_token = explode(':', $token)[0];
                 $success = "Bot '{$first_name}' (@{$username}) berhasil ditambahkan!";
 
             } else {
@@ -71,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_bot'])) {
 }
 
 // Ambil daftar bot yang ada
-$bots = $pdo->query("SELECT id, first_name, username, token, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
+$bots = $pdo->query("SELECT telegram_bot_id, first_name, username, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
 
 $page_title = 'Kelola Bot';
 require_once __DIR__ . '/../partials/header.php';
@@ -96,7 +101,7 @@ require_once __DIR__ . '/../partials/header.php';
 <table>
     <thead>
         <tr>
-            <th>ID</th>
+            <th>ID Bot</th>
             <th>Nama</th>
             <th>Username</th>
             <th>Aksi</th>
@@ -109,15 +114,12 @@ require_once __DIR__ . '/../partials/header.php';
             </tr>
         <?php else: ?>
             <?php foreach ($bots as $bot): ?>
-                <?php
-                    $telegram_bot_id = explode(':', $bot['token'])[0];
-                ?>
                 <tr>
-                    <td><?= htmlspecialchars($telegram_bot_id) ?></td>
+                    <td><?= htmlspecialchars($bot['telegram_bot_id']) ?></td>
                     <td><?= htmlspecialchars($bot['first_name']) ?></td>
                     <td>@<?= htmlspecialchars($bot['username'] ?? 'N/A') ?></td>
                     <td>
-                        <a href="edit_bot.php?id=<?= htmlspecialchars($telegram_bot_id) ?>" class="btn btn-edit">Edit</a>
+                        <a href="edit_bot.php?id=<?= htmlspecialchars($bot['telegram_bot_id']) ?>" class="btn btn-edit">Edit</a>
                     </td>
                 </tr>
             <?php endforeach; ?>
