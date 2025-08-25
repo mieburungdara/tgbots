@@ -164,3 +164,15 @@ function get_bot_details(PDO $pdo, int $bot_id): ?array
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ?: null;
 }
+
+/**
+ * Mendapatkan semua bot yang terdaftar di sistem.
+ *
+ * @param PDO $pdo Objek koneksi PDO.
+ * @return array Daftar semua bot.
+ */
+function get_all_bots(PDO $pdo): array
+{
+    $stmt = $pdo->query("SELECT id, name, username FROM bots ORDER BY name ASC");
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
