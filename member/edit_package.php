@@ -26,7 +26,7 @@ $error_message = null;
 $success_message = null;
 
 // Ambil ID publik paket dari URL
-$public_id = filter_input(INPUT_GET, 'id', FILTER_SANITIZE_STRING);
+$public_id = $_GET['id'] ?? null;
 if (!$public_id) {
     header("Location: my_content.php"); // Redirect jika ID tidak valid
     exit;
