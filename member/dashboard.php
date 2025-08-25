@@ -4,9 +4,7 @@
  *
  * Halaman ini adalah halaman utama yang dilihat pengguna setelah berhasil login.
  * Ini menampilkan ringkasan statistik penjualan (jika pengguna adalah penjual)
- * dan informasi dasar akun pengguna.
- *
- * Pengguna harus memiliki `member_user_id` dalam session untuk mengakses halaman ini.
+ * dan informasi dasar akun pengguna, dengan opsi rentang waktu untuk grafik.
  */
 session_start();
 
@@ -30,25 +28,36 @@ $stmt->execute([$user_id]);
 $user_info = $stmt->fetch();
 
 if (!$user_info) {
-    // Jika data pengguna tidak ditemukan, hancurkan session dan redirect
     session_destroy();
     header("Location: index.php");
     exit;
 }
 
+// Tentukan periode waktu untuk analitik
+$periods = [
+    '1' => 'Hari Ini',
+    '7' => '7 Hari',
+    '30' => '30 Hari',
+    '365' => '1 Tahun',
+];
+$current_period = isset($_GET['period']) && isset($periods[$_GET['period']]) ? $_GET['period'] : '30';
+
 // Ambil semua data analitik yang diperlukan
 $seller_summary = $analyticsRepo->getSellerSummary($user_id);
 $purchase_stats = $analyticsRepo->getUserPurchaseStats($user_id);
-$sales_by_day = $analyticsRepo->getSalesByDay($user_id, 30);
+$sales_by_day = $analyticsRepo->getSalesByDay($user_id, $current_period);
 $top_selling_items = $analyticsRepo->getTopSellingPackagesForSeller($user_id, 5);
 
 // Siapkan data untuk grafik
 $chart_labels = [];
 $chart_data = [];
+$label_format = ($current_period > 90) ? 'M Y' : 'd M'; // Format bulanan untuk periode panjang
 foreach ($sales_by_day as $day) {
-    $chart_labels[] = date('d M', strtotime($day['sales_date']));
+    $chart_labels[] = date($label_format, strtotime($day['sales_date']));
     $chart_data[] = $day['daily_revenue'];
 }
+
+$chart_title = 'Tren Pendapatan ' . $periods[$current_period];
 
 // Handle logout
 if (isset($_GET['action']) && $_GET['action'] === 'logout') {
@@ -60,6 +69,31 @@ if (isset($_GET['action']) && $_GET['action'] === 'logout') {
 $page_title = 'Dashboard';
 require_once __DIR__ . '/../partials/header.php';
 ?>
+
+<!-- Style untuk pemilih periode -->
+<style>
+.period-selector {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+.period-selector a {
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+    color: #333;
+    font-size: 0.9em;
+    border: 1px solid #ddd;
+}
+.period-selector a.active {
+    background-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+    border-color: #007bff;
+}
+</style>
 
 <h2>Selamat Datang, <?= htmlspecialchars($user_info['first_name'] ?? '') ?>!</h2>
 <p>Ini adalah ringkasan aktivitas dan statistik Anda di platform kami.</p>
@@ -105,7 +139,14 @@ require_once __DIR__ . '/../partials/header.php';
 
     <!-- Sales Chart -->
     <div class="chart-container dashboard-card">
-        <h3>Tren Pendapatan 30 Hari Terakhir</h3>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3><?= htmlspecialchars($chart_title) ?></h3>
+            <div class="period-selector">
+                <?php foreach ($periods as $days => $label): ?>
+                    <a href="?period=<?= $days ?>" class="<?= $current_period == $days ? 'active' : '' ?>"><?= $label ?></a>
+                <?php endforeach; ?>
+            </div>
+        </div>
         <canvas id="salesChart"></canvas>
     </div>
 
@@ -147,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function () {
         data: {
             labels: <?= json_encode($chart_labels) ?>,
             datasets: [{
-                label: 'Pendapatan Harian (Rp)',
+                label: 'Pendapatan (Rp)',
                 data: <?= json_encode($chart_data) ?>,
                 backgroundColor: 'rgba(0, 123, 255, 0.1)',
                 borderColor: 'rgba(0, 123, 255, 1)',
