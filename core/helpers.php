@@ -120,3 +120,32 @@ function get_sort_link(string $column, string $current_sort_by, string $current_
 
     return basename($_SERVER['PHP_SELF']) . '?' . http_build_query($query_params) . $arrow;
 }
+
+/**
+ * Mendapatkan ID bot default dari database.
+ * Saat ini mengambil bot pertama yang ditemukan.
+ *
+ * @param PDO $pdo Objek koneksi PDO.
+ * @return int|null ID bot atau null jika tidak ada.
+ */
+function get_default_bot_id(PDO $pdo): ?int
+{
+    $stmt = $pdo->query("SELECT id FROM bots ORDER BY id ASC LIMIT 1");
+    $result = $stmt->fetchColumn();
+    return $result ? (int)$result : null;
+}
+
+/**
+ * Mendapatkan token API untuk bot tertentu.
+ *
+ * @param PDO $pdo Objek koneksi PDO.
+ * @param int $bot_id ID bot.
+ * @return string|null Token bot atau null jika tidak ditemukan.
+ */
+function get_bot_token(PDO $pdo, int $bot_id): ?string
+{
+    $stmt = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
+    $stmt->execute([$bot_id]);
+    $token = $stmt->fetchColumn();
+    return $token ?: null;
+}
