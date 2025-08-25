@@ -68,20 +68,27 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil data pendapatan harian untuk ditampilkan dalam grafik.
+     * Mengambil data pendapatan harian atau bulanan untuk ditampilkan dalam grafik.
+     * Agregasi beralih ke bulanan jika rentang hari lebih dari 90.
      *
      * @param int|null $sellerId Jika null, ambil data global. Jika diisi, filter berdasarkan ID penjual.
      * @param int $days Jumlah hari terakhir yang akan diambil datanya.
-     * @return array Daftar data harian, masing-masing berisi `sales_date` dan `daily_revenue`.
+     * @return array Daftar data, masing-masing berisi `sales_date` dan `daily_revenue`.
      */
     public function getSalesByDay(int $sellerId = null, int $days = 30): array
     {
-        $sql = "SELECT DATE(purchased_at) as sales_date, SUM(price) as daily_revenue
-                FROM sales";
-
         $params = [date('Y-m-d H:i:s', strtotime("-{$days} days"))];
 
-        $sql .= " WHERE purchased_at >= ?";
+        $sql = "SELECT ";
+        if ($days > 90) {
+            // Agregasi bulanan untuk rentang waktu yang lebih panjang
+            $sql .= "DATE_FORMAT(purchased_at, '%Y-%m-01') as sales_date, SUM(price) as daily_revenue";
+        } else {
+            // Agregasi harian untuk rentang waktu yang lebih pendek
+            $sql .= "DATE(purchased_at) as sales_date, SUM(price) as daily_revenue";
+        }
+
+        $sql .= " FROM sales WHERE purchased_at >= ?";
 
         if ($sellerId !== null) {
             $sql .= " AND seller_user_id = ?";
