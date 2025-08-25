@@ -149,3 +149,18 @@ function get_bot_token(PDO $pdo, int $bot_id): ?string
     $token = $stmt->fetchColumn();
     return $token ?: null;
 }
+
+/**
+ * Mendapatkan detail lengkap sebuah bot berdasarkan ID-nya.
+ *
+ * @param PDO $pdo Objek koneksi PDO.
+ * @param int $bot_id ID bot.
+ * @return array|null Detail bot sebagai array asosiatif, atau null jika tidak ditemukan.
+ */
+function get_bot_details(PDO $pdo, int $bot_id): ?array
+{
+    $stmt = $pdo->prepare("SELECT * FROM bots WHERE id = ?");
+    $stmt->execute([$bot_id]);
+    $result = $stmt->fetch(PDO::FETCH_ASSOC);
+    return $result ?: null;
+}
