@@ -34,7 +34,7 @@ class UpdateDispatcher
         $this->update = $update;
 
         $bot_repo = new BotRepository($pdo);
-        $this->bot_settings = $bot_repo->getBotSettings($bot['id']);
+        $this->bot_settings = $bot_repo->getBotSettings((int)$bot['id']);
 
         $this->update_handler = new UpdateHandler($this->bot_settings);
 
