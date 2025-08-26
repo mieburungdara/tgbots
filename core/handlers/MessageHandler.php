@@ -433,8 +433,11 @@ EOT;
         }
 
         $login_token = bin2hex(random_bytes(32));
+        // Gunakan 'id' internal untuk mencocokkan dengan `members`.`user_id` sebelum migrasi 035.
+        // Setelah migrasi 035, kolom ini akan berisi telegram_id, jadi kode ini perlu disesuaikan lagi nanti.
+        // Untuk sekarang, ini akan memperbaiki masalah login.
         $app->pdo->prepare("UPDATE members SET login_token = ?, token_created_at = NOW(), token_used = 0 WHERE user_id = ?")
-             ->execute([$login_token, $app->user['telegram_id']]);
+             ->execute([$login_token, $app->user['id']]);
 
         if ($app->user['role'] === 'Admin') {
             $login_link = rtrim(BASE_URL, '/') . '/login_choice.php?token=' . $login_token;
