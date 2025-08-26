@@ -91,7 +91,7 @@ class UpdateDispatcher
 
             // Simpan pesan masuk (kecuali untuk beberapa jenis pembaruan)
             if ($update_type === 'message' || $update_type === 'edited_message' || $update_type === 'callback_query') {
-                 $this->logIncomingMessage($message_context, $update_type, isset($current_user['telegram_id']) ? (int)$current_user['telegram_id'] : null);
+                 $this->logIncomingMessage($message_context, $update_type, isset($current_user['id']) ? (int)$current_user['id'] : null);
             }
 
             // Buat App container
@@ -133,7 +133,7 @@ class UpdateDispatcher
         }
     }
 
-    private function logIncomingMessage(array $context, string $update_type, ?int $user_id)
+    private function logIncomingMessage(array $context, string $update_type, ?int $internal_user_id)
     {
         $telegram_message_id = $context['message_id'] ?? 0;
         $chat_id = $context['chat']['id'];
@@ -147,7 +147,7 @@ class UpdateDispatcher
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'incoming', ?)"
         );
         $stmt->execute([
-            $user_id,
+            $internal_user_id,
             $this->telegram_bot_id,
             $telegram_message_id,
             $chat_id,

@@ -110,7 +110,7 @@ class UserRepository
     {
         $stmt_user = $this->pdo->prepare(
             "SELECT
-                u.telegram_id, u.public_seller_id, u.balance,
+                u.id, u.telegram_id, u.public_seller_id, u.balance,
                 r.state, r.state_context,
                 roles.name as role
              FROM users u
