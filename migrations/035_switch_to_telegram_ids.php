@@ -73,7 +73,16 @@ if ($is_managing_transaction) {
 try {
     // 1. Tambah dan isi `telegram_bot_id` di tabel `bots`
     echo "1. Altering `bots` table..." . PHP_EOL;
-    $pdo->exec("ALTER TABLE `bots` ADD COLUMN `telegram_bot_id` BIGINT NULL UNIQUE AFTER `id`;");
+    try {
+        $pdo->exec("ALTER TABLE `bots` ADD COLUMN `telegram_bot_id` BIGINT NULL UNIQUE AFTER `id`;");
+    } catch (PDOException $e) {
+        // SQLSTATE 42S21 adalah error untuk 'Duplicate column name'
+        if ($e->getCode() === '42S21') {
+            echo "   Warning: Column 'telegram_bot_id' already exists. Skipping 'ADD COLUMN'." . PHP_EOL;
+        } else {
+            throw $e; // Lemparkan kembali error lain yang tidak terduga
+        }
+    }
     $pdo->exec("UPDATE `bots` SET `telegram_bot_id` = CAST(SUBSTRING_INDEX(`token`, ':', 1) AS UNSIGNED);");
 
     // Validasi
