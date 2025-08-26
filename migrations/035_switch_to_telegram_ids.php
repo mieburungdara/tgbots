@@ -48,12 +48,11 @@ $constraints_to_rebuild = [
         ['name' => 'bot_settings_ibfk_1', 'col' => 'bot_id', 'ref_table' => 'bots', 'ref_col' => 'telegram_bot_id']
     ],
     'seller_sales_channels' => [
-        ['name' => 'seller_sales_channels_ibfk_1', 'col' => 'user_id', 'ref_table' => 'users', 'ref_col' => 'telegram_id'],
+        // Nama constraint dan kolom disesuaikan dengan skema asli
+        ['name' => 'fk_seller_sales_channels_user_id', 'col' => 'seller_user_id', 'ref_table' => 'users', 'ref_col' => 'telegram_id'],
         ['name' => 'seller_sales_channels_ibfk_2', 'col' => 'bot_id', 'ref_table' => 'bots', 'ref_col' => 'telegram_bot_id']
     ],
-    'channel_post_packages' => [
-        ['name' => 'channel_post_packages_ibfk_1', 'col' => 'bot_id', 'ref_table' => 'bots', 'ref_col' => 'telegram_bot_id']
-    ],
+    // 'channel_post_packages' tidak memiliki bot_id, jadi foreign key tidak perlu dibuat ulang untuk bot.
     'balance_transactions' => [
         ['name' => 'balance_transactions_ibfk_1', 'col' => 'user_id', 'ref_table' => 'users', 'ref_col' => 'telegram_id']
     ],
@@ -115,7 +114,8 @@ try {
     $pdo->exec("UPDATE `bot_settings` bs JOIN `bots` b ON bs.bot_id = b.id SET bs.bot_id = b.telegram_bot_id;");
     $pdo->exec("UPDATE `seller_sales_channels` ssc JOIN `users` u ON ssc.seller_user_id = u.id SET ssc.seller_user_id = u.telegram_id;");
     $pdo->exec("UPDATE `seller_sales_channels` ssc JOIN `bots` b ON ssc.bot_id = b.id SET ssc.bot_id = b.telegram_bot_id;");
-    $pdo->exec("UPDATE `channel_post_packages` cpp JOIN `bots` b ON cpp.bot_id = b.id SET cpp.bot_id = b.telegram_bot_id;");
+    // Baris berikut dihapus karena tabel channel_post_packages tidak memiliki kolom bot_id
+    // $pdo->exec("UPDATE `channel_post_packages` cpp JOIN `bots` b ON cpp.bot_id = b.id SET cpp.bot_id = b.telegram_bot_id;");
     $pdo->exec("UPDATE `balance_transactions` bt JOIN `users` u ON bt.user_id = u.id SET bt.user_id = u.telegram_id;");
     $pdo->exec("UPDATE `sales` s JOIN `users` u_seller ON s.seller_user_id = u_seller.id SET s.seller_user_id = u_seller.telegram_id;");
     $pdo->exec("UPDATE `sales` s JOIN `users` u_buyer ON s.buyer_user_id = u_buyer.id SET s.buyer_user_id = u_buyer.telegram_id;");
@@ -127,8 +127,9 @@ try {
     $pdo->exec("ALTER TABLE `messages` MODIFY `user_id` BIGINT NULL, MODIFY `bot_id` BIGINT NOT NULL;"); // User ID can be null
     $pdo->exec("ALTER TABLE `members` MODIFY `user_id` BIGINT NOT NULL;");
     $pdo->exec("ALTER TABLE `bot_settings` MODIFY `bot_id` BIGINT NOT NULL;");
-    $pdo->exec("ALTER TABLE `seller_sales_channels` MODIFY `user_id` BIGINT NOT NULL, MODIFY `bot_id` BIGINT NOT NULL;");
-    $pdo->exec("ALTER TABLE `channel_post_packages` MODIFY `bot_id` BIGINT NOT NULL;");
+    $pdo->exec("ALTER TABLE `seller_sales_channels` MODIFY `seller_user_id` BIGINT NOT NULL, MODIFY `bot_id` BIGINT NOT NULL;");
+    // Baris berikut dihapus karena tabel channel_post_packages tidak memiliki kolom bot_id
+    // $pdo->exec("ALTER TABLE `channel_post_packages` MODIFY `bot_id` BIGINT NOT NULL;");
     $pdo->exec("ALTER TABLE `balance_transactions` MODIFY `user_id` BIGINT NOT NULL;");
     $pdo->exec("ALTER TABLE `sales` MODIFY `seller_user_id` BIGINT NOT NULL, MODIFY `buyer_user_id` BIGINT NOT NULL;");
     echo "   Column types changed." . PHP_EOL;
