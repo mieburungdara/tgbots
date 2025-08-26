@@ -113,7 +113,7 @@ try {
     $pdo->exec("UPDATE `messages` m JOIN `bots` b ON m.bot_id = b.id SET m.bot_id = b.telegram_bot_id;");
     $pdo->exec("UPDATE `members` m JOIN `users` u ON m.user_id = u.id SET m.user_id = u.telegram_id;");
     $pdo->exec("UPDATE `bot_settings` bs JOIN `bots` b ON bs.bot_id = b.id SET bs.bot_id = b.telegram_bot_id;");
-    $pdo->exec("UPDATE `seller_sales_channels` ssc JOIN `users` u ON ssc.user_id = u.id SET ssc.user_id = u.telegram_id;");
+    $pdo->exec("UPDATE `seller_sales_channels` ssc JOIN `users` u ON ssc.seller_user_id = u.id SET ssc.seller_user_id = u.telegram_id;");
     $pdo->exec("UPDATE `seller_sales_channels` ssc JOIN `bots` b ON ssc.bot_id = b.id SET ssc.bot_id = b.telegram_bot_id;");
     $pdo->exec("UPDATE `channel_post_packages` cpp JOIN `bots` b ON cpp.bot_id = b.id SET cpp.bot_id = b.telegram_bot_id;");
     $pdo->exec("UPDATE `balance_transactions` bt JOIN `users` u ON bt.user_id = u.id SET bt.user_id = u.telegram_id;");
