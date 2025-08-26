@@ -18,10 +18,17 @@ if (php_sapi_name() !== 'cli') {
 
 require_once __DIR__ . '/../core/database.php';
 
-$pdo = get_db_connection(true); // `true` untuk mendapatkan PDO instance, bukan koneksi singleton
-if (!$pdo) {
-    die("Could not connect to the database." . PHP_EOL);
+// Jika skrip ini di-include oleh runner lain, $pdo sudah harus ada.
+// Jika tidak, buat koneksi baru untuk eksekusi mandiri.
+if (!isset($pdo)) {
+    $pdo = get_db_connection();
+    if (!$pdo) {
+        die("Could not connect to the database." . PHP_EOL);
+    }
 }
+
+// Tentukan apakah skrip ini perlu mengelola transaksinya sendiri.
+$is_managing_transaction = !$pdo->inTransaction();
 
 // Daftar tabel yang memiliki foreign key ke `users` atau `bots`
 // dan nama constraint-nya. Ini mungkin perlu disesuaikan.
@@ -58,8 +65,10 @@ $constraints_to_rebuild = [
     // Tambahkan tabel lain jika ada
 ];
 
-$pdo->beginTransaction();
-echo "Transaction started." . PHP_EOL;
+if ($is_managing_transaction) {
+    $pdo->beginTransaction();
+    echo "Transaction started by this script." . PHP_EOL;
+}
 
 try {
     // 1. Tambah dan isi `telegram_bot_id` di tabel `bots`
@@ -139,12 +148,18 @@ try {
         }
     }
 
-    $pdo->commit();
-    echo PHP_EOL . "Migration successful! Database schema has been updated." . PHP_EOL;
+    if ($is_managing_transaction) {
+        $pdo->commit();
+        echo PHP_EOL . "Migration successful! This script committed the transaction." . PHP_EOL;
+    } else {
+        echo PHP_EOL . "Migration step successful! Transaction will be committed by the parent runner." . PHP_EOL;
+    }
 
 } catch (Exception $e) {
-    $pdo->rollBack();
-    echo PHP_EOL . "An error occurred: " . $e->getMessage() . PHP_EOL;
-    echo "Transaction rolled back. No changes were made to the database." . PHP_EOL;
-    exit(1);
+    if ($is_managing_transaction) {
+        $pdo->rollBack();
+        echo PHP_EOL . "Transaction rolled back by this script." . PHP_EOL;
+    }
+    // Lemparkan kembali error agar runner utama bisa menangkapnya
+    throw $e;
 }
