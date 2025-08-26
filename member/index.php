@@ -52,13 +52,15 @@ function process_login_token($token, $pdo) {
     }
 
     if ($member) {
-        $user_telegram_id = $member['user_id']; // Kolom user_id sekarang berisi telegram_id
+        // Setelah migrasi 035, kolom `members.user_id` berisi `telegram_id`.
+        $user_telegram_id = $member['user_id'];
 
         // Jika valid, tandai token sebagai sudah digunakan untuk mencegah replay attack.
         $update_stmt = $pdo->prepare("UPDATE members SET token_used = 1, login_token = NULL WHERE user_id = ?");
         $update_stmt->execute([$user_telegram_id]);
 
         // Atur session untuk menandai pengguna sebagai sudah login.
+        // Nama session tetap 'member_user_id' untuk konsistensi, meskipun isinya adalah telegram_id.
         $_SESSION['member_user_id'] = $user_telegram_id;
 
         // Ambil info pengguna untuk logging yang lebih baik
