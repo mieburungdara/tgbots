@@ -37,7 +37,7 @@ class UserRepository
 
         if (!$current_user) {
             // Pengguna tidak ada, buat baru.
-            $this->pdo->beginTransaction();
+            // Transaksi sekarang dikelola oleh UpdateDispatcher, jadi kita tidak perlu memulainya di sini.
             try {
                 // 1. Masukkan ke tabel `users`
                 // Gunakan INSERT IGNORE untuk menghindari error jika pengguna sudah ada (misal, dari request konkuren)
@@ -59,12 +59,11 @@ class UserRepository
                     $stmt_user_role->execute([$telegram_user_id, $role_id]);
                 }
 
-                $this->pdo->commit();
                 app_log("Pengguna baru dibuat atau diverifikasi: telegram_id: {$telegram_user_id}, user: {$first_name}, peran: {$initial_role_name}", 'bot');
             } catch (Exception $e) {
-                $this->pdo->rollBack();
+                // Jangan rollback di sini. Lemparkan kembali agar dispatcher bisa melakukan rollback.
                 app_log("Gagal membuat pengguna baru: " . $e->getMessage(), 'error');
-                return false;
+                throw $e;
             }
         }
 
