@@ -25,10 +25,9 @@ class BotRepository
      */
     public function findBotByTelegramId(int $telegram_bot_id)
     {
-        // Menggunakan LIKE pada token adalah cara paling andal untuk menemukan bot,
-        // karena kolom telegram_bot_id mungkin belum ada jika migrasi tertentu belum dijalankan.
-        $stmt = $this->pdo->prepare("SELECT id, token FROM bots WHERE token LIKE ?");
-        $stmt->execute([$telegram_bot_id . ':%']);
+        // Bot sekarang dicari berdasarkan ID Telegram-nya, yang merupakan Primary Key.
+        $stmt = $this->pdo->prepare("SELECT id, token FROM bots WHERE id = ?");
+        $stmt->execute([$telegram_bot_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
