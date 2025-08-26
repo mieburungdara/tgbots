@@ -86,4 +86,21 @@ class UpdateHandler
         }
         return null;
     }
+
+    /**
+     * Memeriksa apakah sebuah pesan berisi media yang dapat disimpan.
+     *
+     * @param array $message Objek pesan dari Telegram.
+     * @return bool True jika pesan berisi media, false jika tidak.
+     */
+    public static function isMediaMessage(array $message): bool
+    {
+        $media_keys = ['photo', 'video', 'audio', 'voice', 'document', 'animation', 'video_note'];
+        foreach ($media_keys as $key) {
+            if (isset($message[$key])) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
