@@ -133,7 +133,7 @@ class UpdateDispatcher
         }
     }
 
-    private function logIncomingMessage(array $context, string $update_type, ?int $internal_user_id)
+    private function logIncomingMessage(array $context, string $update_type, ?int $user_id)
     {
         $telegram_message_id = $context['message_id'] ?? 0;
         $chat_id = $context['chat']['id'];
@@ -147,7 +147,7 @@ class UpdateDispatcher
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'incoming', ?)"
         );
         $stmt->execute([
-            $internal_user_id,
+            $user_id,
             $this->telegram_bot_id,
             $telegram_message_id,
             $chat_id,

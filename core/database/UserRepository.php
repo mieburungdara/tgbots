@@ -109,14 +109,14 @@ class UserRepository
     {
         $stmt_user = $this->pdo->prepare(
             "SELECT
-                u.id, u.telegram_id, u.public_seller_id, u.balance,
+                u.id, u.public_seller_id, u.balance,
                 r.state, r.state_context,
                 roles.name as role
              FROM users u
-             LEFT JOIN rel_user_bot r ON u.telegram_id = r.user_id AND r.bot_id = ?
-             LEFT JOIN user_roles ON u.telegram_id = user_roles.user_id
+             LEFT JOIN rel_user_bot r ON u.id = r.user_id AND r.bot_id = ?
+             LEFT JOIN user_roles ON u.id = user_roles.user_id
              LEFT JOIN roles ON user_roles.role_id = roles.id
-             WHERE u.telegram_id = ?
+             WHERE u.id = ?
              LIMIT 1"
         );
         $stmt_user->execute([$this->telegram_bot_id, $telegram_user_id]);
@@ -170,7 +170,7 @@ class UserRepository
             }
 
             // Simpan ID yang unik
-            $stmt_update = $this->pdo->prepare("UPDATE users SET public_seller_id = ? WHERE telegram_id = ?");
+            $stmt_update = $this->pdo->prepare("UPDATE users SET public_seller_id = ? WHERE id = ?");
             if ($stmt_update->execute([$public_id, $telegram_user_id])) {
                 return $public_id;
             }
@@ -194,7 +194,7 @@ class UserRepository
             return false;
         }
 
-        $sql = "UPDATE users SET status = ? WHERE telegram_id = ?";
+        $sql = "UPDATE users SET status = ? WHERE id = ?";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$status, $telegram_user_id]);
     }
