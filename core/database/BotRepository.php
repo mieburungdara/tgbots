@@ -25,21 +25,23 @@ class BotRepository
      */
     public function findBotByTelegramId(int $telegram_bot_id)
     {
-        $stmt = $this->pdo->prepare("SELECT telegram_bot_id, token FROM bots WHERE telegram_bot_id = ?");
-        $stmt->execute([$telegram_bot_id]);
+        // Menggunakan LIKE pada token adalah cara paling andal untuk menemukan bot,
+        // karena kolom telegram_bot_id mungkin belum ada jika migrasi tertentu belum dijalankan.
+        $stmt = $this->pdo->prepare("SELECT id, token FROM bots WHERE token LIKE ?");
+        $stmt->execute([$telegram_bot_id . ':%']);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 
     /**
      * Mengambil semua pengaturan untuk bot tertentu, dengan nilai default jika tidak disetel.
      *
-     * @param int $telegram_bot_id ID Telegram bot dari tabel `bots`.
+     * @param int $bot_id ID internal bot dari tabel `bots`.
      * @return array Pengaturan bot sebagai array asosiatif.
      */
-    public function getBotSettings(int $telegram_bot_id): array
+    public function getBotSettings(int $bot_id): array
     {
         $stmt_settings = $this->pdo->prepare("SELECT setting_key, setting_value FROM bot_settings WHERE bot_id = ?");
-        $stmt_settings->execute([$telegram_bot_id]);
+        $stmt_settings->execute([$bot_id]);
         $bot_settings_raw = $stmt_settings->fetchAll(PDO::FETCH_KEY_PAIR);
 
         // Tetapkan pengaturan default jika tidak ada di database
