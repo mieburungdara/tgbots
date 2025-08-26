@@ -52,26 +52,27 @@ function process_login_token($token, $pdo) {
     }
 
     if ($member) {
-        // Sebelum migrasi 035, kolom `members.user_id` merujuk ke `users.id` (internal).
-        $user_internal_id = $member['user_id'];
+        // Setelah migrasi 035, kolom `members.user_id` berisi `telegram_id`.
+        $user_telegram_id = $member['user_id'];
 
         // Jika valid, tandai token sebagai sudah digunakan untuk mencegah replay attack.
         $update_stmt = $pdo->prepare("UPDATE members SET token_used = 1, login_token = NULL WHERE user_id = ?");
-        $update_stmt->execute([$user_internal_id]);
+        $update_stmt->execute([$user_telegram_id]);
 
         // Atur session untuk menandai pengguna sebagai sudah login.
-        $_SESSION['member_user_id'] = $user_internal_id;
+        // Nama session tetap 'member_user_id' untuk konsistensi, meskipun isinya adalah telegram_id.
+        $_SESSION['member_user_id'] = $user_telegram_id;
 
-        // Ambil info pengguna untuk logging yang lebih baik menggunakan ID internal.
-        $user_info_stmt = $pdo->prepare("SELECT telegram_id, first_name, username FROM users WHERE id = ?");
-        $user_info_stmt->execute([$user_internal_id]);
+        // Ambil info pengguna untuk logging yang lebih baik
+        $user_info_stmt = $pdo->prepare("SELECT first_name, username FROM users WHERE telegram_id = ?");
+        $user_info_stmt->execute([$user_telegram_id]);
         $user_info = $user_info_stmt->fetch(PDO::FETCH_ASSOC);
 
         $log_message = "Login member berhasil: ";
         if ($user_info) {
-            $log_message .= "Name: {$user_info['first_name']}, Username: @{$user_info['username']}, InternalID: {$user_internal_id}, TelegramID: {$user_info['telegram_id']}";
+            $log_message .= "Name: {$user_info['first_name']}, Username: @{$user_info['username']}, TelegramID: {$user_telegram_id}";
         } else {
-            $log_message .= "internal_id = {$user_internal_id} (Info pengguna tidak ditemukan)";
+            $log_message .= "telegram_id = {$user_telegram_id} (Info pengguna tidak ditemukan)";
         }
         app_log($log_message, 'member');
 
