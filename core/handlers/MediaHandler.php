@@ -1,53 +1,33 @@
 <?php
 
 require_once __DIR__ . '/../database/MediaFileRepository.php';
+require_once __DIR__ . '/HandlerInterface.php';
 
 /**
  * Menangani pesan yang berisi media (foto, video, dokumen, dll.).
  * Tugas utamanya adalah mengekstrak metadata media dan menyimpannya ke database.
  */
-class MediaHandler
+class MediaHandler implements HandlerInterface
 {
-    private $pdo;
-    private $message;
-    private $user_id_from_telegram;
-    private $chat_id_from_telegram;
-    private $telegram_message_id;
-    private $media_repo;
-
-    /**
-     * Membuat instance MediaHandler.
-     *
-     * @param PDO $pdo Objek koneksi database.
-     * @param array $message Data pesan lengkap dari Telegram.
-     * @param int $user_id_from_telegram ID Telegram pengguna yang mengirim media.
-     * @param int $chat_id_from_telegram ID obrolan tempat media dikirim.
-     * @param int $telegram_message_id ID pesan media di Telegram.
-     */
-    public function __construct(PDO $pdo, array $message, int $user_id_from_telegram, int $chat_id_from_telegram, int $telegram_message_id)
-    {
-        $this->pdo = $pdo;
-        $this->message = $message;
-        $this->user_id_from_telegram = $user_id_from_telegram;
-        $this->chat_id_from_telegram = $chat_id_from_telegram;
-        $this->telegram_message_id = $telegram_message_id;
-        $this->media_repo = new MediaFileRepository($pdo);
-    }
-
     /**
      * Titik masuk utama untuk menangani pesan media.
-     * Mengidentifikasi jenis media, mengumpulkan metadata, dan menyimpannya.
+     *
+     * @param App $app Wadah aplikasi.
+     * @param array $message Data pesan lengkap dari Telegram.
      */
-    public function handle()
+    public function handle(App $app, array $message): void
     {
+        $media_repo = new MediaFileRepository($app->pdo);
+
         $media_type = null;
         $media_info = null;
         $media_keys = ['photo', 'video', 'document', 'audio', 'voice', 'animation', 'video_note'];
 
         foreach ($media_keys as $key) {
-            if (isset($this->message[$key])) {
+            if (isset($message[$key])) {
                 $media_type = $key;
-                $media_info = ($key === 'photo') ? end($this->message['photo']) : $this->message[$key];
+                // Untuk foto, ambil resolusi tertinggi (elemen terakhir array)
+                $media_info = ($key === 'photo') ? end($message['photo']) : $message[$key];
                 break;
             }
         }
@@ -61,16 +41,16 @@ class MediaHandler
                 'duration' => $media_info['duration'] ?? null,
                 'mime_type' => $media_info['mime_type'] ?? null,
                 'file_name' => $media_info['file_name'] ?? null,
-                'caption' => $this->message['caption'] ?? null,
-                'caption_entities' => $this->message['caption_entities'] ?? null,
-                'user_id' => $this->user_id_from_telegram,
-                'chat_id' => $this->chat_id_from_telegram,
-                'message_id' => $this->telegram_message_id,
-                'media_group_id' => $this->message['media_group_id'] ?? null,
-                'has_spoiler' => $this->message['has_media_spoiler'] ?? false
+                'caption' => $message['caption'] ?? null,
+                'caption_entities' => $message['caption_entities'] ?? null,
+                'user_id' => $app->user['telegram_id'],
+                'chat_id' => $app->chat_id,
+                'message_id' => $message['message_id'],
+                'media_group_id' => $message['media_group_id'] ?? null,
+                'has_spoiler' => $message['has_media_spoiler'] ?? false
             ];
 
-            $this->media_repo->saveMediaFile($params);
+            $media_repo->saveMediaFile($params);
         }
     }
 }

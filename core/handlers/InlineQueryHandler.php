@@ -1,45 +1,31 @@
 <?php
 
 require_once __DIR__ . '/../database/PackageRepository.php';
+require_once __DIR__ . '/HandlerInterface.php';
 
 /**
  * Menangani permintaan inline query dari pengguna.
  * Memungkinkan pengguna untuk mencari dan berbagi paket konten langsung dari chat manapun.
  */
-class InlineQueryHandler
+class InlineQueryHandler implements HandlerInterface
 {
-    private $pdo;
-    private $telegram_api;
-    private $package_repo;
-
-    /**
-     * Membuat instance InlineQueryHandler.
-     *
-     * @param PDO $pdo Objek koneksi database.
-     * @param TelegramAPI $telegram_api Klien untuk berinteraksi dengan API Telegram.
-     */
-    public function __construct(PDO $pdo, TelegramAPI $telegram_api)
-    {
-        $this->pdo = $pdo;
-        $this->telegram_api = $telegram_api;
-        $this->package_repo = new PackageRepository($pdo);
-    }
-
     /**
      * Titik masuk utama untuk menangani inline query.
-     * Mencari paket berdasarkan query teks dan mengembalikan hasilnya ke Telegram.
      *
+     * @param App $app Wadah aplikasi (mungkin tidak sepenuhnya terisi untuk inline query).
      * @param array $inline_query Data inline query lengkap dari Telegram.
      */
-    public function handle(array $inline_query)
+    public function handle(App $app, array $inline_query): void
     {
+        $package_repo = new PackageRepository($app->pdo);
+
         $query_id = $inline_query['id'];
         $query_text = $inline_query['query'];
 
         $results = [];
 
-        if (strlen($query_text) > 2) { // Only search if query is reasonably long
-            $package = $this->package_repo->findByPublicId($query_text);
+        if (strlen($query_text) > 2) { // Hanya cari jika query cukup panjang
+            $package = $package_repo->findByPublicId($query_text);
 
             if ($package) {
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
@@ -63,6 +49,6 @@ class InlineQueryHandler
             }
         }
 
-        $this->telegram_api->answerInlineQuery($query_id, $results);
+        $app->telegram_api->answerInlineQuery($query_id, $results);
     }
 }

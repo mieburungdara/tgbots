@@ -1,5 +1,17 @@
 # Changelog
 
+## [4.3.0] - 2025-08-25
+
+### Diubah (Refactoring Besar)
+- **Arsitektur Webhook Didesain Ulang**: File `webhook.php` yang monolitik telah direfaktor secara besar-besaran menjadi arsitektur berbasis *Dispatcher* yang lebih bersih, modular, dan mudah dipelihara.
+  - **`UpdateDispatcher`**: Memperkenalkan kelas `UpdateDispatcher` baru yang sekarang berfungsi sebagai otak utama, bertanggung jawab untuk menerima pembaruan, menentukan jenisnya, dan mendelegasikannya ke handler yang sesuai.
+  - **Kontainer `App`**: Membuat kelas `App` baru yang berfungsi sebagai wadah dependensi sederhana untuk menampung objek-objek bersama (seperti koneksi PDO, instance TelegramAPI, dan data pengguna), menyederhanakan cara dependensi diteruskan ke handler.
+  - **`HandlerInterface`**: Menstandardisasi semua handler (`MessageHandler`, `CallbackQueryHandler`, dll.) untuk mengimplementasikan `HandlerInterface` umum, memastikan mereka memiliki metode `handle()` yang konsisten.
+  - **`webhook.php` yang Ramping**: `webhook.php` sekarang hanya bertanggung jawab untuk validasi awal, inisialisasi, dan memanggil dispatcher. Semua logika bisnis, penanganan transaksi, dan routing telah dipindahkan ke kelas-kelas yang sesuai.
+
+### Peningkatan
+- **Sentralisasi Logika**: Logika yang sebelumnya tersebar di `webhook.php` (seperti menyimpan pesan masuk, menangani state machine, atau kasus-kasus khusus untuk `channel_post`) sekarang telah dipindahkan ke dalam handler masing-masing, membuat setiap kelas lebih mandiri.
+
 ## [4.2.23] - 2025-08-23
 
 ### Peningkatan
