@@ -76,7 +76,7 @@ class UpdateDispatcher
 
             // Dapatkan atau buat pengguna jika relevan
             $user_id = $message_context['from']['id'] ?? null;
-            $chat_id = $message_context['chat']['id'] ?? 0;
+            $chat_id = (int)($message_context['chat']['id'] ?? 0);
             $current_user = null;
 
             if ($user_id) {
@@ -91,7 +91,7 @@ class UpdateDispatcher
 
             // Simpan pesan masuk (kecuali untuk beberapa jenis pembaruan)
             if ($update_type === 'message' || $update_type === 'edited_message' || $update_type === 'callback_query') {
-                 $this->logIncomingMessage($message_context, $update_type, $current_user['telegram_id'] ?? null);
+                 $this->logIncomingMessage($message_context, $update_type, isset($current_user['telegram_id']) ? (int)$current_user['telegram_id'] : null);
             }
 
             // Buat App container
