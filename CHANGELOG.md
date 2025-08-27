@@ -6,6 +6,9 @@
 - **Login Member Gagal**: Memperbaiki masalah di mana token login untuk panel member selalu ditolak sebagai "tidak valid".
   - **Penyebab**: Perintah `/login` gagal menyimpan token yang baru dibuat ke database. Ini karena query `UPDATE` pada tabel `members` menggunakan kunci array yang salah (`telegram_id` bukan `id`) untuk mengidentifikasi pengguna.
   - **Solusi**: Mengubah `handleLoginCommand` di `core/handlers/MessageHandler.php` untuk menggunakan `$app->user['id']` yang benar saat menyimpan token.
+- **Fatal Error di Panel Member**: Memperbaiki error `SQLSTATE[42S22]: Column not found` yang terjadi setelah validasi token berhasil.
+  - **Penyebab**: Query untuk mengambil informasi pengguna di `member/index.php` setelah login berhasil, masih menggunakan kolom `telegram_id` yang salah, bukan `id`.
+  - **Solusi**: Menyamakan query di `member/index.php` untuk menggunakan kolom `id` yang benar.
 
 ## [4.3.1] - 2025-08-27
 
