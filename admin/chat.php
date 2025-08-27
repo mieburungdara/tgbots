@@ -66,12 +66,12 @@ $sql = "SELECT m.id, m.user_id, m.bot_id, m.telegram_message_id, m.chat_id, m.ch
         LEFT JOIN media_files mf ON m.id = mf.message_id
         WHERE m.user_id = ? AND m.bot_id = ?
         ORDER BY m.id DESC
-        LIMIT ? OFFSET ?";
+        LIMIT $limit OFFSET $offset";
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(1, $telegram_id, PDO::PARAM_INT);
 $stmt->bindValue(2, $bot_id, PDO::PARAM_INT);
-$stmt->bindValue(3, (int)$limit, PDO::PARAM_INT);
-$stmt->bindValue(4, (int)$offset, PDO::PARAM_INT);
+//$stmt->bindValue(3, (int)$limit, PDO::PARAM_INT);
+//$stmt->bindValue(4, (int)$offset, PDO::PARAM_INT);
 $stmt->execute();
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 var_dump($messages);
