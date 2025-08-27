@@ -6,6 +6,9 @@
 - **Fatal Error pada Webhook**: Memperbaiki error `500 Internal Server Error` yang terjadi saat webhook menerima pembaruan.
   - **Penyebab**: `UpdateDispatcher` menggunakan ID Telegram bot (`telegram_bot_id`) saat mencoba menyimpan pesan ke database, padahal seharusnya menggunakan ID internal bot dari tabel `bots`. Hal ini menyebabkan pelanggaran *foreign key constraint* dan memicu `PDOException`.
   - **Solusi**: Mengubah panggilan `execute()` di metode `logIncomingMessage` dalam `core/UpdateDispatcher.php` untuk menggunakan `(int)$this->bot['id']` yang benar.
+- **Fatal Error saat Membuat Pengguna**: Memperbaiki error `SQLSTATE[42S22]: Unknown column 'telegram_id'` yang terjadi saat pengguna baru pertama kali berinteraksi dengan bot.
+  - **Penyebab**: `UserRepository` mencoba memasukkan data ke kolom `telegram_id` pada tabel `users`, tetapi skema database yang aktif saat ini masih menggunakan `id` sebagai primary key. Terjadi inkonsistensi antara kode dan skema database yang sebenarnya.
+  - **Solusi**: Mengubah query `INSERT` di metode `findOrCreateUser` dalam `core/database/UserRepository.php` untuk menggunakan kolom `id` yang benar.
 
 ## [4.3.0] - 2025-08-25
 
