@@ -435,7 +435,7 @@ EOT;
         $login_token = bin2hex(random_bytes(32));
         // Setelah migrasi 035, members.user_id merujuk ke users.telegram_id.
         $app->pdo->prepare("UPDATE members SET login_token = ?, token_created_at = NOW(), token_used = 0 WHERE user_id = ?")
-             ->execute([$login_token, $app->user['telegram_id']]);
+             ->execute([$login_token, $app->user['id']]);
 
         if ($app->user['role'] === 'Admin') {
             $login_link = rtrim(BASE_URL, '/') . '/login_choice.php?token=' . $login_token;
