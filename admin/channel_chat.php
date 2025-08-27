@@ -56,7 +56,7 @@ $total_pages = ceil($total_messages / $limit);
 $sql = "SELECT m.*, mf.type as media_type, u.first_name as sender_first_name
         FROM messages m
         LEFT JOIN media_files mf ON m.telegram_message_id = mf.message_id AND m.chat_id = mf.chat_id
-        LEFT JOIN users u ON m.user_id = u.telegram_id
+        LEFT JOIN users u ON m.user_id = u.id
         WHERE m.chat_id = ? AND m.bot_id = ?
         ORDER BY m.created_at DESC
         LIMIT ? OFFSET ?";

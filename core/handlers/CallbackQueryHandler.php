@@ -42,7 +42,7 @@ class CallbackQueryHandler implements HandlerInterface
         $post_package_repo = new ChannelPostPackageRepository($app->pdo);
 
         $callback_query_id = $callback_query['id'];
-        $telegram_user_id = $app->user['telegram_id'];
+        $telegram_user_id = $app->user['id'];
 
         $package = $package_repo->findByPublicId($public_id);
         if (!$package || $package['seller_user_id'] != $telegram_user_id) {
@@ -113,8 +113,8 @@ class CallbackQueryHandler implements HandlerInterface
             return;
         }
 
-        $is_seller = ($package['seller_user_id'] == $app->user['telegram_id']);
-        $has_purchased = $sale_repo->hasUserPurchased($package['id'], $app->user['telegram_id']);
+        $is_seller = ($package['seller_user_id'] == $app->user['id']);
+        $has_purchased = $sale_repo->hasUserPurchased($package['id'], $app->user['id']);
 
         if (!$is_seller && !$has_purchased) {
             $app->telegram_api->answerCallbackQuery($callback_query['id'], '⚠️ Anda tidak memiliki akses ke konten ini.', true);
@@ -166,7 +166,7 @@ class CallbackQueryHandler implements HandlerInterface
         }
 
         try {
-            $public_id = $user_repo->setPublicId($app->user['telegram_id']);
+            $public_id = $user_repo->setPublicId($app->user['id']);
             $message = "Selamat! Anda berhasil terdaftar sebagai penjual.\n\nID Penjual Publik Anda adalah: *" . $app->telegram_api->escapeMarkdown($public_id) . "*\n\nSekarang Anda dapat menggunakan perintah /sell.";
             $app->telegram_api->sendMessage($app->chat_id, $message, 'Markdown');
             $app->telegram_api->answerCallbackQuery($callback_query['id']);
@@ -196,7 +196,7 @@ class CallbackQueryHandler implements HandlerInterface
                 throw new Exception('Saldo Anda tidak cukup.');
             }
 
-            $sale_repo->createSale($package['id'], $package['seller_user_id'], $app->user['telegram_id'], $package['price']);
+            $sale_repo->createSale($package['id'], $package['seller_user_id'], $app->user['id'], $package['price']);
             $package_repo->markAsSold($package['id']);
 
             $app->telegram_api->sendMessage($app->chat_id, '✅ Pembelian berhasil! Menampilkan konten Anda...');

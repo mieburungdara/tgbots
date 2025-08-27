@@ -33,8 +33,8 @@ if (isset($_GET['token'])) {
         $stmt = $pdo->prepare(
             "SELECT m.user_id, u.first_name
              FROM members m
-             JOIN users u ON m.user_id = u.telegram_id
-             JOIN user_roles ur ON u.telegram_id = ur.user_id
+             JOIN users u ON m.user_id = u.id
+             JOIN user_roles ur ON u.id = ur.user_id
              JOIN roles r ON ur.role_id = r.id
              WHERE m.login_token = ? AND m.token_used = 0 AND m.token_created_at >= NOW() - INTERVAL 5 MINUTE AND r.name = 'Admin'"
         );

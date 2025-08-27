@@ -24,7 +24,7 @@ if (!$telegram_id || !$telegram_bot_id) {
 }
 
 // Ambil info pengguna dan bot
-$stmt_user = $pdo->prepare("SELECT * FROM users WHERE telegram_id = ?");
+$stmt_user = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt_user->execute([$telegram_id]);
 $user_info = $stmt_user->fetch();
 
@@ -41,7 +41,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['reply_message'])) {
     $reply_text = trim($_POST['reply_text']);
     if (!empty($reply_text)) {
         $telegram_api = new TelegramAPI($bot_info['token'], $pdo, $telegram_bot_id);
-        $result = $telegram_api->sendMessage($user_info['telegram_id'], $reply_text);
+        $result = $telegram_api->sendMessage($user_info['id'], $reply_text);
 
         // sendMessage in TelegramAPI now handles logging outgoing messages
         header("Location: " . $_SERVER['REQUEST_URI']);

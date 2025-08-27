@@ -1,24 +1,18 @@
 # Changelog
 
-## [4.3.2] - 2025-08-27
+## [4.3.3] - 2025-08-27
 
 ### Diperbaiki
-- **Login Member Gagal**: Memperbaiki masalah di mana token login untuk panel member selalu ditolak sebagai "tidak valid".
-  - **Penyebab**: Perintah `/login` gagal menyimpan token yang baru dibuat ke database. Ini karena query `UPDATE` pada tabel `members` menggunakan kunci array yang salah (`telegram_id` bukan `id`) untuk mengidentifikasi pengguna.
-  - **Solusi**: Mengubah `handleLoginCommand` di `core/handlers/MessageHandler.php` untuk menggunakan `$app->user['id']` yang benar saat menyimpan token.
-- **Fatal Error di Panel Member**: Memperbaiki error `SQLSTATE[42S22]: Column not found` yang terjadi setelah validasi token berhasil.
-  - **Penyebab**: Query untuk mengambil informasi pengguna di `member/index.php` setelah login berhasil, masih menggunakan kolom `telegram_id` yang salah, bukan `id`.
-  - **Solusi**: Menyamakan query di `member/index.php` untuk menggunakan kolom `id` yang benar.
-
-## [4.3.1] - 2025-08-27
-
-### Diperbaiki
-- **Fatal Error pada Webhook**: Memperbaiki error `500 Internal Server Error` yang terjadi saat webhook menerima pembaruan.
-  - **Penyebab**: `UpdateDispatcher` menggunakan ID Telegram bot (`telegram_bot_id`) saat mencoba menyimpan pesan ke database, padahal seharusnya menggunakan ID internal bot dari tabel `bots`. Hal ini menyebabkan pelanggaran *foreign key constraint* dan memicu `PDOException`.
-  - **Solusi**: Mengubah panggilan `execute()` di metode `logIncomingMessage` dalam `core/UpdateDispatcher.php` untuk menggunakan `(int)$this->bot['id']` yang benar.
-- **Fatal Error saat Membuat Pengguna**: Memperbaiki error `SQLSTATE[42S22]: Unknown column 'telegram_id'` yang terjadi saat pengguna baru pertama kali berinteraksi dengan bot.
-  - **Penyebab**: `UserRepository` mencoba memasukkan data ke kolom `telegram_id` pada tabel `users`, tetapi skema database yang aktif saat ini masih menggunakan `id` sebagai primary key. Terjadi inkonsistensi antara kode dan skema database yang sebenarnya.
-  - **Solusi**: Mengubah query `INSERT` di metode `findOrCreateUser` dalam `core/database/UserRepository.php` untuk menggunakan kolom `id` yang benar.
+- **Inkonsistensi ID Pengguna di Seluruh Kode**: Memperbaiki serangkaian error fatal (`500 Internal Server Error`, `Column not found`, `Invalid Token`) yang disebabkan oleh penggunaan nama kolom yang tidak konsisten untuk ID pengguna (`id` vs. `telegram_id`) di seluruh basis kode.
+  - **Penyebab**: Sebagian kode telah diperbarui untuk menggunakan skema database baru (dengan `telegram_id` sebagai primary key), tetapi database yang aktif dan sebagian besar kode lainnya masih menggunakan skema lama (dengan `id` sebagai primary key). Hal ini menyebabkan kegagalan query SQL di banyak bagian aplikasi.
+  - **Solusi**: Melakukan audit dan perbaikan massal di seluruh basis kode untuk secara konsisten menggunakan kolom `id` sebagai primary key pengguna. File yang diperbaiki antara lain:
+    - `core/UpdateDispatcher.php`: Menggunakan ID bot internal yang benar.
+    - `core/database/UserRepository.php`: Mengoreksi query `INSERT` pengguna baru.
+    - `core/handlers/MessageHandler.php`: Menyelaraskan semua penggunaan ID pengguna.
+    - `core/handlers/CallbackQueryHandler.php`: Menyelaraskan semua penggunaan ID pengguna.
+    - `core/handlers/MediaHandler.php`: Menggunakan ID pengguna yang benar saat menyimpan media.
+    - `member/index.php`, `member/dashboard.php`: Memperbaiki alur login dan tampilan dasbor member.
+    - `admin/auth.php`, `admin/chat.php`, `admin/balance.php`, dan file terkait lainnya: Menyelaraskan semua query dan logika di panel admin.
 
 ## [4.3.0] - 2025-08-25
 

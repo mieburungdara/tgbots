@@ -91,7 +91,7 @@ class MessageHandler implements HandlerInterface
         $state_context = json_decode($app->user['state_context'] ?? '{}', true);
 
         if (strpos($text, '/cancel') === 0) {
-            $user_repo->setUserState($app->user['telegram_id'], null, null);
+            $user_repo->setUserState($app->user['id'], null, null);
             $app->telegram_api->sendMessage($app->chat_id, "Operasi dibatalkan.");
             return;
         }
@@ -142,7 +142,7 @@ class MessageHandler implements HandlerInterface
         $numeric_channel_id = $channel_info['result']['id'];
         $channel_title = $channel_info['result']['title'];
 
-        $success = $sales_channel_repo->createOrUpdate($app->user['telegram_id'], $numeric_channel_id);
+        $success = $sales_channel_repo->createOrUpdate($app->user['id'], $numeric_channel_id);
 
         if ($success) {
             $escaped_title = $app->telegram_api->escapeMarkdown($channel_title);
@@ -158,7 +158,7 @@ class MessageHandler implements HandlerInterface
     private function handleMeCommand(App $app, array $message)
     {
         $analytics_repo = new AnalyticsRepository($app->pdo);
-        $user_id = $app->user['telegram_id'];
+        $user_id = $app->user['id'];
         $sales_stats = $analytics_repo->getSellerSummary($user_id);
 
         $user_name = $app->telegram_api->escapeMarkdown(trim($app->user['first_name'] . ' ' . ($app->user['last_name'] ?? '')));
@@ -170,7 +170,7 @@ class MessageHandler implements HandlerInterface
 
         $response = "👤 *Profil Anda*\n\n";
         $response .= "Nama: *{$user_name}*\n";
-        $response .= "Telegram ID: `{$app->user['telegram_id']}`\n";
+        $response .= "Telegram ID: `{$app->user['id']}`\n";
         $response .= "ID Penjual: {$seller_id}\n\n";
         $response .= "💰 *Keuangan*\n";
         $response .= "Saldo Saat Ini: *{$balance}*\n\n";
@@ -247,7 +247,7 @@ EOT;
             }
 
             $package_id = $package['id'];
-            $telegram_user_id = $app->user['telegram_id'];
+            $telegram_user_id = $app->user['id'];
 
             $is_seller = ($package['seller_user_id'] == $telegram_user_id);
             $has_purchased = $sale_repo->hasUserPurchased($package_id, $telegram_user_id);
@@ -345,7 +345,7 @@ EOT;
         $state_context = [
             'media_messages' => [['message_id' => $replied_message['message_id'], 'chat_id' => $replied_message['chat']['id']]]
         ];
-        $user_repo->setUserState($app->user['telegram_id'], 'awaiting_price', $state_context);
+        $user_repo->setUserState($app->user['id'], 'awaiting_price', $state_context);
 
         $message_text = "✅ Media telah siap untuk dijual.\n\n";
         if (!empty($description)) {
@@ -388,15 +388,15 @@ EOT;
         }
 
         $is_admin = ($app->user['role'] === 'Admin');
-        $is_seller = ($package['seller_user_id'] == $app->user['telegram_id']);
-        $has_purchased = $sale_repo->hasUserPurchased($package_id, $app->user['telegram_id']);
+        $is_seller = ($package['seller_user_id'] == $app->user['id']);
+        $has_purchased = $sale_repo->hasUserPurchased($package_id, $app->user['id']);
         $has_access = $is_admin || $is_seller || $has_purchased;
 
         $keyboard = [];
         if ($has_access) {
             $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
             if ($is_seller) {
-                $sales_channel = $sales_channel_repo->findBySellerId($app->user['telegram_id']);
+                $sales_channel = $sales_channel_repo->findBySellerId($app->user['id']);
                 if ($sales_channel) {
                     $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
                 }
@@ -507,7 +507,7 @@ EOT;
         }
 
         $package = $package_repo->findByPublicId($public_package_id);
-        if (!$package || $package['seller_user_id'] != $app->user['telegram_id']) {
+        if (!$package || $package['seller_user_id'] != $app->user['id']) {
             $app->telegram_api->sendMessage($app->chat_id, "⚠️ Anda tidak memiliki izin untuk mengubah paket ini.");
             return;
         }
