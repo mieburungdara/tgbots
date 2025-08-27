@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.4.1] - 2025-08-27
+
+### Diperbaiki
+- **Fatal Error di Halaman Pilihan Login**: Memperbaiki error `SQLSTATE[42S02]: Base table or view not found` pada `login_choice.php`.
+  - **Penyebab**: Halaman ini masih mencoba mengakses tabel `members` yang sudah dihapus dan digabungkan ke dalam tabel `users` pada refactoring sebelumnya.
+  - **Solusi**: Mengubah query database di `login_choice.php` untuk mengambil data token langsung dari tabel `users`.
+
 ## [4.4.0] - 2025-08-27
 
 ### Fitur
