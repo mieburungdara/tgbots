@@ -64,7 +64,7 @@ function process_login_token($token, $pdo) {
         $_SESSION['member_user_id'] = $user_telegram_id;
 
         // Ambil info pengguna untuk logging yang lebih baik
-        $user_info_stmt = $pdo->prepare("SELECT first_name, username FROM users WHERE telegram_id = ?");
+        $user_info_stmt = $pdo->prepare("SELECT first_name, username FROM users WHERE id = ?");
         $user_info_stmt->execute([$user_telegram_id]);
         $user_info = $user_info_stmt->fetch(PDO::FETCH_ASSOC);
 
