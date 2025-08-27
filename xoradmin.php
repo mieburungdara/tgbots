@@ -33,6 +33,9 @@ $active_tab = 'bots';
 if (isset($_GET['action']) && $_GET['action'] === 'db_reset') {
     $action_view = 'db_reset';
     $active_tab = 'db_reset';
+} elseif (isset($_GET['action']) && $_GET['action'] === 'roles') {
+    $action_view = 'roles';
+    $active_tab = 'roles';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -169,6 +172,22 @@ if ($is_authenticated && $pdo) {
         unset($_SESSION['status_message']);
     }
     $bots = $pdo->query("SELECT id, first_name, username, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
+
+    // Fetch users and roles for the new tab
+    $users_with_roles = [];
+    if ($action_view === 'roles') {
+        $sql = "
+            SELECT u.id, u.first_name, u.last_name, u.username, GROUP_CONCAT(r.name SEPARATOR ', ') as roles
+            FROM users u
+            LEFT JOIN user_roles ur ON u.id = ur.user_id
+            LEFT JOIN roles r ON ur.role_id = r.id
+            GROUP BY u.id
+            ORDER BY u.first_name, u.last_name
+        ";
+        $users_with_roles = $pdo->query($sql)->fetchAll();
+    }
+    // Fetch all available roles for the modal
+    $all_roles = $pdo->query("SELECT id, name FROM roles ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 }
 
 ?>
@@ -208,6 +227,7 @@ if ($is_authenticated && $pdo) {
         .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
         .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
         #modal-body { white-space: pre-wrap; background-color: #eee; padding: 15px; border-radius: 5px; }
+        .role-badge { display: inline-block; padding: 0.25em 0.6em; font-size: 75%; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.375rem; color: #fff; background-color: #6c757d; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -232,6 +252,7 @@ if ($is_authenticated && $pdo) {
 
             <div class="tabs">
                 <a href="?action=list_bots" class="tab-link <?= $active_tab === 'bots' ? 'active' : '' ?>">Manajemen Bot</a>
+                <a href="?action=roles" class="tab-link <?= $active_tab === 'roles' ? 'active' : '' ?>">Manajemen Peran</a>
                 <a href="?action=db_reset" class="tab-link <?= $active_tab === 'db_reset' ? 'active' : '' ?>">Reset Database</a>
             </div>
 
@@ -295,6 +316,47 @@ if ($is_authenticated && $pdo) {
                             </form>
                         </div>
                     </div>
+                <?php elseif ($action_view === 'roles'): ?>
+                    <div id="roles" class="tab-content active">
+                        <h2>Manajemen Peran Pengguna</h2>
+                        <p>Tetapkan peran untuk setiap pengguna. Peran "Admin" akan memberikan akses ke panel admin utama.</p>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID Pengguna</th>
+                                    <th>Nama</th>
+                                    <th>Username</th>
+                                    <th>Peran Saat Ini</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php if (empty($users_with_roles)): ?>
+                                    <tr><td colspan="5" style="text-align: center;">Tidak ada pengguna ditemukan.</td></tr>
+                                <?php else: ?>
+                                    <?php foreach ($users_with_roles as $user): ?>
+                                        <tr id="user-row-<?= $user['id'] ?>">
+                                            <td><?= htmlspecialchars($user['id']) ?></td>
+                                            <td><?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></td>
+                                            <td>@<?= htmlspecialchars($user['username'] ?? 'N/A') ?></td>
+                                            <td class="roles-cell">
+                                                <?php if (!empty($user['roles'])): ?>
+                                                    <?php foreach (explode(', ', $user['roles']) as $role): ?>
+                                                        <span class="role-badge"><?= htmlspecialchars($role) ?></span>
+                                                    <?php endforeach; ?>
+                                                <?php else: ?>
+                                                    <span style="color: #888;">Tidak ada</span>
+                                                <?php endif; ?>
+                                            </td>
+                                            <td>
+                                                <button class="btn-manage-roles" data-user-id="<?= $user['id'] ?>" data-user-name="<?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>">Kelola Peran</button>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
+                            </tbody>
+                        </table>
+                    </div>
                 <?php elseif ($action_view === 'db_reset'): ?>
                     <div id="db_reset" class="tab-content danger-zone active">
                         <h2>Reset Database</h2>
@@ -311,8 +373,11 @@ if ($is_authenticated && $pdo) {
         <?php endif; ?>
     </div>
 
-    <!-- The Modal -->
+    <!-- Modal for Webhook/Bot Actions -->
     <div id="responseModal" class="modal"><div class="modal-content"><span class="close">&times;</span><h2 id="modal-title">Hasil Aksi</h2><pre id="modal-body">Memproses...</pre></div></div>
+
+    <!-- Modal for Role Management -->
+    <div id="rolesModal" class="modal" style="display:none;"><div class="modal-content"><span class="close">&times;</span><h2 id="roles-modal-title">Kelola Peran</h2><form id="roles-form"><input type="hidden" id="modal-user-id" name="user_id"><div id="roles-checkbox-container"></div><button type="button" id="save-roles-button">Simpan</button></form></div></div>
 
     <script>
         <?php if ($is_authenticated): ?>
@@ -353,6 +418,88 @@ if ($is_authenticated && $pdo) {
                 handleAjaxAction(this.classList[0], this.dataset.botId);
             });
         });
+
+        // --- Role Management Modal JS ---
+        const rolesModal = document.getElementById('rolesModal');
+        if (rolesModal) {
+            const rolesCloseButton = rolesModal.querySelector('.close');
+            const manageRolesButtons = document.querySelectorAll('.btn-manage-roles');
+            const saveRolesButton = document.getElementById('save-roles-button');
+            const rolesCheckboxContainer = document.getElementById('roles-checkbox-container');
+            const modalUserIdInput = document.getElementById('modal-user-id');
+            const rolesModalTitle = document.getElementById('roles-modal-title');
+            const allRoles = <?= json_encode($all_roles ?? []) ?>;
+
+            function openRolesModal(userId, userName) {
+                modalUserIdInput.value = userId;
+                rolesModalTitle.textContent = 'Kelola Peran untuk ' + userName;
+                rolesCheckboxContainer.innerHTML = 'Memuat peran...';
+                rolesModal.style.display = 'block';
+
+                const formData = new FormData();
+                formData.append('action', 'get_user_roles');
+                formData.append('user_id', userId);
+
+                fetch('xoradminapi.php', { method: 'POST', body: formData })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status !== 'success') throw new Error(data.message);
+                        populateRolesCheckboxes(data.role_ids);
+                    })
+                    .catch(error => {
+                        rolesCheckboxContainer.innerHTML = `<p style="color:red;">Gagal memuat peran: ${error.message}</p>`;
+                    });
+            }
+
+            function populateRolesCheckboxes(assignedRoleIds) {
+                rolesCheckboxContainer.innerHTML = '';
+                allRoles.forEach(role => {
+                    const isChecked = assignedRoleIds.includes(parseInt(role.id, 10));
+                    rolesCheckboxContainer.innerHTML += `<div><label><input type="checkbox" name="role_ids[]" value="${role.id}" ${isChecked ? 'checked' : ''}> ${role.name}</label></div>`;
+                });
+            }
+
+            function closeRolesModal() {
+                rolesModal.style.display = 'none';
+            }
+
+            manageRolesButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    openRolesModal(this.dataset.userId, this.dataset.userName);
+                });
+            });
+
+            saveRolesButton.addEventListener('click', function() {
+                const userId = modalUserIdInput.value;
+                const checkedRoles = Array.from(rolesCheckboxContainer.querySelectorAll('input:checked')).map(cb => cb.value);
+
+                const formData = new FormData();
+                formData.append('action', 'update_user_roles');
+                formData.append('user_id', userId);
+                formData.append('role_ids', JSON.stringify(checkedRoles));
+
+                saveRolesButton.textContent = 'Menyimpan...';
+                saveRolesButton.disabled = true;
+
+                fetch('xoradminapi.php', { method: 'POST', body: formData })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status !== 'success') throw new Error(data.message);
+                        closeRolesModal();
+                        location.reload(); // Easiest way to show the updated roles
+                    })
+                    .catch(error => alert('Gagal menyimpan: ' + error.message))
+                    .finally(() => {
+                        saveRolesButton.textContent = 'Simpan';
+                        saveRolesButton.disabled = false;
+                    });
+            });
+
+            rolesCloseButton.onclick = closeRolesModal;
+            window.addEventListener('click', function(event) {
+                if (event.target == rolesModal) closeRolesModal();
+            });
+        }
         <?php endif; ?>
     </script>
 </body>

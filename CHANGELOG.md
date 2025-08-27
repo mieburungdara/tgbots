@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.5.0] - 2025-08-27
+
+### Fitur
+- **Manajemen Peran di XOR Admin Panel**: Menambahkan fungsionalitas penuh untuk mengelola peran pengguna langsung dari panel admin khusus (`xoradmin.php`).
+  - **Tab Baru**: Menambahkan tab "Manajemen Peran" yang menampilkan daftar semua pengguna beserta peran mereka saat ini.
+  - **Modal Interaktif**: Mengklik tombol "Kelola Peran" untuk setiap pengguna akan membuka jendela modal (pop-up) yang memungkinkan admin untuk menetapkan atau mencabut peran (seperti 'Admin', 'User') menggunakan checkbox.
+  - **Backend Terintegrasi**: Logika untuk mengambil dan memperbarui peran ditangani melalui endpoint baru di `xoradminapi.php`, memastikan perubahan disimpan ke database secara dinamis tanpa perlu me-refresh halaman.
+
 ## [4.4.0] - 2025-08-27
 
 ### Diubah (Refactoring)
