@@ -59,13 +59,10 @@ $count_stmt->execute([$telegram_id, $bot_id]);
 $total_messages = $count_stmt->fetchColumn();
 $total_pages = ceil($total_messages / $limit);
 
-$sql = "SELECT m.id, m.user_id, m.bot_id, m.telegram_message_id, m.chat_id, m.chat_type,
-               m.update_type, m.text, m.raw_data, m.direction, m.telegram_timestamp, m.created_at,
-               mf.type as media_type
-        FROM messages m
-        LEFT JOIN media_files mf ON m.id = mf.message_id
-        WHERE m.user_id = ? AND m.bot_id = ?
-        ORDER BY m.created_at DESC
+$sql = "SELECT *, NULL as media_type
+        FROM messages
+        WHERE user_id = ? AND bot_id = ?
+        ORDER BY created_at DESC
         LIMIT ? OFFSET ?";
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(1, $telegram_id, PDO::PARAM_INT);
