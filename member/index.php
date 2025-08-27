@@ -40,40 +40,30 @@ function process_login_token($token, $pdo) {
         return "Silakan masukkan token Anda.";
     }
 
-    // Cari token yang valid dan belum digunakan
-    $stmt = $pdo->prepare("SELECT * FROM members WHERE login_token = ? AND token_used = 0");
+    // Cari token yang valid dan belum digunakan di tabel users
+    $stmt = $pdo->prepare("SELECT * FROM users WHERE login_token = ? AND token_used = 0");
     $stmt->execute([$token]);
-    $member = $stmt->fetch(PDO::FETCH_ASSOC);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     // Cek apakah token kedaluwarsa (lebih dari 5 menit)
-    if ($member && isset($member['token_created_at']) && strtotime($member['token_created_at']) < time() - (5 * 60)) {
+    if ($user && isset($user['token_created_at']) && strtotime($user['token_created_at']) < time() - (5 * 60)) {
         app_log("Upaya login gagal: Token kedaluwarsa. Token: {$token}", 'member');
         return "Token yang Anda gunakan sudah kedaluwarsa. Silakan minta yang baru dari bot.";
     }
 
-    if ($member) {
-        // Setelah migrasi 035, kolom `members.user_id` berisi `telegram_id`.
-        $user_telegram_id = $member['user_id'];
+    if ($user) {
+        $user_telegram_id = $user['id'];
 
         // Jika valid, tandai token sebagai sudah digunakan untuk mencegah replay attack.
-        $update_stmt = $pdo->prepare("UPDATE members SET token_used = 1, login_token = NULL WHERE user_id = ?");
+        $update_stmt = $pdo->prepare("UPDATE users SET token_used = 1, login_token = NULL WHERE id = ?");
         $update_stmt->execute([$user_telegram_id]);
 
         // Atur session untuk menandai pengguna sebagai sudah login.
-        // Nama session tetap 'member_user_id' untuk konsistensi, meskipun isinya adalah telegram_id.
         $_SESSION['member_user_id'] = $user_telegram_id;
 
-        // Ambil info pengguna untuk logging yang lebih baik
-        $user_info_stmt = $pdo->prepare("SELECT first_name, username FROM users WHERE id = ?");
-        $user_info_stmt->execute([$user_telegram_id]);
-        $user_info = $user_info_stmt->fetch(PDO::FETCH_ASSOC);
-
+        // Info pengguna sudah ada di variabel $user, tidak perlu query lagi
         $log_message = "Login member berhasil: ";
-        if ($user_info) {
-            $log_message .= "Name: {$user_info['first_name']}, Username: @{$user_info['username']}, TelegramID: {$user_telegram_id}";
-        } else {
-            $log_message .= "telegram_id = {$user_telegram_id} (Info pengguna tidak ditemukan)";
-        }
+        $log_message .= "Name: {$user['first_name']}, Username: @{$user['username']}, TelegramID: {$user_telegram_id}";
         app_log($log_message, 'member');
 
         // Alihkan ke dasbor.

@@ -106,7 +106,6 @@ function clean_transactional_data(PDO $pdo): void {
         'rel_user_bot',
         'bot_settings',
         'bot_channel_usage',
-        'members',
         'users' // 'users' terakhir karena tabel lain memiliki foreign key ke sini
     ];
 
