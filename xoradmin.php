@@ -21,61 +21,6 @@ if ($is_authenticated) {
     $pdo = get_db_connection();
 }
 
-// --- AJAX Request Handler ---
-// This block handles all AJAX requests and exits, ensuring no HTML is ever sent.
-if (isset($_POST['action']) && in_array($_POST['action'], ['get_me', 'set', 'check', 'delete'])) {
-    header('Content-Type: application/json');
-
-    if (!$is_authenticated || !$pdo) {
-        echo json_encode(['status' => 'error', 'message' => 'Sesi tidak valid atau koneksi database gagal. Silakan login kembali.']);
-        exit;
-    }
-
-    $handler_response = ['status' => 'error', 'message' => 'Aksi tidak diketahui atau ID bot tidak valid.'];
-    $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
-
-    if ($bot_id > 0) {
-        try {
-            $stmt_token = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
-            $stmt_token->execute([$bot_id]);
-            $token = $stmt_token->fetchColumn();
-            if (!$token) throw new Exception("Bot tidak ditemukan.");
-
-            $telegram_api = new TelegramAPI($token);
-            $post_action = $_POST['action'];
-            $result = null;
-
-            if ($post_action === 'get_me') {
-                $bot_info = $telegram_api->getMe();
-                if (!isset($bot_info['ok']) || !$bot_info['ok']) throw new Exception("Gagal mendapatkan info dari Telegram: " . ($bot_info['description'] ?? ''));
-                $bot_result = $bot_info['result'];
-                if ($bot_result['id'] != $bot_id) throw new Exception("Token tidak cocok dengan ID bot.");
-
-                $stmt_update = $pdo->prepare("UPDATE bots SET first_name = ?, username = ? WHERE id = ?");
-                $stmt_update->execute([$bot_result['first_name'], $bot_result['username'] ?? null, $bot_id]);
-
-                $handler_response = ['status' => 'success', 'message' => 'Informasi bot diperbarui.', 'data' => $bot_result];
-            } else { // Webhook actions
-                if ($post_action === 'set') {
-                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-                    $webhook_url = $protocol . $_SERVER['HTTP_HOST'] . str_replace(basename(__FILE__), 'webhook.php', $_SERVER['PHP_SELF']) . '?id=' . $bot_id;
-                    $result = $telegram_api->setWebhook($webhook_url);
-                } elseif ($post_action === 'check') {
-                    $result = $telegram_api->getWebhookInfo();
-                } elseif ($post_action === 'delete') {
-                    $result = $telegram_api->deleteWebhook();
-                }
-                if ($result === false) throw new Exception("Gagal komunikasi dengan API Telegram.");
-                $handler_response = ['status' => 'success', 'data' => $result];
-            }
-        } catch (Exception $e) {
-            $handler_response['message'] = $e->getMessage();
-        }
-    }
-    echo json_encode($handler_response);
-    exit;
-}
-
 // --- Page Request Handler (Non-AJAX) ---
 $error = '';
 $db_message = '';
@@ -391,7 +336,7 @@ if ($is_authenticated && $pdo) {
                 formData.append('action', action);
                 formData.append('bot_id', botId);
 
-                const response = await fetch('xoradmin.php', { method: 'POST', body: formData });
+                const response = await fetch('xoradminapi.php', { method: 'POST', body: formData });
                 if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const result = await response.json();
                 if (result.status === 'error') throw new Error(result.message);
