@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.1] - 2025-08-27
+
+### Diperbaiki
+- **Fatal Error pada Webhook**: Memperbaiki error `500 Internal Server Error` yang terjadi saat webhook menerima pembaruan.
+  - **Penyebab**: `UpdateDispatcher` menggunakan ID Telegram bot (`telegram_bot_id`) saat mencoba menyimpan pesan ke database, padahal seharusnya menggunakan ID internal bot dari tabel `bots`. Hal ini menyebabkan pelanggaran *foreign key constraint* dan memicu `PDOException`.
+  - **Solusi**: Mengubah panggilan `execute()` di metode `logIncomingMessage` dalam `core/UpdateDispatcher.php` untuk menggunakan `(int)$this->bot['id']` yang benar.
+
 ## [4.3.0] - 2025-08-25
 
 ### Diubah (Refactoring Besar)

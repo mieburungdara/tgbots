@@ -148,7 +148,7 @@ class UpdateDispatcher
         );
         $stmt->execute([
             $user_id,
-            $this->telegram_bot_id,
+            (int)$this->bot['id'],
             $telegram_message_id,
             $chat_id,
             $chat_type,
