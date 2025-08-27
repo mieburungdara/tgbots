@@ -29,7 +29,7 @@ $handler_response = ['status' => 'error', 'message' => 'Aksi tidak diketahui ata
 $post_action = $_POST['action'] ?? null;
 $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
 
-if ($bot_id > 0 && in_array($post_action, ['get_me', 'set-webhook', 'check-webhook', 'delete-webhook'])) {
+if ($bot_id > 0 && in_array($post_action, ['get-me', 'set-webhook', 'check-webhook', 'delete-webhook'])) {
     try {
         $stmt_token = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
         $stmt_token->execute([$bot_id]);
@@ -39,7 +39,7 @@ if ($bot_id > 0 && in_array($post_action, ['get_me', 'set-webhook', 'check-webho
         $telegram_api = new TelegramAPI($token);
         $result = null;
 
-        if ($post_action === 'get_me') {
+        if ($post_action === 'get-me') {
             $bot_info = $telegram_api->getMe();
             if (!isset($bot_info['ok']) || !$bot_info['ok']) throw new Exception("Gagal mendapatkan info dari Telegram: " . ($bot_info['description'] ?? ''));
             $bot_result = $bot_info['result'];
