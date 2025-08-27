@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.3.2] - 2025-08-27
+
+### Diperbaiki
+- **Login Member Gagal**: Memperbaiki masalah di mana token login untuk panel member selalu ditolak sebagai "tidak valid".
+  - **Penyebab**: Perintah `/login` gagal menyimpan token yang baru dibuat ke database. Ini karena query `UPDATE` pada tabel `members` menggunakan kunci array yang salah (`telegram_id` bukan `id`) untuk mengidentifikasi pengguna.
+  - **Solusi**: Mengubah `handleLoginCommand` di `core/handlers/MessageHandler.php` untuk menggunakan `$app->user['id']` yang benar saat menyimpan token.
+
 ## [4.3.1] - 2025-08-27
 
 ### Diperbaiki
