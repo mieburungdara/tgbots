@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Repositori untuk mengelola data pengguna (`users`, `members`, `rel_user_bot`).
+ * Repositori untuk mengelola data pengguna (`users`, `rel_user_bot`).
  * Menangani pembuatan pengguna, pencarian, pengelolaan state, dan peran.
  */
 class UserRepository
@@ -90,9 +90,7 @@ class UserRepository
         $this->pdo->prepare("INSERT IGNORE INTO rel_user_bot (user_id, bot_id) VALUES (?, ?)")
                   ->execute([$telegram_user_id, $this->telegram_bot_id]);
 
-        // Pastikan entri member ada (gunakan INSERT IGNORE)
-        $this->pdo->prepare("INSERT IGNORE INTO members (user_id) VALUES (?)")
-                  ->execute([$telegram_user_id]);
+        // Entri member tidak lagi diperlukan karena tabelnya digabungkan.
 
         // Ambil kembali data pengguna yang terbaru setelah semua operasi
         return $this->findUserByTelegramId($telegram_user_id);

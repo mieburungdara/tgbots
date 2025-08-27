@@ -1,5 +1,15 @@
 # Changelog
 
+## [4.4.0] - 2025-08-27
+
+### Diubah (Refactoring)
+- **Penggabungan Tabel `users` dan `members`**: Melakukan refactoring skema database dengan menggabungkan tabel `members` ke dalam tabel `users`.
+  - **Alasan**: Tabel `members` pada dasarnya adalah perpanjangan dari tabel `users` dengan relasi satu-ke-satu, yang berfungsi untuk menyimpan informasi login panel web. Menggabungkannya akan menormalkan skema, mengurangi join yang tidak perlu, dan menyederhanakan logika kode.
+  - **Perubahan Teknis**:
+    1.  Membuat file migrasi (`036_merge_members_into_users.php`) untuk memindahkan kolom `login_token`, `token_created_at`, dan `token_used` dari `members` ke `users`, lalu menghapus tabel `members`.
+    2.  Memperbarui semua logika otentikasi di `member/index.php` dan `admin/auth.php` untuk membaca dan menulis token langsung dari/ke tabel `users`.
+    3.  Menghapus logika pendaftaran `members` yang sekarang sudah usang dari `UserRepository`.
+
 ## [4.3.4] - 2025-08-27
 
 ### Diperbaiki
