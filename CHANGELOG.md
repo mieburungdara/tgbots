@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.5.2] - 2025-08-27
+
+### Diperbaiki
+- **Fatal Error di Halaman Paket Admin**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.telegram_id' in 'ON'` yang terjadi saat mengakses halaman manajemen paket di panel admin.
+  - **Penyebab**: Kueri `findAll` di `PackageRepository.php` salah melakukan JOIN pada `users` menggunakan `u.telegram_id` yang tidak ada.
+  - **Solusi**: Mengubah kondisi JOIN menjadi `u.id` agar sesuai dengan skema database.
+
 ## [4.5.1] - 2025-08-27
 
 ### Diperbaiki
