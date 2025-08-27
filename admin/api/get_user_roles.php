@@ -10,12 +10,12 @@ if (!isset($_GET['telegram_id']) || !filter_var($_GET['telegram_id'], FILTER_VAL
     exit;
 }
 
-$telegram_id = (int)$_GET['telegram_id'];
+$user_id = (int)$_GET['telegram_id'];
 $pdo = get_db_connection();
 
 try {
     $stmt = $pdo->prepare("SELECT role_id FROM user_roles WHERE user_id = ?");
-    $stmt->execute([$telegram_id]);
+    $stmt->execute([$user_id]);
     // Mengambil semua role_id sebagai array of integers
     $role_ids = $stmt->fetchAll(PDO::FETCH_COLUMN, 0);
     // Konversi ke integer karena beberapa driver PDO mungkin mengembalikan string

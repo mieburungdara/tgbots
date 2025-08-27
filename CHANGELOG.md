@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.5.1] - 2025-08-27
+
+### Diperbaiki
+- **Inkonsistensi Kolom ID Pengguna (`id` vs `telegram_id`)**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.telegram_id'` dan masalah terkait di seluruh aplikasi.
+  - **Penyebab**: Sebagian besar kode masih menggunakan `telegram_id` untuk merujuk pada ID pengguna, padahal skema database final (`updated_schema.sql`) menggunakan `id` sebagai primary key untuk tabel `users`.
+  - **Solusi**: Melakukan refactoring global untuk mengganti semua referensi ke kolom `telegram_id` pengguna dengan `id`. Ini termasuk perbaikan pada query SQL, nama variabel, dan parameter fungsi di direktori `admin`, `core`, dan `member`.
+  - **Perbaikan Tambahan**: Menonaktifkan atau memperbaiki file migrasi lama (`002_...`, `018_...`) dan `setup.sql` untuk memastikan konsistensi skema bagi instalasi baru.
+
 ## [4.5.0] - 2025-08-27
 
 ### Fitur

@@ -29,7 +29,7 @@ if (!isset($data['role_ids']) || !is_array($data['role_ids'])) {
     exit;
 }
 
-$telegram_id_to_update = (int)$data['telegram_id'];
+$user_id_to_update = (int)$data['telegram_id'];
 // Sanitize all elements to be integers
 $role_ids = array_filter(array_map('intval', $data['role_ids']), fn($id) => $id > 0);
 
@@ -40,13 +40,13 @@ try {
 
     // 1. Hapus semua peran lama dari pengguna
     $stmt_delete = $pdo->prepare("DELETE FROM user_roles WHERE user_id = ?");
-    $stmt_delete->execute([$telegram_id_to_update]);
+    $stmt_delete->execute([$user_id_to_update]);
 
     // 2. Masukkan peran baru jika ada
     if (!empty($role_ids)) {
         $stmt_insert = $pdo->prepare("INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)");
         foreach ($role_ids as $role_id) {
-            $stmt_insert->execute([$telegram_id_to_update, $role_id]);
+            $stmt_insert->execute([$user_id_to_update, $role_id]);
         }
     }
 

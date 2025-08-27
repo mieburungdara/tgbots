@@ -13,20 +13,20 @@ if (!$pdo) {
 
 // --- Logika untuk menangani form penyesuaian saldo (dari modal) ---
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $telegram_id = (int)($_POST['user_id'] ?? 0); // Input field is still named user_id, but now holds telegram_id
+    $user_id = (int)($_POST['user_id'] ?? 0);
     $amount = filter_var($_POST['amount'] ?? 0, FILTER_VALIDATE_FLOAT);
     $description = trim($_POST['description'] ?? '');
     $action = $_POST['action'];
     $message = '';
     $message_type = 'danger';
-    if ($telegram_id && $amount > 0) {
+    if ($user_id && $amount > 0) {
         $transaction_amount = ($action === 'add_balance') ? $amount : -$amount;
         $pdo->beginTransaction();
         try {
             $stmt_update_user = $pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
-            $stmt_update_user->execute([$transaction_amount, $telegram_id]);
+            $stmt_update_user->execute([$transaction_amount, $user_id]);
             $stmt_insert_trans = $pdo->prepare("INSERT INTO balance_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)");
-            $stmt_insert_trans->execute([$telegram_id, $transaction_amount, 'admin_adjustment', $description]);
+            $stmt_insert_trans->execute([$user_id, $transaction_amount, 'admin_adjustment', $description]);
             $pdo->commit();
             $message = "Saldo pengguna berhasil diperbarui.";
             $message_type = 'success';

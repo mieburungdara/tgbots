@@ -52,18 +52,18 @@ function process_login_token($token, $pdo) {
     }
 
     if ($user) {
-        $user_telegram_id = $user['id'];
+        $user_id = $user['id'];
 
         // Jika valid, tandai token sebagai sudah digunakan untuk mencegah replay attack.
         $update_stmt = $pdo->prepare("UPDATE users SET token_used = 1, login_token = NULL WHERE id = ?");
-        $update_stmt->execute([$user_telegram_id]);
+        $update_stmt->execute([$user_id]);
 
         // Atur session untuk menandai pengguna sebagai sudah login.
-        $_SESSION['member_user_id'] = $user_telegram_id;
+        $_SESSION['member_user_id'] = $user_id;
 
         // Info pengguna sudah ada di variabel $user, tidak perlu query lagi
         $log_message = "Login member berhasil: ";
-        $log_message .= "Name: {$user['first_name']}, Username: @{$user['username']}, TelegramID: {$user_telegram_id}";
+        $log_message .= "Name: {$user['first_name']}, Username: @{$user['username']}, UserID: {$user_id}";
         app_log($log_message, 'member');
 
         // Alihkan ke dasbor.

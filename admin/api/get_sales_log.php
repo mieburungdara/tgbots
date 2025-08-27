@@ -6,9 +6,9 @@
 header('Content-Type: application/json');
 require_once __DIR__ . '/../../core/database.php';
 
-$telegram_id = isset($_GET['telegram_id']) ? (int)$_GET['telegram_id'] : 0;
+$user_id = isset($_GET['telegram_id']) ? (int)$_GET['telegram_id'] : 0;
 
-if (!$telegram_id) {
+if (!$user_id) {
     echo json_encode(['error' => 'Telegram ID tidak valid.']);
     exit;
 }
@@ -29,7 +29,7 @@ try {
          WHERE s.seller_user_id = ?
          ORDER BY s.purchased_at DESC"
     );
-    $stmt->execute([$telegram_id]);
+    $stmt->execute([$user_id]);
     $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     echo json_encode($logs);

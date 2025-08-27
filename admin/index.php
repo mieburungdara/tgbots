@@ -72,16 +72,16 @@ if ($selected_bot_id) {
         $params = [$selected_bot_id];
         $user_where_clause = '';
         if (!empty($search_user)) {
-            $user_where_clause = "AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.username LIKE ? OR u.telegram_id = ?)";
+            $user_where_clause = "AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.username LIKE ? OR u.id = ?)";
             $params = array_merge($params, ["%$search_user%", "%$search_user%", "%$search_user%", $search_user]);
         }
 
         $sql_users = "
-            SELECT u.telegram_id, u.first_name, u.username,
-                   (SELECT text FROM messages m WHERE m.user_id = u.telegram_id AND m.bot_id = r.bot_id ORDER BY m.id DESC LIMIT 1) as last_message,
-                   (SELECT telegram_timestamp FROM messages m WHERE m.user_id = u.telegram_id AND m.bot_id = r.bot_id ORDER BY m.id DESC LIMIT 1) as last_message_time
+            SELECT u.id as telegram_id, u.first_name, u.username,
+                   (SELECT text FROM messages m WHERE m.user_id = u.id AND m.bot_id = r.bot_id ORDER BY m.id DESC LIMIT 1) as last_message,
+                   (SELECT telegram_timestamp FROM messages m WHERE m.user_id = u.id AND m.bot_id = r.bot_id ORDER BY m.id DESC LIMIT 1) as last_message_time
             FROM users u
-            JOIN rel_user_bot r ON u.telegram_id = r.user_id
+            JOIN rel_user_bot r ON u.id = r.user_id
             WHERE r.bot_id = ? {$user_where_clause}
             ORDER BY last_message_time DESC";
 
