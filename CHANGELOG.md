@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.5.0] - 2025-08-27
+
+### Fitur
+- **Reset Database dari File SQL**: Menambahkan fitur baru di halaman `admin/database.php` yang memungkinkan admin untuk me-reset database menggunakan file skema SQL yang dipilih.
+  - **Dropdown Pilihan File**: Mengganti tombol "Bersihkan Data" dengan dropdown yang berisi `updated_schema.sql` (disarankan) dan `setup.sql` (lama).
+  - **Logika Reset Penuh**: Aksi ini akan menghapus semua tabel yang ada dan menjalankan skrip dari file yang dipilih untuk membuat ulang seluruh skema database.
+
 ## [4.4.2] - 2025-08-27
 
 ### Diperbaiki
