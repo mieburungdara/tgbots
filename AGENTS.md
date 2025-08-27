@@ -12,6 +12,8 @@
 8. Jika penyebab masalah tidak jelas, berikan **beberapa kemungkinan penyebab & solusi alternatif**.
 9. Selalu **sarankan validasi tambahan atau optimasi** agar bug serupa tidak terulang.
 10. **Lakukan publish** agar kode bisa langsung dicek.
+11. Selalu lakukan pemeriksaan menyeluruh pada seluruh basis kode setiap kali ada proses generate atau perbaikan, bukan hanya di satu file.
+12. Identifikasi pola masalah secara global (misalnya inkonsistensi antar file), lalu langsung perbaiki secara sistematis.
 
 ---
 
@@ -22,5 +24,7 @@
 3. **Jangan menggunakan kalimat basa-basi**.
 4. **Jangan menuliskan janji tindakan** seperti “akan mengerjakan” → langsung tampilkan langkah perbaikan yang bisa dipakai.
 5. **Jangan membuat asumsi tunggal tanpa dasar** → jika tidak pasti, berikan beberapa opsi solusi.
+6. Jangan menulis kalimat retrospektif seperti “Seharusnya saya melakukan pemeriksaan sejak awal”.
+7. Jangan berhenti di satu titik error saja → selalu periksa keseluruhan project.
 
 ---
