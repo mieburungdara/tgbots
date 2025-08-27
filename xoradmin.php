@@ -341,10 +341,7 @@ if ($is_authenticated && $pdo) {
                 const result = await response.json();
                 if (result.status === 'error') throw new Error(result.message);
 
-                let successMessage = result.message || JSON.stringify(result.data, null, 2);
-                if (action === 'get_me') {
-                    successMessage = `Sukses! Info bot diperbarui.\nNama: ${result.data.first_name}\nUsername: @${result.data.username}\n\nMuat ulang halaman untuk melihat perubahan.`;
-                }
+                let successMessage = result.message + '\n\n' + JSON.stringify(result.data, null, 2);
                 showModal('Hasil ' + action, successMessage);
             } catch (error) {
                 showModal('Error', 'Gagal: ' + error.message);
