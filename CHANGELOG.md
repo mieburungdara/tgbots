@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.2] - 2025-08-27
+
+### Diperbaiki
+- **Pesan di Riwayat Chat Tidak Muncul**: Memperbaiki bug di halaman `admin/chat.php` di mana total jumlah pesan ditampilkan dengan benar, tetapi tabel riwayat pesan tetap kosong.
+  - **Penyebab**: Kueri SQL untuk mengambil data pesan menggunakan kondisi `JOIN` yang salah antara tabel `messages` dan `media_files`. Kueri tersebut mencoba mencocokkan `messages.telegram_message_id` dengan `media_files.message_id`, padahal seharusnya mencocokkan `messages.id` (primary key) dengan `media_files.message_id`.
+  - **Solusi**: Mengubah kondisi `JOIN` menjadi `ON m.id = mf.message_id` dan membuat daftar `SELECT` menjadi eksplisit untuk mencegah potensi masalah tumpang tindih nama kolom.
+
 ## [4.6.1] - 2025-08-27
 
 ### Diperbaiki
