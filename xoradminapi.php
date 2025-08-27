@@ -29,7 +29,7 @@ $handler_response = ['status' => 'error', 'message' => 'Aksi tidak diketahui ata
 $post_action = $_POST['action'] ?? null;
 $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
 
-if ($bot_id > 0 && in_array($post_action, ['get_me', 'set', 'check', 'delete'])) {
+if ($bot_id > 0 && in_array($post_action, ['get_me', 'set-webhook', 'check-webhook', 'delete-webhook'])) {
     try {
         $stmt_token = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
         $stmt_token->execute([$bot_id]);
@@ -50,14 +50,14 @@ if ($bot_id > 0 && in_array($post_action, ['get_me', 'set', 'check', 'delete']))
 
             $handler_response = ['status' => 'success', 'message' => 'Informasi bot diperbarui.', 'data' => $bot_result];
         } else { // Webhook actions
-            if ($post_action === 'set') {
+            if ($post_action === 'set-webhook') {
                 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
                 // IMPORTANT: The path to webhook.php is calculated from the project root now.
                 $webhook_url = $protocol . $_SERVER['HTTP_HOST'] . dirname($_SERVER['PHP_SELF']) . '/webhook.php?id=' . $bot_id;
                 $result = $telegram_api->setWebhook($webhook_url);
-            } elseif ($post_action === 'check') {
+            } elseif ($post_action === 'check-webhook') {
                 $result = $telegram_api->getWebhookInfo();
-            } elseif ($post_action === 'delete') {
+            } elseif ($post_action === 'delete-webhook') {
                 $result = $telegram_api->deleteWebhook();
             }
             if ($result === false) throw new Exception("Gagal komunikasi dengan API Telegram.");
