@@ -89,6 +89,13 @@ if ($selected_bot_id) {
         $stmt_users->execute($params);
         $conversations = $stmt_users->fetchAll();
 
+        // --- UNTUK DEBUGGING ---
+        $debug_queries['User Conversations Query'] = [
+            'sql' => $stmt_users->queryString,
+            'params' => $params
+        ];
+        // --- AKHIR UNTUK DEBUGGING ---
+
         // --- Ambil percakapan CHANNEL dan GRUP (hanya jika tidak ada filter user) ---
         if (empty($search_user)) {
             $stmt_channels = $pdo->prepare(
@@ -101,6 +108,13 @@ if ($selected_bot_id) {
             );
             $stmt_channels->execute([$selected_bot_id]);
             $channel_chats = $stmt_channels->fetchAll();
+
+            // --- UNTUK DEBUGGING ---
+            $debug_queries['Channel Conversations Query'] = [
+                'sql' => $stmt_channels->queryString,
+                'params' => [$selected_bot_id]
+            ];
+            // --- AKHIR UNTUK DEBUGGING ---
         }
     }
 }
@@ -214,5 +228,23 @@ require_once __DIR__ . '/../partials/header.php';
         <?php endif; ?>
     </main>
 </div>
+
+<?php if (!empty($debug_queries)): ?>
+<div class="debug-section" style="margin-top: 40px;">
+    <button onclick="document.getElementById('debug-content').style.display = document.getElementById('debug-content').style.display === 'none' ? 'block' : 'none';" class="btn btn-secondary">
+        Tampilkan/Sembunyikan Info Debug Kueri
+    </button>
+    <div id="debug-content" style="display:none; margin-top: 10px; padding: 15px; border: 1px solid #ccc; background-color: #f8f9fa;">
+        <h4>Kueri yang Dieksekusi</h4>
+        <?php foreach ($debug_queries as $title => $query_info): ?>
+            <h5><?= htmlspecialchars($title) ?></h5>
+            <pre><code class="language-sql"><?= htmlspecialchars($query_info['sql']) ?></code></pre>
+            <h6>Parameter:</h6>
+            <pre><code><?= htmlspecialchars(print_r($query_info['params'], true)) ?></code></pre>
+            <hr>
+        <?php endforeach; ?>
+    </div>
+</div>
+<?php endif; ?>
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>
