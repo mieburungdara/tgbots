@@ -115,7 +115,39 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (isset($_POST['add_bot'])) {
             $active_tab = 'bots';
-             // ... (logika tambah bot tetap sama) ...
+            $token = trim($_POST['token']);
+            if (empty($token)) {
+                $bot_error = "Token tidak boleh kosong.";
+            } else {
+                try {
+                    $telegram_api = new TelegramAPI($token);
+                    $bot_info = $telegram_api->getMe();
+                    if (isset($bot_info['ok']) && $bot_info['ok'] === true) {
+                        $bot_result = $bot_info['result'];
+                        $first_name = $bot_result['first_name'];
+                        $username = $bot_result['username'] ?? null;
+                        $telegram_bot_id = $bot_result['id'];
+
+                        $stmt_check_id = $pdo->prepare("SELECT id FROM bots WHERE id = ?");
+                        $stmt_check_id->execute([$telegram_bot_id]);
+                        if ($stmt_check_id->fetch()) {
+                             throw new Exception("Bot dengan ID Telegram {$telegram_bot_id} ini sudah terdaftar.", 23000);
+                        }
+
+                        $stmt = $pdo->prepare("INSERT INTO bots (id, first_name, username, token) VALUES (?, ?, ?, ?)");
+                        $stmt->execute([$telegram_bot_id, $first_name, $username, $token]);
+                        $bot_message = "Bot '{$first_name}' (@{$username}) berhasil ditambahkan!";
+                    } else {
+                        throw new Exception("Token tidak valid atau gagal menghubungi API Telegram. " . ($bot_info['description'] ?? ''));
+                    }
+                } catch (Exception $e) {
+                    if ($e->getCode() == 23000) {
+                        $bot_error = "Error: " . $e->getMessage();
+                    } else {
+                        $bot_error = "Gagal menambahkan bot: " . $e->getMessage();
+                    }
+                }
+            }
         }
 
         if (isset($_POST['save_bot_settings'])) {
