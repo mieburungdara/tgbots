@@ -17,22 +17,45 @@ if (!$pdo) {
 
 $message = null;
 
-// Menangani permintaan POST hanya untuk aksi 'clean_database'
+// Menangani permintaan POST
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'clean_database') {
+    if ($_POST['action'] === 'reset_with_file') {
+        $allowed_files = ['updated_schema.sql', 'setup.sql'];
+        $selected_file = $_POST['sql_file'] ?? '';
+
+        if (in_array($selected_file, $allowed_files) && file_exists(__DIR__ . '/../' . $selected_file)) {
+            try {
+                $pdo->exec('SET FOREIGN_KEY_CHECKS=0;');
+                $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+                foreach ($tables as $table) {
+                    $pdo->exec("DROP TABLE IF EXISTS `$table`");
+                }
+
+                $sql_script = file_get_contents(__DIR__ . '/../' . $selected_file);
+                $pdo->exec($sql_script);
+
+                $pdo->exec('SET FOREIGN_KEY_CHECKS=1;');
+                $_SESSION['message'] = "Database berhasil di-reset menggunakan file '{$selected_file}'.";
+            } catch (Exception $e) {
+                $_SESSION['message'] = "Gagal me-reset database: " . $e->getMessage();
+            }
+        } else {
+            $_SESSION['message'] = "Error: File SQL tidak valid atau tidak ditemukan.";
+        }
+    } elseif ($_POST['action'] === 'clean_database') { // Keep old action for now, can be removed later
         try {
             clean_transactional_data($pdo); // Fungsi ini ada di core/database.php
             $_SESSION['message'] = "Berhasil! Semua data pengguna, konten, dan penjualan telah dihapus.";
         } catch (Exception $e) {
             $_SESSION['message'] = "Gagal membersihkan database: " . $e->getMessage();
         }
-        // Redirect setelah proses untuk mencegah resubmit (pola PRG)
-        header("Location: database.php");
-        exit;
     }
+    // Redirect setelah proses untuk mencegah resubmit (pola PRG)
+    header("Location: database.php");
+    exit;
 }
 
-// Menampilkan pesan dari session (untuk aksi clean_database)
+// Menampilkan pesan dari session
 if (isset($_SESSION['message'])) {
     $message = $_SESSION['message'];
     unset($_SESSION['message']);
@@ -69,12 +92,18 @@ require_once __DIR__ . '/../partials/header.php';
 <div class="danger-zone" style="margin-top: 40px;">
     <h2>Zona Berbahaya</h2>
     <p class="description">
-        <strong>PERINGATAN:</strong> Aksi di bawah ini bersifat destruktif dan tidak dapat diurungkan.
-        Gunakan ini untuk membersihkan data transaksional (seperti pengguna, konten, penjualan) jika Anda ingin memulai ulang dari awal tanpa menghapus konfigurasi bot atau channel.
+        <strong>PERINGATAN:</strong> Aksi di bawah ini bersifat destruktif dan akan menghapus semua tabel yang ada sebelum membuat ulang skema dari file yang dipilih.
     </p>
-    <form action="database.php" method="post" onsubmit="return confirm('PERINGATAN KERAS!\n\nAnda akan MENGHAPUS SEMUA data pengguna, konten, dan penjualan secara permanen.\n\nAksi ini tidak dapat diurungkan.\n\nLanjutkan?');">
-        <input type="hidden" name="action" value="clean_database">
-        <button type="submit" class="btn btn-danger">Bersihkan Semua Data Transaksional</button>
+    <form action="database.php" method="post" onsubmit="return confirm('PERINGATAN KERAS!\n\nAnda akan MENGHAPUS SEMUA TABEL dan membuat ulang skema database dari file yang dipilih.\n\nAksi ini tidak dapat diurungkan.\n\nLanjutkan?');">
+        <input type="hidden" name="action" value="reset_with_file">
+
+        <label for="sql_file">Pilih File Skema SQL:</label>
+        <select name="sql_file" id="sql_file" style="width: 100%; padding: 8px; margin-bottom: 15px;">
+            <option value="updated_schema.sql">updated_schema.sql (Disarankan)</option>
+            <option value="setup.sql">setup.sql (Skema Awal/Lama)</option>
+        </select>
+
+        <button type="submit" class="btn btn-danger">Reset Database dengan File Pilihan</button>
     </form>
 </div>
 
