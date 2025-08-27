@@ -76,6 +76,7 @@ $stmt->execute();
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 
+
 // --- AKHIR LOGIKA PAGINATION ---
 
 $page_title = "Chat dengan " . htmlspecialchars($user_info['first_name']);
