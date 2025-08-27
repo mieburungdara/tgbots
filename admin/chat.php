@@ -74,7 +74,7 @@ $stmt->bindValue(3, $limit, PDO::PARAM_INT);
 $stmt->bindValue(4, $offset, PDO::PARAM_INT);
 $stmt->execute();
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
+var_dump($messages);
 // --- UNTUK DEBUGGING ---
 $debug_queries = [
     'Count Query' => [
