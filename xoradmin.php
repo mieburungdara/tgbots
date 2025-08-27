@@ -5,7 +5,13 @@
 session_start();
 
 // --- Konfigurasi ---
-$correct_password = 'sup3r4dmin';
+// Memuat konfigurasi utama, termasuk password
+if (file_exists(__DIR__ . '/config.php')) {
+    require_once __DIR__ . '/config.php';
+}
+
+// Menetapkan password dari config atau menggunakan nilai default jika tidak ada
+$correct_password = defined('XOR_ADMIN_PASSWORD') ? XOR_ADMIN_PASSWORD : 'sup3r4dmin';
 $sql_schema_file = 'updated_schema.sql';
 
 // --- Inisialisasi Variabel ---
