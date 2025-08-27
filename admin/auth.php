@@ -46,7 +46,7 @@ if (isset($_GET['token'])) {
 
             session_regenerate_id(true); // Keamanan: cegah session fixation
             $_SESSION['is_admin'] = true;
-            $_SESSION['telegram_id'] = $user['id'];
+            $_SESSION['user_id'] = $user['id'];
             $_SESSION['user_first_name'] = $user['first_name'];
 
             // Redirect untuk membersihkan token dari URL
@@ -68,4 +68,4 @@ if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
 }
 
 // Jika lolos dari semua pemeriksaan, pengguna diautentikasi.
-// Variabel sesi seperti $_SESSION['user_id'] tersedia untuk skrip lainnya.
+// Variabel sesi seperti $_SESSION['user_id'] dan $_SESSION['user_first_name'] tersedia untuk skrip lainnya.

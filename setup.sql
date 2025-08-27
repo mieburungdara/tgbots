@@ -28,29 +28,32 @@ DROP TABLE IF EXISTS `chats`; -- Hapus juga tabel lama jika ada
 DROP TABLE IF EXISTS `bots`;
 
 -- Tabel untuk menyimpan informasi bot
-CREATE TABLE `bots` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) NOT NULL COMMENT 'Nama bot untuk identifikasi di admin panel',
-  `token` varchar(255) NOT NULL COMMENT 'Token API dari BotFather',
-  `username` varchar(255) DEFAULT NULL COMMENT 'Username bot (@namabot)',
-  `first_name` varchar(255) DEFAULT NULL COMMENT 'Nama depan bot',
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `token` (`token`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE `bots`  (
+  `id` bigint NOT NULL COMMENT 'Telegram Bot ID unik',
+  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'Nama bot untuk identifikasi di admin panel',
+  `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'Token API dari BotFather',
+  `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Username bot (@namabot)',
+  `first_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Nama depan bot',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `token`(`token` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- Tabel untuk menyimpan informasi pengguna yang berinteraksi dengan bot
-CREATE TABLE `users` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `telegram_id` bigint(20) NOT NULL COMMENT 'User ID unik dari Telegram',
-  `first_name` varchar(255) DEFAULT NULL,
-  `last_name` varchar(255) DEFAULT NULL,
-  `username` varchar(255) DEFAULT NULL,
-  `language_code` varchar(10) DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `telegram_id` (`telegram_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+CREATE TABLE `users`  (
+  `id` bigint NOT NULL COMMENT 'User ID unik dari Telegram',
+  `public_seller_id` char(4) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `seller_package_sequence` int UNSIGNED NOT NULL DEFAULT 0,
+  `first_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `last_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `language_code` varchar(10) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `balance` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT 'Saldo internal pengguna',
+  `status` enum('active','blocked') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `public_seller_id`(`public_seller_id` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- Tabel untuk relasi antara pengguna dan bot
 CREATE TABLE `rel_user_bot` (

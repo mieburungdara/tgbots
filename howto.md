@@ -66,7 +66,7 @@ Untuk memudahkan melihat paket besar, konten ditampilkan per halaman. Setiap "ha
 Admin (yang ID Telegram-nya diatur di `config.php`) memiliki perintah khusus:
 
 1.  **Menambah Saldo (Untuk Uji Coba):**
-    *   **Perintah:** `/dev_addsaldo <user_telegram_id> <jumlah>`
+    *   **Perintah:** `/dev_addsaldo <user_id> <jumlah>`
     *   **Contoh:** `/dev_addsaldo 12345678 100000`
     *   **Fungsi:** Menambahkan saldo ke pengguna tertentu. Ini penting untuk memungkinkan pembeli melakukan transaksi pertama mereka.
 

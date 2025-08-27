@@ -1,8 +1,10 @@
--- Menambahkan kolom untuk ID publik penjual dan urutan paket
-ALTER TABLE users
-ADD COLUMN public_seller_id CHAR(4) NULL UNIQUE AFTER telegram_id,
-ADD COLUMN seller_package_sequence INT UNSIGNED NOT NULL DEFAULT 0 AFTER public_seller_id;
-
--- Menambahkan kolom untuk ID publik paket
-ALTER TABLE media_packages
-ADD COLUMN public_id VARCHAR(15) NULL UNIQUE AFTER id;
+-- MIGRATION 018: DISABLED.
+--
+-- This migration attempts to add a column after `telegram_id`, which no longer
+-- exists in the final schema (`updated_schema.sql`). The user ID column is now `id`.
+--
+-- To prevent errors during migration for new setups, this script is disabled.
+-- The final, correct schema should be applied directly from `updated_schema.sql`.
+--
+-- Original Author: Jules (AI)
+-- Date: 2025-08-27

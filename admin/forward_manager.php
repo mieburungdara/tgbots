@@ -49,7 +49,7 @@ try {
 
     // 2. Ambil daftar admin
     $admins_stmt = $pdo->query("
-        SELECT u.telegram_id FROM users u
+        SELECT u.id FROM users u
         JOIN user_roles ur ON u.id = ur.user_id
         JOIN roles r ON ur.role_id = r.id
         WHERE r.name = 'Admin'
@@ -65,9 +65,9 @@ try {
 
     $base_sql = "
         SELECT mf.chat_id, mf.message_id, mf.caption, mf.created_at,
-               u.first_name, u.username, u.telegram_id
+               u.first_name, u.username, u.id as telegram_id
         FROM media_files mf
-        LEFT JOIN users u ON mf.user_id = u.telegram_id
+        LEFT JOIN users u ON mf.user_id = u.id
     ";
     $sql = $is_single
         ? $base_sql . " WHERE mf.id = ?"

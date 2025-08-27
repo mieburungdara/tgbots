@@ -17,26 +17,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $message = '';
     // Aksi untuk mengubah status blokir
     if ($_POST['action'] === 'toggle_block') {
-        $telegram_id_to_toggle = (int)($_POST['user_id'] ?? 0); // Still user_id from form, but holds telegram_id
+        $user_id_to_toggle = (int)($_POST['user_id'] ?? 0);
         $bot_id_to_toggle = (int)($_POST['bot_id'] ?? 0);
-        if ($telegram_id_to_toggle && $bot_id_to_toggle) {
+        if ($user_id_to_toggle && $bot_id_to_toggle) {
             $stmt = $pdo->prepare("SELECT is_blocked FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
-            $stmt->execute([$telegram_id_to_toggle, $bot_id_to_toggle]);
+            $stmt->execute([$user_id_to_toggle, $bot_id_to_toggle]);
             $current_status = $stmt->fetchColumn();
             if ($current_status !== false) {
                 $new_status = $current_status ? 0 : 1;
                 $update_stmt = $pdo->prepare("UPDATE rel_user_bot SET is_blocked = ? WHERE user_id = ? AND bot_id = ?");
-                $update_stmt->execute([$new_status, $telegram_id_to_toggle, $bot_id_to_toggle]);
+                $update_stmt->execute([$new_status, $user_id_to_toggle, $bot_id_to_toggle]);
                 $message = "Status blokir pengguna berhasil diubah.";
             }
         }
     // Aksi untuk memperbarui saldo
     } elseif ($_POST['action'] === 'update_balance') {
-        $telegram_id_to_update = (int)($_POST['user_id'] ?? 0); // Still user_id from form, but holds telegram_id
+        $user_id_to_update = (int)($_POST['user_id'] ?? 0);
         $new_balance = filter_var($_POST['balance'] ?? false, FILTER_VALIDATE_FLOAT);
-        if ($telegram_id_to_update && $new_balance !== false) {
-            $update_stmt = $pdo->prepare("UPDATE users SET balance = ? WHERE telegram_id = ?");
-            $message = $update_stmt->execute([$new_balance, $telegram_id_to_update]) ? "Saldo berhasil diperbarui." : "Gagal memperbarui saldo.";
+        if ($user_id_to_update && $new_balance !== false) {
+            $update_stmt = $pdo->prepare("UPDATE users SET balance = ? WHERE id = ?");
+            $message = $update_stmt->execute([$new_balance, $user_id_to_update]) ? "Saldo berhasil diperbarui." : "Gagal memperbarui saldo.";
         } else {
             $message = "Input tidak valid.";
         }
@@ -59,9 +59,9 @@ $where_clause = '';
 $params = [];
 if (!empty($search_term)) {
     // Menggunakan placeholder unik untuk setiap kondisi untuk menghindari error di beberapa driver PDO
-    $where_clause = "WHERE u.telegram_id = :search_telegram_id OR u.first_name LIKE :like_fn OR u.last_name LIKE :like_ln OR u.username LIKE :like_un";
+    $where_clause = "WHERE u.id = :search_id OR u.first_name LIKE :like_fn OR u.last_name LIKE :like_ln OR u.username LIKE :like_un";
     $params = [
-        ':search_telegram_id' => $search_term,
+        ':search_id' => $search_term,
         ':like_fn' => "%$search_term%",
         ':like_ln' => "%$search_term%",
         ':like_un' => "%$search_term%"
@@ -69,8 +69,8 @@ if (!empty($search_term)) {
 }
 
 // --- Logika Pengurutan ---
-$sort_columns = ['telegram_id', 'first_name', 'username', 'status', 'roles'];
-$sort_by = in_array($_GET['sort'] ?? '', $sort_columns) ? $_GET['sort'] : 'telegram_id';
+$sort_columns = ['id', 'first_name', 'username', 'status', 'roles'];
+$sort_by = in_array($_GET['sort'] ?? '', $sort_columns) ? $_GET['sort'] : 'id';
 $order = strtolower($_GET['order'] ?? '') === 'asc' ? 'ASC' : 'DESC';
 // Perlu penanganan khusus untuk sorting berdasarkan 'roles' karena ini adalah kolom agregat
 $order_by_column = $sort_by === 'roles' ? 'roles' : "u.{$sort_by}";
@@ -90,12 +90,12 @@ $total_pages = ceil($total_users / $limit);
 
 // --- Ambil data pengguna dari database dengan peran mereka ---
 $sql = "
-    SELECT u.telegram_id, u.first_name, u.last_name, u.username, u.status, GROUP_CONCAT(r.name SEPARATOR ', ') as roles
+    SELECT u.id, u.first_name, u.last_name, u.username, u.status, GROUP_CONCAT(r.name SEPARATOR ', ') as roles
     FROM users u
-    LEFT JOIN user_roles ur ON u.telegram_id = ur.user_id
+    LEFT JOIN user_roles ur ON u.id = ur.user_id
     LEFT JOIN roles r ON ur.role_id = r.id
     {$where_clause}
-    GROUP BY u.telegram_id
+    GROUP BY u.id
     {$order_by_clause}
     LIMIT :limit OFFSET :offset
 ";
@@ -139,7 +139,7 @@ require_once __DIR__ . '/../partials/header.php';
     <table class="chat-log-table">
         <thead>
             <tr>
-                <th><a href="<?= get_sort_link('telegram_id', $sort_by, $order) ?>">Telegram ID</a></th>
+                <th><a href="<?= get_sort_link('id', $sort_by, $order) ?>">User ID</a></th>
                 <th><a href="<?= get_sort_link('first_name', $sort_by, $order) ?>">Nama</a></th>
                 <th><a href="<?= get_sort_link('username', $sort_by, $order) ?>">Username</a></th>
                 <th><a href="<?= get_sort_link('status', $sort_by, $order) ?>">Status</a></th>
@@ -154,8 +154,8 @@ require_once __DIR__ . '/../partials/header.php';
                 </tr>
             <?php else: ?>
                 <?php foreach ($users as $user): ?>
-                <tr id="user-row-<?= $user['telegram_id'] ?>">
-                    <td><?= htmlspecialchars($user['telegram_id']) ?></td>
+                <tr id="user-row-<?= $user['id'] ?>">
+                    <td><?= htmlspecialchars($user['id']) ?></td>
                     <td><?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></td>
                     <td>@<?= htmlspecialchars($user['username'] ?? 'N/A') ?></td>
                     <td><span class="status-<?= htmlspecialchars($user['status']) ?>"><?= htmlspecialchars(ucfirst($user['status'])) ?></span></td>
@@ -170,7 +170,7 @@ require_once __DIR__ . '/../partials/header.php';
                     </td>
                     <td>
                         <a href="index.php?search_user=<?= htmlspecialchars($user['username'] ?? $user['first_name']) ?>" class="btn btn-sm">Lihat Chat</a>
-                        <button class="btn btn-sm btn-manage-roles" data-telegram-id="<?= $user['telegram_id'] ?>" data-user-name="<?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>">Kelola Peran</button>
+                        <button class="btn btn-sm btn-manage-roles" data-user-id="<?= $user['id'] ?>" data-user-name="<?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>">Kelola Peran</button>
                     </td>
                 </tr>
                 <?php endforeach; ?>
@@ -233,14 +233,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const allRoles = <?= json_encode($all_roles) ?>;
 
-    function openModal(telegramId, userName) {
-        modalUserIdInput.value = telegramId;
+    function openModal(userId, userName) {
+        modalUserIdInput.value = userId;
         modalTitle.textContent = 'Kelola Peran untuk ' + userName;
         checkboxContainer.innerHTML = 'Memuat peran...';
         modal.style.display = 'block';
 
         // Fetch user's current roles
-        fetch(`api/get_user_roles.php?telegram_id=${telegramId}`)
+        fetch(`api/get_user_roles.php?telegram_id=${userId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
@@ -275,9 +275,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     manageButtons.forEach(button => {
         button.addEventListener('click', function() {
-            const telegramId = this.getAttribute('data-telegram-id');
+            const userId = this.getAttribute('data-user-id');
             const userName = this.getAttribute('data-user-name');
-            openModal(telegramId, userName);
+            openModal(userId, userName);
         });
     });
 
@@ -289,7 +289,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     saveButton.addEventListener('click', function() {
-        const telegramId = modalUserIdInput.value;
+        const userId = modalUserIdInput.value;
         const checkedRoles = Array.from(checkboxContainer.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
 
         saveButton.textContent = 'Menyimpan...';
@@ -299,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                telegram_id: telegramId,
+                telegram_id: userId,
                 role_ids: checkedRoles
             })
         })
@@ -308,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.success) {
                 closeModal();
                 // Optionally, refresh the roles in the table row without a full page reload
-                updateTableRowRoles(telegramId, checkedRoles);
+                updateTableRowRoles(userId, checkedRoles);
                 // Show a temporary success message
                 const flashMessage = document.getElementById('flash-message') || document.createElement('div');
                 flashMessage.className = 'alert alert-success';
@@ -330,8 +330,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    function updateTableRowRoles(telegramId, newRoleIds) {
-        const row = document.getElementById(`user-row-${telegramId}`);
+    function updateTableRowRoles(userId, newRoleIds) {
+        const row = document.getElementById(`user-row-${userId}`);
         if (!row) return;
 
         const rolesCell = row.querySelector('.roles-cell');

@@ -40,7 +40,7 @@ $sql = "
         b.name as bot_name,
         b.id as bot_id
     FROM media_files mf
-    LEFT JOIN users u ON mf.user_id = u.telegram_id
+    LEFT JOIN users u ON mf.user_id = u.id
     LEFT JOIN messages m ON mf.message_id = m.telegram_message_id
     LEFT JOIN bots b ON m.bot_id = b.id
     WHERE b.id IS NOT NULL

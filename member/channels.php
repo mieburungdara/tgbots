@@ -47,8 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['channel_identifier'])
                     throw new Exception("Bot yang dipilih tidak valid atau tidak memiliki token.");
                 }
                 $telegram_api = new TelegramAPI($bot_token);
-                // $bot_telegram_id is already the selected ID.
-                // $bot_telegram_id = $telegram_api->getBotId();
 
                 // 1. Verifikasi Channel
                 $bot_member_channel = $telegram_api->getChatMember($channel_identifier, $selected_bot_id);
