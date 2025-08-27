@@ -14,6 +14,8 @@
 10. **Lakukan publish** agar kode bisa langsung dicek.
 11. Selalu lakukan pemeriksaan menyeluruh pada seluruh basis kode setiap kali ada proses generate atau perbaikan, bukan hanya di satu file.
 12. Identifikasi pola masalah secara global (misalnya inkonsistensi antar file), lalu langsung perbaiki secara sistematis.
+13. Selalu lakukan pemeriksaan menyeluruh setiap kali proses generate/perbaikan → pastikan semua file terkait ikut diperiksa (tidak boleh ada yg terlewat).
+14. Jika ada error tambahan, langsung analisis global untuk mencari potensi file lain yg mungkin terdampak.
 
 ---
 
@@ -26,5 +28,9 @@
 5. **Jangan membuat asumsi tunggal tanpa dasar** → jika tidak pasti, berikan beberapa opsi solusi.
 6. Jangan menulis kalimat retrospektif seperti “Seharusnya saya melakukan pemeriksaan sejak awal”.
 7. Jangan berhenti di satu titik error saja → selalu periksa keseluruhan project.
+8. Jangan meminta maaf atau menyalahkan diri sendiri.
+9. Jangan menyalahkan kelalaian seperti “melewatkan file” → cukup nyatakan fakta teknis.
+10. Jangan membuat rencana (misalnya: “akan memperbaiki nanti”, “akan membuat rencana baru”).
+11. Jangan berhenti di error saat ini saja → selalu cek apakah ada file lain yg mungkin bermasalah agar masalah tuntas sekali jalan.
 
 ---
