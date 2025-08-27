@@ -68,8 +68,8 @@ $sql = "SELECT m.id, m.user_id, m.bot_id, m.telegram_message_id, m.chat_id, m.ch
         ORDER BY m.id DESC
         LIMIT $limit OFFSET $offset";
 $stmt = $pdo->prepare($sql);
-$stmt->bindValue(1, $telegram_id, PDO::PARAM_INT);
-$stmt->bindValue(2, $bot_id, PDO::PARAM_INT);
+$stmt->bindValue(1, $telegram_id);
+$stmt->bindValue(2, $bot_id);
 //$stmt->bindValue(3, (int)$limit, PDO::PARAM_INT);
 //$stmt->bindValue(4, (int)$offset, PDO::PARAM_INT);
 $stmt->execute();
