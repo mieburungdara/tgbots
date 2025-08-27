@@ -74,7 +74,17 @@ $stmt->bindValue(2, $bot_id, PDO::PARAM_INT);
 //$stmt->bindValue(4, (int)$offset, PDO::PARAM_INT);
 $stmt->execute();
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
-var_dump($messages);
+
+
+echo "<pre>DEBUG:
+Telegram ID: {$telegram_id}
+Bot ID: {$bot_id}
+Page: {$page}, Limit: {$limit}, Offset: {$offset}
+Total Pesan: {$total_messages}
+Messages Fetched: " . count($messages) . "
+</pre>";
+
+
 // --- UNTUK DEBUGGING ---
 $debug_queries = [
     'Count Query' => [
