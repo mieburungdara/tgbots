@@ -130,7 +130,7 @@ function get_sort_link(string $column, string $current_sort_by, string $current_
  */
 function get_default_bot_id(PDO $pdo): ?int
 {
-    $stmt = $pdo->query("SELECT telegram_bot_id FROM bots ORDER BY created_at ASC LIMIT 1");
+    $stmt = $pdo->query("SELECT id FROM bots ORDER BY created_at ASC LIMIT 1");
     $result = $stmt->fetchColumn();
     return $result ? (int)$result : null;
 }
@@ -139,28 +139,28 @@ function get_default_bot_id(PDO $pdo): ?int
  * Mendapatkan token API untuk bot tertentu.
  *
  * @param PDO $pdo Objek koneksi PDO.
- * @param int $telegram_bot_id ID Telegram bot.
+ * @param int $bot_id ID bot.
  * @return string|null Token bot atau null jika tidak ditemukan.
  */
-function get_bot_token(PDO $pdo, int $telegram_bot_id): ?string
+function get_bot_token(PDO $pdo, int $bot_id): ?string
 {
-    $stmt = $pdo->prepare("SELECT token FROM bots WHERE telegram_bot_id = ?");
-    $stmt->execute([$telegram_bot_id]);
+    $stmt = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
+    $stmt->execute([$bot_id]);
     $token = $stmt->fetchColumn();
     return $token ?: null;
 }
 
 /**
- * Mendapatkan detail lengkap sebuah bot berdasarkan ID Telegram-nya.
+ * Mendapatkan detail lengkap sebuah bot berdasarkan ID-nya.
  *
  * @param PDO $pdo Objek koneksi PDO.
- * @param int $telegram_bot_id ID Telegram bot.
+ * @param int $bot_id ID bot.
  * @return array|null Detail bot sebagai array asosiatif, atau null jika tidak ditemukan.
  */
-function get_bot_details(PDO $pdo, int $telegram_bot_id): ?array
+function get_bot_details(PDO $pdo, int $bot_id): ?array
 {
-    $stmt = $pdo->prepare("SELECT * FROM bots WHERE telegram_bot_id = ?");
-    $stmt->execute([$telegram_bot_id]);
+    $stmt = $pdo->prepare("SELECT * FROM bots WHERE id = ?");
+    $stmt->execute([$bot_id]);
     $result = $stmt->fetch(PDO::FETCH_ASSOC);
     return $result ?: null;
 }
@@ -173,6 +173,6 @@ function get_bot_details(PDO $pdo, int $telegram_bot_id): ?array
  */
 function get_all_bots(PDO $pdo): array
 {
-    $stmt = $pdo->query("SELECT telegram_bot_id, name, username FROM bots ORDER BY name ASC");
+    $stmt = $pdo->query("SELECT id, name, username FROM bots ORDER BY name ASC");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
