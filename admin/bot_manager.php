@@ -28,10 +28,10 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // TODO: Add admin authentication check here
 
 $action = $_POST['action'] ?? null;
-$telegram_bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
+$bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
 $response = ['status' => 'error', 'message' => 'Aksi tidak diketahui.'];
 
-if ($action === 'get_me' && $telegram_bot_id > 0) {
+if ($action === 'get_me' && $bot_id > 0) {
     try {
         $pdo = get_db_connection();
         if (!$pdo) {
@@ -39,12 +39,12 @@ if ($action === 'get_me' && $telegram_bot_id > 0) {
         }
 
         // 1. Ambil token bot dari database
-        $stmt_token = $pdo->prepare("SELECT token FROM bots WHERE telegram_bot_id = ?");
-        $stmt_token->execute([$telegram_bot_id]);
+        $stmt_token = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
+        $stmt_token->execute([$bot_id]);
         $token = $stmt_token->fetchColumn();
 
         if (!$token) {
-            throw new Exception("Bot dengan ID {$telegram_bot_id} tidak ditemukan.");
+            throw new Exception("Bot dengan ID {$bot_id} tidak ditemukan.");
         }
 
         // 2. Panggil API Telegram
@@ -59,15 +59,15 @@ if ($action === 'get_me' && $telegram_bot_id > 0) {
         $bot_result = $bot_info['result'];
 
         // Verifikasi bahwa token sesuai dengan ID bot yang di-request
-        if ($bot_result['id'] != $telegram_bot_id) {
+        if ($bot_result['id'] != $bot_id) {
             throw new Exception("Token tidak cocok dengan ID bot yang sedang diperbarui. Keamanan terverifikasi.");
         }
 
         $first_name = $bot_result['first_name'];
         $username = $bot_result['username'] ?? null;
 
-        $stmt_update = $pdo->prepare("UPDATE bots SET first_name = ?, username = ? WHERE telegram_bot_id = ?");
-        $stmt_update->execute([$first_name, $username, $telegram_bot_id]);
+        $stmt_update = $pdo->prepare("UPDATE bots SET first_name = ?, username = ? WHERE id = ?");
+        $stmt_update->execute([$first_name, $username, $bot_id]);
 
         $response = [
             'status' => 'success',

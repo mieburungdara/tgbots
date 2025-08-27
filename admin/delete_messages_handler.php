@@ -20,7 +20,7 @@ if (!$pdo) {
 // Ambil data dari form
 $message_ids = $_POST['message_ids'] ?? [];
 $action = $_POST['action'] ?? '';
-$telegram_bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0; // This now holds telegram_bot_id
+$bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
 
 // Logika untuk menangani sumber halaman yang berbeda (user chat vs channel chat)
 $telegram_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0; // This now holds telegram_id
@@ -29,11 +29,11 @@ $source_page = $_POST['source_page'] ?? 'user_chat';
 
 // Tentukan URL redirect berdasarkan sumber
 if ($source_page === 'channel_chat') {
-    $redirect_url = "channel_chat.php?chat_id=$chat_id_param&bot_id=$telegram_bot_id";
-    $is_valid = !empty($message_ids) && is_array($message_ids) && !empty($action) && $chat_id_param && $telegram_bot_id;
+    $redirect_url = "channel_chat.php?chat_id=$chat_id_param&bot_id=$bot_id";
+    $is_valid = !empty($message_ids) && is_array($message_ids) && !empty($action) && $chat_id_param && $bot_id;
 } else {
-    $redirect_url = "chat.php?telegram_id=$telegram_id&bot_id=$telegram_bot_id";
-    $is_valid = !empty($message_ids) && is_array($message_ids) && !empty($action) && $telegram_id && $telegram_bot_id;
+    $redirect_url = "chat.php?telegram_id=$telegram_id&bot_id=$bot_id";
+    $is_valid = !empty($message_ids) && is_array($message_ids) && !empty($action) && $telegram_id && $bot_id;
 }
 
 // Validasi input
@@ -43,8 +43,8 @@ if (!$is_valid) {
 }
 
 // Ambil info bot untuk inisialisasi API
-$stmt_bot = $pdo->prepare("SELECT token FROM bots WHERE telegram_bot_id = ?");
-$stmt_bot->execute([$telegram_bot_id]);
+$stmt_bot = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
+$stmt_bot->execute([$bot_id]);
 $bot_info = $stmt_bot->fetch();
 
 if (!$bot_info) {

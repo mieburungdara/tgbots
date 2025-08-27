@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.4.2] - 2025-08-27
+
+### Diperbaiki
+- **Fatal Error di Dasbor Percakapan**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'telegram_bot_id'` di halaman utama admin (`admin/index.php`).
+  - **Penyebab**: Kode di `admin/index.php` mencoba mengambil kolom `telegram_bot_id` dari tabel `bots`, padahal skema database yang benar (`updated_schema.sql`) menamai kolom tersebut `id`.
+  - **Solusi**: Mengubah semua referensi ke `telegram_bot_id` menjadi `id` di `admin/index.php`, termasuk query SQL dan variabel terkait, agar sesuai dengan struktur database.
+
 ## [4.4.1] - 2025-08-27
 
 ### Diperbaiki

@@ -27,10 +27,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 
 // Validasi input
 $bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
-$telegram_bot_id = filter_input(INPUT_POST, 'telegram_bot_id', FILTER_VALIDATE_INT);
 $settings_from_form = $_POST['settings'] ?? [];
 
-if (!$bot_id || !$telegram_bot_id) {
+if (!$bot_id) {
     // Jika ID tidak valid, kembali ke daftar bot utama
     $_SESSION['status_message'] = 'Error: ID Bot tidak valid.';
     header('Location: bots.php');
@@ -38,7 +37,7 @@ if (!$bot_id || !$telegram_bot_id) {
 }
 
 // Redirect kembali ke halaman edit bot jika terjadi error
-$redirect_url = "edit_bot.php?id=" . $telegram_bot_id;
+$redirect_url = "edit_bot.php?id=" . $bot_id;
 
 $pdo = get_db_connection();
 if (!$pdo) {

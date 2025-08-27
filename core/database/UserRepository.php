@@ -7,18 +7,18 @@
 class UserRepository
 {
     private $pdo;
-    private $telegram_bot_id;
+    private $bot_id;
 
     /**
      * Membuat instance UserRepository.
      *
      * @param PDO $pdo Objek koneksi database.
-     * @param int $telegram_bot_id ID Telegram bot yang sedang berinteraksi dengan pengguna.
+     * @param int $bot_id ID Telegram bot yang sedang berinteraksi dengan pengguna.
      */
-    public function __construct(PDO $pdo, int $telegram_bot_id)
+    public function __construct(PDO $pdo, int $bot_id)
     {
         $this->pdo = $pdo;
-        $this->telegram_bot_id = $telegram_bot_id;
+        $this->bot_id = $bot_id;
     }
 
     /**
@@ -88,7 +88,7 @@ class UserRepository
 
         // Pastikan relasi user-bot ada (gunakan INSERT IGNORE untuk efisiensi)
         $this->pdo->prepare("INSERT IGNORE INTO rel_user_bot (user_id, bot_id) VALUES (?, ?)")
-                  ->execute([$telegram_user_id, $this->telegram_bot_id]);
+                  ->execute([$telegram_user_id, $this->bot_id]);
 
         // Entri member tidak lagi diperlukan karena tabelnya digabungkan.
 
@@ -117,7 +117,7 @@ class UserRepository
              WHERE u.id = ?
              LIMIT 1"
         );
-        $stmt_user->execute([$this->telegram_bot_id, $telegram_user_id]);
+        $stmt_user->execute([$this->bot_id, $telegram_user_id]);
         return $stmt_user->fetch(PDO::FETCH_ASSOC);
     }
 
@@ -133,7 +133,7 @@ class UserRepository
     public function setUserState(int $telegram_user_id, ?string $state, ?array $context = null)
     {
         $stmt = $this->pdo->prepare("UPDATE rel_user_bot SET state = ?, state_context = ? WHERE user_id = ? AND bot_id = ?");
-        $stmt->execute([$state, $context ? json_encode($context) : null, $telegram_user_id, $this->telegram_bot_id]);
+        $stmt->execute([$state, $context ? json_encode($context) : null, $telegram_user_id, $this->bot_id]);
     }
 
     /**
@@ -141,9 +141,9 @@ class UserRepository
      *
      * @return int ID Telegram bot.
      */
-    public function getTelegramBotId(): int
+    public function getBotId(): int
     {
-        return $this->telegram_bot_id;
+        return $this->bot_id;
     }
 
     /**

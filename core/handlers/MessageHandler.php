@@ -86,7 +86,7 @@ class MessageHandler implements HandlerInterface
      */
     private function handleState(App $app, array $message): void
     {
-        $user_repo = new UserRepository($app->pdo, $app->bot['telegram_bot_id']);
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
         $text = $message['text'];
         $state_context = json_decode($app->user['state_context'] ?? '{}', true);
 
@@ -303,7 +303,7 @@ EOT;
      */
     private function handleSellCommand(App $app, array $message)
     {
-        $user_repo = new UserRepository($app->pdo, $app->bot['telegram_bot_id']);
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
 
         if (!isset($message['reply_to_message'])) {
             $app->telegram_api->sendMessage($app->chat_id, "Untuk menjual, silakan reply media yang ingin Anda jual dengan perintah /sell.");
@@ -478,7 +478,7 @@ EOT;
      */
     private function addMediaToNewPackage(App $app, array $message)
     {
-        $user_repo = new UserRepository($app->pdo, $app->bot['telegram_bot_id']);
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
 
         if ($app->user['state'] !== 'awaiting_price') {
             $app->telegram_api->sendMessage($app->chat_id, "⚠️ Perintah ini hanya bisa digunakan saat Anda sedang dalam proses menjual item.");

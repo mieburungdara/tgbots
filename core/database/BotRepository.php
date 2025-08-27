@@ -20,14 +20,14 @@ class BotRepository
     /**
      * Mencari bot berdasarkan ID Telegram-nya dan mengembalikan data bot.
      *
-     * @param int $telegram_bot_id ID numerik bot di Telegram.
+     * @param int $bot_id ID numerik bot di Telegram.
      * @return array|false Mengembalikan data bot sebagai array asosiatif jika ditemukan, atau `false` jika tidak.
      */
-    public function findBotByTelegramId(int $telegram_bot_id)
+    public function findBotByTelegramId(int $bot_id)
     {
         // Bot sekarang dicari berdasarkan ID Telegram-nya, yang merupakan Primary Key.
         $stmt = $this->pdo->prepare("SELECT id, token FROM bots WHERE id = ?");
-        $stmt->execute([$telegram_bot_id]);
+        $stmt->execute([$bot_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 

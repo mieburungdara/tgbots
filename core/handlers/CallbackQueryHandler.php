@@ -158,7 +158,7 @@ class CallbackQueryHandler implements HandlerInterface
      */
     private function handleRegisterSeller(App $app, array $callback_query)
     {
-        $user_repo = new UserRepository($app->pdo, $app->bot['telegram_bot_id']);
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
 
         if (!empty($app->user['public_seller_id'])) {
             $app->telegram_api->answerCallbackQuery($callback_query['id'], 'Anda sudah terdaftar sebagai penjual.', true);

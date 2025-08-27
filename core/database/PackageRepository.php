@@ -314,13 +314,13 @@ class PackageRepository
      * Sebaiknya dijalankan di dalam sebuah transaksi.
      *
      * @param int $seller_telegram_id ID Telegram penjual.
-     * @param int $telegram_bot_id ID Telegram bot yang digunakan untuk membuat paket.
+     * @param int $bot_id ID Telegram bot yang digunakan untuk membuat paket.
      * @param string $description Deskripsi paket.
      * @param int $thumbnail_media_id ID internal dari file media yang dijadikan thumbnail.
      * @return int ID internal dari paket yang baru dibuat.
      * @throws Exception Jika terjadi kegagalan dalam transaksi atau jika penjual tidak valid.
      */
-    public function createPackageWithPublicId(int $seller_telegram_id, int $telegram_bot_id, string $description, int $thumbnail_media_id): int
+    public function createPackageWithPublicId(int $seller_telegram_id, int $bot_id, string $description, int $thumbnail_media_id): int
     {
         try {
             // 1. Ambil dan kunci baris pengguna untuk mendapatkan urutan & ID publik
@@ -346,7 +346,7 @@ class PackageRepository
                 "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id)
                  VALUES (?, ?, ?, ?, 'pending', ?)"
             );
-            $stmt_package->execute([$seller_telegram_id, $telegram_bot_id, $description, $thumbnail_media_id, $public_id]);
+            $stmt_package->execute([$seller_telegram_id, $bot_id, $description, $thumbnail_media_id, $public_id]);
             $package_id = $this->pdo->lastInsertId();
 
             return $package_id;
