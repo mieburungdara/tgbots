@@ -14,7 +14,8 @@ $current_page = basename($_SERVER['PHP_SELF']);
         <a href="roles.php" class="<?= $current_page == 'roles.php' ? 'active' : '' ?>">Manajemen Peran</a>
         <a href="packages.php" class="<?= $current_page == 'packages.php' ? 'active' : '' ?>">Konten</a>
         <a href="media_logs.php" class="<?= $current_page == 'media_logs.php' ? 'active' : '' ?>">Log Media</a>
-        <a href="channels.php" class="<?= $current_page == 'channels.php' ? 'active' : '' ?>">Channel</a>
+        <a href="sales_channels.php" class="<?= $current_page == 'sales_channels.php' ? 'active' : '' ?>">Channel Jualan</a>
+        <a href="channels.php" class="<?= $current_page == 'channels.php' ? 'active' : '' ?>">Channel Penyimpanan</a>
         <a href="database.php" class="<?= $current_page == 'database.php' ? 'active' : '' ?>">Database</a>
         <a href="logs.php" class="<?= $current_page == 'logs.php' ? 'active' : '' ?>">Logs</a>
         <a href="telegram_logs.php" class="<?= $current_page == 'telegram_logs.php' ? 'active' : '' ?>">Log Error Telegram</a>
