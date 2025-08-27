@@ -17,4 +17,8 @@ define('BASE_URL', '');
 // Kosongkan jika tidak ingin menggunakan fitur ini.
 define('SUPER_ADMIN_TELEGRAM_ID', '');
 
+// (Opsional) Password untuk halaman admin `xoradmin.php`.
+// Sangat disarankan untuk mengubah nilai default ini ke password yang kuat.
+define('XOR_ADMIN_PASSWORD', 'sup3r4dmin');
+
 ?>
