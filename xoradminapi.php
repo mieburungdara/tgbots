@@ -25,11 +25,52 @@ if (!$is_authenticated || !$pdo) {
     exit;
 }
 
-$handler_response = ['status' => 'error', 'message' => 'Aksi tidak diketahui atau ID bot tidak valid.'];
+$handler_response = ['status' => 'error', 'message' => 'Aksi tidak diketahui atau input tidak valid.'];
 $post_action = $_POST['action'] ?? null;
-$bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
 
-if ($bot_id > 0 && in_array($post_action, ['get-me', 'set-webhook', 'check-webhook', 'delete-webhook'])) {
+if ($post_action === 'get_user_roles' && isset($_POST['user_id'])) {
+    try {
+        $user_id = (int)$_POST['user_id'];
+        $stmt = $pdo->prepare("SELECT role_id FROM user_roles WHERE user_id = ?");
+        $stmt->execute([$user_id]);
+        $role_ids = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $handler_response = ['status' => 'success', 'role_ids' => $role_ids];
+    } catch (Exception $e) {
+        $handler_response['message'] = 'Database error: ' . $e->getMessage();
+    }
+} elseif ($post_action === 'update_user_roles' && isset($_POST['user_id'], $_POST['role_ids'])) {
+    try {
+        $user_id = (int)$_POST['user_id'];
+        $role_ids = json_decode($_POST['role_ids']);
+        if (!is_array($role_ids)) {
+            throw new Exception("Format role_ids tidak valid.");
+        }
+
+        $pdo->beginTransaction();
+
+        // 1. Hapus semua peran lama pengguna
+        $stmt_delete = $pdo->prepare("DELETE FROM user_roles WHERE user_id = ?");
+        $stmt_delete->execute([$user_id]);
+
+        // 2. Masukkan peran baru
+        if (!empty($role_ids)) {
+            $stmt_insert = $pdo->prepare("INSERT INTO user_roles (user_id, role_id) VALUES (?, ?)");
+            foreach ($role_ids as $role_id) {
+                $stmt_insert->execute([$user_id, (int)$role_id]);
+            }
+        }
+
+        $pdo->commit();
+        $handler_response = ['status' => 'success', 'message' => 'Peran berhasil diperbarui.'];
+
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        $handler_response['message'] = 'Database error: ' . $e->getMessage();
+    }
+} elseif (isset($_POST['bot_id']) && in_array($post_action, ['get-me', 'set-webhook', 'check-webhook', 'delete-webhook'])) {
+    $bot_id = (int)$_POST['bot_id'];
     try {
         $stmt_token = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
         $stmt_token->execute([$bot_id]);
