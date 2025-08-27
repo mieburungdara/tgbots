@@ -1,5 +1,12 @@
 # Changelog
 
+## [4.6.1] - 2025-08-27
+
+### Diperbaiki
+- **Fatal Error di Halaman Channel Jualan**: Memperbaiki error `Undefined array key "bot_id"` dan `TypeError` di halaman `admin/sales_channels.php`.
+  - **Penyebab**: Kueri database tidak menyertakan `bot_id` dalam hasil, yang menyebabkan error saat mencoba mengambil token bot untuk panggilan API.
+  - **Solusi**: Menambahkan `ssc.bot_id` ke dalam `SELECT` pada kueri SQL untuk memastikan data yang diperlukan tersedia.
+
 ## [4.6.0] - 2025-08-27
 
 ### Fitur

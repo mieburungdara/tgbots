@@ -22,6 +22,7 @@ $sql = "
         ssc.discussion_group_id,
         ssc.is_active,
         ssc.created_at,
+        ssc.bot_id,
         u.first_name as seller_name,
         u.username as seller_username,
         b.username as bot_username
