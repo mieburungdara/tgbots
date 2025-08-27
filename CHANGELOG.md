@@ -3,9 +3,9 @@
 ## [4.6.2] - 2025-08-27
 
 ### Diperbaiki
-- **Pesan di Riwayat Chat Tidak Muncul**: Memperbaiki bug di halaman `admin/chat.php` di mana total jumlah pesan ditampilkan dengan benar, tetapi tabel riwayat pesan tetap kosong.
-  - **Penyebab**: Kueri SQL untuk mengambil data pesan menggunakan kondisi `JOIN` yang salah antara tabel `messages` dan `media_files`. Kueri tersebut mencoba mencocokkan `messages.telegram_message_id` dengan `media_files.message_id`, padahal seharusnya mencocokkan `messages.id` (primary key) dengan `media_files.message_id`.
-  - **Solusi**: Mengubah kondisi `JOIN` menjadi `ON m.id = mf.message_id` dan membuat daftar `SELECT` menjadi eksplisit untuk mencegah potensi masalah tumpang tindih nama kolom.
+- **Riwayat Chat Kosong Karena Integer Overflow**: Memperbaiki bug kritis di `admin/chat.php` yang menyebabkan riwayat chat tidak muncul untuk ID pengguna atau bot yang lebih besar dari batas 32-bit integer (sekitar 2.14 miliar).
+  - **Penyebab**: ID pengguna dan bot diikat ke kueri SQL menggunakan `PDO::PARAM_INT`. Ketika ID aktual (seperti 7.6 miliar) melebihi batas maksimum integer 32-bit, PDO akan memotongnya menjadi nilai yang salah sebelum mengirim kueri ke database, sehingga tidak ada baris yang ditemukan. Kueri `COUNT(*)` berhasil karena menggunakan metode `execute()` yang berbeda yang tidak memaksa tipe data.
+  - **Solusi**: Mengubah tipe parameter untuk `user_id` dan `bot_id` dari `PDO::PARAM_INT` menjadi `PDO::PARAM_STR` di `admin/chat.php`. Ini memastikan ID besar dikirim sebagai string dan tidak terpotong, memungkinkan database untuk mencocokkannya dengan benar terhadap kolom `BIGINT`.
 
 ## [4.6.1] - 2025-08-27
 
