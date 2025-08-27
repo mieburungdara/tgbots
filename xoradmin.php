@@ -5,40 +5,91 @@
 session_start();
 
 // --- Konfigurasi ---
-// Memuat konfigurasi utama, termasuk password
 if (file_exists(__DIR__ . '/config.php')) {
     require_once __DIR__ . '/config.php';
 }
-
-// Menetapkan password dari config atau menggunakan nilai default jika tidak ada
 $correct_password = defined('XOR_ADMIN_PASSWORD') ? XOR_ADMIN_PASSWORD : 'sup3r4dmin';
 $sql_schema_file = 'updated_schema.sql';
 
-// --- Inisialisasi Variabel ---
-$message = '';
-$error = '';
-$db_message = '';
-$db_error = '';
-$bot_message = '';
-$bot_error = '';
-$active_tab = 'bots'; // Tab default
-$action_view = 'list_bots'; // Tampilan default di tab bot
-
-// --- Inisialisasi Koneksi DB & Helper ---
-$pdo = null;
+// --- Inisialisasi ---
 $is_authenticated = isset($_SESSION['is_authenticated']) && $_SESSION['is_authenticated'];
-
+$pdo = null;
 if ($is_authenticated) {
     require_once __DIR__ . '/core/database.php';
     require_once __DIR__ . '/core/helpers.php';
     require_once __DIR__ . '/core/TelegramAPI.php';
     $pdo = get_db_connection();
-    if (!$pdo) {
-        $error = "Koneksi database gagal. Pastikan file `config.php` sudah benar.";
-    }
 }
 
-// --- Logika Proses ---
+// --- AJAX Request Handler ---
+// This block handles all AJAX requests and exits, ensuring no HTML is ever sent.
+if (isset($_POST['action']) && in_array($_POST['action'], ['get_me', 'set', 'check', 'delete'])) {
+    header('Content-Type: application/json');
+
+    if (!$is_authenticated || !$pdo) {
+        echo json_encode(['status' => 'error', 'message' => 'Sesi tidak valid atau koneksi database gagal. Silakan login kembali.']);
+        exit;
+    }
+
+    $handler_response = ['status' => 'error', 'message' => 'Aksi tidak diketahui atau ID bot tidak valid.'];
+    $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
+
+    if ($bot_id > 0) {
+        try {
+            $stmt_token = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
+            $stmt_token->execute([$bot_id]);
+            $token = $stmt_token->fetchColumn();
+            if (!$token) throw new Exception("Bot tidak ditemukan.");
+
+            $telegram_api = new TelegramAPI($token);
+            $post_action = $_POST['action'];
+            $result = null;
+
+            if ($post_action === 'get_me') {
+                $bot_info = $telegram_api->getMe();
+                if (!isset($bot_info['ok']) || !$bot_info['ok']) throw new Exception("Gagal mendapatkan info dari Telegram: " . ($bot_info['description'] ?? ''));
+                $bot_result = $bot_info['result'];
+                if ($bot_result['id'] != $bot_id) throw new Exception("Token tidak cocok dengan ID bot.");
+
+                $stmt_update = $pdo->prepare("UPDATE bots SET first_name = ?, username = ? WHERE id = ?");
+                $stmt_update->execute([$bot_result['first_name'], $bot_result['username'] ?? null, $bot_id]);
+
+                $handler_response = ['status' => 'success', 'message' => 'Informasi bot diperbarui.', 'data' => $bot_result];
+            } else { // Webhook actions
+                if ($post_action === 'set') {
+                    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+                    $webhook_url = $protocol . $_SERVER['HTTP_HOST'] . str_replace(basename(__FILE__), 'webhook.php', $_SERVER['PHP_SELF']) . '?id=' . $bot_id;
+                    $result = $telegram_api->setWebhook($webhook_url);
+                } elseif ($post_action === 'check') {
+                    $result = $telegram_api->getWebhookInfo();
+                } elseif ($post_action === 'delete') {
+                    $result = $telegram_api->deleteWebhook();
+                }
+                if ($result === false) throw new Exception("Gagal komunikasi dengan API Telegram.");
+                $handler_response = ['status' => 'success', 'data' => $result];
+            }
+        } catch (Exception $e) {
+            $handler_response['message'] = $e->getMessage();
+        }
+    }
+    echo json_encode($handler_response);
+    exit;
+}
+
+// --- Page Request Handler (Non-AJAX) ---
+$error = '';
+$db_message = '';
+$db_error = '';
+$bot_message = '';
+$bot_error = '';
+$action_view = 'list_bots';
+$active_tab = 'bots';
+
+if (isset($_GET['action']) && $_GET['action'] === 'db_reset') {
+    $action_view = 'db_reset';
+    $active_tab = 'db_reset';
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['login'])) {
         if (isset($_POST['password']) && $_POST['password'] === $correct_password) {
@@ -58,63 +109,36 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($is_authenticated && $pdo) {
-        $post_action = $_POST['action'] ?? null;
-
-        // --- Backend Handlers (AJAX) ---
-        if ($post_action === 'get_me' || $post_action === 'set' || $post_action === 'check' || $post_action === 'delete') {
-            header('Content-Type: application/json');
-            $handler_response = ['status' => 'error', 'message' => 'Aksi tidak diketahui.'];
-            $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
-
-            if ($bot_id > 0) {
-                try {
-                    $stmt_token = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
-                    $stmt_token->execute([$bot_id]);
-                    $token = $stmt_token->fetchColumn();
-                    if (!$token) throw new Exception("Bot tidak ditemukan.");
-
-                    $telegram_api = new TelegramAPI($token);
-
-                    if ($post_action === 'get_me') {
-                        $bot_info = $telegram_api->getMe();
-                        if (!isset($bot_info['ok']) || !$bot_info['ok']) throw new Exception("Gagal mendapatkan info dari Telegram: " . ($bot_info['description'] ?? ''));
-                        $bot_result = $bot_info['result'];
-                        if ($bot_result['id'] != $bot_id) throw new Exception("Token tidak cocok dengan ID bot.");
-
-                        $stmt_update = $pdo->prepare("UPDATE bots SET first_name = ?, username = ? WHERE id = ?");
-                        $stmt_update->execute([$bot_result['first_name'], $bot_result['username'] ?? null, $bot_id]);
-
-                        $handler_response = ['status' => 'success', 'message' => 'Informasi bot diperbarui.', 'data' => $bot_result];
-                    } else { // Webhook actions
-                        $result = null;
-                        if ($post_action === 'set') {
-                            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-                            $webhook_url = $protocol . $_SERVER['HTTP_HOST'] . str_replace(basename(__FILE__), 'webhook.php', $_SERVER['PHP_SELF']) . '?id=' . $bot_id;
-                            $result = $telegram_api->setWebhook($webhook_url);
-                        } elseif ($post_action === 'check') {
-                            $result = $telegram_api->getWebhookInfo();
-                        } elseif ($post_action === 'delete') {
-                            $result = $telegram_api->deleteWebhook();
-                        }
-                        if ($result === false) throw new Exception("Gagal komunikasi dengan API Telegram.");
-                        $handler_response = ['status' => 'success', 'data' => $result];
-                    }
-                } catch (Exception $e) {
-                    $handler_response['message'] = $e->getMessage();
-                }
-            }
-            echo json_encode($handler_response);
-            exit;
-        }
-
-        // --- Form Submissions ---
         if (isset($_POST['confirm_reset'])) {
+            $action_view = 'db_reset';
             $active_tab = 'db_reset';
-            // ... (logika reset database tetap sama) ...
+            try {
+                $db_message .= "Berhasil terhubung ke database.<br>";
+                $pdo->exec('SET FOREIGN_KEY_CHECKS=0;');
+                $db_message .= "Pemeriksaan foreign key dinonaktifkan.<br>";
+                $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
+                if (empty($tables)) {
+                    $db_message .= "Tidak ada tabel untuk dihapus.<br>";
+                } else {
+                    foreach ($tables as $table) {
+                        $pdo->exec("DROP TABLE IF EXISTS `$table`");
+                    }
+                    $db_message .= "<b>Semua tabel berhasil dihapus.</b><br>";
+                }
+                if (!file_exists($sql_schema_file)) throw new Exception("File skema '$sql_schema_file' tidak ditemukan.");
+                $sql_script = file_get_contents($sql_schema_file);
+                if ($sql_script === false) throw new Exception("Gagal membaca file skema '$sql_schema_file'.");
+                $pdo->exec($sql_script);
+                $db_message .= "<b>Skema database berhasil dibuat ulang dari '$sql_schema_file'.</b><br>";
+                $pdo->exec('SET FOREIGN_KEY_CHECKS=1;');
+                $db_message .= "Pemeriksaan foreign key diaktifkan kembali.<br>";
+                $db_message .= "<br><b style='color: green;'>PROSES RESET DATABASE SELESAI.</b>";
+            } catch (Exception $e) {
+                $db_error = "Terjadi kesalahan: " . $e->getMessage();
+            }
         }
 
         if (isset($_POST['add_bot'])) {
-            $active_tab = 'bots';
             $token = trim($_POST['token']);
             if (empty($token)) {
                 $bot_error = "Token tidak boleh kosong.";
@@ -151,8 +175,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if (isset($_POST['save_bot_settings'])) {
-            $active_tab = 'bots';
-            $action_view = 'edit_bot';
             $bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
             if ($bot_id) {
                 try {
@@ -178,10 +200,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// --- Logika GET Request ---
 if ($is_authenticated && $pdo) {
-    $get_action = $_GET['action'] ?? 'list_bots';
-    if ($get_action === 'edit_bot' && isset($_GET['id'])) {
+    if (isset($_GET['action']) && $_GET['action'] === 'edit_bot' && isset($_GET['id'])) {
         $action_view = 'edit_bot';
         $bot_id = filter_var($_GET['id'], FILTER_VALIDATE_INT);
         $stmt = $pdo->prepare("SELECT id, first_name, username, token, created_at FROM bots WHERE id = ?");
@@ -266,8 +286,8 @@ if ($is_authenticated && $pdo) {
             </form>
 
             <div class="tabs">
-                <a href="?action=list_bots" class="tab-link <?= $action_view !== 'db_reset' ? 'active' : '' ?>">Manajemen Bot</a>
-                <a href="?action=db_reset" class="tab-link <?= $action_view === 'db_reset' ? 'active' : '' ?>">Reset Database</a>
+                <a href="?action=list_bots" class="tab-link <?= $active_tab === 'bots' ? 'active' : '' ?>">Manajemen Bot</a>
+                <a href="?action=db_reset" class="tab-link <?= $active_tab === 'db_reset' ? 'active' : '' ?>">Reset Database</a>
             </div>
 
             <div class="main-content">
@@ -336,7 +356,7 @@ if ($is_authenticated && $pdo) {
                         <div class="warning"><strong>PERINGATAN:</strong> Semua data akan hilang secara permanen.</div>
                         <?php if ($db_error): ?><div class="error"><?= htmlspecialchars($db_error) ?></div><?php endif; ?>
                         <?php if ($db_message): ?><div class="message"><?= $db_message ?></div><?php endif; ?>
-                        <form action="" method="post" onsubmit="return confirm('APAKAH ANDA YAKIN INGIN MERESET DATABASE?');">
+                        <form action="xoradmin.php" method="post" onsubmit="return confirm('APAKAH ANDA YAKIN INGIN MERESET DATABASE?');">
                             <input type="hidden" name="confirm_reset" value="1">
                             <input type="submit" value="HAPUS DAN RESET DATABASE SEKARANG">
                         </form>
