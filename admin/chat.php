@@ -59,7 +59,8 @@ $count_stmt->execute([$telegram_id, $bot_id]);
 $total_messages = $count_stmt->fetchColumn();
 $total_pages = ceil($total_messages / $limit);
 
-$sql = "SELECT *, NULL as media_type
+// DEBUGGING: Selecting specific columns to isolate data corruption issue.
+$sql = "SELECT id, user_id, bot_id, text, created_at, direction, raw_data, NULL as media_type
         FROM messages
         WHERE user_id = ? AND bot_id = ?
         ORDER BY created_at DESC
