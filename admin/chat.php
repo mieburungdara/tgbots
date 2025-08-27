@@ -66,37 +66,15 @@ $sql = "SELECT m.id, m.user_id, m.bot_id, m.telegram_message_id, m.chat_id, m.ch
         LEFT JOIN media_files mf ON m.id = mf.message_id
         WHERE m.user_id = ? AND m.bot_id = ?
         ORDER BY m.id DESC
-        LIMIT $limit OFFSET $offset";
+        LIMIT ? OFFSET ?";
 $stmt = $pdo->prepare($sql);
-$stmt->bindValue(1, $telegram_id);
-$stmt->bindValue(2, $bot_id);
-//$stmt->bindValue(3, (int)$limit, PDO::PARAM_INT);
-//$stmt->bindValue(4, (int)$offset, PDO::PARAM_INT);
+$stmt->bindValue(1, $telegram_id, PDO::PARAM_STR);
+$stmt->bindValue(2, $bot_id, PDO::PARAM_STR);
+$stmt->bindValue(3, $limit, PDO::PARAM_INT);
+$stmt->bindValue(4, $offset, PDO::PARAM_INT);
 $stmt->execute();
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-
-echo "<pre>DEBUG:
-Telegram ID: {$telegram_id}
-Bot ID: {$bot_id}
-Page: {$page}, Limit: {$limit}, Offset: {$offset}
-Total Pesan: {$total_messages}
-Messages Fetched: " . count($messages) . "
-</pre>";
-
-
-// --- UNTUK DEBUGGING ---
-$debug_queries = [
-    'Count Query' => [
-        'sql' => $count_stmt->queryString,
-        'params' => [$telegram_id, $bot_id]
-    ],
-    'Fetch Query' => [
-        'sql' => $stmt->queryString,
-        'params' => [$telegram_id, $bot_id, $limit, $offset]
-    ]
-];
-// --- AKHIR UNTUK DEBUGGING ---
 
 
 // --- AKHIR LOGIKA PAGINATION ---
@@ -254,22 +232,5 @@ document.addEventListener('DOMContentLoaded', function() {
     updateButtonState(); // Initial state
 });
 </script>
-
-<div class="debug-section">
-    <button onclick="document.getElementById('debug-content').style.display = document.getElementById('debug-content').style.display === 'none' ? 'block' : 'none';" class="btn btn-secondary">
-        Tampilkan/Sembunyikan Info Debug Kueri
-    </button>
-    <div id="debug-content" style="display:none; margin-top: 10px; padding: 15px; border: 1px solid #ccc; background-color: #f8f9fa;">
-        <h4>Kueri yang Dieksekusi</h4>
-        <?php foreach ($debug_queries as $title => $query_info): ?>
-            <h5><?= htmlspecialchars($title) ?></h5>
-            <pre><code class="language-sql"><?= htmlspecialchars($query_info['sql']) ?></code></pre>
-            <h6>Parameter:</h6>
-            <pre><code><?= htmlspecialchars(print_r($query_info['params'], true)) ?></code></pre>
-            <hr>
-        <?php endforeach; ?>
-    </div>
-</div>
-
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>
