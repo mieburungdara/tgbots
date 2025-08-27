@@ -25,7 +25,7 @@ try {
         "SELECT s.price, s.purchased_at, mp.title as package_title, u_buyer.first_name as buyer_name
          FROM sales s
          JOIN media_packages mp ON s.package_id = mp.id
-         JOIN users u_buyer ON s.buyer_user_id = u_buyer.telegram_id
+         JOIN users u_buyer ON s.buyer_user_id = u_buyer.id
          WHERE s.seller_user_id = ?
          ORDER BY s.purchased_at DESC"
     );

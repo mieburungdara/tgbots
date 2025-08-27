@@ -43,7 +43,7 @@ class MediaHandler implements HandlerInterface
                 'file_name' => $media_info['file_name'] ?? null,
                 'caption' => $message['caption'] ?? null,
                 'caption_entities' => $message['caption_entities'] ?? null,
-                'user_id' => $app->user['telegram_id'],
+                'user_id' => $app->user['id'],
                 'chat_id' => $app->chat_id,
                 'message_id' => $message['message_id'],
                 'media_group_id' => $message['media_group_id'] ?? null,

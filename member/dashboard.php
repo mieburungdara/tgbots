@@ -23,7 +23,7 @@ $analyticsRepo = new AnalyticsRepository($pdo);
 $user_id = $_SESSION['member_user_id'];
 
 // Ambil informasi pengguna dari tabel users
-$stmt = $pdo->prepare("SELECT * FROM users WHERE telegram_id = ?");
+$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
 $stmt->execute([$user_id]);
 $user_info = $stmt->fetch();
 
@@ -128,7 +128,7 @@ require_once __DIR__ . '/../partials/header.php';
             </tr>
             <tr>
                 <th>Telegram ID</th>
-                <td><?= htmlspecialchars($user_info['telegram_id']) ?></td>
+                <td><?= htmlspecialchars($user_info['id']) ?></td>
             </tr>
             <tr>
                 <th>Terdaftar</th>

@@ -23,7 +23,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
         $transaction_amount = ($action === 'add_balance') ? $amount : -$amount;
         $pdo->beginTransaction();
         try {
-            $stmt_update_user = $pdo->prepare("UPDATE users SET balance = balance + ? WHERE telegram_id = ?");
+            $stmt_update_user = $pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
             $stmt_update_user->execute([$transaction_amount, $telegram_id]);
             $stmt_insert_trans = $pdo->prepare("INSERT INTO balance_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)");
             $stmt_insert_trans->execute([$telegram_id, $transaction_amount, 'admin_adjustment', $description]);
@@ -77,9 +77,9 @@ $total_pages = ceil($total_users / $limit);
 
 $sql = "
     SELECT
-        u.telegram_id, u.first_name, u.last_name, u.username, u.balance,
-        (SELECT SUM(price) FROM sales WHERE seller_user_id = u.telegram_id) as total_income,
-        (SELECT SUM(price) FROM sales WHERE buyer_user_id = u.telegram_id) as total_spending
+        u.id as telegram_id, u.first_name, u.last_name, u.username, u.balance,
+        (SELECT SUM(price) FROM sales WHERE seller_user_id = u.id) as total_income,
+        (SELECT SUM(price) FROM sales WHERE buyer_user_id = u.id) as total_spending
     FROM users u
     {$where_clause}
     ORDER BY {$sort_by} {$order}
@@ -121,7 +121,7 @@ require_once __DIR__ . '/../partials/header.php';
         <table class="chat-log-table">
             <thead>
                 <tr>
-                    <th><a href="<?= get_sort_link('telegram_id', $sort_by, $order, $_GET) ?>">Telegram ID</a></th>
+                    <th><a href="<?= get_sort_link('id', $sort_by, $order, $_GET) ?>">Telegram ID</a></th>
                     <th><a href="<?= get_sort_link('first_name', $sort_by, $order, $_GET) ?>">Nama</a></th>
                     <th><a href="<?= get_sort_link('username', $sort_by, $order, $_GET) ?>">Username</a></th>
                     <th class="sortable"><a href="<?= get_sort_link('balance', $sort_by, $order, $_GET) ?>">Saldo Saat Ini</a></th>
