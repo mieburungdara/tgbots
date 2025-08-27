@@ -186,8 +186,6 @@ if ($is_authenticated && $pdo) {
         ";
         $users_with_roles = $pdo->query($sql)->fetchAll();
     }
-    // Fetch all available roles for the modal
-    $all_roles = $pdo->query("SELECT id, name FROM roles ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
 }
 
 ?>
@@ -227,7 +225,6 @@ if ($is_authenticated && $pdo) {
         .close { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
         .close:hover, .close:focus { color: black; text-decoration: none; cursor: pointer; }
         #modal-body { white-space: pre-wrap; background-color: #eee; padding: 15px; border-radius: 5px; }
-        .role-badge { display: inline-block; padding: 0.25em 0.6em; font-size: 75%; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.375rem; color: #fff; background-color: #6c757d; margin-right: 5px; }
     </style>
 </head>
 <body>
@@ -319,7 +316,7 @@ if ($is_authenticated && $pdo) {
                 <?php elseif ($action_view === 'roles'): ?>
                     <div id="roles" class="tab-content active">
                         <h2>Manajemen Peran Pengguna</h2>
-                        <p>Tetapkan peran untuk setiap pengguna. Peran "Admin" akan memberikan akses ke panel admin utama.</p>
+                        <p>Tetapkan peran "Admin" untuk pengguna. Pengguna dengan peran ini akan mendapatkan akses ke panel admin utama.</p>
                         <table>
                             <thead>
                                 <tr>
@@ -335,21 +332,23 @@ if ($is_authenticated && $pdo) {
                                     <tr><td colspan="5" style="text-align: center;">Tidak ada pengguna ditemukan.</td></tr>
                                 <?php else: ?>
                                     <?php foreach ($users_with_roles as $user): ?>
-                                        <tr id="user-row-<?= $user['id'] ?>">
+                                        <tr>
                                             <td><?= htmlspecialchars($user['id']) ?></td>
                                             <td><?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></td>
                                             <td>@<?= htmlspecialchars($user['username'] ?? 'N/A') ?></td>
-                                            <td class="roles-cell">
+                                            <td>
                                                 <?php if (!empty($user['roles'])): ?>
-                                                    <?php foreach (explode(', ', $user['roles']) as $role): ?>
-                                                        <span class="role-badge"><?= htmlspecialchars($role) ?></span>
-                                                    <?php endforeach; ?>
+                                                    <?= htmlspecialchars($user['roles']) ?>
                                                 <?php else: ?>
                                                     <span style="color: #888;">Tidak ada</span>
                                                 <?php endif; ?>
                                             </td>
                                             <td>
-                                                <button class="btn-manage-roles" data-user-id="<?= $user['id'] ?>" data-user-name="<?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>">Kelola Peran</button>
+                                                <?php if (strpos($user['roles'] ?? '', 'Admin') === false): ?>
+                                                    <button class="btn-make-admin" data-user-id="<?= $user['id'] ?>">Jadikan Admin</button>
+                                                <?php else: ?>
+                                                    <span style="color: green;">✓ Admin</span>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>
@@ -373,11 +372,8 @@ if ($is_authenticated && $pdo) {
         <?php endif; ?>
     </div>
 
-    <!-- Modal for Webhook/Bot Actions -->
+    <!-- The Modal -->
     <div id="responseModal" class="modal"><div class="modal-content"><span class="close">&times;</span><h2 id="modal-title">Hasil Aksi</h2><pre id="modal-body">Memproses...</pre></div></div>
-
-    <!-- Modal for Role Management -->
-    <div id="rolesModal" class="modal" style="display:none;"><div class="modal-content"><span class="close">&times;</span><h2 id="roles-modal-title">Kelola Peran</h2><form id="roles-form"><input type="hidden" id="modal-user-id" name="user_id"><div id="roles-checkbox-container"></div><button type="button" id="save-roles-button">Simpan</button></form></div></div>
 
     <script>
         <?php if ($is_authenticated): ?>
@@ -419,87 +415,30 @@ if ($is_authenticated && $pdo) {
             });
         });
 
-        // --- Role Management Modal JS ---
-        const rolesModal = document.getElementById('rolesModal');
-        if (rolesModal) {
-            const rolesCloseButton = rolesModal.querySelector('.close');
-            const manageRolesButtons = document.querySelectorAll('.btn-manage-roles');
-            const saveRolesButton = document.getElementById('save-roles-button');
-            const rolesCheckboxContainer = document.getElementById('roles-checkbox-container');
-            const modalUserIdInput = document.getElementById('modal-user-id');
-            const rolesModalTitle = document.getElementById('roles-modal-title');
-            const allRoles = <?= json_encode($all_roles ?? []) ?>;
+        document.querySelectorAll('.btn-make-admin').forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.dataset.userId;
+                if (confirm(`Apakah Anda yakin ingin menjadikan pengguna ID ${userId} sebagai Admin?`)) {
+                    const formData = new FormData();
+                    formData.append('action', 'make_admin');
+                    formData.append('user_id', userId);
 
-            function openRolesModal(userId, userName) {
-                modalUserIdInput.value = userId;
-                rolesModalTitle.textContent = 'Kelola Peran untuk ' + userName;
-                rolesCheckboxContainer.innerHTML = 'Memuat peran...';
-                rolesModal.style.display = 'block';
-
-                const formData = new FormData();
-                formData.append('action', 'get_user_roles');
-                formData.append('user_id', userId);
-
-                fetch('xoradminapi.php', { method: 'POST', body: formData })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status !== 'success') throw new Error(data.message);
-                        populateRolesCheckboxes(data.role_ids);
-                    })
-                    .catch(error => {
-                        rolesCheckboxContainer.innerHTML = `<p style="color:red;">Gagal memuat peran: ${error.message}</p>`;
-                    });
-            }
-
-            function populateRolesCheckboxes(assignedRoleIds) {
-                rolesCheckboxContainer.innerHTML = '';
-                allRoles.forEach(role => {
-                    const isChecked = assignedRoleIds.includes(parseInt(role.id, 10));
-                    rolesCheckboxContainer.innerHTML += `<div><label><input type="checkbox" name="role_ids[]" value="${role.id}" ${isChecked ? 'checked' : ''}> ${role.name}</label></div>`;
-                });
-            }
-
-            function closeRolesModal() {
-                rolesModal.style.display = 'none';
-            }
-
-            manageRolesButtons.forEach(button => {
-                button.addEventListener('click', function() {
-                    openRolesModal(this.dataset.userId, this.dataset.userName);
-                });
+                    fetch('xoradminapi.php', { method: 'POST', body: formData })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.status === 'success') {
+                                alert('Pengguna berhasil dijadikan Admin.');
+                                location.reload();
+                            } else {
+                                throw new Error(data.message);
+                            }
+                        })
+                        .catch(error => {
+                            alert('Gagal: ' + error.message);
+                        });
+                }
             });
-
-            saveRolesButton.addEventListener('click', function() {
-                const userId = modalUserIdInput.value;
-                const checkedRoles = Array.from(rolesCheckboxContainer.querySelectorAll('input:checked')).map(cb => cb.value);
-
-                const formData = new FormData();
-                formData.append('action', 'update_user_roles');
-                formData.append('user_id', userId);
-                formData.append('role_ids', JSON.stringify(checkedRoles));
-
-                saveRolesButton.textContent = 'Menyimpan...';
-                saveRolesButton.disabled = true;
-
-                fetch('xoradminapi.php', { method: 'POST', body: formData })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.status !== 'success') throw new Error(data.message);
-                        closeRolesModal();
-                        location.reload(); // Easiest way to show the updated roles
-                    })
-                    .catch(error => alert('Gagal menyimpan: ' + error.message))
-                    .finally(() => {
-                        saveRolesButton.textContent = 'Simpan';
-                        saveRolesButton.disabled = false;
-                    });
-            });
-
-            rolesCloseButton.onclick = closeRolesModal;
-            window.addEventListener('click', function(event) {
-                if (event.target == rolesModal) closeRolesModal();
-            });
-        }
+        });
         <?php endif; ?>
     </script>
 </body>

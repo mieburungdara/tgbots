@@ -1,31 +1,12 @@
 # Changelog
 
-## [4.5.0] - 2025-08-27
-
-### Fitur
-- **Manajemen Peran di XOR Admin Panel**: Menambahkan fungsionalitas penuh untuk mengelola peran pengguna langsung dari panel admin khusus (`xoradmin.php`).
-  - **Tab Baru**: Menambahkan tab "Manajemen Peran" yang menampilkan daftar semua pengguna beserta peran mereka saat ini.
-  - **Modal Interaktif**: Mengklik tombol "Kelola Peran" untuk setiap pengguna akan membuka jendela modal (pop-up) yang memungkinkan admin untuk menetapkan atau mencabut peran (seperti 'Admin', 'User') menggunakan checkbox.
-  - **Backend Terintegrasi**: Logika untuk mengambil dan memperbarui peran ditangani melalui endpoint baru di `xoradminapi.php`, memastikan perubahan disimpan ke database secara dinamis tanpa perlu me-refresh halaman.
-
 ## [4.4.0] - 2025-08-27
 
-### Diubah (Refactoring)
-- **Penggabungan Tabel `users` dan `members`**: Melakukan refactoring skema database dengan menggabungkan tabel `members` ke dalam tabel `users`.
-  - **Alasan**: Tabel `members` pada dasarnya adalah perpanjangan dari tabel `users` dengan relasi satu-ke-satu, yang berfungsi untuk menyimpan informasi login panel web. Menggabungkannya akan menormalkan skema, mengurangi join yang tidak perlu, dan menyederhanakan logika kode.
-  - **Perubahan Teknis**:
-    1.  Membuat file migrasi (`036_merge_members_into_users.php`) untuk memindahkan kolom `login_token`, `token_created_at`, dan `token_used` dari `members` ke `users`, lalu menghapus tabel `members`.
-    2.  Memperbarui semua logika otentikasi di `member/index.php` dan `admin/auth.php` untuk membaca dan menulis token langsung dari/ke tabel `users`.
-    3.  Menghapus logika pendaftaran `members` yang sekarang sudah usang dari `UserRepository`.
-
-## [4.3.4] - 2025-08-27
-
-### Diperbaiki
-- **Fatal Error di Halaman Manajemen Channel**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'telegram_bot_id'` yang terjadi saat anggota membuka halaman "Manajemen Channel".
-  - **Penyebab**: Kode di `core/helpers.php` dan `member/channels.php` salah merujuk ke kolom `telegram_bot_id` pada tabel `bots`. Berdasarkan investigasi pada `updated_schema.sql`, nama kolom yang benar untuk ID bot adalah `id`. Inkonsistensi ini muncul karena adanya migrasi yang belum sepenuhnya diterapkan atau telah dikembalikan.
-  - **Solusi**: Mengubah semua referensi ke `bots.telegram_bot_id` menjadi `bots.id` di file-file berikut:
-    - `core/helpers.php`: Menyesuaikan fungsi `get_all_bots`, `get_bot_details`, `get_bot_token`, dan `get_default_bot_id`.
-    - `member/channels.php`: Memperbarui logika untuk menangani `bot_id` dari formulir dan saat menampilkan daftar bot.
+### Fitur
+- **Tombol "Jadikan Admin" di XOR Admin Panel**: Menambahkan fungsionalitas sederhana untuk memberikan peran Admin kepada pengguna dari panel `xoradmin.php`.
+  - **Tampilan Baru**: Menambahkan tab "Manajemen Peran" yang menampilkan daftar pengguna dan peran mereka saat ini.
+  - **Aksi Cepat**: Untuk setiap pengguna yang belum menjadi admin, sebuah tombol "Jadikan Admin" tersedia. Mengklik tombol ini akan langsung memberikan peran Admin kepada pengguna tersebut.
+  - **Backend**: Logika ini didukung oleh endpoint API `make_admin` baru di `xoradminapi.php`.
 
 ## [4.3.3] - 2025-08-27
 
