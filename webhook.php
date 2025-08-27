@@ -28,7 +28,7 @@ try {
         app_log("Webhook Error: ID bot dari URL tidak valid atau tidak ada.", 'bot');
         exit;
     }
-    $telegram_bot_id = (int)$_GET['id'];
+    $bot_id = (int)$_GET['id'];
 
     // 2. Koneksi ke DB
     $pdo = get_db_connection();
@@ -41,17 +41,17 @@ try {
 
     // 3. Temukan bot di database
     $bot_repo = new BotRepository($pdo);
-    $bot = $bot_repo->findBotByTelegramId($telegram_bot_id);
+    $bot = $bot_repo->findBotByTelegramId($bot_id);
 
     if (!$bot) {
         http_response_code(404); // Not Found
-        app_log("Webhook Error: Bot dengan ID Telegram {$telegram_bot_id} tidak ditemukan.", 'bot');
+        app_log("Webhook Error: Bot dengan ID Telegram {$bot_id} tidak ditemukan.", 'bot');
         exit;
     }
 
     // 4. Definisikan konstanta global yang mungkin dibutuhkan (cth: untuk inline query)
     require_once __DIR__ . '/core/TelegramAPI.php';
-    $api_for_globals = new TelegramAPI($bot['token'], $pdo, $telegram_bot_id);
+    $api_for_globals = new TelegramAPI($bot['token'], $pdo, $bot_id);
     $bot_info = $api_for_globals->getMe();
     if ($bot_info['ok'] && !defined('BOT_USERNAME')) {
         define('BOT_USERNAME', $bot_info['result']['username'] ?? '');

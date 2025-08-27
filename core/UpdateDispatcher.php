@@ -25,7 +25,6 @@ class UpdateDispatcher
     private $update_handler;
     private $telegram_api;
     private $bot_settings;
-    private $telegram_bot_id;
 
     public function __construct(PDO $pdo, array $bot, array $update)
     {
@@ -38,9 +37,7 @@ class UpdateDispatcher
 
         $this->update_handler = new UpdateHandler($this->bot_settings);
 
-        // Ekstrak dan simpan telegram_bot_id untuk penggunaan konsisten
-        $this->telegram_bot_id = (int)explode(':', $bot['token'])[0];
-        $this->telegram_api = new TelegramAPI($bot['token'], $pdo, $this->telegram_bot_id);
+        $this->telegram_api = new TelegramAPI($bot['token'], $pdo, (int)$bot['id']);
     }
 
     public function dispatch()
@@ -80,7 +77,7 @@ class UpdateDispatcher
             $current_user = null;
 
             if ($user_id) {
-                $user_repo = new UserRepository($this->pdo, $this->telegram_bot_id);
+                $user_repo = new UserRepository($this->pdo, (int)$this->bot['id']);
                 $current_user = $user_repo->findOrCreateUser(
                     $user_id,
                     $message_context['from']['first_name'] ?? '',

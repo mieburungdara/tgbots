@@ -98,16 +98,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $bot_result = $bot_info['result'];
                         $first_name = $bot_result['first_name'];
                         $username = $bot_result['username'] ?? null;
-                        $telegram_bot_id = $bot_result['id'];
+                        $bot_id = $bot_result['id'];
 
                         $stmt_check_id = $pdo->prepare("SELECT id FROM bots WHERE id = ?");
-                        $stmt_check_id->execute([$telegram_bot_id]);
+                        $stmt_check_id->execute([$bot_id]);
                         if ($stmt_check_id->fetch()) {
-                             throw new Exception("Bot dengan ID Telegram {$telegram_bot_id} ini sudah terdaftar.", 23000);
+                             throw new Exception("Bot dengan ID Telegram {$bot_id} ini sudah terdaftar.", 23000);
                         }
 
                         $stmt = $pdo->prepare("INSERT INTO bots (id, first_name, username, token) VALUES (?, ?, ?, ?)");
-                        $stmt->execute([$telegram_bot_id, $first_name, $username, $token]);
+                        $stmt->execute([$bot_id, $first_name, $username, $token]);
                         $bot_message = "Bot '{$first_name}' (@{$username}) berhasil ditambahkan!";
                     } else {
                         throw new Exception("Token tidak valid atau gagal menghubungi API Telegram. " . ($bot_info['description'] ?? ''));

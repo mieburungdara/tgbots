@@ -17,9 +17,9 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action']) || !isset(
 }
 
 $action = $_POST['action'];
-$telegram_bot_id = filter_var($_POST['bot_id'], FILTER_VALIDATE_INT); // This field now contains the telegram_bot_id
+$bot_id = filter_var($_POST['bot_id'], FILTER_VALIDATE_INT);
 
-if (!$telegram_bot_id) {
+if (!$bot_id) {
     json_response('error', 'ID Bot tidak valid.');
 }
 
@@ -29,12 +29,12 @@ if (!$pdo) {
     json_response('error', 'Koneksi database gagal.');
 }
 
-$stmt = $pdo->prepare("SELECT token FROM bots WHERE telegram_bot_id = ?");
-$stmt->execute([$telegram_bot_id]);
+$stmt = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
+$stmt->execute([$bot_id]);
 $bot = $stmt->fetch();
 
 if (!$bot) {
-    json_response('error', "Bot dengan ID Telegram {$telegram_bot_id} tidak ditemukan.");
+    json_response('error', "Bot dengan ID Telegram {$bot_id} tidak ditemukan.");
 }
 $bot_token = $bot['token'];
 
@@ -51,7 +51,7 @@ try {
             $domain = $_SERVER['HTTP_HOST'];
             // Buat path relatif yang benar dari /admin/ ke /webhook.php
             $webhook_path = str_replace('/admin', '', dirname($_SERVER['PHP_SELF'])) . '/webhook.php';
-            $webhook_url = $protocol . $domain . $webhook_path . '?id=' . $telegram_bot_id;
+            $webhook_url = $protocol . $domain . $webhook_path . '?id=' . $bot_id;
 
             $result = $telegram->setWebhook($webhook_url);
             break;

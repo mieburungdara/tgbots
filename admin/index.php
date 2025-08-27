@@ -51,25 +51,25 @@ try {
 }
 
 // Ambil semua bot untuk sidebar
-$bots = $pdo->query("SELECT telegram_bot_id, first_name FROM bots ORDER BY first_name ASC")->fetchAll();
+$bots = $pdo->query("SELECT id, first_name FROM bots ORDER BY first_name ASC")->fetchAll();
 
 // Dapatkan parameter dari URL
-$selected_telegram_bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : null;
+$selected_bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : null;
 $search_user = trim($_GET['search_user'] ?? '');
 
 $conversations = [];
 $channel_chats = [];
 $bot_exists = false;
 
-if ($selected_telegram_bot_id) {
+if ($selected_bot_id) {
     // Verifikasi bot ada
-    $stmt = $pdo->prepare("SELECT 1 FROM bots WHERE telegram_bot_id = ?");
-    $stmt->execute([$selected_telegram_bot_id]);
+    $stmt = $pdo->prepare("SELECT 1 FROM bots WHERE id = ?");
+    $stmt->execute([$selected_bot_id]);
     $bot_exists = $stmt->fetchColumn();
 
     if ($bot_exists) {
         // --- Ambil percakapan PRIBADI ---
-        $params = [$selected_telegram_bot_id];
+        $params = [$selected_bot_id];
         $user_where_clause = '';
         if (!empty($search_user)) {
             $user_where_clause = "AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.username LIKE ? OR u.telegram_id = ?)";
@@ -99,7 +99,7 @@ if ($selected_telegram_bot_id) {
                 FROM messages m
                 WHERE m.bot_id = ? AND m.chat_id < 0 ORDER BY last_message_time DESC"
             );
-            $stmt_channels->execute([$selected_telegram_bot_id]);
+            $stmt_channels->execute([$selected_bot_id]);
             $channel_chats = $stmt_channels->fetchAll();
         }
     }
@@ -120,12 +120,12 @@ require_once __DIR__ . '/../partials/header.php';
             <?php else: ?>
                 <?php foreach ($bots as $bot): ?>
                     <?php
-                        $link_params = ['bot_id' => $bot['telegram_bot_id']];
+                        $link_params = ['bot_id' => $bot['id']];
                         if (!empty($search_user)) {
                             $link_params['search_user'] = $search_user;
                         }
                     ?>
-                    <a href="index.php?<?= http_build_query($link_params) ?>" class="<?= ($selected_telegram_bot_id == $bot['telegram_bot_id']) ? 'active' : '' ?>">
+                    <a href="index.php?<?= http_build_query($link_params) ?>" class="<?= ($selected_bot_id == $bot['id']) ? 'active' : '' ?>">
                         <?= htmlspecialchars($bot['first_name'] ?? 'Bot Tanpa Nama') ?>
                     </a>
                 <?php endforeach; ?>
@@ -136,20 +136,20 @@ require_once __DIR__ . '/../partials/header.php';
     <main class="conv-main">
         <div class="search-form" style="margin-bottom: 20px;">
             <form action="index.php" method="get">
-                <?php if ($selected_telegram_bot_id): ?>
-                    <input type="hidden" name="bot_id" value="<?= htmlspecialchars($selected_telegram_bot_id) ?>">
+                <?php if ($selected_bot_id): ?>
+                    <input type="hidden" name="bot_id" value="<?= htmlspecialchars($selected_bot_id) ?>">
                 <?php endif; ?>
                 <input type="text" name="search_user" placeholder="Cari percakapan pengguna..." value="<?= htmlspecialchars($search_user) ?>" style="width: 300px; display: inline-block;">
                 <button type="submit" class="btn">Cari</button>
                 <?php if(!empty($search_user)): ?>
-                    <a href="index.php?bot_id=<?= $selected_telegram_bot_id ?>" class="btn btn-delete">Hapus Filter</a>
+                    <a href="index.php?bot_id=<?= $selected_bot_id ?>" class="btn btn-delete">Hapus Filter</a>
                 <?php endif; ?>
             </form>
         </div>
 
-        <?php if ($selected_telegram_bot_id): ?>
+        <?php if ($selected_bot_id): ?>
             <?php if (!$bot_exists): ?>
-                <div class="alert alert-danger">Bot dengan ID <?= htmlspecialchars($selected_telegram_bot_id) ?> tidak ditemukan.</div>
+                <div class="alert alert-danger">Bot dengan ID <?= htmlspecialchars($selected_bot_id) ?> tidak ditemukan.</div>
             <?php else: ?>
 
                 <h3>Percakapan Pengguna</h3>
@@ -159,7 +159,7 @@ require_once __DIR__ . '/../partials/header.php';
                     <?php else: ?>
                         <?php foreach ($conversations as $conv): ?>
                             <li class="conv-card">
-                                <a href="chat.php?telegram_id=<?= $conv['telegram_id'] ?>&bot_id=<?= $selected_telegram_bot_id ?>">
+                                <a href="chat.php?telegram_id=<?= $conv['telegram_id'] ?>&bot_id=<?= $selected_bot_id ?>">
                                     <div class="conv-avatar"><?= get_initials($conv['first_name'] ?? '?') ?></div>
                                     <div class="conv-details">
                                         <div class="conv-header">
@@ -189,7 +189,7 @@ require_once __DIR__ . '/../partials/header.php';
                                 }
                             ?>
                             <li class="conv-card">
-                                <a href="channel_chat.php?chat_id=<?= $chat['chat_id'] ?>&bot_id=<?= $selected_telegram_bot_id ?>">
+                                <a href="channel_chat.php?chat_id=<?= $chat['chat_id'] ?>&bot_id=<?= $selected_bot_id ?>">
                                     <div class="conv-avatar" style="background-color: #6c757d;"><?= get_initials($chat_title) ?></div>
                                     <div class="conv-details">
                                         <div class="conv-header">

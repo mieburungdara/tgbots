@@ -23,12 +23,12 @@ class SellerSalesChannelRepository
      * Jika penjual sudah punya channel, detailnya akan diperbarui dan diaktifkan kembali.
      *
      * @param int $seller_telegram_id ID Telegram pengguna (penjual).
-     * @param int $telegram_bot_id ID Telegram bot yang akan dihubungkan.
+     * @param int $bot_id ID Telegram bot yang akan dihubungkan.
      * @param int $channel_id ID channel Telegram.
      * @param int $discussion_group_id ID grup diskusi yang terhubung.
      * @return bool True jika berhasil.
      */
-    public function createOrUpdate(int $seller_telegram_id, int $telegram_bot_id, int $channel_id, int $discussion_group_id): bool
+    public function createOrUpdate(int $seller_telegram_id, int $bot_id, int $channel_id, int $discussion_group_id): bool
     {
         // Menggunakan ON DUPLICATE KEY UPDATE yang bergantung pada kunci unik di seller_user_id
         $sql = "INSERT INTO seller_sales_channels (seller_user_id, bot_id, channel_id, discussion_group_id, is_active)
@@ -36,7 +36,7 @@ class SellerSalesChannelRepository
                 ON DUPLICATE KEY UPDATE bot_id = VALUES(bot_id), channel_id = VALUES(channel_id), discussion_group_id = VALUES(discussion_group_id), is_active = 1";
 
         $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([$seller_telegram_id, $telegram_bot_id, $channel_id, $discussion_group_id]);
+        return $stmt->execute([$seller_telegram_id, $bot_id, $channel_id, $discussion_group_id]);
     }
 
     /**

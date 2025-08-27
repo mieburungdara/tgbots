@@ -22,11 +22,11 @@ if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
     header("Location: bots.php");
     exit;
 }
-$telegram_bot_id = $_GET['id'];
+$bot_id = $_GET['id'];
 
 // Ambil data bot dari database menggunakan ID Telegram-nya.
-$stmt = $pdo->prepare("SELECT telegram_bot_id, first_name, username, token, created_at FROM bots WHERE telegram_bot_id = ?");
-$stmt->execute([$telegram_bot_id]);
+$stmt = $pdo->prepare("SELECT id, first_name, username, token, created_at FROM bots WHERE id = ?");
+$stmt->execute([$bot_id]);
 $bot = $stmt->fetch();
 
 // Jika bot tidak ditemukan, alihkan kembali ke halaman daftar bot.
@@ -37,7 +37,7 @@ if (!$bot) {
 
 // Ambil pengaturan spesifik untuk bot ini dari tabel `bot_settings`.
 $stmt_settings = $pdo->prepare("SELECT setting_key, setting_value FROM bot_settings WHERE bot_id = ?");
-$stmt_settings->execute([$telegram_bot_id]);
+$stmt_settings->execute([$bot_id]);
 $bot_settings_raw = $stmt_settings->fetchAll(PDO::FETCH_KEY_PAIR);
 
 // Tetapkan nilai default untuk setiap pengaturan jika belum ada di database,
@@ -75,7 +75,7 @@ require_once __DIR__ . '/../partials/header.php';
 
         <div class="bot-info">
             <h2>Informasi Bot</h2>
-            <p><strong>ID Telegram:</strong> <?= htmlspecialchars($bot['telegram_bot_id']) ?></p>
+            <p><strong>ID Telegram:</strong> <?= htmlspecialchars($bot['id']) ?></p>
             <p><strong>Nama Depan:</strong> <?= htmlspecialchars($bot['first_name']) ?></p>
             <p><strong>Username:</strong> @<?= htmlspecialchars($bot['username'] ?? 'N/A') ?></p>
             <p><strong>Token:</strong> <code><?= substr(htmlspecialchars($bot['token']), 0, 15) ?>...</code></p>
@@ -84,19 +84,18 @@ require_once __DIR__ . '/../partials/header.php';
 
         <div class="actions">
             <h2>Manajemen Bot & Webhook</h2>
-            <button class="set-webhook" data-bot-id="<?= $bot['telegram_bot_id'] ?>">Set Webhook</button>
-            <button class="check-webhook" data-bot-id="<?= $bot['telegram_bot_id'] ?>">Check Webhook</button>
-            <button class="delete-webhook" data-bot-id="<?= $bot['telegram_bot_id'] ?>">Delete Webhook</button>
-            <button class="test-webhook" data-telegram-bot-id="<?= htmlspecialchars($bot['telegram_bot_id']) ?>" title="Kirim POST request kosong untuk memeriksa apakah webhook merespons 200 OK">Test Webhook</button>
-            <button class="get-me" data-bot-id="<?= $bot['telegram_bot_id'] ?>">Get Me & Update</button>
+            <button class="set-webhook" data-bot-id="<?= $bot['id'] ?>">Set Webhook</button>
+            <button class="check-webhook" data-bot-id="<?= $bot['id'] ?>">Check Webhook</button>
+            <button class="delete-webhook" data-bot-id="<?= $bot['id'] ?>">Delete Webhook</button>
+            <button class="test-webhook" data-telegram-bot-id="<?= htmlspecialchars($bot['id']) ?>" title="Kirim POST request kosong untuk memeriksa apakah webhook merespons 200 OK">Test Webhook</button>
+            <button class="get-me" data-bot-id="<?= $bot['id'] ?>">Get Me & Update</button>
         </div>
 
         <div class="settings">
             <h2>Pengaturan Penyimpanan Pesan</h2>
             <p>Pilih jenis pembaruan (update) dari Telegram yang ingin Anda simpan ke database untuk bot ini.</p>
             <form action="settings_manager.php" method="post">
-                <input type="hidden" name="bot_id" value="<?= $bot['telegram_bot_id'] ?>">
-                <input type="hidden" name="telegram_bot_id" value="<?= htmlspecialchars($bot['telegram_bot_id']) ?>">
+                <input type="hidden" name="bot_id" value="<?= $bot['id'] ?>">
 
                 <div class="setting-item">
                     <label>
@@ -196,12 +195,12 @@ require_once __DIR__ . '/../partials/header.php';
 
         /**
          * Menangani aksi pengujian webhook dengan mengirimkan POST request kosong ke URL webhook.
-         * @param {number} telegramBotId - ID Telegram dari bot.
+         * @param {number} botId - ID Telegram dari bot.
          */
-        async function handleTestWebhook(telegramBotId) {
+        async function handleTestWebhook(botId) {
             // Ambil BASE_URL dari config, jika tidak ada, coba tebak dari URL saat ini
             const baseUrl = '<?= defined('BASE_URL') && BASE_URL ? rtrim(BASE_URL, '/') : (isset($_SERVER['HTTPS']) ? 'https' : 'http') . '://' . $_SERVER['HTTP_HOST'] ?>';
-            const webhookUrl = `${baseUrl}/webhook.php?id=${telegramBotId}`;
+            const webhookUrl = `${baseUrl}/webhook.php?id=${botId}`;
 
             showModal('Hasil Test POST', `Mengirim request ke:\n${webhookUrl}\n\nMohon tunggu...`);
 

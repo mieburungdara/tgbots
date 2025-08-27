@@ -18,7 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     // Aksi untuk mengubah status blokir
     if ($_POST['action'] === 'toggle_block') {
         $telegram_id_to_toggle = (int)($_POST['user_id'] ?? 0); // Still user_id from form, but holds telegram_id
-        $bot_id_to_toggle = (int)($_POST['bot_id'] ?? 0); // This should be telegram_bot_id
+        $bot_id_to_toggle = (int)($_POST['bot_id'] ?? 0);
         if ($telegram_id_to_toggle && $bot_id_to_toggle) {
             $stmt = $pdo->prepare("SELECT is_blocked FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
             $stmt->execute([$telegram_id_to_toggle, $bot_id_to_toggle]);

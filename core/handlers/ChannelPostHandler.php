@@ -32,7 +32,7 @@ class ChannelPostHandler implements HandlerInterface
              VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, 'incoming', ?)"
         );
         $stmt->execute([
-            $app->bot['telegram_bot_id'],
+            $app->bot['id'],
             $telegram_message_id,
             $chat_id,
             $chat_type,
