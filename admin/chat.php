@@ -70,8 +70,8 @@ $sql = "SELECT m.id, m.user_id, m.bot_id, m.telegram_message_id, m.chat_id, m.ch
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(1, $telegram_id, PDO::PARAM_INT);
 $stmt->bindValue(2, $bot_id, PDO::PARAM_INT);
-$stmt->bindValue(3, $limit, PDO::PARAM_INT);
-$stmt->bindValue(4, $offset, PDO::PARAM_INT);
+$stmt->bindValue(3, (int)$limit, PDO::PARAM_INT);
+$stmt->bindValue(4, (int)$offset, PDO::PARAM_INT);
 $stmt->execute();
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
 var_dump($messages);
