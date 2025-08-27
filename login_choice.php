@@ -22,17 +22,17 @@ if (!$token) {
     } else {
         // Cari token dan pastikan belum digunakan dan tidak kedaluwarsa (misal: dalam 5 menit terakhir)
         $stmt = $pdo->prepare(
-            "SELECT user_id FROM members WHERE login_token = ? AND token_used = 0 AND token_created_at >= NOW() - INTERVAL 5 MINUTE"
+            "SELECT id FROM users WHERE login_token = ? AND token_used = 0 AND token_created_at >= NOW() - INTERVAL 5 MINUTE"
         );
         $stmt->execute([$token]);
-        $member = $stmt->fetch();
+        $user = $stmt->fetch();
 
-        if ($member) {
+        if ($user) {
             // Sebelum menampilkan link, pastikan pengguna ini memang admin
             $stmt_check_admin = $pdo->prepare(
                 "SELECT 1 FROM user_roles ur JOIN roles r ON ur.role_id = r.id WHERE ur.user_id = ? AND r.name = 'Admin'"
             );
-            $stmt_check_admin->execute([$member['user_id']]);
+            $stmt_check_admin->execute([$user['id']]);
             if ($stmt_check_admin->fetch()) {
                 $is_token_valid = true;
             } else {
