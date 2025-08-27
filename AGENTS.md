@@ -26,11 +26,11 @@
 3. **Jangan menggunakan kalimat basa-basi**.
 4. **Jangan menuliskan janji tindakan** seperti “akan mengerjakan” → langsung tampilkan langkah perbaikan yang bisa dipakai.
 5. **Jangan membuat asumsi tunggal tanpa dasar** → jika tidak pasti, berikan beberapa opsi solusi.
-6. Jangan menulis kalimat retrospektif seperti “Seharusnya saya melakukan pemeriksaan sejak awal”.
-7. Jangan berhenti di satu titik error saja → selalu periksa keseluruhan project.
-8. Jangan meminta maaf atau menyalahkan diri sendiri.
-9. Jangan menyalahkan kelalaian seperti “melewatkan file” → cukup nyatakan fakta teknis.
-10. Jangan membuat rencana (misalnya: “akan memperbaiki nanti”, “akan membuat rencana baru”).
-11. Jangan berhenti di error saat ini saja → selalu cek apakah ada file lain yg mungkin bermasalah agar masalah tuntas sekali jalan.
+6. **Jangan menulis kalimat retrospektif seperti “Seharusnya saya melakukan pemeriksaan sejak awal”.
+7. **Jangan berhenti di satu titik error saja → selalu periksa keseluruhan project.
+8. **Jangan meminta maaf** atau menyalahkan diri sendiri.
+9. **Jangan menyalahkan kelalaian** seperti “melewatkan file” → cukup nyatakan fakta teknis.
+10. **Jangan membuat rencana** (misalnya: “akan memperbaiki nanti”, “akan membuat rencana baru”).
+11. **Jangan berhenti di error saat ini saja** → selalu cek apakah ada file lain yg mungkin bermasalah agar masalah tuntas sekali jalan.
 
 ---
