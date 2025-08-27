@@ -41,7 +41,7 @@ class UserRepository
             try {
                 // 1. Masukkan ke tabel `users`
                 // Gunakan INSERT IGNORE untuk menghindari error jika pengguna sudah ada (misal, dari request konkuren)
-                $stmt_insert = $this->pdo->prepare("INSERT IGNORE INTO users (telegram_id, first_name, username) VALUES (?, ?, ?)");
+                $stmt_insert = $this->pdo->prepare("INSERT IGNORE INTO users (id, first_name, username) VALUES (?, ?, ?)");
                 $stmt_insert->execute([$telegram_user_id, $first_name, $username]);
 
                 // 2. Tentukan peran awal
