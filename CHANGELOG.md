@@ -1,5 +1,13 @@
 # Changelog
 
+## [4.6.0] - 2025-08-27
+
+### Fitur
+- **Halaman Manajemen Channel Jualan**: Menambahkan halaman baru `admin/sales_channels.php` untuk menampilkan daftar semua channel jualan yang didaftarkan oleh penjual.
+  - **Tampilan Komprehensif**: Menampilkan tabel dengan informasi lengkap termasuk nama channel, nama grup diskusi, pemilik channel (penjual), dan bot yang terhubung.
+  - **Integrasi API**: Secara dinamis mengambil nama channel dan grup dari API Telegram untuk ditampilkan di samping ID numeriknya.
+  - **Navigasi**: Menambahkan tautan "Channel Jualan" baru ke sidebar admin untuk akses mudah, dan memperjelas tautan lama menjadi "Channel Penyimpanan".
+
 ## [4.5.2] - 2025-08-27
 
 ### Diperbaiki
