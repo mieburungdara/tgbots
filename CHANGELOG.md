@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.3.4] - 2025-08-27
+
+### Diperbaiki
+- **Fatal Error di Halaman Manajemen Channel**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'telegram_bot_id'` yang terjadi saat anggota membuka halaman "Manajemen Channel".
+  - **Penyebab**: Kode di `core/helpers.php` dan `member/channels.php` salah merujuk ke kolom `telegram_bot_id` pada tabel `bots`. Berdasarkan investigasi pada `updated_schema.sql`, nama kolom yang benar untuk ID bot adalah `id`. Inkonsistensi ini muncul karena adanya migrasi yang belum sepenuhnya diterapkan atau telah dikembalikan.
+  - **Solusi**: Mengubah semua referensi ke `bots.telegram_bot_id` menjadi `bots.id` di file-file berikut:
+    - `core/helpers.php`: Menyesuaikan fungsi `get_all_bots`, `get_bot_details`, `get_bot_token`, dan `get_default_bot_id`.
+    - `member/channels.php`: Memperbarui logika untuk menangani `bot_id` dari formulir dan saat menampilkan daftar bot.
+
 ## [4.3.3] - 2025-08-27
 
 ### Diperbaiki
