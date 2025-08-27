@@ -59,11 +59,13 @@ $count_stmt->execute([$telegram_id, $bot_id]);
 $total_messages = $count_stmt->fetchColumn();
 $total_pages = ceil($total_messages / $limit);
 
-// DEBUGGING: Selecting specific columns to isolate data corruption issue.
-$sql = "SELECT id, user_id, bot_id, text, created_at, direction, raw_data, NULL as media_type
-        FROM messages
-        WHERE user_id = ? AND bot_id = ?
-        ORDER BY created_at DESC
+$sql = "SELECT m.id, m.user_id, m.bot_id, m.telegram_message_id, m.chat_id, m.chat_type,
+               m.update_type, m.text, m.raw_data, m.direction, m.telegram_timestamp, m.created_at,
+               mf.type as media_type
+        FROM messages m
+        LEFT JOIN media_files mf ON m.id = mf.message_id
+        WHERE m.user_id = ? AND m.bot_id = ?
+        ORDER BY m.id DESC
         LIMIT ? OFFSET ?";
 $stmt = $pdo->prepare($sql);
 $stmt->bindValue(1, $telegram_id, PDO::PARAM_INT);
@@ -72,6 +74,21 @@ $stmt->bindValue(3, $limit, PDO::PARAM_INT);
 $stmt->bindValue(4, $offset, PDO::PARAM_INT);
 $stmt->execute();
 $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// --- UNTUK DEBUGGING ---
+$debug_queries = [
+    'Count Query' => [
+        'sql' => $count_stmt->queryString,
+        'params' => [$telegram_id, $bot_id]
+    ],
+    'Fetch Query' => [
+        'sql' => $stmt->queryString,
+        'params' => [$telegram_id, $bot_id, $limit, $offset]
+    ]
+];
+// --- AKHIR UNTUK DEBUGGING ---
+
+
 // --- AKHIR LOGIKA PAGINATION ---
 
 $page_title = "Chat dengan " . htmlspecialchars($user_info['first_name']);
@@ -227,5 +244,22 @@ document.addEventListener('DOMContentLoaded', function() {
     updateButtonState(); // Initial state
 });
 </script>
+
+<div class="debug-section">
+    <button onclick="document.getElementById('debug-content').style.display = document.getElementById('debug-content').style.display === 'none' ? 'block' : 'none';" class="btn btn-secondary">
+        Tampilkan/Sembunyikan Info Debug Kueri
+    </button>
+    <div id="debug-content" style="display:none; margin-top: 10px; padding: 15px; border: 1px solid #ccc; background-color: #f8f9fa;">
+        <h4>Kueri yang Dieksekusi</h4>
+        <?php foreach ($debug_queries as $title => $query_info): ?>
+            <h5><?= htmlspecialchars($title) ?></h5>
+            <pre><code class="language-sql"><?= htmlspecialchars($query_info['sql']) ?></code></pre>
+            <h6>Parameter:</h6>
+            <pre><code><?= htmlspecialchars(print_r($query_info['params'], true)) ?></code></pre>
+            <hr>
+        <?php endforeach; ?>
+    </div>
+</div>
+
 
 <?php require_once __DIR__ . '/../partials/footer.php'; ?>
