@@ -84,7 +84,7 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
             <a href="/admin/sales_channels" class="<?= is_active_nav('admin/sales_channels', $current_path) ? 'active' : '' ?>">Channel Jualan</a>
             <a href="/admin/channels" class="<?= is_active_nav('admin/channels', $current_path) ? 'active' : '' ?>">Channel Penyimpanan</a>
             <a href="/admin/database" class="<?= is_active_nav('admin/database', $current_path) ? 'active' : '' ?>">Database</a>
-            <a href="/admin/logs" class="<?= is_active_nav('admin/logs', $current_path) ? 'active' : '' ?>">Logs</a>
+            <a href="/admin/logs" class="<?= is_active_nav('admin/logs', $current_path) ? 'active' : '' ?>">Log Aplikasi</a>
             <a href="/admin/telegram_logs" class="<?= is_active_nav('admin/telegram_logs', $current_path) ? 'active' : '' ?>">Log Error Telegram</a>
             <a href="/admin/debug_feed" class="<?= is_active_nav('admin/debug_feed', $current_path) ? 'active' : '' ?>">Debug Feed</a>
             <a href="/admin/api_test" class="<?= is_active_nav('admin/api_test', $current_path) ? 'active' : '' ?>">Tes API</a>

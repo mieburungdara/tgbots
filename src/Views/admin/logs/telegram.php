@@ -1,34 +1,5 @@
 <?php
-/**
- * Halaman Log Kesalahan API Telegram (Admin).
- */
-session_start();
-require_once __DIR__ . '/../core/database.php';
-require_once __DIR__ . '/../core/database/TelegramErrorLogRepository.php';
-require_once __DIR__ . '/../core/helpers.php';
-
-// Auth check placeholder
-// if (!isset($_SESSION['admin_logged_in'])) { header('Location: login.php'); exit; }
-
-$pdo = get_db_connection();
-if (!$pdo) {
-    die("Tidak dapat terhubung ke database.");
-}
-
-$logRepo = new TelegramErrorLogRepository($pdo);
-
-// Pagination
-$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$limit = 25;
-$offset = ($page - 1) * $limit;
-$total_records = $logRepo->countAll();
-$total_pages = ceil($total_records / $limit);
-$page = max(1, min($page, $total_pages)); // Re-validate page
-
-$logs = $logRepo->findAll($limit, $offset);
-
-$page_title = 'Log Kesalahan Telegram';
-require_once __DIR__ . '/../partials/header.php';
+// This view assumes $logs, $total_pages, and $page are passed from the controller.
 ?>
 
 <h1>Log Kesalahan API Telegram</h1>
@@ -92,17 +63,17 @@ require_once __DIR__ . '/../partials/header.php';
         <?php if ($page > 1): ?>
             <a href="?page=<?= $page - 1 ?>">&laquo; Sebelumnya</a>
         <?php else: ?>
-            <a class="disabled">&laquo; Sebelumnya</a>
+            <span class="disabled">&laquo; Sebelumnya</span>
         <?php endif; ?>
 
         <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-            <a href="?page=<?= $i ?>" class="<?= ($page == $i) ? 'current' : '' ?>"><?= $i ?></a>
+            <a href="?page=<?= $i ?>" class="<?= ($page == $i) ? 'current-page' : '' ?>"><?= $i ?></a>
         <?php endfor; ?>
 
         <?php if ($page < $total_pages): ?>
             <a href="?page=<?= $page + 1 ?>">Berikutnya &raquo;</a>
         <?php else: ?>
-            <a class="disabled">Berikutnya &raquo;</a>
+            <span class="disabled">Berikutnya &raquo;</span>
         <?php endif; ?>
     <?php endif; ?>
 </div>
@@ -118,8 +89,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 const isHidden = targetDiv.style.display === 'none';
                 targetDiv.style.display = isHidden ? 'block' : 'none';
                 this.textContent = isHidden ? 'Hide' : 'Show';
-
-                // Highlight only when showing for the first time
                 if (isHidden && !this.dataset.highlighted) {
                     if (window.Prism) {
                         Prism.highlightAllUnder(targetDiv);
@@ -131,7 +100,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
-<?php
-require_once __DIR__ . '/../partials/footer.php';
-?>
