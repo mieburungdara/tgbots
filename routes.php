@@ -26,6 +26,10 @@ $router->get('member/dashboard', 'Member/DashboardController@index');
 $router->get('member/my_content', 'Member/ContentController@index');
 $router->get('member/content/edit', 'Member/ContentController@edit');
 $router->post('member/content/update', 'Member/ContentController@update');
+$router->get('member/purchased', 'Member/TransactionController@purchased');
+$router->get('member/sold', 'Member/TransactionController@sold');
+$router->post('member/transactions/delete_package', 'Member/TransactionController@softDeletePackage');
+$router->get('member/content/show', 'Member/ContentController@show');
 $router->get('member/logout', 'Auth/LoginController@logout');
 
 // User management

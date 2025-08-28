@@ -1,81 +1,7 @@
 <?php
-/**
- * Halaman Detail dan Analitik Paket Konten.
- *
- * Halaman ini menampilkan informasi mendetail dan statistik penjualan
- * untuk satu paket konten spesifik milik pengguna.
- */
-session_start();
-
-// Jika belum login, redirect ke halaman login
-if (!isset($_SESSION['member_user_id'])) {
-    header("Location: index.php");
-    exit;
-}
-
-require_once __DIR__ . '/../core/database.php';
-require_once __DIR__ . '/../core/database/PackageRepository.php';
-require_once __DIR__ . '/../core/database/AnalyticsRepository.php';
-
-$pdo = get_db_connection();
-$packageRepo = new PackageRepository($pdo);
-$analyticsRepo = new AnalyticsRepository($pdo);
-$user_id = $_SESSION['member_user_id'];
-
-// Ambil ID publik paket dari URL
-$public_id = $_GET['id'] ?? null;
-if (!$public_id) {
-    header("Location: my_content.php");
-    exit;
-}
-
-// Ambil data paket dan verifikasi kepemilikan
-try {
-    $package = $packageRepo->findByPublicId($public_id);
-    if (!$package || $package['seller_user_id'] != $user_id) {
-        $_SESSION['flash_message'] = "Error: Paket tidak ditemukan atau Anda tidak memiliki izin.";
-        header("Location: my_content.php");
-        exit;
-    }
-} catch (Exception $e) {
-    $_SESSION['flash_message'] = "Error: " . $e->getMessage();
-    header("Location: my_content.php");
-    exit;
-}
-
-// -- Start Chart Logic --
-$package_id = $package['id'];
-
-// Tentukan periode waktu untuk analitik
-$periods = [
-    '7' => '7 Hari',
-    '30' => '30 Hari',
-    '90' => '90 Hari',
-    '365' => '1 Tahun',
-];
-$current_period = isset($_GET['period']) && isset($periods[$_GET['period']]) ? $_GET['period'] : '30';
-
-// Ambil data analitik untuk paket ini
-$package_summary = $analyticsRepo->getSummaryForPackage($package_id);
-$sales_by_day = $analyticsRepo->getSalesByDay(null, $current_period, $package_id);
-
-// Siapkan data untuk grafik
-$chart_labels = [];
-$chart_data = [];
-$label_format = ($current_period > 90) ? 'M Y' : 'd M';
-foreach ($sales_by_day as $day) {
-    $chart_labels[] = date($label_format, strtotime($day['sales_date']));
-    $chart_data[] = $day['daily_revenue'];
-}
-$chart_title = 'Tren Pendapatan ' . $periods[$current_period];
-// -- End Chart Logic --
-
-
-$page_title = 'Detail Konten: ' . htmlspecialchars($package['public_id']);
-require_once __DIR__ . '/../partials/header.php';
+// This view assumes all data variables ($package, $package_summary, etc.) are passed from the controller.
 ?>
 
-<!-- Style untuk pemilih periode, jika belum ada di header.php -->
 <style>
 .period-selector { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
 .period-selector a { text-decoration: none; padding: 8px 12px; border-radius: 5px; background-color: #f0f0f0; color: #333; font-size: 0.9em; border: 1px solid #ddd; }
@@ -118,7 +44,7 @@ require_once __DIR__ . '/../partials/header.php';
         <h3><?= htmlspecialchars($chart_title) ?></h3>
         <div class="period-selector">
             <?php foreach ($periods as $days => $label): ?>
-                <a href="?id=<?= htmlspecialchars($public_id) ?>&period=<?= $days ?>" class="<?= $current_period == $days ? 'active' : '' ?>"><?= $label ?></a>
+                <a href="/member/content/show?id=<?= htmlspecialchars($package['public_id']) ?>&period=<?= $days ?>" class="<?= $current_period == $days ? 'active' : '' ?>"><?= $label ?></a>
             <?php endforeach; ?>
         </div>
     </div>
@@ -127,7 +53,7 @@ require_once __DIR__ . '/../partials/header.php';
 
 
 <div style="margin-top: 20px;">
-    <a href="my_content.php" class="btn">Kembali ke Konten Saya</a>
+    <a href="/member/my_content" class="btn">Kembali ke Konten Saya</a>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -175,7 +101,3 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-
-<?php
-require_once __DIR__ . '/../partials/footer.php';
-?>

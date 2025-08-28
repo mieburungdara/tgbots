@@ -14,6 +14,7 @@
 - **Manajemen Konten Member**: Melanjutkan refactoring area member dengan memigrasikan halaman "Konten Saya" (`member/my_content.php`) dan "Edit Paket" (`member/edit_package.php`) ke dalam `ContentController`.
 - **Halaman Chat Admin**: Memigrasikan halaman chat admin (`admin/chat.php`) dan fungsionalitas hapus pesan ke `ChatController`, membuat alur kerja inti ini sesuai dengan arsitektur MVCR.
 - **Halaman Chat Channel**: Melengkapi refactoring fitur chat dengan memigrasikan halaman chat channel (`admin/channel_chat.php`) ke metode baru di dalam `ChatController`.
+- **Penyelesaian Area Member**: Menyelesaikan refactoring area member dengan memigrasikan halaman 'Konten Dibeli' (`purchased.php`), 'Konten Dijual' (`sold.php`), dan 'Lihat Paket' (`view_package.php`) ke dalam controller dan view yang sesuai.
 
 ## [4.7.0] - 2025-08-28
 

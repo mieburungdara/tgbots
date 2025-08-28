@@ -95,4 +95,57 @@ class ContentController extends MemberBaseController {
             exit();
         }
     }
+
+    public function show() {
+        $public_id = $_GET['id'] ?? null;
+        if (!$public_id) {
+            header("Location: /member/my_content");
+            exit;
+        }
+
+        $pdo = get_db_connection();
+        $packageRepo = new PackageRepository($pdo);
+        $analyticsRepo = new AnalyticsRepository($pdo);
+        $user_id = $_SESSION['member_user_id'];
+
+        try {
+            $package = $packageRepo->findByPublicId($public_id);
+            if (!$package || $package['seller_user_id'] != $user_id) {
+                $_SESSION['flash_message'] = "Error: Paket tidak ditemukan atau Anda tidak memiliki izin.";
+                header("Location: /member/my_content");
+                exit;
+            }
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = "Error: " . $e->getMessage();
+            header("Location: /member/my_content");
+            exit;
+        }
+
+        $package_id = $package['id'];
+        $periods = ['7' => '7 Hari', '30' => '30 Hari', '90' => '90 Hari', '365' => '1 Tahun'];
+        $current_period = isset($_GET['period']) && isset($periods[$_GET['period']]) ? $_GET['period'] : '30';
+
+        $package_summary = $analyticsRepo->getSummaryForPackage($package_id);
+        $sales_by_day = $analyticsRepo->getSalesByDay(null, $current_period, $package_id);
+
+        $chart_labels = [];
+        $chart_data = [];
+        $label_format = ($current_period > 90) ? 'M Y' : 'd M';
+        foreach ($sales_by_day as $day) {
+            $chart_labels[] = date($label_format, strtotime($day['sales_date']));
+            $chart_data[] = $day['daily_revenue'];
+        }
+        $chart_title = 'Tren Pendapatan ' . $periods[$current_period];
+
+        $this->view('member/content/show', [
+            'page_title' => 'Detail Konten: ' . htmlspecialchars($package['public_id']),
+            'package' => $package,
+            'package_summary' => $package_summary,
+            'periods' => $periods,
+            'current_period' => $current_period,
+            'chart_labels' => $chart_labels,
+            'chart_data' => $chart_data,
+            'chart_title' => $chart_title
+        ], 'member_layout');
+    }
 }
