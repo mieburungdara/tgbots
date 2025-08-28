@@ -13,7 +13,7 @@ require_once __DIR__ . '/../../core/database/PrivateChannelRepository.php';
 require_once __DIR__ . '/../../core/database/PrivateChannelBotRepository.php';
 
 // --- Keamanan & Inisialisasi ---
-if (!isset($_SESSION['is_authenticated']) || !$_SESSION['is_authenticated']) {
+if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
     echo json_encode(['status' => 'error', 'message' => 'Akses ditolak. Sesi tidak valid.']);
     exit;
 }
