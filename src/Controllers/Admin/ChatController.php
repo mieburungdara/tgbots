@@ -89,6 +89,66 @@ class ChatController extends BaseController {
         exit;
     }
 
+    public function channel() {
+        $pdo = get_db_connection();
+        $chat_id = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
+        $bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
+
+        if (!$chat_id || !$bot_id) {
+            header("Location: /admin/dashboard");
+            exit;
+        }
+
+        $stmt_bot = $pdo->prepare("SELECT * FROM bots WHERE id = ?");
+        $stmt_bot->execute([$bot_id]);
+        $bot_info = $stmt_bot->fetch();
+        if (!$bot_info) { die("Bot tidak ditemukan."); }
+
+        $stmt_chat_info = $pdo->prepare("SELECT raw_data FROM messages WHERE chat_id = ? AND bot_id = ? ORDER BY id DESC LIMIT 1");
+        $stmt_chat_info->execute([$chat_id, $bot_id]);
+        $last_message_raw = $stmt_chat_info->fetchColumn();
+        $chat_title = "Chat ID: $chat_id";
+        if ($last_message_raw) {
+            $raw = json_decode($last_message_raw, true);
+            $chat_title = $raw['channel_post']['chat']['title'] ?? $raw['message']['chat']['title'] ?? $chat_title;
+        }
+
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 50;
+        $offset = ($page - 1) * $limit;
+
+        $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE chat_id = ? AND bot_id = ?");
+        $count_stmt->execute([$chat_id, $bot_id]);
+        $total_messages = $count_stmt->fetchColumn();
+        $total_pages = ceil($total_messages / $limit);
+
+        $sql = "SELECT m.*, mf.type as media_type, u.first_name as sender_first_name
+                FROM messages m
+                LEFT JOIN media_files mf ON m.telegram_message_id = mf.message_id AND m.chat_id = mf.chat_id
+                LEFT JOIN users u ON m.user_id = u.id
+                WHERE m.chat_id = ? AND m.bot_id = ?
+                ORDER BY m.created_at DESC
+                LIMIT ? OFFSET ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(1, $chat_id, PDO::PARAM_INT);
+        $stmt->bindValue(2, $bot_id, PDO::PARAM_INT);
+        $stmt->bindValue(3, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(4, $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('admin/chat/channel', [
+            'page_title' => "Riwayat Chat: " . htmlspecialchars($chat_title),
+            'chat_title' => $chat_title,
+            'bot_info' => $bot_info,
+            'messages' => $messages,
+            'total_messages' => $total_messages,
+            'total_pages' => $total_pages,
+            'page' => $page,
+            'chat_id' => $chat_id
+        ], 'admin_layout');
+    }
+
     public function delete() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header("Location: /admin/dashboard");
@@ -99,9 +159,19 @@ class ChatController extends BaseController {
         $message_ids = $_POST['message_ids'] ?? [];
         $action = $_POST['action'] ?? '';
         $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
-        $user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
 
-        if (empty($message_ids) || empty($action) || !$bot_id || !$user_id) {
+        // Determine redirect URL based on whether user_id or chat_id is present
+        $user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $chat_id = isset($_POST['chat_id']) ? (int)$_POST['chat_id'] : 0;
+        $redirect_url = '/admin/dashboard';
+
+        if ($user_id && $bot_id) {
+            $redirect_url = "/admin/chat?telegram_id=$user_id&bot_id=$bot_id";
+        } elseif ($chat_id && $bot_id) {
+            $redirect_url = "/admin/channel_chat?chat_id=$chat_id&bot_id=$bot_id";
+        }
+
+        if (empty($message_ids) || empty($action) || !$bot_id) {
             header("Location: /admin/dashboard");
             exit;
         }
@@ -131,7 +201,7 @@ class ChatController extends BaseController {
             }
         }
 
-        header("Location: /admin/chat?telegram_id=$user_id&bot_id=$bot_id");
+        header("Location: " . $redirect_url);
         exit;
     }
 }

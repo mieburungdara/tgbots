@@ -33,6 +33,7 @@ $router->get('admin/users', 'Admin/UserController@index');
 
 // Chat management
 $router->get('admin/chat', 'Admin/ChatController@index');
+$router->get('admin/channel_chat', 'Admin/ChatController@channel');
 $router->post('admin/chat/reply', 'Admin/ChatController@reply');
 $router->post('admin/chat/delete', 'Admin/ChatController@delete');
 
