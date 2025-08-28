@@ -176,3 +176,19 @@ function get_all_bots(PDO $pdo): array
     $stmt = $pdo->query("SELECT id, name, username FROM bots ORDER BY name ASC");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
 }
+
+/**
+ * Checks if the current navigation link should be active for the new routing system.
+ *
+ * @param string $path The base path to check (e.g., 'admin/bots').
+ * @param string $current_path The current URL path.
+ * @param bool $exact If true, matches the path exactly. Otherwise, matches if the current path starts with it.
+ * @return bool True if the link should be considered active.
+ */
+function is_active_nav(string $path, string $current_path, bool $exact = false): bool {
+    if ($exact) {
+        return $current_path === $path;
+    }
+    // Check if the current path starts with the given path, and also handles the base case e.g. /admin for /admin/dashboard
+    return strpos($current_path, $path) === 0 || ($path === 'admin/dashboard' && $current_path === 'admin');
+}
