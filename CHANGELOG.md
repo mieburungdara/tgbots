@@ -1,5 +1,14 @@
 # Changelog
 
+## [4.7.0] - 2025-08-28
+
+### Fitur
+- **Manajemen & Verifikasi Bot untuk Channel Penyimpanan**: Merombak total halaman "Channel Penyimpanan" (`admin/channels.php`) untuk memperkenalkan alur kerja berbasis wizard untuk mengelola dan memverifikasi bot.
+  - **Hubungan Banyak-ke-Banyak**: Sistem sekarang mendukung beberapa bot yang dikaitkan dengan satu channel penyimpanan, yang dikelola melalui tabel database `private_channel_bots` baru.
+  - **Modal Manajemen Interaktif**: Mengklik tombol "Kelola Bot" baru pada sebuah channel akan membuka modal di mana admin dapat menambah, menghapus, dan memverifikasi bot untuk channel tersebut.
+  - **Verifikasi Otomatis via API**: Fitur "Verifikasi" secara otomatis memanggil API Telegram untuk memeriksa apakah bot adalah admin di channel. Jika ya, statusnya diperbarui di UI.
+  - **Endpoint API Modular**: Menambahkan beberapa endpoint API baru (`get_channel_bots.php`, `add_bot_to_channel.php`, `remove_bot_from_channel.php`, `verify_channel_bot.php`) untuk mendukung fungsionalitas modal secara dinamis.
+
 ## [4.6.2] - 2025-08-27
 
 ### Diperbaiki
