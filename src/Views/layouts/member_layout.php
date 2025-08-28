@@ -58,7 +58,7 @@ function is_member_nav_active($slug, $current_path) {
             <nav>
                 <a href="/member/dashboard" class="<?= is_member_nav_active('member/dashboard', $current_path) ? 'active' : '' ?>">Dashboard</a>
                 <a href="/member/my_content" class="<?= is_member_nav_active('member/my_content', $current_path) ? 'active' : '' ?>">Konten Saya</a>
-                <a href="/member/channels" class="<?= is_member_nav_active('member/channels', $current_path) ? 'active' : '' ?>">Channel</a>
+                <a href="/member/channels" class="<?= is_member_nav_active('member/channels', $current_path) ? 'active' : '' ?>">Channel Saya</a>
                 <a href="/member/purchased" class="<?= is_member_nav_active('member/purchased', $current_path) ? 'active' : '' ?>">Dibeli</a>
                 <a href="/member/sold" class="<?= is_member_nav_active('member/sold', $current_path) ? 'active' : '' ?>">Dijual</a>
                 <a href="/member/logout">Logout</a>

@@ -26,6 +26,8 @@ $router->get('member/dashboard', 'Member/DashboardController@index');
 $router->get('member/my_content', 'Member/ContentController@index');
 $router->get('member/content/edit', 'Member/ContentController@edit');
 $router->post('member/content/update', 'Member/ContentController@update');
+$router->get('member/channels', 'Member/ChannelController@index');
+$router->post('member/channels', 'Member/ChannelController@register');
 $router->get('member/purchased', 'Member/TransactionController@purchased');
 $router->get('member/sold', 'Member/TransactionController@sold');
 $router->post('member/transactions/delete_package', 'Member/TransactionController@softDeletePackage');
@@ -34,6 +36,10 @@ $router->get('member/logout', 'Auth/LoginController@logout');
 
 // User management
 $router->get('admin/users', 'Admin/UserController@index');
+
+// Package management
+$router->get('admin/packages', 'Admin/PackageController@index');
+$router->post('admin/packages/delete', 'Admin/PackageController@hardDelete');
 
 // Chat management
 $router->get('admin/chat', 'Admin/ChatController@index');
