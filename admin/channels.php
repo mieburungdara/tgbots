@@ -160,16 +160,16 @@ require_once __DIR__ . '/../partials/header.php';
             <th>ID Channel</th>
             <th>Jumlah Bot</th>
             <th>Bot Terhubung</th>
-            <th>Aksi</th>
+            <th colspan="2">Aksi</th>
         </tr>
     </thead>
     <tbody>
         <?php if (empty($private_channels)): ?>
-            <tr><td colspan="5">Belum ada channel yang ditambahkan.</td></tr>
+            <tr><td colspan="6">Belum ada channel yang ditambahkan.</td></tr>
         <?php else: ?>
             <?php foreach ($private_channels as $channel): ?>
-                <tr>
-                    <td><?php echo htmlspecialchars($channel['name']); ?></td>
+                <tr data-row-id="<?php echo $channel['channel_id']; ?>">
+                    <td class="channel-name"><?php echo htmlspecialchars($channel['name']); ?></td>
                     <td><?php echo htmlspecialchars($channel['channel_id']); ?></td>
                     <td><?php echo htmlspecialchars($channel['bot_count']); ?></td>
                     <td><?php echo htmlspecialchars($channel['bot_usernames'] ?? 'N/A'); ?></td>
@@ -178,6 +178,11 @@ require_once __DIR__ . '/../partials/header.php';
                                 data-channel-id="<?php echo $channel['channel_id']; ?>"
                                 data-channel-name="<?php echo htmlspecialchars($channel['name']); ?>">
                             Kelola Bot
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn btn-secondary btn-sm refresh-channel-btn" data-channel-id="<?php echo $channel['channel_id']; ?>">
+                            Refresh
                         </button>
                     </td>
                 </tr>
@@ -357,6 +362,29 @@ document.addEventListener('DOMContentLoaded', function () {
             const data = await apiRequest('api/remove_bot_from_channel.php', { channel_id: channelId, bot_id: botId });
             showNotification(data.message, data.status === 'success' ? 'success' : 'danger');
             loadConnectedBots(channelId);
+        }
+    });
+
+    document.querySelector('tbody').addEventListener('click', async function(e) {
+        const target = e.target;
+        if (target.classList.contains('refresh-channel-btn')) {
+            const channelId = target.dataset.channelId;
+            target.disabled = true;
+            target.innerText = '...';
+
+            const data = await apiRequest('api/update_channel_info.php', { channel_id: channelId });
+            if (data.status === 'success') {
+                const row = document.querySelector(`tr[data-row-id="${channelId}"]`);
+                if (row) {
+                    row.querySelector('.channel-name').innerText = data.newName;
+                }
+                alert(data.message);
+            } else {
+                alert('Error: ' + data.message);
+            }
+
+            target.disabled = false;
+            target.innerText = 'Refresh';
         }
     });
 });
