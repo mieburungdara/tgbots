@@ -31,5 +31,10 @@ $router->get('member/logout', 'Auth/LoginController@logout');
 // User management
 $router->get('admin/users', 'Admin/UserController@index');
 
+// Chat management
+$router->get('admin/chat', 'Admin/ChatController@index');
+$router->post('admin/chat/reply', 'Admin/ChatController@reply');
+$router->post('admin/chat/delete', 'Admin/ChatController@delete');
+
 // Add more routes here as the refactoring progresses.
 // e.g., $router->get('admin/users', 'Admin/UsersController@index');
