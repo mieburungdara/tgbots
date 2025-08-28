@@ -98,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const formData = new FormData();
             formData.append('package_id', packageId);
             try {
-                const response = await fetch('/member/package_manager.php', {
+                const response = await fetch('/api/member/content/toggle-protection', {
                     method: 'POST',
                     body: formData
                 });

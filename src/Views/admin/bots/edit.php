@@ -103,93 +103,53 @@
             }
         }
 
-        async function handleWebhookAction(action, botId) {
-            let confirmation = true;
-            if (action === 'delete') {
-                confirmation = confirm('Apakah Anda yakin ingin menghapus webhook untuk bot ini?');
+        async function handleApiAction(action, botId, confirmationMessage = null) {
+            if (confirmationMessage && !confirm(confirmationMessage)) {
+                return;
             }
-            if (!confirmation) return;
 
             showModal('Hasil ' + action, 'Sedang memproses permintaan...');
             try {
-                const response = await fetch('/admin/webhook_manager.php', {
+                const response = await fetch(`/api/admin/bots/${action}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `action=${action}&bot_id=${botId}`
+                    body: `bot_id=${botId}`
                 });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+
                 const result = await response.json();
-                if (result.status === 'error') throw new Error(result.data);
-                const formattedResult = JSON.stringify(result.data, null, 2);
-                showModal('Hasil ' + action, formattedResult);
-            } catch (error) {
-                showModal('Error', 'Gagal melakukan permintaan: ' + error.message);
-            }
-        }
-
-        async function handleTestWebhook(botId) {
-            const webhookUrl = `/webhook.php?id=${botId}`;
-
-            showModal('Hasil Test POST', `Mengirim request ke:\n${webhookUrl}\n\nMohon tunggu...`);
-
-            try {
-                const response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ "update_id": 0, "message": { "text": "/test" } })
-                });
-
-                let statusText = `Status: ${response.status} ${response.statusText}`;
-                let bodyText = await response.text();
-
-                if(response.status === 200) {
-                    showModal('Hasil Test POST: Sukses', `${statusText}\n\nRespons Body:\n${bodyText}\n\nWebhook tampaknya merespons dengan benar (200 OK).`);
-                } else {
-                    showModal('Hasil Test POST: Gagal', `${statusText}\n\nRespons Body:\n${bodyText}\n\nWebhook mengembalikan error.`);
+                if (!response.ok) {
+                    throw new Error(result.error || `HTTP error! status: ${response.status}`);
                 }
 
-            } catch (error) {
-                showModal('Error', 'Gagal melakukan permintaan fetch: ' + error.message);
-            }
-        }
+                let resultText = typeof result === 'object' ? JSON.stringify(result, null, 2) : result;
 
-        async function handleBotAction(action, botId) {
-            showModal('Hasil ' + action, 'Sedang memproses permintaan...');
-            try {
-                const response = await fetch('/admin/bot_manager.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `action=${action}&bot_id=${botId}`
-                });
-                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-                const result = await response.json();
-                if (result.status === 'error') throw new Error(result.message);
+                if (action === 'get-me' && result.success) {
+                    resultText = `Sukses! Informasi bot telah diperbarui.\n\nNama: ${result.data.first_name}\nUsername: @${result.data.username}\n\nSilakan muat ulang halaman untuk melihat perubahan.`;
+                } else if (action === 'test-webhook') {
+                    resultText = `Status: ${result.status_code}\n\nRespons Body:\n${result.body}`;
+                }
 
-                let successMessage = `Sukses! Informasi bot telah diperbarui.\n\nNama: ${result.data.first_name}\nUsername: @${result.data.username}\n\nSilakan muat ulang halaman untuk melihat perubahan.`;
-                showModal('Hasil ' + action, successMessage);
+                showModal('Hasil ' + action, resultText);
 
             } catch (error) {
                 showModal('Error', 'Gagal melakukan permintaan: ' + error.message);
             }
         }
 
-        document.querySelectorAll('.set-webhook, .check-webhook, .delete-webhook').forEach(button => {
-            button.addEventListener('click', function() {
-                const action = this.classList.contains('set-webhook') ? 'set' :
-                               this.classList.contains('check-webhook') ? 'check' : 'delete';
-                handleWebhookAction(action, this.dataset.botId);
-            });
+        document.querySelector('.set-webhook').addEventListener('click', function() {
+            handleApiAction('set-webhook', this.dataset.botId);
         });
-
+        document.querySelector('.check-webhook').addEventListener('click', function() {
+            handleApiAction('check-webhook', this.dataset.botId);
+        });
+        document.querySelector('.delete-webhook').addEventListener('click', function() {
+            handleApiAction('delete-webhook', this.dataset.botId, 'Anda yakin ingin menghapus webhook untuk bot ini?');
+        });
         document.querySelector('.get-me').addEventListener('click', function() {
-            handleBotAction('get_me', this.dataset.botId);
+            handleApiAction('get-me', this.dataset.botId);
         });
-
-        const testWebhookBtn = document.querySelector('.test-webhook');
-        if (testWebhookBtn) {
-            testWebhookBtn.addEventListener('click', function() {
-                handleTestWebhook(this.dataset.telegramBotId);
-            });
-        }
+        document.querySelector('.test-webhook').addEventListener('click', function() {
+            handleApiAction('test-webhook', this.dataset.botId);
+        });
     });
 </script>

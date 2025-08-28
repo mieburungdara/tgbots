@@ -78,4 +78,56 @@ class UserController extends BaseController {
 
         unset($_SESSION['flash_message']);
     }
+
+    public function getRoles() {
+        if (!isset($_GET['telegram_id']) || !filter_var($_GET['telegram_id'], FILTER_VALIDATE_INT)) {
+            return $this->jsonResponse(['error' => 'Telegram ID tidak valid atau tidak diberikan.'], 400);
+        }
+        $user_id = (int)$_GET['telegram_id'];
+        $pdo = get_db_connection();
+        try {
+            $stmt = $pdo->prepare("SELECT role_id FROM user_roles WHERE user_id = ?");
+            $stmt->execute([$user_id]);
+            $role_ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN, 0));
+            return $this->jsonResponse(['role_ids' => $role_ids]);
+        } catch (Exception $e) {
+            error_log('API Error in UserController@getRoles: ' . $e->getMessage());
+            return $this->jsonResponse(['error' => 'Terjadi kesalahan pada server.'], 500);
+        }
+    }
+
+    public function updateRoles() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            return $this->jsonResponse(['error' => 'Metode permintaan tidak valid.'], 405);
+        }
+        $data = json_decode(file_get_contents('php://input'), true);
+        if (!isset($data['telegram_id']) || !filter_var($data['telegram_id'], FILTER_VALIDATE_INT)) {
+            return $this->jsonResponse(['error' => 'Telegram ID tidak valid.'], 400);
+        }
+        if (!isset($data['role_ids']) || !is_array($data['role_ids'])) {
+            return $this->jsonResponse(['error' => 'Role IDs tidak valid.'], 400);
+        }
+
+        $user_id_to_update = (int)$data['telegram_id'];
+        $role_ids = array_filter(array_map('intval', $data['role_ids']), fn($id) => $id > 0);
+        $pdo = get_db_connection();
+
+        try {
+            $pdo->beginTransaction();
+            $stmt_delete = $pdo->prepare("DELETE FROM user_roles WHERE user_id = ?");
+            $stmt_delete->execute([$user_id_to_update]);
+            if (!empty($role_ids)) {
+                $stmt_insert = $pdo->prepare("INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)");
+                foreach ($role_ids as $role_id) {
+                    $stmt_insert->execute([$user_id_to_update, $role_id]);
+                }
+            }
+            $pdo->commit();
+            return $this->jsonResponse(['success' => true, 'message' => 'Peran pengguna berhasil diperbarui.']);
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            error_log('API Error in UserController@updateRoles: ' . $e->getMessage());
+            return $this->jsonResponse(['error' => 'Terjadi kesalahan pada server.'], 500);
+        }
+    }
 }
