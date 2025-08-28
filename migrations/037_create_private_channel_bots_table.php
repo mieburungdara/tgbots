@@ -11,10 +11,6 @@
  * 2. Menambahkan foreign key ke `private_channels` dan `bots`.
  */
 
-if (php_sapi_name() !== 'cli' && php_sapi_name() !== 'cgi-fcgi') {
-    die("This script can only be run from the command line or a similar environment.");
-}
-
 require_once __DIR__ . '/../core/database.php';
 
 if (!isset($pdo)) {
@@ -35,7 +31,7 @@ try {
     echo "1. Creating `private_channel_bots` table..." . PHP_EOL;
     $pdo->exec("
         CREATE TABLE `private_channel_bots` (
-            `private_channel_id` BIGINT UNSIGNED NOT NULL,
+            `private_channel_id` INT NOT NULL,
             `bot_id` BIGINT NOT NULL,
             `verified_at` TIMESTAMP NULL DEFAULT NULL,
             `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
