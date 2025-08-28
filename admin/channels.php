@@ -37,13 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     }
 
     if ($action === 'delete_channel') {
-        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-        if ($id) {
-            if ($channelRepo->deleteChannel($id)) {
+        $telegram_channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
+        if ($telegram_channel_id) {
+            if ($channelRepo->deleteByTelegramId($telegram_channel_id)) {
                 $_SESSION['message'] = "Channel berhasil dihapus.";
             } else {
                 $_SESSION['message'] = "Gagal menghapus channel.";
             }
+        } else {
+            $_SESSION['message'] = "ID Channel tidak valid untuk penghapusan.";
         }
         header("Location: channels.php");
         exit;
@@ -173,7 +175,7 @@ require_once __DIR__ . '/../partials/header.php';
                     <td><?php echo htmlspecialchars($channel['bot_usernames'] ?? 'N/A'); ?></td>
                     <td>
                         <button class="btn btn-primary manage-bots-btn"
-                                data-channel-id="<?php echo $channel['id']; ?>"
+                                data-channel-id="<?php echo $channel['channel_id']; ?>"
                                 data-channel-name="<?php echo htmlspecialchars($channel['name']); ?>">
                             Kelola Bot
                         </button>
@@ -218,9 +220,9 @@ require_once __DIR__ . '/../partials/header.php';
 
         <hr>
 
-        <form action="channels.php" method="post" onsubmit="return confirm('Yakin ingin menghapus channel ini beserta semua hubungan bot-nya?');">
+        <form id="delete-channel-form" action="channels.php" method="post" onsubmit="return confirm('Yakin ingin menghapus channel ini beserta semua hubungan bot-nya?');">
             <input type="hidden" name="action" value="delete_channel">
-            <input type="hidden" id="delete-channel-id" name="id">
+            <input type="hidden" id="delete-channel-id-input" name="channel_id">
             <button type="submit" class="btn btn-danger">Hapus Channel Ini</button>
         </form>
     </div>
@@ -313,7 +315,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const channelName = btn.dataset.channelName;
             modal.querySelector('#modal-title').innerText = 'Kelola Bot untuk Channel: ' + channelName;
             modalChannelIdInput.value = channelId;
-            modal.querySelector('#delete-channel-id').value = channelId;
+            modal.querySelector('#delete-channel-id-input').value = channelId;
             modalNotifications.innerHTML = '';
             modal.style.display = 'block';
             loadConnectedBots(channelId);
