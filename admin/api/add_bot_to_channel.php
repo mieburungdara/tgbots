@@ -27,23 +27,32 @@ if (!$pdo) {
 }
 
 // --- Input ---
-$channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
+$telegram_channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
 $bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
 
-if (!$channel_id || !$bot_id) {
+if (!$telegram_channel_id || !$bot_id) {
     echo json_encode(['status' => 'error', 'message' => 'Input tidak valid: channel_id dan bot_id diperlukan.']);
     exit;
 }
 
 // --- Logika ---
 try {
+    require_once __DIR__ . '/../../core/database/PrivateChannelRepository.php';
+    $channelRepo = new PrivateChannelRepository($pdo);
+    $channel = $channelRepo->findByTelegramId($telegram_channel_id);
+
+    if (!$channel) {
+        throw new Exception("Channel tidak ditemukan.");
+    }
+
+    $internal_channel_id = $channel['id'];
     $pcBotRepo = new PrivateChannelBotRepository($pdo);
 
-    if ($pcBotRepo->isBotInChannel($channel_id, $bot_id)) {
+    if ($pcBotRepo->isBotInChannel($internal_channel_id, $bot_id)) {
         throw new Exception("Bot ini sudah ditambahkan ke channel tersebut.");
     }
 
-    if ($pcBotRepo->addBotToChannel($channel_id, $bot_id)) {
+    if ($pcBotRepo->addBotToChannel($internal_channel_id, $bot_id)) {
         echo json_encode(['status' => 'success', 'message' => 'Bot berhasil ditambahkan ke channel.']);
     } else {
         throw new Exception("Gagal menambahkan bot ke channel di database.");

@@ -30,10 +30,10 @@ if (!$pdo) {
 }
 
 // --- Input ---
-$channel_id_internal = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
+$telegram_channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
 $bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
 
-if (!$channel_id_internal || !$bot_id) {
+if (!$telegram_channel_id || !$bot_id) {
     echo json_encode(['status' => 'error', 'message' => 'Input tidak valid: channel_id dan bot_id diperlukan.']);
     exit;
 }
@@ -46,7 +46,7 @@ try {
 
     // 1. Dapatkan token bot dan ID channel telegram
     $bot = $botRepo->findBotByTelegramId($bot_id);
-    $channel = $channelRepo->findById($channel_id_internal);
+    $channel = $channelRepo->findByTelegramId($telegram_channel_id);
 
     if (!$bot) {
         throw new Exception("Bot tidak ditemukan di database.");
@@ -56,7 +56,7 @@ try {
     }
 
     $token = $bot['token'];
-    $telegram_channel_id = $channel['channel_id'];
+    $internal_channel_id = $channel['id'];
 
     // 2. Hubungi API Telegram untuk memeriksa status keanggotaan bot
     $telegram_api = new TelegramAPI($token);
@@ -72,11 +72,11 @@ try {
     // 3. Update status verifikasi di database jika bot adalah admin
     if ($is_admin) {
         // Pastikan hubungan sudah ada sebelum memverifikasi
-        if (!$pcBotRepo->isBotInChannel($channel_id_internal, $bot_id)) {
-            $pcBotRepo->addBotToChannel($channel_id_internal, $bot_id);
+        if (!$pcBotRepo->isBotInChannel($internal_channel_id, $bot_id)) {
+            $pcBotRepo->addBotToChannel($internal_channel_id, $bot_id);
         }
 
-        if ($pcBotRepo->verifyBotInChannel($channel_id_internal, $bot_id)) {
+        if ($pcBotRepo->verifyBotInChannel($internal_channel_id, $bot_id)) {
             echo json_encode(['status' => 'success', 'message' => "Verifikasi berhasil! Bot adalah '{$status}' di channel."]);
         } else {
             throw new Exception("Gagal memperbarui status verifikasi di database.");

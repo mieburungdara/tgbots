@@ -53,6 +53,18 @@ class PrivateChannelRepository
     }
 
     /**
+     * Menghapus channel dari database berdasarkan ID Telegram-nya.
+     *
+     * @param int $telegram_id ID unik dari channel Telegram.
+     * @return bool True jika berhasil, false jika gagal.
+     */
+    public function deleteByTelegramId(int $telegram_id): bool
+    {
+        $stmt = $this->pdo->prepare("DELETE FROM private_channels WHERE channel_id = ?");
+        return $stmt->execute([$telegram_id]);
+    }
+
+    /**
      * Mendapatkan semua channel pribadi dari database, beserta bot yang terhubung.
      *
      * @return array Daftar semua channel dengan informasi bot terkait.
@@ -91,6 +103,19 @@ class PrivateChannelRepository
     {
         $stmt = $this->pdo->prepare("SELECT * FROM private_channels WHERE id = ?");
         $stmt->execute([$id]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Mendapatkan satu channel berdasarkan ID Telegram-nya.
+     *
+     * @param int $telegram_id
+     * @return array|false
+     */
+    public function findByTelegramId(int $telegram_id)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM private_channels WHERE channel_id = ?");
+        $stmt->execute([$telegram_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
 }
