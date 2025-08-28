@@ -57,7 +57,7 @@ function is_member_nav_active($slug, $current_path) {
             <h1><a href="/member/dashboard" style="text-decoration: none; color: inherit;">Member Area</a></h1>
             <nav>
                 <a href="/member/dashboard" class="<?= is_member_nav_active('member/dashboard', $current_path) ? 'active' : '' ?>">Dashboard</a>
-                <a href="/member/my_content" class="<?= is_member_nav_active('member/my_content', $current_path) ? 'active' : '' ?>">My Content</a>
+                <a href="/member/my_content" class="<?= is_member_nav_active('member/my_content', $current_path) ? 'active' : '' ?>">Konten Saya</a>
                 <a href="/member/channels" class="<?= is_member_nav_active('member/channels', $current_path) ? 'active' : '' ?>">Channel</a>
                 <a href="/member/purchased" class="<?= is_member_nav_active('member/purchased', $current_path) ? 'active' : '' ?>">Purchased</a>
                 <a href="/member/sold" class="<?= is_member_nav_active('member/sold', $current_path) ? 'active' : '' ?>">Sold</a>

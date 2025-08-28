@@ -11,6 +11,7 @@
 - **Lanjutan Refactoring**: Melanjutkan refactoring dengan memigrasikan halaman "Kelola Bot" (`admin/bots.php`) dan "Edit Bot" (`admin/edit_bot.php`) ke `BotController` baru. Juga memulai refactoring area member dengan membuat `MemberBaseController` dan memigrasikan halaman "Dasbor Member" (`member/dashboard.php`).
 - **Alur Login Member**: Menyelesaikan refactoring area member dengan memigrasikan halaman login (`member/index.php`) ke `Member/LoginController` yang baru, membuat alur otentikasi member sepenuhnya dikelola oleh arsitektur MVCR.
 - **Manajemen Pengguna**: Halaman manajemen pengguna (`admin/users.php`) telah dimigrasikan ke `UserController`, mendukung fungsionalitas pencarian, pengurutan, dan paginasi dalam arsitektur baru.
+- **Manajemen Konten Member**: Melanjutkan refactoring area member dengan memigrasikan halaman "Konten Saya" (`member/my_content.php`) dan "Edit Paket" (`member/edit_package.php`) ke dalam `ContentController`.
 
 ## [4.7.0] - 2025-08-28
 

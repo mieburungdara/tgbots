@@ -1,30 +1,5 @@
 <?php
-/**
- * Halaman "Konten Saya" untuk Anggota.
- *
- * Halaman ini memungkinkan anggota (penjual) untuk melihat dan mengelola
- * semua paket konten yang telah mereka buat.
- */
-session_start();
-
-// Jika belum login, redirect ke halaman login
-if (!isset($_SESSION['member_user_id'])) {
-    header("Location: index.php");
-    exit;
-}
-
-require_once __DIR__ . '/../core/database.php';
-require_once __DIR__ . '/../core/database/PackageRepository.php';
-
-$pdo = get_db_connection();
-$packageRepo = new PackageRepository($pdo);
-$user_id = $_SESSION['member_user_id'];
-
-// Ambil semua paket milik pengguna yang sedang login
-$my_packages = $packageRepo->findAllBySellerId($user_id);
-
-$page_title = 'Konten Saya';
-require_once __DIR__ . '/../partials/header.php';
+// This view assumes $my_packages is passed from the controller.
 ?>
 
 <h2>Konten Saya</h2>
@@ -56,8 +31,8 @@ require_once __DIR__ . '/../partials/header.php';
                         <td><span class="status-badge status-<?= htmlspecialchars($package['status']) ?>"><?= ucfirst(htmlspecialchars($package['status'])) ?></span></td>
                         <td><?= htmlspecialchars(date('d M Y H:i', strtotime($package['created_at']))) ?></td>
                         <td style="white-space: nowrap;">
-                            <a href="view_package.php?id=<?= $package['public_id'] ?>" class="btn btn-sm">Lihat</a>
-                            <a href="edit_package.php?id=<?= $package['public_id'] ?>" class="btn btn-edit btn-sm">Edit</a>
+                            <a href="/member/content/view?id=<?= $package['public_id'] ?>" class="btn btn-sm">Lihat</a>
+                            <a href="/member/content/edit?id=<?= $package['public_id'] ?>" class="btn btn-edit btn-sm">Edit</a>
                             <a href="#" class="btn btn-delete btn-sm">Hapus</a>
                         </td>
                     </tr>
@@ -67,7 +42,6 @@ require_once __DIR__ . '/../partials/header.php';
     </table>
 </div>
 
-<!-- CSS untuk status badge, bisa dipindahkan ke header.php nanti jika diperlukan di tempat lain -->
 <style>
 .status-badge {
     padding: 4px 8px;
@@ -82,7 +56,3 @@ require_once __DIR__ . '/../partials/header.php';
 .status-sold { background-color: #dc3545; }
 .status-deleted { background-color: #6c757d; }
 </style>
-
-<?php
-require_once __DIR__ . '/../partials/footer.php';
-?>
