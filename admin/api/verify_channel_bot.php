@@ -45,7 +45,7 @@ try {
     $pcBotRepo = new PrivateChannelBotRepository($pdo);
 
     // 1. Dapatkan token bot dan ID channel telegram
-    $bot = $botRepo->findById($bot_id);
+    $bot = $botRepo->findBotByTelegramId($bot_id);
     $channel = $channelRepo->findById($channel_id_internal);
 
     if (!$bot) {

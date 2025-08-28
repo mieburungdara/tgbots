@@ -18,6 +18,17 @@ class BotRepository
     }
 
     /**
+     * Mengambil semua bot dari database.
+     *
+     * @return array Daftar semua bot.
+     */
+    public function getAllBots(): array
+    {
+        $stmt = $this->pdo->query("SELECT id, first_name, username FROM bots ORDER BY first_name ASC");
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Mencari bot berdasarkan ID Telegram-nya dan mengembalikan data bot.
      *
      * @param int $bot_id ID numerik bot di Telegram.
