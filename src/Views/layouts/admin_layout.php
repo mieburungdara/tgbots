@@ -79,7 +79,7 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
             <a href="/admin/users" class="<?= is_active_nav('admin/users', $current_path) ? 'active' : '' ?>">Pengguna</a>
             <a href="/admin/balance" class="<?= is_active_nav('admin/balance', $current_path) ? 'active' : '' ?>">Manajemen Saldo</a>
             <a href="/admin/roles" class="<?= is_active_nav('admin/roles', $current_path) ? 'active' : '' ?>">Manajemen Peran</a>
-            <a href="/admin/packages" class="<?= is_active_nav('admin/packages', $current_path) ? 'active' : '' ?>">Konten</a>
+            <a href="/admin/packages" class="<?= is_active_nav('admin/packages', $current_path) ? 'active' : '' ?>">Manajemen Konten</a>
             <a href="/admin/media_logs" class="<?= is_active_nav('admin/media_logs', $current_path) ? 'active' : '' ?>">Log Media</a>
             <a href="/admin/sales_channels" class="<?= is_active_nav('admin/sales_channels', $current_path) ? 'active' : '' ?>">Channel Jualan</a>
             <a href="/admin/channels" class="<?= is_active_nav('admin/channels', $current_path) ? 'active' : '' ?>">Channel Penyimpanan</a>
