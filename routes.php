@@ -23,6 +23,9 @@ $router->get('member/login', 'Member/LoginController@showLoginForm');
 $router->get('member/token-login', 'Member/LoginController@processLinkLogin'); // For links from bot
 $router->post('member/login', 'Member/LoginController@processFormLogin');    // For form submission
 $router->get('member/dashboard', 'Member/DashboardController@index');
+$router->get('member/my_content', 'Member/ContentController@index');
+$router->get('member/content/edit', 'Member/ContentController@edit');
+$router->post('member/content/update', 'Member/ContentController@update');
 $router->get('member/logout', 'Auth/LoginController@logout');
 
 // User management
