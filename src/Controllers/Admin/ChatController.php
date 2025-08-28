@@ -1,0 +1,137 @@
+<?php
+
+require_once __DIR__ . '/../BaseController.php';
+require_once __DIR__ . '/../../../core/TelegramAPI.php';
+
+class ChatController extends BaseController {
+
+    public function index() {
+        $pdo = get_db_connection();
+        $telegram_id = isset($_GET['telegram_id']) ? (int)$_GET['telegram_id'] : 0;
+        $bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
+
+        if (!$telegram_id || !$bot_id) {
+            header("Location: /admin/dashboard"); // Redirect to new dashboard
+            exit;
+        }
+
+        $stmt_user = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt_user->execute([$telegram_id]);
+        $user_info = $stmt_user->fetch();
+
+        $stmt_bot = $pdo->prepare("SELECT * FROM bots WHERE id = ?");
+        $stmt_bot->execute([$bot_id]);
+        $bot_info = $stmt_bot->fetch();
+
+        if (!$user_info || !$bot_info) {
+            // A proper error view would be better
+            die("Pengguna atau bot tidak ditemukan.");
+        }
+
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = 50;
+        $offset = ($page - 1) * $limit;
+
+        $count_stmt = $pdo->prepare("SELECT COUNT(*) FROM messages WHERE user_id = ? AND bot_id = ?");
+        $count_stmt->execute([$telegram_id, $bot_id]);
+        $total_messages = $count_stmt->fetchColumn();
+        $total_pages = ceil($total_messages / $limit);
+
+        $sql = "SELECT m.id, m.telegram_message_id, m.chat_id, m.text, m.raw_data, m.direction, m.created_at, mf.type as media_type
+                FROM messages m
+                LEFT JOIN media_files mf ON m.id = mf.message_id
+                WHERE m.user_id = ? AND m.bot_id = ?
+                ORDER BY m.id DESC
+                LIMIT ? OFFSET ?";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindValue(1, $telegram_id, PDO::PARAM_STR);
+        $stmt->bindValue(2, $bot_id, PDO::PARAM_STR);
+        $stmt->bindValue(3, $limit, PDO::PARAM_INT);
+        $stmt->bindValue(4, $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $messages = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $this->view('admin/chat/index', [
+            'page_title' => "Chat dengan " . htmlspecialchars($user_info['first_name']),
+            'user_info' => $user_info,
+            'bot_info' => $bot_info,
+            'messages' => $messages,
+            'total_messages' => $total_messages,
+            'total_pages' => $total_pages,
+            'page' => $page
+        ], 'admin_layout');
+    }
+
+    public function reply() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['reply_message'])) {
+            header('Location: /admin/dashboard');
+            exit();
+        }
+
+        $pdo = get_db_connection();
+        $user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+        $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
+        $reply_text = trim($_POST['reply_text']);
+
+        if ($user_id && $bot_id && !empty($reply_text)) {
+            $stmt_bot = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
+            $stmt_bot->execute([$bot_id]);
+            $bot_info = $stmt_bot->fetch();
+
+            if ($bot_info) {
+                $telegram_api = new TelegramAPI($bot_info['token'], $pdo, $bot_id);
+                $telegram_api->sendMessage($user_id, $reply_text);
+            }
+        }
+
+        // Redirect back to the chat page
+        header("Location: /admin/chat?telegram_id=$user_id&bot_id=$bot_id");
+        exit;
+    }
+
+    public function delete() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header("Location: /admin/dashboard");
+            exit;
+        }
+
+        $pdo = get_db_connection();
+        $message_ids = $_POST['message_ids'] ?? [];
+        $action = $_POST['action'] ?? '';
+        $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
+        $user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
+
+        if (empty($message_ids) || empty($action) || !$bot_id || !$user_id) {
+            header("Location: /admin/dashboard");
+            exit;
+        }
+
+        $stmt_bot = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
+        $stmt_bot->execute([$bot_id]);
+        $bot_info = $stmt_bot->fetch();
+
+        if (!$bot_info) { die("Bot tidak ditemukan."); }
+
+        $telegram_api = new TelegramAPI($bot_info['token']);
+
+        $placeholders = implode(',', array_fill(0, count($message_ids), '?'));
+        $stmt = $pdo->prepare("SELECT id, telegram_message_id, chat_id FROM messages WHERE id IN ($placeholders)");
+        $stmt->execute($message_ids);
+        $messages_to_delete = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        foreach ($messages_to_delete as $msg) {
+            if ($action === 'delete_telegram' || $action === 'delete_both') {
+                if ($msg['telegram_message_id'] && $msg['chat_id']) {
+                    $telegram_api->deleteMessage($msg['chat_id'], $msg['telegram_message_id']);
+                }
+            }
+            if ($action === 'delete_db' || $action === 'delete_both') {
+                $stmt_delete = $pdo->prepare("DELETE FROM messages WHERE id = ?");
+                $stmt_delete->execute([$msg['id']]);
+            }
+        }
+
+        header("Location: /admin/chat?telegram_id=$user_id&bot_id=$bot_id");
+        exit;
+    }
+}

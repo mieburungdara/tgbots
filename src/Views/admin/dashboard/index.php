@@ -56,7 +56,6 @@
                     <?php else: ?>
                         <?php foreach ($conversations as $conv): ?>
                             <li class="conv-card">
-                                <?php // This link will be broken until ChatController is created ?>
                                 <a href="/admin/chat?telegram_id=<?= $conv['telegram_id'] ?>&bot_id=<?= $selected_bot_id ?>">
                                     <div class="conv-avatar"><?= get_initials($conv['first_name'] ?? '?') ?></div>
                                     <div class="conv-details">
