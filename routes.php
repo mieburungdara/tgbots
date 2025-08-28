@@ -25,5 +25,8 @@ $router->post('member/login', 'Member/LoginController@processFormLogin');    // 
 $router->get('member/dashboard', 'Member/DashboardController@index');
 $router->get('member/logout', 'Auth/LoginController@logout');
 
+// User management
+$router->get('admin/users', 'Admin/UserController@index');
+
 // Add more routes here as the refactoring progresses.
 // e.g., $router->get('admin/users', 'Admin/UsersController@index');
