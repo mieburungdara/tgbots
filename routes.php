@@ -47,5 +47,11 @@ $router->get('admin/channel_chat', 'Admin/ChatController@channel');
 $router->post('admin/chat/reply', 'Admin/ChatController@reply');
 $router->post('admin/chat/delete', 'Admin/ChatController@delete');
 
+// Log viewers
+$router->get('admin/logs', 'Admin/LogController@app');
+$router->post('admin/logs/clear', 'Admin/LogController@clearAppLogs');
+$router->get('admin/media_logs', 'Admin/LogController@media');
+$router->get('admin/telegram_logs', 'Admin/LogController@telegram');
+
 // Add more routes here as the refactoring progresses.
 // e.g., $router->get('admin/users', 'Admin/UsersController@index');
