@@ -1,73 +1,7 @@
 <?php
-/**
- * Halaman Dasbor Panel Anggota.
- *
- * Halaman ini adalah halaman utama yang dilihat pengguna setelah berhasil login.
- * Ini menampilkan ringkasan statistik penjualan (jika pengguna adalah penjual)
- * dan informasi dasar akun pengguna, dengan opsi rentang waktu untuk grafik.
- */
-session_start();
-
-// Jika belum login, redirect ke halaman login
-if (!isset($_SESSION['member_user_id'])) {
-    header("Location: index.php");
-    exit;
-}
-
-require_once __DIR__ . '/../core/database.php';
-require_once __DIR__ . '/../core/database/AnalyticsRepository.php';
-
-$pdo = get_db_connection();
-$analyticsRepo = new AnalyticsRepository($pdo);
-
-$user_id = $_SESSION['member_user_id'];
-
-// Ambil informasi pengguna dari tabel users
-$stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
-$stmt->execute([$user_id]);
-$user_info = $stmt->fetch();
-
-if (!$user_info) {
-    session_destroy();
-    header("Location: index.php");
-    exit;
-}
-
-// Tentukan periode waktu untuk analitik
-$periods = [
-    '1' => 'Hari Ini',
-    '7' => '7 Hari',
-    '30' => '30 Hari',
-    '365' => '1 Tahun',
-];
-$current_period = isset($_GET['period']) && isset($periods[$_GET['period']]) ? $_GET['period'] : '30';
-
-// Ambil semua data analitik yang diperlukan
-$seller_summary = $analyticsRepo->getSellerSummary($user_id);
-$purchase_stats = $analyticsRepo->getUserPurchaseStats($user_id);
-$sales_by_day = $analyticsRepo->getSalesByDay($user_id, $current_period);
-$top_selling_items = $analyticsRepo->getTopSellingPackagesForSeller($user_id, 5);
-
-// Siapkan data untuk grafik
-$chart_labels = [];
-$chart_data = [];
-$label_format = ($current_period > 90) ? 'M Y' : 'd M'; // Format bulanan untuk periode panjang
-foreach ($sales_by_day as $day) {
-    $chart_labels[] = date($label_format, strtotime($day['sales_date']));
-    $chart_data[] = $day['daily_revenue'];
-}
-
-$chart_title = 'Tren Pendapatan ' . $periods[$current_period];
-
-// Handle logout
-if (isset($_GET['action']) && $_GET['action'] === 'logout') {
-    session_destroy();
-    header("Location: index.php");
-    exit;
-}
-
-$page_title = 'Dashboard';
-require_once __DIR__ . '/../partials/header.php';
+// This view assumes all data variables are passed from the controller:
+// $user_info, $periods, $current_period, $seller_summary, $purchase_stats,
+// $chart_labels, $chart_data, $chart_title, $top_selling_items
 ?>
 
 <!-- Style untuk pemilih periode -->
@@ -143,7 +77,7 @@ require_once __DIR__ . '/../partials/header.php';
             <h3><?= htmlspecialchars($chart_title) ?></h3>
             <div class="period-selector">
                 <?php foreach ($periods as $days => $label): ?>
-                    <a href="?period=<?= $days ?>" class="<?= $current_period == $days ? 'active' : '' ?>"><?= $label ?></a>
+                    <a href="/member/dashboard?period=<?= $days ?>" class="<?= $current_period == $days ? 'active' : '' ?>"><?= $label ?></a>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -232,7 +166,3 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
-
-<?php
-require_once __DIR__ . '/../partials/footer.php';
-?>

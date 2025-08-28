@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.0.0] - 2025-08-28
+
+### Diubah (Refactoring Arsitektur)
+- **Implementasi Pola Model-View-Controller-Router (MVCR)**: Memulai refactoring besar-besaran pada arsitektur aplikasi dari struktur PHP native menjadi pola MVCR untuk meningkatkan modularitas, keterbacaan, dan kemudahan pemeliharaan.
+  - **Router & Front Controller**: Memperkenalkan `public/index.php` sebagai satu-satunya titik masuk (front controller) dan `core/Router.php` untuk menangani semua permintaan web. Ini memungkinkan penggunaan URL yang bersih (misalnya, `/admin/dashboard`).
+  - **Struktur Direktori Baru**: Membuat struktur direktori baru (`src/Controllers`, `src/Views`, `src/Models`, `public`) untuk memisahkan tanggung jawab dengan jelas.
+  - **BaseController**: Membuat `BaseController` yang menangani logika umum seperti otentikasi sesi admin dan rendering view, yang akan diwarisi oleh semua controller lain.
+  - **Refactor Dasbor Admin**: Halaman pertama yang berhasil di-refactor adalah Dasbor Percakapan Admin (`admin/index.php`). Logika bisnisnya sekarang berada di `Admin/DashboardController.php`, dan presentasinya di `src/Views/admin/dashboard/index.php` dengan layout terpusat.
+- **Lanjutan Refactoring**: Melanjutkan refactoring dengan memigrasikan halaman "Kelola Bot" (`admin/bots.php`) dan "Edit Bot" (`admin/edit_bot.php`) ke `BotController` baru. Juga memulai refactoring area member dengan membuat `MemberBaseController` dan memigrasikan halaman "Dasbor Member" (`member/dashboard.php`).
+- **Alur Login Member**: Menyelesaikan refactoring area member dengan memigrasikan halaman login (`member/index.php`) ke `Member/LoginController` yang baru, membuat alur otentikasi member sepenuhnya dikelola oleh arsitektur MVCR.
+
 ## [4.7.0] - 2025-08-28
 
 ### Fitur

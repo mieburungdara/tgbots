@@ -1,112 +1,7 @@
 <?php
-/**
- * Halaman Utama Panel Admin (Dasbor Percakapan).
- *
- * Halaman ini menampilkan antarmuka dua kolom untuk menjelajahi percakapan:
- * - Sidebar Kiri: Daftar semua bot yang terdaftar.
- * - Area Utama: Daftar percakapan untuk bot yang dipilih, dengan opsi filter pengguna.
- */
-require_once __DIR__ . '/auth.php'; // Handle otentikasi
-require_once __DIR__ . '/../core/database.php';
-require_once __DIR__ . '/../core/helpers.php';
-
-// Fungsi helper untuk mendapatkan inisial dari nama
-function get_initials($name) {
-    $words = explode(' ', $name);
-    $initials = '';
-    $wordCount = 0;
-    foreach ($words as $word) {
-        if (!empty($word)) {
-            $initials .= strtoupper($word[0]);
-            $wordCount++;
-        }
-        if ($wordCount >= 2) {
-            break;
-        }
-    }
-    return $initials ?: '?';
-}
-
-$pdo = get_db_connection();
-if (!$pdo) {
-    die("Koneksi database gagal.");
-}
-
-// Pengecekan awal dan setup database otomatis jika diperlukan
-try {
-    if (!check_tables_exist($pdo)) {
-        if (setup_database($pdo)) {
-            header("Location: " . $_SERVER['REQUEST_URI']);
-            exit;
-        } else {
-            $setup_error_message = "<strong>Gagal melakukan setup database secara otomatis!</strong><br>" .
-                "Pastikan kredensial database di `config.php` sudah benar dan server database berjalan.<br><br>" .
-                "Anda juga bisa mencoba mengimpor file <code>setup.sql</code> secara manual.";
-            include __DIR__ . '/../core/templates/setup_error.php';
-            exit;
-        }
-    }
-} catch (PDOException $e) {
-    die("Error saat memeriksa database: " . $e->getMessage());
-}
-
-// Ambil semua bot untuk sidebar
-$bots = $pdo->query("SELECT id, first_name FROM bots ORDER BY first_name ASC")->fetchAll();
-
-// Dapatkan parameter dari URL
-$selected_bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : null;
-$search_user = trim($_GET['search_user'] ?? '');
-
-$conversations = [];
-$channel_chats = [];
-$bot_exists = false;
-
-if ($selected_bot_id) {
-    // Verifikasi bot ada
-    $stmt = $pdo->prepare("SELECT 1 FROM bots WHERE id = ?");
-    $stmt->execute([$selected_bot_id]);
-    $bot_exists = $stmt->fetchColumn();
-
-    if ($bot_exists) {
-        // --- Ambil percakapan PRIBADI ---
-        $params = [$selected_bot_id];
-        $user_where_clause = '';
-        if (!empty($search_user)) {
-            $user_where_clause = "AND (u.first_name LIKE ? OR u.last_name LIKE ? OR u.username LIKE ? OR u.id = ?)";
-            $params = array_merge($params, ["%$search_user%", "%$search_user%", "%$search_user%", $search_user]);
-        }
-
-        $sql_users = "
-            SELECT u.id as telegram_id, u.first_name, u.username,
-                   (SELECT text FROM messages m WHERE m.user_id = u.id AND m.bot_id = r.bot_id ORDER BY m.id DESC LIMIT 1) as last_message,
-                   (SELECT telegram_timestamp FROM messages m WHERE m.user_id = u.id AND m.bot_id = r.bot_id ORDER BY m.id DESC LIMIT 1) as last_message_time
-            FROM users u
-            JOIN rel_user_bot r ON u.id = r.user_id
-            WHERE r.bot_id = ? {$user_where_clause}
-            ORDER BY last_message_time DESC";
-
-        $stmt_users = $pdo->prepare($sql_users);
-        $stmt_users->execute($params);
-        $conversations = $stmt_users->fetchAll();
-
-        // --- Ambil percakapan CHANNEL dan GRUP (hanya jika tidak ada filter user) ---
-        if (empty($search_user)) {
-            $stmt_channels = $pdo->prepare(
-                "SELECT DISTINCT m.chat_id,
-                    (SELECT raw_data FROM messages WHERE chat_id = m.chat_id AND bot_id = m.bot_id ORDER BY id DESC LIMIT 1) as last_message_raw,
-                    (SELECT text FROM messages WHERE chat_id = m.chat_id AND bot_id = m.bot_id ORDER BY id DESC LIMIT 1) as last_message,
-                    (SELECT telegram_timestamp FROM messages WHERE chat_id = m.chat_id AND bot_id = m.bot_id ORDER BY id DESC LIMIT 1) as last_message_time
-                FROM messages m
-                WHERE m.bot_id = ? AND m.chat_id < 0 ORDER BY last_message_time DESC"
-            );
-            $stmt_channels->execute([$selected_bot_id]);
-            $channel_chats = $stmt_channels->fetchAll();
-        }
-    }
-}
-
-$page_title = 'Percakapan';
-require_once __DIR__ . '/../partials/header.php';
+// This view assumes that the following variables are available from the controller:
+// $bots, $selected_bot_id, $search_user, $conversations, $channel_chats, $bot_exists,
+// and the helper function get_initials().
 ?>
 
 <div class="conv-layout">
@@ -124,8 +19,10 @@ require_once __DIR__ . '/../partials/header.php';
                         if (!empty($search_user)) {
                             $link_params['search_user'] = $search_user;
                         }
+                        // Note: A url() helper function would be ideal here.
+                        $url = '/admin/dashboard?' . http_build_query($link_params);
                     ?>
-                    <a href="index.php?<?= http_build_query($link_params) ?>" class="<?= ($selected_bot_id == $bot['id']) ? 'active' : '' ?>">
+                    <a href="<?= $url ?>" class="<?= ($selected_bot_id == $bot['id']) ? 'active' : '' ?>">
                         <?= htmlspecialchars($bot['first_name'] ?? 'Bot Tanpa Nama') ?>
                     </a>
                 <?php endforeach; ?>
@@ -135,14 +32,14 @@ require_once __DIR__ . '/../partials/header.php';
 
     <main class="conv-main">
         <div class="search-form" style="margin-bottom: 20px;">
-            <form action="index.php" method="get">
+            <form action="/admin/dashboard" method="get">
                 <?php if ($selected_bot_id): ?>
                     <input type="hidden" name="bot_id" value="<?= htmlspecialchars($selected_bot_id) ?>">
                 <?php endif; ?>
                 <input type="text" name="search_user" placeholder="Cari percakapan pengguna..." value="<?= htmlspecialchars($search_user) ?>" style="width: 300px; display: inline-block;">
                 <button type="submit" class="btn">Cari</button>
                 <?php if(!empty($search_user)): ?>
-                    <a href="index.php?bot_id=<?= $selected_bot_id ?>" class="btn btn-delete">Hapus Filter</a>
+                    <a href="/admin/dashboard?bot_id=<?= $selected_bot_id ?>" class="btn btn-delete">Hapus Filter</a>
                 <?php endif; ?>
             </form>
         </div>
@@ -159,7 +56,8 @@ require_once __DIR__ . '/../partials/header.php';
                     <?php else: ?>
                         <?php foreach ($conversations as $conv): ?>
                             <li class="conv-card">
-                                <a href="chat.php?telegram_id=<?= $conv['telegram_id'] ?>&bot_id=<?= $selected_bot_id ?>">
+                                <?php // This link will be broken until ChatController is created ?>
+                                <a href="/admin/chat?telegram_id=<?= $conv['telegram_id'] ?>&bot_id=<?= $selected_bot_id ?>">
                                     <div class="conv-avatar"><?= get_initials($conv['first_name'] ?? '?') ?></div>
                                     <div class="conv-details">
                                         <div class="conv-header">
@@ -174,7 +72,7 @@ require_once __DIR__ . '/../partials/header.php';
                     <?php endif; ?>
                 </ul>
 
-                <?php if(empty($search_user)): // Hanya tampilkan channel jika tidak sedang mencari user ?>
+                <?php if(empty($search_user)): // Only show channels if not searching for a user ?>
                 <h3 style="margin-top: 40px;">Percakapan Channel & Grup</h3>
                 <ul class="conv-list">
                      <?php if (empty($channel_chats)): ?>
@@ -189,7 +87,8 @@ require_once __DIR__ . '/../partials/header.php';
                                 }
                             ?>
                             <li class="conv-card">
-                                <a href="channel_chat.php?chat_id=<?= $chat['chat_id'] ?>&bot_id=<?= $selected_bot_id ?>">
+                                <?php // This link will be broken until ChannelChatController is created ?>
+                                <a href="/admin/channel_chat?chat_id=<?= $chat['chat_id'] ?>&bot_id=<?= $selected_bot_id ?>">
                                     <div class="conv-avatar" style="background-color: #6c757d;"><?= get_initials($chat_title) ?></div>
                                     <div class="conv-details">
                                         <div class="conv-header">
@@ -214,5 +113,3 @@ require_once __DIR__ . '/../partials/header.php';
         <?php endif; ?>
     </main>
 </div>
-
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
