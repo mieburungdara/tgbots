@@ -65,5 +65,15 @@ $router->post('api/admin/bots/delete-webhook', 'Admin/BotController@deleteWebhoo
 $router->post('api/admin/bots/get-me', 'Admin/BotController@getMe');
 $router->post('api/admin/bots/test-webhook', 'Admin/BotController@testWebhook');
 
+// Balance Page
+$router->get('admin/balance', 'Admin/BalanceController@index');
+$router->post('admin/balance/adjust', 'Admin/BalanceController@adjust');
+$router->get('api/admin/balance/log', 'Admin/BalanceController@getBalanceLog');
+$router->get('api/admin/balance/sales', 'Admin/BalanceController@getSalesLog');
+$router->get('api/admin/balance/purchases', 'Admin/BalanceController@getPurchasesLog');
+
+// Analytics
+$router->get('admin/analytics', 'Admin/AnalyticsController@index');
+
 // Add more routes here as the refactoring progresses.
 // e.g., $router->get('admin/users', 'Admin/UsersController@index');

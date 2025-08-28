@@ -1,101 +1,5 @@
 <?php
-/**
- * Halaman Manajemen Saldo Pengguna (Admin).
- */
-session_start();
-require_once __DIR__ . '/../core/database.php';
-require_once __DIR__ . '/../core/helpers.php';
-
-$pdo = get_db_connection();
-if (!$pdo) {
-    die("Koneksi database gagal.");
-}
-
-// --- Logika untuk menangani form penyesuaian saldo (dari modal) ---
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $user_id = (int)($_POST['user_id'] ?? 0);
-    $amount = filter_var($_POST['amount'] ?? 0, FILTER_VALIDATE_FLOAT);
-    $description = trim($_POST['description'] ?? '');
-    $action = $_POST['action'];
-    $message = '';
-    $message_type = 'danger';
-    if ($user_id && $amount > 0) {
-        $transaction_amount = ($action === 'add_balance') ? $amount : -$amount;
-        $pdo->beginTransaction();
-        try {
-            $stmt_update_user = $pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
-            $stmt_update_user->execute([$transaction_amount, $user_id]);
-            $stmt_insert_trans = $pdo->prepare("INSERT INTO balance_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)");
-            $stmt_insert_trans->execute([$user_id, $transaction_amount, 'admin_adjustment', $description]);
-            $pdo->commit();
-            $message = "Saldo pengguna berhasil diperbarui.";
-            $message_type = 'success';
-        } catch (Exception $e) {
-            $pdo->rollBack();
-            $message = "Terjadi kesalahan: " . $e->getMessage();
-        }
-    } else {
-        $message = "Input tidak valid.";
-    }
-    $_SESSION['flash_message'] = $message;
-    $_SESSION['flash_message_type'] = $message_type;
-    $redirect_url = "balance.php?" . http_build_query($_GET);
-    header("Location: $redirect_url");
-    exit;
-}
-
-// Ambil flash message dari session
-$flash_message = $_SESSION['flash_message'] ?? '';
-$flash_message_type = $_SESSION['flash_message_type'] ?? 'success';
-unset($_SESSION['flash_message'], $_SESSION['flash_message_type']);
-
-// --- Logika
-$search_term = $_GET['search'] ?? '';
-$page = (int)($_GET['page'] ?? 1);
-$sort_by = $_GET['sort'] ?? 'id';
-$order = strtolower($_GET['order'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
-$limit = 50;
-$offset = ($page - 1) * $limit;
-
-$allowed_sort_columns = ['id', 'first_name', 'username', 'balance', 'total_income', 'total_spending'];
-if (!in_array($sort_by, $allowed_sort_columns)) {
-    $sort_by = 'id';
-}
-
-$where_clause = '';
-$params = [];
-if (!empty($search_term)) {
-    $where_clause = "WHERE u.first_name LIKE :search1 OR u.last_name LIKE :search2 OR u.username LIKE :search3";
-    $params = [':search1' => "%$search_term%", ':search2' => "%$search_term%", ':search3' => "%$search_term%"];
-}
-
-$count_sql = "SELECT COUNT(*) FROM users u {$where_clause}";
-$count_stmt = $pdo->prepare($count_sql);
-$count_stmt->execute($params);
-$total_users = $count_stmt->fetchColumn();
-$total_pages = ceil($total_users / $limit);
-
-$sql = "
-    SELECT
-        u.id as telegram_id, u.first_name, u.last_name, u.username, u.balance,
-        (SELECT SUM(price) FROM sales WHERE seller_user_id = u.id) as total_income,
-        (SELECT SUM(price) FROM sales WHERE buyer_user_id = u.id) as total_spending
-    FROM users u
-    {$where_clause}
-    ORDER BY {$sort_by} {$order}
-    LIMIT :limit OFFSET :offset
-";
-$stmt = $pdo->prepare($sql);
-$stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-$stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-foreach ($params as $key => $value) {
-    $stmt->bindValue($key, $value);
-}
-$stmt->execute();
-$users_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$page_title = 'Manajemen Saldo';
-require_once __DIR__ . '/../partials/header.php';
+// This view assumes all data variables are passed from the controller.
 ?>
 
 <h1>Manajemen Saldo</h1>
@@ -108,11 +12,11 @@ require_once __DIR__ . '/../partials/header.php';
     <h2>Daftar Saldo Pengguna</h2>
 
     <div class="search-form" style="margin-bottom: 20px;">
-        <form action="balance.php" method="get">
+        <form action="/admin/balance" method="get">
             <input type="text" name="search" placeholder="Cari Nama/Username..." value="<?= htmlspecialchars($search_term) ?>" style="width: 300px; display: inline-block;">
             <button type="submit" class="btn">Cari</button>
              <?php if(!empty($search_term)): ?>
-                <a href="balance.php" class="btn btn-delete">Hapus Filter</a>
+                <a href="/admin/balance" class="btn btn-delete">Hapus Filter</a>
             <?php endif; ?>
         </form>
     </div>
@@ -163,14 +67,14 @@ require_once __DIR__ . '/../partials/header.php';
         $query_params = $_GET;
         if ($page > 1) {
             $query_params['page'] = $page - 1;
-            echo '<a href="?' . http_build_query($query_params) . '">&laquo; Sebelumnya</a>';
+            echo '<a href="/admin/balance?' . http_build_query($query_params) . '">&laquo; Sebelumnya</a>';
         } else {
             echo '<span class="disabled">&laquo; Sebelumnya</span>';
         }
         echo '<span class="current-page">Halaman ' . $page . ' dari ' . $total_pages . '</span>';
         if ($page < $total_pages) {
             $query_params['page'] = $page + 1;
-            echo '<a href="?' . http_build_query($query_params) . '">Berikutnya &raquo;</a>';
+            echo '<a href="/admin/balance?' . http_build_query($query_params) . '">Berikutnya &raquo;</a>';
         } else {
             echo '<span class="disabled">Berikutnya &raquo;</span>';
         }
@@ -185,7 +89,7 @@ require_once __DIR__ . '/../partials/header.php';
             <h2 id="modal-title-adjust">Ubah Saldo untuk Pengguna</h2>
             <button class="modal-close-adjust">&times;</button>
         </div>
-        <form action="balance.php?<?= http_build_query($_GET) ?>" method="post" class="balance-adjustment-form" style="padding: 0; border: none; background: none; margin-top: 0;">
+        <form action="/admin/balance/adjust?<?= http_build_query($_GET) ?>" method="post" class="balance-adjustment-form" style="padding: 0; border: none; background: none; margin-top: 0;">
             <input type="hidden" name="user_id" id="modal-user-id">
             <div class="form-group">
                 <label for="modal-amount">Jumlah:</label>
@@ -218,21 +122,21 @@ require_once __DIR__ . '/../partials/header.php';
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // --- Modal untuk Ubah Saldo ---
+    // Modal untuk Ubah Saldo
     const balanceModal = document.getElementById('balance-modal');
     const balanceModalTitle = document.getElementById('modal-title-adjust');
     const balanceModalUserIdInput = document.getElementById('modal-user-id');
     document.querySelectorAll('.open-balance-modal').forEach(button => {
         button.addEventListener('click', function() {
             balanceModalTitle.textContent = 'Ubah Saldo untuk ' + this.dataset.userName;
-            balanceModalUserIdInput.value = this.dataset.telegramId; // Changed from userId
+            balanceModalUserIdInput.value = this.dataset.telegramId;
             balanceModal.style.display = 'flex';
         });
     });
     document.querySelectorAll('.modal-close-adjust').forEach(button => button.addEventListener('click', () => balanceModal.style.display = 'none'));
     balanceModal.addEventListener('click', e => { if (e.target === balanceModal) balanceModal.style.display = 'none'; });
 
-    // --- Modal untuk Log Transaksi ---
+    // Modal untuk Log Transaksi
     const logModal = document.getElementById('log-modal');
     const logModalTitle = document.getElementById('log-modal-title');
     const logModalBody = document.getElementById('log-modal-body');
@@ -252,33 +156,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
             switch (logType) {
                 case 'balance':
-                    apiUrl = `api/get_balance_log.php?telegram_id=${telegramId}`;
+                    apiUrl = `/api/admin/balance/log?telegram_id=${telegramId}`;
                     title = `Riwayat Penyesuaian Saldo untuk ${userName}`;
                     headers = ['Waktu', 'Tipe', 'Jumlah', 'Deskripsi'];
-                    dataBuilder = (item) => `
-                        <td>${item.created_at}</td>
-                        <td>${item.type}</td>
-                        <td>${formatCurrency(item.amount)}</td>
-                        <td>${item.description || ''}</td>`;
+                    dataBuilder = (item) => `<td>${item.created_at}</td><td>${item.type}</td><td>${formatCurrency(item.amount)}</td><td>${item.description || ''}</td>`;
                     break;
                 case 'sales':
-                    apiUrl = `api/get_sales_log.php?telegram_id=${telegramId}`;
+                    apiUrl = `/api/admin/balance/sales?telegram_id=${telegramId}`;
                     title = `Riwayat Pemasukan (Penjualan) untuk ${userName}`;
                     headers = ['Waktu', 'Konten', 'Pembeli', 'Harga'];
-                    dataBuilder = (item) => `
-                        <td>${item.purchased_at}</td>
-                        <td>${item.package_title || 'N/A'}</td>
-                        <td>${item.buyer_name || 'N/A'}</td>
-                        <td>${formatCurrency(item.price)}</td>`;
+                    dataBuilder = (item) => `<td>${item.purchased_at}</td><td>${item.package_title || 'N/A'}</td><td>${item.buyer_name || 'N/A'}</td><td>${formatCurrency(item.price)}</td>`;
                     break;
                 case 'purchases':
-                    apiUrl = `api/get_purchases_log.php?telegram_id=${telegramId}`;
+                    apiUrl = `/api/admin/balance/purchases?telegram_id=${telegramId}`;
                     title = `Riwayat Pengeluaran (Pembelian) untuk ${userName}`;
                     headers = ['Waktu', 'Konten', 'Harga'];
-                    dataBuilder = (item) => `
-                        <td>${item.purchased_at}</td>
-                        <td>${item.package_title || 'N/A'}</td>
-                        <td>${formatCurrency(item.price)}</td>`;
+                    dataBuilder = (item) => `<td>${item.purchased_at}</td><td>${item.package_title || 'N/A'}</td><td>${formatCurrency(item.price)}</td>`;
                     break;
             }
 
@@ -287,17 +180,11 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch(apiUrl);
                 const data = await response.json();
-
-                if (data.error) {
-                    logModalBody.innerHTML = `<p class="alert alert-danger">${data.error}</p>`;
-                    return;
-                }
-
+                if (data.error) throw new Error(data.error);
                 if (data.length === 0) {
                     logModalBody.innerHTML = '<p>Tidak ada riwayat ditemukan.</p>';
                     return;
                 }
-
                 let tableHTML = '<table class="chat-log-table"><thead><tr>';
                 headers.forEach(h => tableHTML += `<th>${h}</th>`);
                 tableHTML += '</tr></thead><tbody>';
@@ -306,21 +193,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 tableHTML += '</tbody></table>';
                 logModalBody.innerHTML = tableHTML;
-
             } catch (error) {
-                logModalBody.innerHTML = `<p class="alert alert-danger">Gagal memuat data. Silakan coba lagi.</p>`;
+                logModalBody.innerHTML = `<p class="alert alert-danger">Gagal memuat data: ${error.message}</p>`;
             }
         });
     });
     document.querySelectorAll('.modal-close-log').forEach(button => button.addEventListener('click', () => logModal.style.display = 'none'));
     logModal.addEventListener('click', e => { if (e.target === logModal) logModal.style.display = 'none'; });
 
-    // Helper function to format currency inside JS
     function formatCurrency(number, currency = 'Rp') {
         if (isNaN(parseFloat(number))) return number;
         return currency + ' ' + parseFloat(number).toLocaleString('id-ID');
     }
 });
 </script>
-
-<?php require_once __DIR__ . '/../partials/footer.php'; ?>
