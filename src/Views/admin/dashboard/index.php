@@ -86,7 +86,6 @@
                                 }
                             ?>
                             <li class="conv-card">
-                                <?php // This link will be broken until ChannelChatController is created ?>
                                 <a href="/admin/channel_chat?chat_id=<?= $chat['chat_id'] ?>&bot_id=<?= $selected_bot_id ?>">
                                     <div class="conv-avatar" style="background-color: #6c757d;"><?= get_initials($chat_title) ?></div>
                                     <div class="conv-details">
