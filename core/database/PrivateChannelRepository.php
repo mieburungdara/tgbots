@@ -53,13 +53,31 @@ class PrivateChannelRepository
     }
 
     /**
-     * Mendapatkan semua channel pribadi dari database.
+     * Mendapatkan semua channel pribadi dari database, beserta bot yang terhubung.
      *
-     * @return array Daftar semua channel.
+     * @return array Daftar semua channel dengan informasi bot terkait.
      */
     public function getAllChannels(): array
     {
-        $stmt = $this->pdo->query("SELECT id, channel_id, name FROM private_channels ORDER BY id ASC");
+        $sql = "
+            SELECT
+                pc.id,
+                pc.channel_id,
+                pc.name,
+                COUNT(pcb.bot_id) as bot_count,
+                GROUP_CONCAT(b.username SEPARATOR ', ') as bot_usernames
+            FROM
+                private_channels pc
+            LEFT JOIN
+                private_channel_bots pcb ON pc.id = pcb.private_channel_id
+            LEFT JOIN
+                bots b ON pcb.bot_id = b.id
+            GROUP BY
+                pc.id, pc.channel_id, pc.name
+            ORDER BY
+                pc.id ASC
+        ";
+        $stmt = $this->pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
