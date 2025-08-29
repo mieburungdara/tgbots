@@ -261,7 +261,6 @@ class XorAdminController extends BaseController
                     echo json_encode($response);
                     exit;
                 }
-                if ($result === false) throw new Exception("Gagal komunikasi dengan API Telegram.");
                 $response = ['status' => 'success', 'message' => 'Aksi berhasil.', 'data' => $result];
             }
         } catch (Exception $e) {
