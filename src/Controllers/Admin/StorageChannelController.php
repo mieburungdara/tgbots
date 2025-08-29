@@ -15,11 +15,6 @@ class StorageChannelController extends BaseController {
     public function __construct() {
         parent::__construct();
         $pdo = get_db_connection();
-        if (!$pdo) {
-            // Melempar exception akan menghentikan eksekusi dan dapat ditangkap oleh error handler global.
-            // Ini lebih baik daripada fatal error karena tipe argumen yang salah.
-            throw new \RuntimeException("Koneksi database gagal.");
-        }
         $this->channelRepo = new PrivateChannelRepository($pdo);
         $this->botRepo = new BotRepository($pdo);
         $this->pcBotRepo = new PrivateChannelBotRepository($pdo);
