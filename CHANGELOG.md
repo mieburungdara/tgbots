@@ -20,6 +20,7 @@
 - **Migrasi AJAX ke API Controller**: Memigrasikan semua endpoint AJAX lama (misalnya, `api/update_user_roles.php`, `webhook_manager.php`, `package_manager.php`) ke dalam metode API yang sesuai di dalam controller yang ada, membuat semua interaksi backend konsisten dengan pola MVCR.
 - **Lanjutan Refactor Admin**: Melanjutkan migrasi dengan merefaktor halaman 'Analitik' (`admin/analytics.php`) dan 'Manajemen Saldo' (`admin/balance.php`) beserta endpoint-endpoint API terkaitnya.
 - **Penyelesaian Refactor Admin**: Menyelesaikan migrasi penuh area admin dengan merefaktor halaman 'Channel Penyimpanan' (`admin/channels.php`) dan 'Manajemen Peran' (`admin/roles.php`), membuat semua fungsionalitas admin kini berjalan di bawah arsitektur MVCR yang baru.
+- **Penyelesaian Refactoring Total**: Menyelesaikan migrasi semua sisa halaman legacy, termasuk halaman admin (`database`, `sales_channels`, `api_test`, `debug_feed`), halaman root (`login_choice`, `xoradmin`), dan yang paling penting, titik masuk utama `webhook.php`. Seluruh fungsionalitas web dan bot sekarang berjalan sepenuhnya di bawah arsitektur MVCR yang baru. Direktori `admin/` dan `partials/` yang usang telah dihapus.
 
 ## [4.7.0] - 2025-08-28
 
