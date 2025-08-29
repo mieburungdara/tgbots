@@ -10,6 +10,7 @@ class PackageController extends BaseController {
         $pdo = get_db_connection();
         $packageRepo = new PackageRepository($pdo);
 
+        if (session_status() == PHP_SESSION_NONE) session_start();
         $message = $_SESSION['flash_message'] ?? null;
         unset($_SESSION['flash_message']);
 
@@ -31,6 +32,8 @@ class PackageController extends BaseController {
         $pdo = get_db_connection();
         $packageRepo = new PackageRepository($pdo);
         $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
+
+        if (session_status() == PHP_SESSION_NONE) session_start();
 
         if ($package_id_to_delete) {
             try {

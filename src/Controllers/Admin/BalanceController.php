@@ -7,6 +7,7 @@ class BalanceController extends BaseController {
     public function index() {
         $pdo = get_db_connection();
 
+        if (session_status() == PHP_SESSION_NONE) session_start();
         $flash_message = $_SESSION['flash_message'] ?? '';
         $flash_message_type = $_SESSION['flash_message_type'] ?? 'success';
         unset($_SESSION['flash_message'], $_SESSION['flash_message_type']);
@@ -79,6 +80,8 @@ class BalanceController extends BaseController {
         $amount = filter_var($_POST['amount'] ?? 0, FILTER_VALIDATE_FLOAT);
         $description = trim($_POST['description'] ?? '');
         $action = $_POST['action'];
+
+        if (session_status() == PHP_SESSION_NONE) session_start();
 
         if ($user_id && $amount > 0) {
             $transaction_amount = ($action === 'add_balance') ? $amount : -$amount;

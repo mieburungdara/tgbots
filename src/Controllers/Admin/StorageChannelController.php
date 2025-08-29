@@ -21,6 +21,7 @@ class StorageChannelController extends BaseController {
     }
 
     public function index() {
+        if (session_status() == PHP_SESSION_NONE) session_start();
         $message = $_SESSION['flash_message'] ?? null;
         unset($_SESSION['flash_message']);
 
@@ -43,6 +44,8 @@ class StorageChannelController extends BaseController {
 
         $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
         $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
+
+        if (session_status() == PHP_SESSION_NONE) session_start();
 
         if ($channel_id && $name) {
             if ($this->channelRepo->addChannel($channel_id, $name)) {
@@ -68,6 +71,8 @@ class StorageChannelController extends BaseController {
         $new_name = filter_input(INPUT_POST, 'new_name', FILTER_SANITIZE_STRING);
         $new_channel_id = filter_input(INPUT_POST, 'new_channel_id', FILTER_VALIDATE_INT);
 
+        if (session_status() == PHP_SESSION_NONE) session_start();
+
         if ($channel_id && $new_name && $new_channel_id) {
             if ($this->channelRepo->updateChannel($channel_id, $new_name, $new_channel_id)) {
                 $_SESSION['flash_message'] = "Channel berhasil diperbarui.";
@@ -90,6 +95,8 @@ class StorageChannelController extends BaseController {
 
         $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
 
+        if (session_status() == PHP_SESSION_NONE) session_start();
+
         if ($channel_id) {
             if ($this->channelRepo->setDefaultChannel($channel_id)) {
                 $_SESSION['flash_message'] = "Channel default berhasil diatur.";
@@ -111,6 +118,8 @@ class StorageChannelController extends BaseController {
         }
 
         $channel_id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+
+        if (session_status() == PHP_SESSION_NONE) session_start();
 
         if ($channel_id) {
             if ($this->channelRepo->deleteChannel($channel_id)) {

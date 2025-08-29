@@ -1,0 +1,14 @@
+-- MIGRATION 002: DISABLED.
+--
+-- This migration was part of a complex and inconsistent series of refactorings
+-- related to the primary keys of the `users` and `bots` tables.
+--
+-- This script renames the `chat_id` column to `telegram_id`. However, the final
+-- schema (`updated_schema.sql`) uses `id` as the primary key for the user's Telegram ID.
+--
+-- To prevent inconsistencies and potential database corruption for new setups,
+-- this migration is disabled. The final, correct schema should be applied directly
+-- from `updated_schema.sql`.
+--
+-- Original Author: Jules (AI)
+-- Date: 2025-08-27

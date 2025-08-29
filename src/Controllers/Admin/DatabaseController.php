@@ -9,6 +9,7 @@ class DatabaseController extends BaseController
      */
     public function index()
     {
+        if (session_status() == PHP_SESSION_NONE) session_start();
         $message = $_SESSION['flash_message'] ?? null;
         unset($_SESSION['flash_message']);
 
@@ -27,6 +28,8 @@ class DatabaseController extends BaseController
             header('Location: /admin/database');
             exit();
         }
+
+        if (session_status() == PHP_SESSION_NONE) session_start();
 
         $pdo = get_db_connection();
         $allowed_files = ['updated_schema.sql', 'setup.sql'];
@@ -66,6 +69,12 @@ class DatabaseController extends BaseController
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 throw new Exception("Metode permintaan harus POST.");
+            }
+
+            if (session_status() == PHP_SESSION_NONE) session_start();
+            if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
+                http_response_code(403);
+                throw new Exception("Akses ditolak. Anda harus login sebagai admin.");
             }
 
             $pdo = get_db_connection();

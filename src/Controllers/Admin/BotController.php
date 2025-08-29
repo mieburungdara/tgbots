@@ -9,6 +9,11 @@ class BotController extends BaseController {
         $pdo = get_db_connection();
         $bots = $pdo->query("SELECT id, first_name, username, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
 
+        // Start session if not already started to handle flash messages
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
         $error = $_SESSION['flash_error'] ?? null;
         $success = $_SESSION['flash_success'] ?? null;
 
@@ -78,6 +83,10 @@ class BotController extends BaseController {
             }
         }
 
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
+
         if ($error) {
             $_SESSION['flash_error'] = $error;
         }
@@ -117,6 +126,9 @@ class BotController extends BaseController {
             'save_edited_messages'  => $bot_settings_raw['save_edited_messages'] ?? '0',
         ];
 
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
         $status_message = $_SESSION['flash_status'] ?? null;
         unset($_SESSION['flash_status']);
 
@@ -168,6 +180,9 @@ class BotController extends BaseController {
             $status_message = "Gagal menyimpan pengaturan: " . $e->getMessage();
         }
 
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
         $_SESSION['flash_status'] = $status_message;
 
         header("Location: /admin/bots/edit?id=" . $bot_id);

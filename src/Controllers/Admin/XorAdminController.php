@@ -16,6 +16,9 @@ class XorAdminController extends BaseController
         }
         $this->correct_password = defined('XOR_ADMIN_PASSWORD') ? XOR_ADMIN_PASSWORD : 'sup3r4dmin';
 
+        if (session_status() == PHP_SESSION_NONE) {
+            session_start();
+        }
     }
 
     private function isAuthenticated()
@@ -113,7 +116,8 @@ class XorAdminController extends BaseController
 
     public function login()
     {
-        if (isset($_POST['password']) && !empty($this->correct_password) && hash_equals($this->correct_password, $_POST['password'])) {
+        // Add is_string() check to prevent warnings on manipulated requests (e.g., password[]=...)
+        if (isset($_POST['password']) && is_string($_POST['password']) && !empty($this->correct_password) && hash_equals($this->correct_password, $_POST['password'])) {
             $_SESSION['is_authenticated'] = true;
         } else {
             $_SESSION['xor_error'] = "Password salah!";

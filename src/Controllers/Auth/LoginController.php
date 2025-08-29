@@ -1,8 +1,8 @@
 <?php
 
-require_once __DIR__ . '/../AppController.php';
+require_once __DIR__ . '/../BaseController.php';
 
-class LoginController extends AppController {
+class LoginController extends BaseController {
 
     /**
      * Handles the one-time login token from the URL.

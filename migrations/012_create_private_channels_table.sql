@@ -1,0 +1,6 @@
+CREATE TABLE private_channels (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    channel_id BIGINT NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

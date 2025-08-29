@@ -1,0 +1,10 @@
+-- MIGRATION 018: DISABLED.
+--
+-- This migration attempts to add a column after `telegram_id`, which no longer
+-- exists in the final schema (`updated_schema.sql`). The user ID column is now `id`.
+--
+-- To prevent errors during migration for new setups, this script is disabled.
+-- The final, correct schema should be applied directly from `updated_schema.sql`.
+--
+-- Original Author: Jules (AI)
+-- Date: 2025-08-27
