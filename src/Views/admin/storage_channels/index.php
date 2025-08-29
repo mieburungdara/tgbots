@@ -82,8 +82,7 @@
 <p class="description">Tambahkan channel pribadi yang akan digunakan bot untuk menyimpan file media. Anda dapat mengelola bot mana yang memiliki akses ke setiap channel.</p>
 
 <h2>Tambah Channel Baru</h2>
-<form action="channels.php" method="post" class="mb-20">
-	<input type="hidden" name="action" value="add_channel">
+<form action="/admin/storage_channels/store" method="post" class="mb-20">
 	<div class="form-group">
 		<label for="name">Nama Channel (untuk referensi)</label>
 		<input type="text" id="name" name="name" required>
@@ -96,7 +95,8 @@
 </form>
 
 <h2>Daftar Channel Tersimpan</h2>
-<table>
+<table id="channel-list-table"
+    data-update-info-url="/api/admin/storage_channels/update-info">
 	<thead>
 		<tr>
 			<th>Nama</th>
@@ -135,7 +135,11 @@
 </table>
 
 <!-- Modal untuk Manajemen Bot -->
-<div id="manage-bots-modal" class="modal">
+<div id="manage-bots-modal" class="modal"
+    data-get-bots-url="/api/admin/storage_channels/bots"
+    data-add-bot-url="/api/admin/storage_channels/add-bot"
+    data-remove-bot-url="/api/admin/storage_channels/remove-bot"
+    data-verify-bot-url="/api/admin/storage_channels/verify-bot">
 	<div class="modal-content">
 		<span class="close-button">&times;</span>
 		<h2 id="modal-title">Kelola Bot untuk Channel: </h2>
@@ -182,9 +186,8 @@
 
 		<hr>
 
-		<form id="delete-channel-form" action="channels.php" method="post" onsubmit="return confirm('Yakin ingin menghapus channel ini beserta semua hubungan bot-nya?');">
-			<input type="hidden" name="action" value="delete_channel">
-			<input type="hidden" id="delete-channel-id-input" name="channel_id">
+		<form id="delete-channel-form" action="/admin/storage_channels/destroy" method="post" onsubmit="return confirm('Yakin ingin menghapus channel ini beserta semua hubungan bot-nya?');">
+			<input type="hidden" id="delete-channel-id-input" name="id">
 			<button type="submit" class="btn btn-danger">Hapus Channel Ini</button>
 		</form>
 	</div>
@@ -193,12 +196,21 @@
 <script>
 	document.addEventListener('DOMContentLoaded', function() {
 		const modal = document.getElementById('manage-bots-modal');
+        const channelTable = document.getElementById('channel-list-table');
 		const closeModalBtn = modal.querySelector('.close-button');
 		const manageBtns = document.querySelectorAll('.manage-bots-btn');
 		const botListDiv = document.getElementById('bot-list');
 		const addBotForm = document.getElementById('add-bot-to-channel-form');
 		const modalChannelIdInput = document.getElementById('modal-channel-id');
 		const modalNotifications = document.getElementById('modal-notifications');
+
+        const apiUrls = {
+            getBots: modal.dataset.getBotsUrl,
+            addBot: modal.dataset.addBotUrl,
+            removeBot: modal.dataset.removeBotUrl,
+            verifyBot: modal.dataset.verifyBotUrl,
+            updateInfo: channelTable.dataset.updateInfoUrl
+        };
 
 		const closeModal = () => modal.style.display = 'none';
 
@@ -237,7 +249,6 @@
 
 			bots.forEach(bot => {
 				const clone = template.content.cloneNode(true);
-				const botItem = clone.querySelector('.bot-item');
 				const statusSpan = clone.querySelector('.bot-status');
 				const verifyBtn = clone.querySelector('.btn-verify');
 				const removeBtn = clone.querySelector('.btn-remove');
@@ -263,10 +274,10 @@
 		async function loadConnectedBots(channelId) {
 			botListDiv.innerHTML = '<p>Memuat...</p>';
 			try {
-				const response = await fetch(`api/get_channel_bots.php?channel_id=${channelId}`);
+				const response = await fetch(`${apiUrls.getBots}?channel_id=${channelId}`);
 				const data = await response.json();
 				if (data.status === 'success') {
-					renderBotList(data.bots, channelId);
+					renderBotList(data.bots);
 				} else {
 					botListDiv.innerHTML = `<p class="text-danger">Error: ${data.message}</p>`;
 				}
@@ -301,7 +312,7 @@
 				showNotification('Silakan pilih bot terlebih dahulu.', 'danger');
 				return;
 			}
-			const data = await apiRequest('api/add_bot_to_channel.php', {
+			const data = await apiRequest(apiUrls.addBot, {
 				channel_id: channelId,
 				bot_id: botId
 			});
@@ -319,7 +330,7 @@
 				target.disabled = true;
 				target.innerText = 'Memverifikasi...';
 				const botId = target.dataset.botId;
-				const data = await apiRequest('api/verify_channel_bot.php', {
+				const data = await apiRequest(apiUrls.verifyBot, {
 					channel_id: channelId,
 					bot_id: botId
 				});
@@ -331,7 +342,7 @@
 				if (!confirm('Yakin ingin menghapus bot ini dari channel?')) return;
 				target.disabled = true;
 				const botId = target.dataset.botId;
-				const data = await apiRequest('api/remove_bot_from_channel.php', {
+				const data = await apiRequest(apiUrls.removeBot, {
 					channel_id: channelId,
 					bot_id: botId
 				});
@@ -347,7 +358,7 @@
 				target.disabled = true;
 				target.innerText = '...';
 
-				const data = await apiRequest('api/update_channel_info.php', {
+				const data = await apiRequest(apiUrls.updateInfo, {
 					channel_id: channelId
 				});
 				if (data.status === 'success') {
