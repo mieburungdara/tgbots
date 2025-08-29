@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.0.5] - 2025-08-29
+
+### Diperbaiki (Keamanan)
+- **Sanitasi Input**: Memperkuat keamanan di `RoleController` dengan mengganti `trim()` sederhana dengan `htmlspecialchars()` untuk membersihkan input `role_name` dari pengguna. Ini mencegah potensi serangan XSS.
+
 ## [5.0.4] - 2025-08-29
 
 ### Peningkatan
