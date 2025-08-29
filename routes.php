@@ -75,5 +75,23 @@ $router->get('api/admin/balance/purchases', 'Admin/BalanceController@getPurchase
 // Analytics
 $router->get('admin/analytics', 'Admin/AnalyticsController@index');
 
+// Admin - Storage Channels
+$router->get('/admin/storage_channels', 'Admin/StorageChannelController@index');
+$router->post('/admin/storage_channels/store', 'Admin/StorageChannelController@store');
+$router->post('/admin/storage_channels/update', 'Admin/StorageChannelController@update');
+$router->post('/admin/storage_channels/delete', 'Admin/StorageChannelController@destroy');
+$router->post('/admin/storage_channels/set_default', 'Admin/StorageChannelController@setDefault');
+
+// API for Storage Channels
+$router->get('/api/admin/storage_channels/bots', 'Admin/StorageChannelController@getBots');
+$router->post('/api/admin/storage_channels/bots/add', 'Admin/StorageChannelController@addBot');
+$router->post('/api/admin/storage_channels/bots/remove', 'Admin/StorageChannelController@removeBot');
+$router->post('/api/admin/storage_channels/bots/verify', 'Admin/StorageChannelController@verifyBot');
+
+// Admin - Roles
+$router->get('/admin/roles', 'Admin/RoleController@index');
+$router->post('/admin/roles/store', 'Admin/RoleController@store');
+$router->post('/admin/roles/delete', 'Admin/RoleController@destroy');
+
 // Add more routes here as the refactoring progresses.
 // e.g., $router->get('admin/users', 'Admin/UsersController@index');
