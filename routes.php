@@ -53,5 +53,17 @@ $router->post('admin/logs/clear', 'Admin/LogController@clearAppLogs');
 $router->get('admin/media_logs', 'Admin/LogController@media');
 $router->get('admin/telegram_logs', 'Admin/LogController@telegram');
 
+// API routes
+$router->get('api/admin/user/roles', 'Admin/UserController@getRoles');
+$router->post('api/admin/user/roles', 'Admin/UserController@updateRoles');
+$router->post('api/member/content/toggle-protection', 'Member/ContentController@toggleProtection');
+
+// Bot Management API
+$router->post('api/admin/bots/set-webhook', 'Admin/BotController@setWebhook');
+$router->post('api/admin/bots/check-webhook', 'Admin/BotController@getWebhookInfo');
+$router->post('api/admin/bots/delete-webhook', 'Admin/BotController@deleteWebhook');
+$router->post('api/admin/bots/get-me', 'Admin/BotController@getMe');
+$router->post('api/admin/bots/test-webhook', 'Admin/BotController@testWebhook');
+
 // Add more routes here as the refactoring progresses.
 // e.g., $router->get('admin/users', 'Admin/UsersController@index');

@@ -188,4 +188,100 @@ class BotController extends BaseController {
         header("Location: /admin/bots/edit?id=" . $bot_id);
         exit();
     }
+
+    // --- API Methods for bot management ---
+
+    private function getBotAndApi($bot_id) {
+        if (!$bot_id) {
+            $this->jsonResponse(['error' => 'ID Bot tidak valid.'], 400);
+        }
+        $pdo = get_db_connection();
+        $stmt = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
+        $stmt->execute([$bot_id]);
+        $bot = $stmt->fetch();
+        if (!$bot) {
+            $this->jsonResponse(['error' => "Bot dengan ID {$bot_id} tidak ditemukan."], 404);
+        }
+        return new TelegramAPI($bot['token']);
+    }
+
+    public function setWebhook() {
+        $bot_id = (int)($_POST['bot_id'] ?? 0);
+        $telegram = $this->getBotAndApi($bot_id);
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+        $domain = $_SERVER['HTTP_HOST'];
+        $webhook_path = str_replace(['/admin', '/api/bots'], '', dirname($_SERVER['PHP_SELF'])) . '/webhook.php';
+        $webhook_url = $protocol . $domain . $webhook_path . '?id=' . $bot_id;
+        $result = $telegram->setWebhook($webhook_url);
+        $this->jsonResponse($result);
+    }
+
+    public function getWebhookInfo() {
+        $bot_id = (int)($_POST['bot_id'] ?? 0);
+        $telegram = $this->getBotAndApi($bot_id);
+        $result = $telegram->getWebhookInfo();
+        $this->jsonResponse($result);
+    }
+
+    public function deleteWebhook() {
+        $bot_id = (int)($_POST['bot_id'] ?? 0);
+        $telegram = $this->getBotAndApi($bot_id);
+        $result = $telegram->deleteWebhook();
+        $this->jsonResponse($result);
+    }
+
+    public function getMe() {
+        $bot_id = (int)($_POST['bot_id'] ?? 0);
+        $telegram = $this->getBotAndApi($bot_id);
+        $bot_info = $telegram->getMe();
+
+        if (!isset($bot_info['ok']) || !$bot_info['ok']) {
+            $this->jsonResponse(['error' => "Gagal mendapatkan info dari Telegram: " . ($bot_info['description'] ?? 'Error')], 500);
+        }
+
+        $bot_result = $bot_info['result'];
+        if ($bot_result['id'] != $bot_id) {
+            $this->jsonResponse(['error' => "Token tidak cocok dengan ID bot."], 400);
+        }
+
+        $first_name = $bot_result['first_name'];
+        $username = $bot_result['username'] ?? null;
+
+        $pdo = get_db_connection();
+        $stmt_update = $pdo->prepare("UPDATE bots SET first_name = ?, username = ? WHERE id = ?");
+        $stmt_update->execute([$first_name, $username, $bot_id]);
+
+        $this->jsonResponse([
+            'success' => true,
+            'data' => ['first_name' => $first_name, 'username' => $username]
+        ]);
+    }
+
+    public function testWebhook() {
+        // This is a bit tricky as it's a request from the browser to the server itself.
+        // The original script was making a request to webhook.php. We will do the same.
+        $bot_id = (int)($_POST['bot_id'] ?? 0);
+        if (!$bot_id) {
+            return $this->jsonResponse(['error' => 'ID Bot tidak valid.'], 400);
+        }
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+        $domain = $_SERVER['HTTP_HOST'];
+        $webhook_path = str_replace(['/admin', '/api/bots'], '', dirname($_SERVER['PHP_SELF'])) . '/webhook.php';
+        $webhook_url = $protocol . $domain . $webhook_path . '?id=' . $bot_id;
+
+        // Using cURL to make the request from the server to itself
+        $ch = curl_init($webhook_url);
+        curl_setopt($ch, CURLOPT_POST, 1);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(["update_id"=>0, "message"=>["text"=>"/test"]]));
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        $response_body = curl_exec($ch);
+        $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        $this->jsonResponse([
+            'status_code' => $http_code,
+            'body' => $response_body
+        ]);
+    }
 }

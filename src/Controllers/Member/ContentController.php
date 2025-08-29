@@ -148,4 +148,30 @@ class ContentController extends MemberBaseController {
             'chart_title' => $chart_title
         ], 'member_layout');
     }
+
+    public function toggleProtection() {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['package_id'])) {
+            return $this->jsonResponse(['status' => 'error', 'message' => 'Permintaan tidak valid.'], 400);
+        }
+
+        $package_id = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
+        $user_id = $_SESSION['member_user_id'];
+
+        if (!$package_id) {
+            return $this->jsonResponse(['status' => 'error', 'message' => 'ID paket tidak valid.'], 400);
+        }
+
+        try {
+            $pdo = get_db_connection();
+            $packageRepo = new PackageRepository($pdo);
+            $new_status = $packageRepo->toggleProtection($package_id, $user_id);
+            return $this->jsonResponse([
+                'status' => 'success',
+                'message' => 'Status proteksi berhasil diubah.',
+                'is_protected' => $new_status
+            ]);
+        } catch (Exception $e) {
+            return $this->jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
 }

@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', function() {
         checkboxContainer.innerHTML = 'Memuat peran...';
         modal.style.display = 'block';
 
-        fetch(`/admin/api/get_user_roles.php?telegram_id=${userId}`)
+        fetch(`/api/admin/user/roles?telegram_id=${userId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function() {
         saveButton.textContent = 'Menyimpan...';
         saveButton.disabled = true;
 
-        fetch('/admin/api/update_user_roles.php', {
+        fetch('/api/admin/user/roles', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
