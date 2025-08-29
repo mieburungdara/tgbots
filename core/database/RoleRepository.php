@@ -26,9 +26,15 @@ class RoleRepository
         }
     }
 
-    public function deleteRole(int $id): bool
+    public function deleteRole(int $id): int
     {
-        $stmt = $this->pdo->prepare("DELETE FROM roles WHERE id = ?");
-        return $stmt->execute([$id]);
+        try {
+            $stmt = $this->pdo->prepare("DELETE FROM roles WHERE id = ?");
+            $stmt->execute([$id]);
+            return $stmt->rowCount();
+        } catch (PDOException $e) {
+            error_log("Error deleting role: " . $e->getMessage());
+            return -1;
+        }
     }
 }

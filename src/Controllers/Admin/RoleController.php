@@ -65,10 +65,14 @@ class RoleController extends BaseController
             exit();
         }
 
-        if ($this->roleRepo->deleteRole($role_id)) {
+        $rowCount = $this->roleRepo->deleteRole($role_id);
+
+        if ($rowCount > 0) {
             $_SESSION['flash_message'] = "Peran berhasil dihapus.";
+        } elseif ($rowCount === 0) {
+            $_SESSION['flash_message'] = "Gagal menghapus: Peran tidak ditemukan.";
         } else {
-            $_SESSION['flash_message'] = "Gagal menghapus peran.";
+            $_SESSION['flash_message'] = "Gagal menghapus peran karena kesalahan database.";
         }
 
         header("Location: /admin/roles");

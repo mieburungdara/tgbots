@@ -1,11 +1,12 @@
 # Changelog
 
-## [5.0.9] - 2025-08-29
+## [5.1.0] - 2025-08-29
 
 ### Peningkatan
 
 - **Pesan Status yang Lebih Akurat**: Memperbaiki logika penambahan peran di `RoleController`. Sistem sekarang memberikan pesan yang jelas kepada pengguna jika peran berhasil ditambahkan, jika peran tersebut sudah ada, atau jika terjadi kesalahan, daripada hanya menampilkan pesan sukses umum.
 - **Perbaikan Bug Variabel**: Memperbaiki bug di `RoleController` di mana variabel `$roleRepo` dipanggil alih-alih properti kelas `$this->roleRepo`, yang akan menyebabkan error fatal.
+- **Pesan Status Hapus yang Lebih Akurat**: Mengikuti pembaruan sebelumnya, logika penghapusan peran di `RoleController` kini juga telah diperbaiki. Sistem sekarang memberikan pesan yang jelas kepada pengguna jika peran berhasil dihapus, jika peran tidak ditemukan (sehingga tidak ada yang dihapus), atau jika terjadi kesalahan database.
 
 ## [5.0.8] - 2025-08-29
 
