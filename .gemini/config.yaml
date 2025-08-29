@@ -1,0 +1,14 @@
+have_fun: false   # kalau mau ada komentar lucu, ganti ke true
+code_review:
+  disable: false  # kalau true, Gemini nda bakal review sama sekali
+  comment_severity_threshold: MEDIUM  # LOW | MEDIUM | HIGH | CRITICAL
+  max_review_comments: -1  # biar nda kebanyakan komentar
+  pull_request_opened:
+    help: true
+    summary: true
+    code_review: true
+ignore_patterns:
+  - "vendor/**"      # jangan review file dari composer vendor
+  - "*.min.js"       # abaikan file JS hasil minify
+  - "node_modules/**"
+  - ".github/workflows"
