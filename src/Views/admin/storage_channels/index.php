@@ -147,6 +147,20 @@
 			<p>Memuat...</p>
 		</div>
 
+		<template id="bot-item-template">
+			<div class="bot-item">
+				<div>
+					<strong class="bot-username"></strong>
+					<span class="bot-first-name"></span>
+					<span class="bot-status"></span>
+				</div>
+				<div class="bot-actions">
+					<button class="btn btn-sm btn-verify" style="display: none;">Verifikasi</button>
+					<button class="btn btn-sm btn-danger btn-remove">Hapus</button>
+				</div>
+			</div>
+		</template>
+
 		<hr>
 
 		<h3>Tambah Bot ke Channel</h3>
@@ -212,33 +226,37 @@
 			}
 		}
 
-		function renderBotList(bots, channelId) {
+		function renderBotList(bots) {
 			botListDiv.innerHTML = '';
 			if (bots.length === 0) {
 				botListDiv.innerHTML = '<p>Belum ada bot yang terhubung ke channel ini.</p>';
 				return;
 			}
+
+			const template = document.getElementById('bot-item-template');
+
 			bots.forEach(bot => {
-				const verifiedStatus = bot.verified_at ?
-					`<span class="bot-status verified">Terverifikasi</span>` :
-					`<span class="bot-status unverified">Belum Diverifikasi</span>`;
+				const clone = template.content.cloneNode(true);
+				const botItem = clone.querySelector('.bot-item');
+				const statusSpan = clone.querySelector('.bot-status');
+				const verifyBtn = clone.querySelector('.btn-verify');
+				const removeBtn = clone.querySelector('.btn-remove');
 
-				const actionButton = !bot.verified_at ?
-					`<button class="btn btn-sm btn-verify" data-bot-id="${bot.id}">Verifikasi</button>` :
-					'';
+				clone.querySelector('.bot-username').textContent = `@${bot.username}`;
+				clone.querySelector('.bot-first-name').textContent = `(${bot.first_name})`;
 
-				const item = document.createElement('div');
-				item.className = 'bot-item';
-				item.innerHTML = `
-                <div>
-                    <strong>@${bot.username}</strong> (${bot.first_name}) ${verifiedStatus}
-                </div>
-                <div>
-                    ${actionButton}
-                    <button class="btn btn-sm btn-danger btn-remove" data-bot-id="${bot.id}">Hapus</button>
-                </div>
-            `;
-				botListDiv.appendChild(item);
+				if (bot.verified_at) {
+					statusSpan.textContent = 'Terverifikasi';
+					statusSpan.className = 'bot-status verified';
+				} else {
+					statusSpan.textContent = 'Belum Diverifikasi';
+					statusSpan.className = 'bot-status unverified';
+					verifyBtn.style.display = 'inline-block';
+					verifyBtn.dataset.botId = bot.id;
+				}
+
+				removeBtn.dataset.botId = bot.id;
+				botListDiv.appendChild(clone);
 			});
 		}
 
