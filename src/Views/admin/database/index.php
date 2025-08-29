@@ -1,68 +1,5 @@
 <?php
-/**
- * Halaman Manajemen Database (Admin).
- *
- * Halaman ini menyediakan antarmuka untuk melakukan tugas-tugas administrasi
- * database tingkat lanjut, seperti migrasi dan pembersihan data.
- */
-session_start();
-require_once __DIR__ . '/auth.php'; // Otentikasi
-require_once __DIR__ . '/../core/database.php';
-require_once __DIR__ . '/../core/helpers.php';
-
-$pdo = get_db_connection();
-if (!$pdo) {
-    die("Koneksi database gagal.");
-}
-
-$message = null;
-
-// Menangani permintaan POST
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    if ($_POST['action'] === 'reset_with_file') {
-        $allowed_files = ['updated_schema.sql', 'setup.sql'];
-        $selected_file = $_POST['sql_file'] ?? '';
-
-        if (in_array($selected_file, $allowed_files) && file_exists(__DIR__ . '/../' . $selected_file)) {
-            try {
-                $pdo->exec('SET FOREIGN_KEY_CHECKS=0;');
-                $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
-                foreach ($tables as $table) {
-                    $pdo->exec("DROP TABLE IF EXISTS `$table`");
-                }
-
-                $sql_script = file_get_contents(__DIR__ . '/../' . $selected_file);
-                $pdo->exec($sql_script);
-
-                $pdo->exec('SET FOREIGN_KEY_CHECKS=1;');
-                $_SESSION['message'] = "Database berhasil di-reset menggunakan file '{$selected_file}'.";
-            } catch (Exception $e) {
-                $_SESSION['message'] = "Gagal me-reset database: " . $e->getMessage();
-            }
-        } else {
-            $_SESSION['message'] = "Error: File SQL tidak valid atau tidak ditemukan.";
-        }
-    } elseif ($_POST['action'] === 'clean_database') { // Keep old action for now, can be removed later
-        try {
-            clean_transactional_data($pdo); // Fungsi ini ada di core/database.php
-            $_SESSION['message'] = "Berhasil! Semua data pengguna, konten, dan penjualan telah dihapus.";
-        } catch (Exception $e) {
-            $_SESSION['message'] = "Gagal membersihkan database: " . $e->getMessage();
-        }
-    }
-    // Redirect setelah proses untuk mencegah resubmit (pola PRG)
-    header("Location: database.php");
-    exit;
-}
-
-// Menampilkan pesan dari session
-if (isset($_SESSION['message'])) {
-    $message = $_SESSION['message'];
-    unset($_SESSION['message']);
-}
-
-$page_title = 'Manajemen Database';
-require_once __DIR__ . '/../partials/header.php';
+// This view assumes $message is passed from the controller.
 ?>
 
 <h1>Manajemen Database</h1>
@@ -94,7 +31,7 @@ require_once __DIR__ . '/../partials/header.php';
     <p class="description">
         <strong>PERINGATAN:</strong> Aksi di bawah ini bersifat destruktif dan akan menghapus semua tabel yang ada sebelum membuat ulang skema dari file yang dipilih.
     </p>
-    <form action="database.php" method="post" onsubmit="return confirm('PERINGATAN KERAS!\n\nAnda akan MENGHAPUS SEMUA TABEL dan membuat ulang skema database dari file yang dipilih.\n\nAksi ini tidak dapat diurungkan.\n\nLanjutkan?');">
+    <form action="/admin/database/reset" method="post" onsubmit="return confirm('PERINGATAN KERAS!\n\nAnda akan MENGHAPUS SEMUA TABEL dan membuat ulang skema database dari file yang dipilih.\n\nAksi ini tidak dapat diurungkan.\n\nLanjutkan?');">
         <input type="hidden" name="action" value="reset_with_file">
 
         <label for="sql_file">Pilih File Skema SQL:</label>
@@ -126,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resultsContainer.style.display = 'block';
         resultsPre.textContent = 'Memproses permintaan...';
 
-        fetch('run_migrations_ajax.php', {
+        fetch('/api/admin/database/migrate', {
             method: 'POST'
         })
         .then(response => {
@@ -155,7 +92,3 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
-
-<?php
-require_once __DIR__ . '/../partials/footer.php';
-?>
