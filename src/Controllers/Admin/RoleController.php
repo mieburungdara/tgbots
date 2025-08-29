@@ -31,7 +31,7 @@ class RoleController extends BaseController
 
         $pdo = get_db_connection();
         $roleRepo = new RoleRepository($pdo);
-        $role_name = trim($_POST['role_name']);
+        $role_name = trim(htmlspecialchars($_POST['role_name'] ?? '', ENT_QUOTES, 'UTF-8'));
 
         if (session_status() == PHP_SESSION_NONE) session_start();
 
