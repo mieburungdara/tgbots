@@ -47,14 +47,20 @@ class RoleController extends BaseController
 
     public function destroy()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['role_id'])) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /admin/roles');
+            exit();
+        }
+
+        $role_id = filter_input(INPUT_POST, 'role_id', FILTER_VALIDATE_INT);
+        // filter_input returns null if var not set, false if filter fails.
+        if ($role_id === false || $role_id === null) {
             header('Location: /admin/roles');
             exit();
         }
 
         $pdo = get_db_connection();
         $roleRepo = new RoleRepository($pdo);
-        $role_id = $_POST['role_id'];
 
         if (session_status() == PHP_SESSION_NONE) session_start();
 
