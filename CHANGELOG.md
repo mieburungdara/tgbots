@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.0.7] - 2025-08-29
+
+### Peningkatan
+- **Refactoring Controller**: Memindahkan inisialisasi `RoleRepository` ke dalam `__construct` di `RoleController`. Ini menghilangkan duplikasi kode di setiap metode dan meningkatkan pemeliharaan dengan mengikuti prinsip DRY.
+
 ## [5.0.6] - 2025-08-29
 
 ### Diperbaiki (Keamanan)
