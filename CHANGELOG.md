@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.0.9] - 2025-08-29
+
+### Diperbaiki (Keamanan)
+
+- **Validasi Input Tambahan**: Memperkuat keamanan di `XorAdminController` dengan menambahkan pemeriksaan `is_string()` sebelum memanggil `hash_equals()`. Ini mencegah potensi peringatan (warning) dan memastikan hanya string yang dibandingkan, melindungi dari serangan manipulasi tipe data.
+
 ## [5.0.8] - 2025-08-29
 
 ### Diperbaiki
