@@ -3,21 +3,30 @@
 require_once __DIR__ . '/../BaseController.php';
 require_once __DIR__ . '/../../../core/database/PrivateChannelRepository.php';
 require_once __DIR__ . '/../../../core/database/BotRepository.php';
+require_once __DIR__ . '/../../../core/database/PrivateChannelBotRepository.php';
 require_once __DIR__ . '/../../../core/TelegramAPI.php';
 
 class StorageChannelController extends BaseController {
 
-    public function index() {
-        $pdo = get_db_connection();
-        $channelRepo = new PrivateChannelRepository($pdo);
-        $botRepo = new BotRepository($pdo);
+    private $channelRepo;
+    private $botRepo;
+    private $pcBotRepo;
 
+    public function __construct() {
+        parent::__construct();
+        $pdo = get_db_connection();
+        $this->channelRepo = new PrivateChannelRepository($pdo);
+        $this->botRepo = new BotRepository($pdo);
+        $this->pcBotRepo = new PrivateChannelBotRepository($pdo);
+    }
+
+    public function index() {
         if (session_status() == PHP_SESSION_NONE) session_start();
         $message = $_SESSION['flash_message'] ?? null;
         unset($_SESSION['flash_message']);
 
-        $private_channels = $channelRepo->getAllChannels();
-        $all_bots = $botRepo->getAllBots();
+        $private_channels = $this->channelRepo->getAllChannels();
+        $all_bots = $this->botRepo->getAllBots();
 
         $this->view('admin/storage_channels/index', [
             'page_title' => 'Kelola Channel Penyimpanan',
@@ -33,15 +42,13 @@ class StorageChannelController extends BaseController {
             exit();
         }
 
-        $pdo = get_db_connection();
-        $channelRepo = new PrivateChannelRepository($pdo);
         $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
         $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
 
         if (session_status() == PHP_SESSION_NONE) session_start();
 
         if ($channel_id && $name) {
-            if ($channelRepo->addChannel($channel_id, $name)) {
+            if ($this->channelRepo->addChannel($channel_id, $name)) {
                 $_SESSION['flash_message'] = "Channel '{$name}' berhasil ditambahkan.";
             } else {
                 $_SESSION['flash_message'] = "Gagal menambahkan channel. Mungkin ID sudah ada.";
@@ -60,8 +67,6 @@ class StorageChannelController extends BaseController {
             exit();
         }
 
-        $pdo = get_db_connection();
-        $channelRepo = new PrivateChannelRepository($pdo);
         $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
         $new_name = filter_input(INPUT_POST, 'new_name', FILTER_SANITIZE_STRING);
         $new_channel_id = filter_input(INPUT_POST, 'new_channel_id', FILTER_VALIDATE_INT);
@@ -69,7 +74,7 @@ class StorageChannelController extends BaseController {
         if (session_status() == PHP_SESSION_NONE) session_start();
 
         if ($channel_id && $new_name && $new_channel_id) {
-            if ($channelRepo->updateChannel($channel_id, $new_name, $new_channel_id)) {
+            if ($this->channelRepo->updateChannel($channel_id, $new_name, $new_channel_id)) {
                 $_SESSION['flash_message'] = "Channel berhasil diperbarui.";
             } else {
                 $_SESSION['flash_message'] = "Gagal memperbarui channel.";
@@ -88,14 +93,12 @@ class StorageChannelController extends BaseController {
             exit();
         }
 
-        $pdo = get_db_connection();
-        $channelRepo = new PrivateChannelRepository($pdo);
         $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
 
         if (session_status() == PHP_SESSION_NONE) session_start();
 
         if ($channel_id) {
-            if ($channelRepo->setDefaultChannel($channel_id)) {
+            if ($this->channelRepo->setDefaultChannel($channel_id)) {
                 $_SESSION['flash_message'] = "Channel default berhasil diatur.";
             } else {
                 $_SESSION['flash_message'] = "Gagal mengatur channel default.";
@@ -114,14 +117,12 @@ class StorageChannelController extends BaseController {
             exit();
         }
 
-        $pdo = get_db_connection();
-        $channelRepo = new PrivateChannelRepository($pdo);
         $channel_id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
 
         if (session_status() == PHP_SESSION_NONE) session_start();
 
         if ($channel_id) {
-            if ($channelRepo->deleteChannel($channel_id)) {
+            if ($this->channelRepo->deleteChannel($channel_id)) {
                 $_SESSION['flash_message'] = "Channel berhasil dihapus.";
             } else {
                 $_SESSION['flash_message'] = "Gagal menghapus channel.";
@@ -141,15 +142,12 @@ class StorageChannelController extends BaseController {
             return $this->jsonResponse(['status' => 'error', 'message' => 'Input tidak valid: channel_id diperlukan.'], 400);
         }
         $telegram_channel_id = (int)$_GET['channel_id'];
-        $pdo = get_db_connection();
-        require_once __DIR__ . '/../../../core/database/PrivateChannelBotRepository.php';
+
         try {
-            $channelRepo = new PrivateChannelRepository($pdo);
-            $channel = $channelRepo->findByTelegramId($telegram_channel_id);
+            $channel = $this->channelRepo->findByTelegramId($telegram_channel_id);
             if (!$channel) throw new Exception("Channel tidak ditemukan.");
 
-            $pcBotRepo = new PrivateChannelBotRepository($pdo);
-            $bots = $pcBotRepo->getBotsForChannel($channel['id']);
+            $bots = $this->pcBotRepo->getBotsForChannel($channel['id']);
             return $this->jsonResponse(['status' => 'success', 'bots' => $bots]);
         } catch (Exception $e) {
             return $this->jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
@@ -162,18 +160,15 @@ class StorageChannelController extends BaseController {
         if (!$telegram_channel_id || !$bot_id) {
             return $this->jsonResponse(['status' => 'error', 'message' => 'Input tidak valid.'], 400);
         }
-        $pdo = get_db_connection();
-        require_once __DIR__ . '/../../../core/database/PrivateChannelBotRepository.php';
+
         try {
-            $channelRepo = new PrivateChannelRepository($pdo);
-            $channel = $channelRepo->findByTelegramId($telegram_channel_id);
+            $channel = $this->channelRepo->findByTelegramId($telegram_channel_id);
             if (!$channel) throw new Exception("Channel tidak ditemukan.");
 
-            $pcBotRepo = new PrivateChannelBotRepository($pdo);
-            if ($pcBotRepo->isBotInChannel($channel['id'], $bot_id)) {
+            if ($this->pcBotRepo->isBotInChannel($channel['id'], $bot_id)) {
                 throw new Exception("Bot ini sudah ditambahkan ke channel tersebut.");
             }
-            if ($pcBotRepo->addBotToChannel($channel['id'], $bot_id)) {
+            if ($this->pcBotRepo->addBotToChannel($channel['id'], $bot_id)) {
                 return $this->jsonResponse(['status' => 'success', 'message' => 'Bot berhasil ditambahkan ke channel.']);
             }
             throw new Exception("Gagal menambahkan bot ke channel di database.");
@@ -188,15 +183,12 @@ class StorageChannelController extends BaseController {
         if (!$telegram_channel_id || !$bot_id) {
             return $this->jsonResponse(['status' => 'error', 'message' => 'Input tidak valid.'], 400);
         }
-        $pdo = get_db_connection();
-        require_once __DIR__ . '/../../../core/database/PrivateChannelBotRepository.php';
+
         try {
-            $channelRepo = new PrivateChannelRepository($pdo);
-            $channel = $channelRepo->findByTelegramId($telegram_channel_id);
+            $channel = $this->channelRepo->findByTelegramId($telegram_channel_id);
             if (!$channel) throw new Exception("Channel tidak ditemukan.");
 
-            $pcBotRepo = new PrivateChannelBotRepository($pdo);
-            if ($pcBotRepo->removeBotFromChannel($channel['id'], $bot_id)) {
+            if ($this->pcBotRepo->removeBotFromChannel($channel['id'], $bot_id)) {
                 return $this->jsonResponse(['status' => 'success', 'message' => 'Bot berhasil dihapus dari channel.']);
             }
             throw new Exception("Gagal menghapus bot dari channel di database.");
@@ -211,16 +203,11 @@ class StorageChannelController extends BaseController {
         if (!$telegram_channel_id || !$bot_id) {
             return $this->jsonResponse(['status' => 'error', 'message' => 'Input tidak valid.'], 400);
         }
-        $pdo = get_db_connection();
-        require_once __DIR__ . '/../../../core/database/PrivateChannelBotRepository.php';
-        try {
-            $botRepo = new BotRepository($pdo);
-            $channelRepo = new PrivateChannelRepository($pdo);
-            $pcBotRepo = new PrivateChannelBotRepository($pdo);
 
-            $bot = $botRepo->findBotByTelegramId($bot_id);
+        try {
+            $bot = $this->botRepo->findBotByTelegramId($bot_id);
             if (!$bot) throw new Exception("Bot tidak ditemukan.");
-            $channel = $channelRepo->findByTelegramId($telegram_channel_id);
+            $channel = $this->channelRepo->findByTelegramId($telegram_channel_id);
             if (!$channel) throw new Exception("Channel tidak ditemukan.");
 
             $telegram_api = new TelegramAPI($bot['token']);
@@ -231,10 +218,10 @@ class StorageChannelController extends BaseController {
             }
             $status = $member_info['result']['status'];
             if (in_array($status, ['creator', 'administrator'])) {
-                if (!$pcBotRepo->isBotInChannel($channel['id'], $bot_id)) {
-                    $pcBotRepo->addBotToChannel($channel['id'], $bot_id);
+                if (!$this->pcBotRepo->isBotInChannel($channel['id'], $bot_id)) {
+                    $this->pcBotRepo->addBotToChannel($channel['id'], $bot_id);
                 }
-                if ($pcBotRepo->verifyBotInChannel($channel['id'], $bot_id)) {
+                if ($this->pcBotRepo->verifyBotInChannel($channel['id'], $bot_id)) {
                     return $this->jsonResponse(['status' => 'success', 'message' => "Verifikasi berhasil! Bot adalah '{$status}'."]);
                 }
                 throw new Exception("Gagal memperbarui status verifikasi di database.");
