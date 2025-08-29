@@ -14,14 +14,15 @@ class RoleRepository
         return $this->pdo->query("SELECT * FROM roles ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function addRole(string $name): bool
+    public function addRole(string $name): int
     {
         try {
             $stmt = $this->pdo->prepare("INSERT INTO roles (name) VALUES (?) ON DUPLICATE KEY UPDATE name=name");
-            return $stmt->execute([$name]);
+            $stmt->execute([$name]);
+            return $stmt->rowCount();
         } catch (PDOException $e) {
             error_log("Error adding role: " . $e->getMessage());
-            return false;
+            return -1;
         }
     }
 
