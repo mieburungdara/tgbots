@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.0.3] - 2025-08-29
+
+### Diperbaiki
+- **Kode Redundan Dihapus**: Menghapus pemeriksaan `if ($result === false)` yang tidak perlu dari `XorAdminController.php`. Pemeriksaan ini tidak akan pernah tercapai karena `TelegramAPI` dirancang untuk melempar `Exception` saat terjadi kegagalan, yang sudah ditangani oleh blok `try-catch` di sekitarnya.
+
 ## [5.0.2] - 2025-08-29
 
 ### Diperbaiki (Keamanan)
