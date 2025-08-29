@@ -12,7 +12,6 @@ class ChannelController extends MemberBaseController {
         $channelRepo = new SellerSalesChannelRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
 
-        if (session_status() == PHP_SESSION_NONE) session_start();
         $error_message = $_SESSION['flash_error'] ?? null;
         $success_message = $_SESSION['flash_success'] ?? null;
         unset($_SESSION['flash_error'], $_SESSION['flash_success']);
@@ -53,8 +52,6 @@ class ChannelController extends MemberBaseController {
             header('Location: /member/channels');
             exit();
         }
-
-        if (session_status() == PHP_SESSION_NONE) session_start();
 
         $last_check_time = $_SESSION['last_channel_check'] ?? 0;
         if (time() - $last_check_time < 60) {

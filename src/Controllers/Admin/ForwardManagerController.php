@@ -15,12 +15,6 @@ class ForwardManagerController extends BaseController
                 throw new Exception("Metode permintaan tidak valid.");
             }
 
-            if (session_status() == PHP_SESSION_NONE) session_start();
-            if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
-                http_response_code(403);
-                throw new Exception("Akses ditolak.");
-            }
-
             $group_id = $_POST['group_id'] ?? null;
             $bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
 

@@ -24,7 +24,6 @@ class TransactionController extends MemberBaseController {
         $packageRepo = new PackageRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
 
-        if (session_status() == PHP_SESSION_NONE) session_start();
         $message = $_SESSION['flash_message'] ?? null;
         unset($_SESSION['flash_message']);
 
@@ -47,8 +46,6 @@ class TransactionController extends MemberBaseController {
         $packageRepo = new PackageRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
         $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
-
-        if (session_status() == PHP_SESSION_NONE) session_start();
 
         if ($package_id_to_delete) {
             try {
