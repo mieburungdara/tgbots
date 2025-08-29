@@ -113,7 +113,7 @@ class XorAdminController extends BaseController
 
     public function login()
     {
-        if (isset($_POST['password']) && !empty($this->correct_password) && hash_equals($this->correct_password, $_POST['password'])) {
+        if (isset($_POST['password']) && is_string($_POST['password']) && !empty($this->correct_password) && hash_equals($this->correct_password, $_POST['password'])) {
             $_SESSION['is_authenticated'] = true;
         } else {
             $_SESSION['xor_error'] = "Password salah!";
