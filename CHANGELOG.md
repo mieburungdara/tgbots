@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.0.1] - 2025-08-29
+
+### Peningkatan
+- **Halaman Akses Ditolak yang Lebih Baik**: Mengganti pesan "Akses Ditolak" berbasis teks biasa dengan halaman HTML yang ramah pengguna. Halaman baru ini memberikan instruksi yang jelas kepada pengguna untuk login kembali melalui bot Telegram dan secara dinamis menyertakan tautan ke bot jika tersedia.
+
 ## [5.0.0] - 2025-08-28
 
 ### Diubah (Refactoring Arsitektur)
