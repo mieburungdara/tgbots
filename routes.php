@@ -111,5 +111,17 @@ $router->get('/admin/debug_feed', 'Admin/DebugFeedController@index');
 // Admin - Forward Manager
 $router->post('/api/admin/media/forward', 'Admin/ForwardManagerController@forward');
 
+// XOR Admin Panel
+$router->get('/xoradmin', 'Admin/XorAdminController@index');
+$router->post('/xoradmin/login', 'Admin/XorAdminController@login');
+$router->post('/xoradmin/logout', 'Admin/XorAdminController@logout');
+$router->post('/xoradmin/add_bot', 'Admin/XorAdminController@addBot');
+$router->post('/xoradmin/save_bot_settings', 'Admin/XorAdminController@saveBotSettings');
+$router->post('/xoradmin/reset_db', 'Admin/XorAdminController@resetDb');
+$router->post('/api/xoradmin', 'Admin/XorAdminController@api');
+
+// Webhook
+$router->post('/webhook/{id}', 'WebhookController@handle');
+
 // Add more routes here as the refactoring progresses.
 // e.g., $router->get('admin/users', 'Admin/UsersController@index');
