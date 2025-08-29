@@ -37,14 +37,10 @@ class RoleController extends BaseController
 
         $role_name = trim(htmlspecialchars($_POST['role_name'] ?? '', ENT_QUOTES, 'UTF-8'));
 
-        $rowCount = $this->roleRepo->addRole($role_name);
-
-        if ($rowCount > 0) {
+        if ($roleRepo->addRole($role_name)) {
             $_SESSION['flash_message'] = "Peran '{$role_name}' berhasil ditambahkan.";
-        } elseif ($rowCount === 0) {
-            $_SESSION['flash_message'] = "Peran '{$role_name}' sudah ada, tidak ada yang ditambahkan.";
         } else {
-            $_SESSION['flash_message'] = "Gagal menambahkan peran karena kesalahan database.";
+            $_SESSION['flash_message'] = "Gagal menambahkan peran.";
         }
 
         header("Location: /admin/roles");
@@ -65,14 +61,10 @@ class RoleController extends BaseController
             exit();
         }
 
-        $rowCount = $this->roleRepo->deleteRole($role_id);
-
-        if ($rowCount > 0) {
+        if ($roleRepo->deleteRole($role_id)) {
             $_SESSION['flash_message'] = "Peran berhasil dihapus.";
-        } elseif ($rowCount === 0) {
-            $_SESSION['flash_message'] = "Gagal menghapus: Peran tidak ditemukan.";
         } else {
-            $_SESSION['flash_message'] = "Gagal menghapus peran karena kesalahan database.";
+            $_SESSION['flash_message'] = "Gagal menghapus peran.";
         }
 
         header("Location: /admin/roles");

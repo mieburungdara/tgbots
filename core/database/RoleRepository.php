@@ -14,27 +14,20 @@ class RoleRepository
         return $this->pdo->query("SELECT * FROM roles ORDER BY name ASC")->fetchAll(PDO::FETCH_ASSOC);
     }
 
-    public function addRole(string $name): int
+    public function addRole(string $name): bool
     {
         try {
             $stmt = $this->pdo->prepare("INSERT INTO roles (name) VALUES (?) ON DUPLICATE KEY UPDATE name=name");
-            $stmt->execute([$name]);
-            return $stmt->rowCount();
+            return $stmt->execute([$name]);
         } catch (PDOException $e) {
             error_log("Error adding role: " . $e->getMessage());
-            return -1;
+            return false;
         }
     }
 
-    public function deleteRole(int $id): int
+    public function deleteRole(int $id): bool
     {
-        try {
-            $stmt = $this->pdo->prepare("DELETE FROM roles WHERE id = ?");
-            $stmt->execute([$id]);
-            return $stmt->rowCount();
-        } catch (PDOException $e) {
-            error_log("Error deleting role: " . $e->getMessage());
-            return -1;
-        }
+        $stmt = $this->pdo->prepare("DELETE FROM roles WHERE id = ?");
+        return $stmt->execute([$id]);
     }
 }
