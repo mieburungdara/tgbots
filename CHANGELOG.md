@@ -18,6 +18,7 @@
 - **Lanjutan Refactor Admin**: Melanjutkan migrasi area admin dengan merefaktor halaman 'Manajemen Konten' (`admin/packages.php`).
 - **Halaman Log Admin**: Memigrasikan semua halaman penampil log (`logs.php`, `media_logs.php`, `telegram_logs.php`) ke dalam `LogController` baru untuk konsistensi.
 - **Migrasi AJAX ke API Controller**: Memigrasikan semua endpoint AJAX lama (misalnya, `api/update_user_roles.php`, `webhook_manager.php`, `package_manager.php`) ke dalam metode API yang sesuai di dalam controller yang ada, membuat semua interaksi backend konsisten dengan pola MVCR.
+- **Lanjutan Refactor Admin**: Melanjutkan migrasi dengan merefaktor halaman 'Analitik' (`admin/analytics.php`) dan 'Manajemen Saldo' (`admin/balance.php`) beserta endpoint-endpoint API terkaitnya.
 
 ## [4.7.0] - 2025-08-28
 
