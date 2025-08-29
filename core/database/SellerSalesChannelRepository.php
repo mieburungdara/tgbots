@@ -66,4 +66,34 @@ class SellerSalesChannelRepository
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$seller_telegram_id]);
     }
+
+    /**
+     * Mengambil semua channel jualan dari semua penjual untuk ditampilkan di panel admin.
+     *
+     * @return array Daftar semua channel jualan.
+     */
+    public function getAllSalesChannelsForAdmin(): array
+    {
+        $sql = "
+            SELECT
+                ssc.channel_id,
+                ssc.discussion_group_id,
+                ssc.is_active,
+                ssc.created_at,
+                ssc.bot_id,
+                u.first_name as seller_name,
+                u.username as seller_username,
+                b.username as bot_username
+            FROM
+                seller_sales_channels ssc
+            LEFT JOIN
+                users u ON ssc.seller_user_id = u.id
+            LEFT JOIN
+                bots b ON ssc.bot_id = b.id
+            ORDER BY
+                ssc.created_at DESC
+        ";
+        $stmt = $this->pdo->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

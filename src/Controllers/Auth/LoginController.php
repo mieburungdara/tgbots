@@ -1,9 +1,13 @@
 <?php
 
-class LoginController {
+require_once __DIR__ . '/../BaseController.php';
+
+class LoginController extends BaseController {
 
     /**
      * Handles the one-time login token from the URL.
+     * If the user is an admin, it shows a choice page.
+     * Otherwise, it should handle normal user login (TBD or handled by Member/LoginController).
      */
     public function handleToken() {
         if (session_status() == PHP_SESSION_NONE) {
@@ -11,8 +15,6 @@ class LoginController {
         }
 
         if (!isset($_GET['token'])) {
-            // If no token is provided, just redirect to the base URL.
-            // This prevents direct access to /login.
             header('Location: /');
             exit();
         }
@@ -21,6 +23,7 @@ class LoginController {
         $pdo = get_db_connection();
 
         if ($pdo) {
+            // Check if token is valid and belongs to an admin
             $stmt = $pdo->prepare(
                 "SELECT u.id, u.first_name
                  FROM users u
@@ -32,25 +35,28 @@ class LoginController {
             $user = $stmt->fetch();
 
             if ($user) {
-                // Token is valid, create the session
+                // Admin token is valid. Create the session.
                 $pdo->prepare("UPDATE users SET token_used = 1, login_token = NULL WHERE login_token = ?")->execute([$token]);
 
-                session_regenerate_id(true); // Prevent session fixation
+                session_regenerate_id(true);
                 $_SESSION['is_admin'] = true;
                 $_SESSION['user_id'] = $user['id'];
                 $_SESSION['user_first_name'] = $user['first_name'];
 
-                // Redirect to the admin dashboard, removing the token from the URL
-                header('Location: /admin/dashboard');
-                exit;
+                // Show the choice page instead of redirecting
+                return $this->view('auth/login_choice', ['page_title' => 'Pilih Panel']);
             }
         }
 
-        // If the token is invalid or a DB error occurred
+        // If token is invalid, expired, or not for an admin, deny access.
+        // A more robust solution might redirect non-admin users to the member login.
         session_unset();
         session_destroy();
         http_response_code(403);
-        die('Akses Ditolak: Tautan login tidak valid, kedaluwarsa, atau bukan untuk admin.');
+        $this->view('500', [
+            'page_title' => 'Akses Ditolak',
+            'error_message' => 'Akses Ditolak: Tautan login tidak valid, kedaluwarsa, atau bukan untuk admin.'
+        ]);
     }
 
     /**

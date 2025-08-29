@@ -80,8 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('bot_id', botId);
 
             try {
-                // This still points to the old handler, to be refactored later.
-                const response = await fetch('/admin/forward_manager.php', {
+                const response = await fetch('/api/admin/media/forward', {
                     method: 'POST',
                     body: formData
                 });

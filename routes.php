@@ -93,5 +93,23 @@ $router->get('/admin/roles', 'Admin/RoleController@index');
 $router->post('/admin/roles/store', 'Admin/RoleController@store');
 $router->post('/admin/roles/delete', 'Admin/RoleController@destroy');
 
+// Admin - Database
+$router->get('/admin/database', 'Admin/DatabaseController@index');
+$router->post('/admin/database/reset', 'Admin/DatabaseController@reset');
+$router->post('/api/admin/database/migrate', 'Admin/DatabaseController@migrate');
+
+// Admin - Sales Channels
+$router->get('/admin/sales_channels', 'Admin/SalesChannelController@index');
+
+// Admin - API Tester
+$router->get('/admin/api_test', 'Admin/ApiTestController@index');
+$router->any('/api/admin/api_test', 'Admin/ApiTestController@handle');
+
+// Admin - Debug Feed
+$router->get('/admin/debug_feed', 'Admin/DebugFeedController@index');
+
+// Admin - Forward Manager
+$router->post('/api/admin/media/forward', 'Admin/ForwardManagerController@forward');
+
 // Add more routes here as the refactoring progresses.
 // e.g., $router->get('admin/users', 'Admin/UsersController@index');

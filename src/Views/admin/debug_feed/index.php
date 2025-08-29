@@ -1,41 +1,11 @@
 <?php
-/**
- * Halaman Feed Debug (Admin).
- */
-
-// Define ROOT_PATH for reliable file access
-if (!defined('ROOT_PATH')) {
-    define('ROOT_PATH', dirname(__DIR__));
-}
-
-require_once ROOT_PATH . '/core/database.php';
-require_once ROOT_PATH . '/core/database/RawUpdateRepository.php';
-
-// Placeholder for real authentication
-$is_admin = true;
-if (!$is_admin) {
-    die('Unauthorized');
-}
-
-$pdo = get_db_connection();
-$raw_update_repo = new RawUpdateRepository($pdo);
-
-// --- Pagination Logic ---
-$items_per_page = 25;
-$total_items = $raw_update_repo->countAll();
-$total_pages = ceil($total_items / $items_per_page);
-$current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-$current_page = max(1, min($current_page, $total_pages));
-$offset = ($current_page - 1) * $items_per_page;
-
-$updates = $raw_update_repo->findAll($items_per_page, $offset);
-
-$page_title = "Raw Telegram Update Feed";
-include_once ROOT_PATH . '/partials/header.php';
+// This view assumes $updates and $pagination are passed from the controller.
+$current_page = $pagination['current_page'];
+$total_pages = $pagination['total_pages'];
 ?>
 
 <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4"><?php echo $page_title; ?></h1>
+    <h1 class="text-2xl font-bold mb-4"><?= htmlspecialchars($page_title) ?></h1>
     <p class="mb-4">This page displays raw JSON payloads received from Telegram. Newest updates appear first.</p>
 
     <div class="bg-white shadow-md rounded-lg overflow-x-auto">
@@ -94,9 +64,3 @@ include_once ROOT_PATH . '/partials/header.php';
         </nav>
     </div>
 </div>
-
-<?php
-// No custom JavaScript needed for this simple table view.
-// Prism.js will be initialized automatically by the autoloader script in the header.
-include_once ROOT_PATH . '/partials/footer.php';
-?>
