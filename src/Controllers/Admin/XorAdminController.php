@@ -34,6 +34,23 @@ class XorAdminController extends BaseController
     }
 
     /**
+     * Memeriksa apakah pengguna terotentikasi. Jika tidak, hentikan eksekusi.
+     * @param bool $is_api Jika true, kembalikan response JSON. Jika false, redirect.
+     */
+    private function requireAuth($is_api = false)
+    {
+        if (!$this->isAuthenticated()) {
+            if ($is_api) {
+                header('Content-Type: application/json');
+                echo json_encode(['status' => 'error', 'message' => 'Sesi tidak valid.']);
+            } else {
+                header("Location: /xoradmin");
+            }
+            exit;
+        }
+    }
+
+    /**
      * Handles the main view and POST requests for the page itself.
      */
     public function index()
@@ -118,7 +135,7 @@ class XorAdminController extends BaseController
 
     public function addBot()
     {
-        if (!$this->isAuthenticated()) { header("Location: /xoradmin"); exit; }
+        $this->requireAuth();
         $this->connectDb();
 
         $token = trim($_POST['token']);
@@ -150,7 +167,7 @@ class XorAdminController extends BaseController
 
     public function saveBotSettings()
     {
-        if (!$this->isAuthenticated()) { header("Location: /xoradmin"); exit; }
+        $this->requireAuth();
         $this->connectDb();
 
         $bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
@@ -180,7 +197,7 @@ class XorAdminController extends BaseController
 
     public function resetDb()
     {
-        if (!$this->isAuthenticated()) { header("Location: /xoradmin"); exit; }
+        $this->requireAuth();
         $this->connectDb();
 
         try {
@@ -211,11 +228,7 @@ class XorAdminController extends BaseController
      */
     public function api()
     {
-        header('Content-Type: application/json');
-        if (!$this->isAuthenticated()) {
-            echo json_encode(['status' => 'error', 'message' => 'Sesi tidak valid.']);
-            exit;
-        }
+        $this->requireAuth(true);
         $this->connectDb();
 
         $response = ['status' => 'error', 'message' => 'Aksi tidak diketahui.'];
