@@ -76,6 +76,7 @@ class PrivateChannelRepository
                 pc.id,
                 pc.channel_id,
                 pc.name,
+                pc.is_default,
                 COUNT(pcb.bot_id) as bot_count,
                 GROUP_CONCAT(b.username SEPARATOR ', ') as bot_usernames
             FROM
@@ -117,6 +118,50 @@ class PrivateChannelRepository
         $stmt = $this->pdo->prepare("SELECT * FROM private_channels WHERE channel_id = ?");
         $stmt->execute([$telegram_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Memperbarui data channel yang ada.
+     *
+     * @param int $id ID internal channel yang akan diperbarui.
+     * @param string $newName Nama baru untuk channel.
+     * @param int $newChannelId ID Telegram baru untuk channel.
+     * @return bool True jika berhasil, false jika gagal.
+     */
+    public function updateChannel(int $id, string $newName, int $newChannelId): bool
+    {
+        $stmt = $this->pdo->prepare(
+            "UPDATE private_channels SET name = ?, channel_id = ? WHERE id = ?"
+        );
+        return $stmt->execute([$newName, $newChannelId, $id]);
+    }
+
+    /**
+     * Mengatur channel tertentu sebagai default.
+     *
+     * @param int $id ID internal channel yang akan dijadikan default.
+     * @return bool True jika berhasil, false jika gagal.
+     */
+    public function setDefaultChannel(int $id): bool
+    {
+        $this->pdo->beginTransaction();
+        try {
+            // Reset semua channel agar tidak ada yang default
+            $this->pdo->exec("UPDATE private_channels SET is_default = 0");
+
+            // Atur channel yang dipilih sebagai default
+            $stmt = $this->pdo->prepare(
+                "UPDATE private_channels SET is_default = 1 WHERE id = ?"
+            );
+            $stmt->execute([$id]);
+
+            $this->pdo->commit();
+            return true;
+        } catch (PDOException $e) {
+            $this->pdo->rollBack();
+            error_log("Failed to set default channel: " . $e->getMessage());
+            return false;
+        }
     }
 
     /**
