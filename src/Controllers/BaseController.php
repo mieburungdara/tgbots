@@ -10,11 +10,30 @@ abstract class BaseController {
         // This check protects all controllers that extend BaseController.
         // The login token logic will be handled by a dedicated LoginController.
         if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
-            // For now, we stick to the original behavior of showing a message.
-            // In the future, this could redirect to a login page.
             http_response_code(403);
-            // We can even render a nice view for this.
-            die('Akses Ditolak. Silakan login melalui bot Telegram menggunakan perintah /login.');
+
+            // Inisialisasi variabel bot_username
+            $bot_username = null;
+
+            // Coba ambil bot default atau bot pertama dari database
+            try {
+                $pdo = get_db_connection();
+                if ($pdo) {
+                    // Query untuk mengambil username dari bot pertama yang ditemukan
+                    // Ini asumsi, bisa disesuaikan jika ada logika bot "default"
+                    $stmt = $pdo->query("SELECT username FROM bots ORDER BY id LIMIT 1");
+                    $bot = $stmt->fetch(PDO::FETCH_ASSOC);
+                    if ($bot && !empty($bot['username'])) {
+                        $bot_username = $bot['username'];
+                    }
+                }
+            } catch (Exception $e) {
+                // Biarkan bot_username null jika ada error database
+            }
+
+            // Render halaman akses ditolak
+            $this->view('auth/access_denied', ['bot_username' => $bot_username]);
+            exit();
         }
     }
 
