@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.0.2] - 2025-08-29
+
+### Diperbaiki (Keamanan)
+- **Perbandingan Password Aman**: Mengganti perbandingan password yang rentan terhadap serangan waktu (`===`) dengan fungsi `hash_equals()` di `XorAdminController.php`. Ini memastikan perbandingan string dilakukan dalam waktu konstan, yang merupakan praktik keamanan standar untuk melindungi rahasia.
+
 ## [5.0.1] - 2025-08-29
 
 ### Peningkatan
