@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.0.4] - 2025-08-29
+
+### Peningkatan
+- **Refactoring Otentikasi**: Memusatkan logika pemeriksaan otentikasi yang berulang di `XorAdminController.php` ke dalam satu metode privat `requireAuth()`. Ini mengurangi duplikasi kode dan meningkatkan keterbacaan serta pemeliharaan.
+
 ## [5.0.3] - 2025-08-29
 
 ### Diperbaiki
