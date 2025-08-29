@@ -16,9 +16,6 @@ class XorAdminController extends BaseController
         }
         $this->correct_password = defined('XOR_ADMIN_PASSWORD') ? XOR_ADMIN_PASSWORD : 'sup3r4dmin';
 
-        if (session_status() == PHP_SESSION_NONE) {
-            session_start();
-        }
     }
 
     private function isAuthenticated()

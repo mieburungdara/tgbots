@@ -1,6 +1,8 @@
 <?php
 
-class LoginController {
+require_once __DIR__ . '/../AppController.php';
+
+class LoginController extends AppController {
 
     /**
      * Shows the login form, pre-filling the token and showing an error if available.
@@ -82,13 +84,5 @@ class LoginController {
         $_SESSION['flash_login_error'] = $error_message;
         header("Location: /member/login?token=" . urlencode($token));
         exit();
-    }
-
-    /**
-     * A simple view helper method.
-     */
-    protected function view($view, $data = []) {
-        extract($data);
-        require __DIR__ . "/../../../src/Views/{$view}.php";
     }
 }

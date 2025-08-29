@@ -11,7 +11,6 @@ class RoleController extends BaseController
         $roleRepo = new RoleRepository($pdo);
         $roles = $roleRepo->getAllRoles();
 
-        if (session_status() == PHP_SESSION_NONE) session_start();
         $message = $_SESSION['flash_message'] ?? null;
         unset($_SESSION['flash_message']);
 
@@ -33,8 +32,6 @@ class RoleController extends BaseController
         $roleRepo = new RoleRepository($pdo);
         $role_name = trim(htmlspecialchars($_POST['role_name'] ?? '', ENT_QUOTES, 'UTF-8'));
 
-        if (session_status() == PHP_SESSION_NONE) session_start();
-
         if ($roleRepo->addRole($role_name)) {
             $_SESSION['flash_message'] = "Peran '{$role_name}' berhasil ditambahkan.";
         } else {
@@ -55,8 +52,6 @@ class RoleController extends BaseController
         $pdo = get_db_connection();
         $roleRepo = new RoleRepository($pdo);
         $role_id = $_POST['role_id'];
-
-        if (session_status() == PHP_SESSION_NONE) session_start();
 
         if ($roleRepo->deleteRole($role_id)) {
             $_SESSION['flash_message'] = "Peran berhasil dihapus.";
