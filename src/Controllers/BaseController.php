@@ -28,7 +28,9 @@ abstract class BaseController {
                     }
                 }
             } catch (Exception $e) {
-                // Biarkan bot_username null jika ada error database
+                // Log the database error and continue, so the user sees the access denied page
+                // instead of a fatal error.
+                app_log('Kesalahan database saat mengambil nama pengguna bot untuk halaman akses ditolak: ' . $e->getMessage());
             }
 
             // Render halaman akses ditolak

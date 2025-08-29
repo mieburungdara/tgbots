@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.0.8] - 2025-08-29
+
+### Diperbaiki
+- **Penanganan Kesalahan Database**: Memperbaiki blok `catch` yang kosong di `BaseController`. Sebelumnya, kesalahan saat mengambil nama pengguna bot untuk halaman "Akses Ditolak" akan diabaikan secara diam-diam. Sekarang, kesalahan tersebut dicatat menggunakan `app_log()` untuk memastikan semua masalah dapat ditelusuri. (#303)
+
 ## [5.0.7] - 2025-08-29
 
 ### Peningkatan
