@@ -43,7 +43,10 @@ class MessageHandler implements HandlerInterface
         $text = $message['text'];
 
         $parts = explode(' ', $text);
-        $command = $parts[0];
+        $command_full = $parts[0];
+        // Menangani perintah yang mungkin menyertakan nama bot (misal: /start@nama_bot)
+        $command_parts = explode('@', $command_full);
+        $command = $command_parts[0];
 
         // Ini dapat direfaktor lebih lanjut menjadi kelas-kelas perintah
         switch ($command) {
