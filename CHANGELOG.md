@@ -2,9 +2,10 @@
 
 ## [5.0.9] - 2025-08-29
 
-### Diperbaiki (Keamanan)
+### Peningkatan
 
-- **Validasi Input Tambahan**: Memperkuat keamanan di `XorAdminController` dengan menambahkan pemeriksaan `is_string()` sebelum memanggil `hash_equals()`. Ini mencegah potensi peringatan (warning) dan memastikan hanya string yang dibandingkan, melindungi dari serangan manipulasi tipe data.
+- **Pesan Status yang Lebih Akurat**: Memperbaiki logika penambahan peran di `RoleController`. Sistem sekarang memberikan pesan yang jelas kepada pengguna jika peran berhasil ditambahkan, jika peran tersebut sudah ada, atau jika terjadi kesalahan, daripada hanya menampilkan pesan sukses umum.
+- **Perbaikan Bug Variabel**: Memperbaiki bug di `RoleController` di mana variabel `$roleRepo` dipanggil alih-alih properti kelas `$this->roleRepo`, yang akan menyebabkan error fatal.
 
 ## [5.0.8] - 2025-08-29
 
