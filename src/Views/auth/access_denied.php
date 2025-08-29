@@ -54,7 +54,7 @@
         <h1>Akses Ditolak</h1>
         <p>Sesi Anda telah berakhir atau Anda tidak memiliki hak akses untuk halaman ini.</p>
         <p>Silakan login kembali melalui bot Telegram dengan menekan tombol di bawah ini dan kirim perintah <code>/login</code>.</p>
-        <?php if (isset($bot_username) && $bot_username): ?>
+        <?php if (!empty($bot_username)): ?>
             <a href="https://t.me/<?php echo htmlspecialchars($bot_username); ?>" target="_blank" class="telegram-button">Login via Telegram</a>
         <?php else: ?>
             <p><strong>Login bot tidak tersedia saat ini.</strong></p>
