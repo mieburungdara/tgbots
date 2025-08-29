@@ -5,11 +5,18 @@ require_once __DIR__ . '/../../../core/database/RoleRepository.php';
 
 class RoleController extends BaseController
 {
+    private $roleRepo;
+
+    public function __construct()
+    {
+        parent::__construct();
+        $pdo = get_db_connection();
+        $this->roleRepo = new RoleRepository($pdo);
+    }
+
     public function index()
     {
-        $pdo = get_db_connection();
-        $roleRepo = new RoleRepository($pdo);
-        $roles = $roleRepo->getAllRoles();
+        $roles = $this->roleRepo->getAllRoles();
 
         $message = $_SESSION['flash_message'] ?? null;
         unset($_SESSION['flash_message']);
@@ -28,8 +35,6 @@ class RoleController extends BaseController
             exit();
         }
 
-        $pdo = get_db_connection();
-        $roleRepo = new RoleRepository($pdo);
         $role_name = trim(htmlspecialchars($_POST['role_name'] ?? '', ENT_QUOTES, 'UTF-8'));
 
         if ($roleRepo->addRole($role_name)) {
@@ -44,14 +49,17 @@ class RoleController extends BaseController
 
     public function destroy()
     {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['role_id'])) {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /admin/roles');
             exit();
         }
 
-        $pdo = get_db_connection();
-        $roleRepo = new RoleRepository($pdo);
-        $role_id = $_POST['role_id'];
+        $role_id = filter_input(INPUT_POST, 'role_id', FILTER_VALIDATE_INT);
+        // filter_input returns null if var not set, false if filter fails.
+        if ($role_id === false || $role_id === null) {
+            header('Location: /admin/roles');
+            exit();
+        }
 
         if ($roleRepo->deleteRole($role_id)) {
             $_SESSION['flash_message'] = "Peran berhasil dihapus.";

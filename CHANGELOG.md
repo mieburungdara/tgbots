@@ -1,5 +1,15 @@
 # Changelog
 
+## [5.0.7] - 2025-08-29
+
+### Peningkatan
+- **Refactoring Controller**: Memindahkan inisialisasi `RoleRepository` ke dalam `__construct` di `RoleController`. Ini menghilangkan duplikasi kode di setiap metode dan meningkatkan pemeliharaan dengan mengikuti prinsip DRY.
+
+## [5.0.6] - 2025-08-29
+
+### Diperbaiki (Keamanan)
+- **Validasi Input**: Memperkuat keamanan di `RoleController` dengan mengganti pemeriksaan `empty()` yang tidak aman dengan `filter_input(INPUT_POST, 'role_id', FILTER_VALIDATE_INT)`. Ini memastikan bahwa hanya nilai integer yang valid yang diproses saat menghapus peran, mencegah potensi manipulasi input.
+
 ## [5.0.5] - 2025-08-29
 
 ### Diperbaiki (Keamanan)
