@@ -163,4 +163,17 @@ class PrivateChannelRepository
             return false;
         }
     }
+
+    /**
+     * Memperbarui nama channel berdasarkan ID Telegram-nya.
+     *
+     * @param int $telegram_id ID unik dari channel Telegram.
+     * @param string $new_name Nama baru untuk channel.
+     * @return bool True jika berhasil, false jika gagal.
+     */
+    public function updateNameByTelegramId(int $telegram_id, string $new_name): bool
+    {
+        $stmt = $this->pdo->prepare("UPDATE private_channels SET name = ? WHERE channel_id = ?");
+        return $stmt->execute([$new_name, $telegram_id]);
+    }
 }
