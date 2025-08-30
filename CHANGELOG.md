@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.1.7] - 2025-08-30
+
+### Dokumentasi
+- **Panduan Instalasi**: Menambahkan file `INSTALL.md` baru yang berisi panduan lengkap dan terperinci untuk menginstal dan mengkonfigurasi aplikasi dari awal, termasuk pengaturan server, database, dan webhook Telegram.
+
 ## [5.1.6] - 2025-08-30
 
 ### Peningkatan
