@@ -3,6 +3,9 @@
 // Define application routes here.
 // The router instance is available as $router within the load() method context.
 
+// Home page / root route
+$router->get('', 'HomeController@index');
+
 // Auth routes
 $router->get('login', 'Auth/LoginController@handleToken');
 $router->get('logout', 'Auth/LoginController@logout');
