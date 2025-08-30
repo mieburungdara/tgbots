@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.1.3] - 2025-08-30
+
+### Peningkatan
+- **Konsistensi Tipe Exception**: Mengubah tipe `Exception` menjadi `\RuntimeException` di `StorageChannelController` saat terjadi kegagalan penambahan bot ke channel. Perubahan ini membuat penanganan error lebih konsisten dengan bagian lain dari file yang sudah menggunakan `\RuntimeException` untuk error saat runtime.
+
 ## [5.1.2] - 2025-08-30
 
 ### Diubah (Keamanan)
