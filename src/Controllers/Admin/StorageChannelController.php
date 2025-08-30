@@ -214,7 +214,7 @@ class StorageChannelController extends BaseController {
             if (in_array($status, ['creator', 'administrator'])) {
                 if (!$this->pcBotRepo->isBotInChannel($channel['id'], $bot_id)) {
                     if (!$this->pcBotRepo->addBotToChannel($channel['id'], $bot_id)) {
-                        throw new Exception("Gagal menambahkan bot ke channel saat proses verifikasi.");
+                        throw new \RuntimeException("Gagal menambahkan bot ke channel saat proses verifikasi.");
                     }
                 }
                 if ($this->pcBotRepo->verifyBotInChannel($channel['id'], $bot_id)) {
