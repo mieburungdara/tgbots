@@ -9,10 +9,26 @@ class HomeController extends AppController
      */
     public function index()
     {
-        // Set header 503 Service Unavailable
-        http_response_code(503);
+        try {
+            // Set header 503 Service Unavailable
+            http_response_code(503);
 
-        // Tampilkan view tanpa layout
-        $this->view('maintenance', [], null);
+            // Tampilkan view tanpa layout
+            $this->view('maintenance', [], null);
+        } catch (Exception $e) {
+            // Catat error jika view tidak ditemukan atau ada masalah lain
+            // Gunakan app_log jika tersedia, jika tidak, gunakan error_log bawaan
+            if (function_exists('app_log')) {
+                app_log('Error in HomeController: ' . $e->getMessage(), 'error');
+            } else {
+                error_log('Error in HomeController: ' . $e->getMessage());
+            }
+
+            // Tampilkan pesan error sederhana sebagai fallback
+            http_response_code(500);
+            // Tambahkan header untuk memastikan browser tidak meng-cache halaman error
+            header('Content-Type: text/plain; charset=utf-8');
+            echo "Terjadi kesalahan internal. Silakan coba lagi nanti.";
+        }
     }
 }
