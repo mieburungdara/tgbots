@@ -1,44 +1,44 @@
 <?php
-// This view assumes all data variables ($users, $total_users, etc.) are passed from the controller.
+// This view assumes all data variables are available in the $data array.
 ?>
 
-<h1><?= htmlspecialchars($page_title) ?></h1>
+<h1><?= htmlspecialchars($data['page_title']) ?></h1>
 
-<?php if (!empty($message)): ?>
-    <div class="alert alert-success" id="flash-message"><?= htmlspecialchars($message) ?></div>
+<?php if (!empty($data['message'])): ?>
+    <div class="alert alert-success" id="flash-message"><?= htmlspecialchars($data['message']) ?></div>
 <?php endif; ?>
 
 <div class="search-form" style="margin-bottom: 20px;">
     <form action="/admin/users" method="get">
-        <input type="text" name="search" placeholder="Cari ID, Nama, Username..." value="<?= htmlspecialchars($search_term) ?>" style="width: 300px; display: inline-block;">
+        <input type="text" name="search" placeholder="Cari ID, Nama, Username..." value="<?= htmlspecialchars($data['search_term']) ?>" style="width: 300px; display: inline-block;">
         <button type="submit" class="btn">Cari</button>
-        <?php if(!empty($search_term)): ?>
+        <?php if(!empty($data['search_term'])): ?>
             <a href="/admin/users" class="btn btn-delete">Hapus Filter</a>
         <?php endif; ?>
     </form>
 </div>
 
-<p>Menampilkan <?= count($users) ?> dari <?= $total_users ?> total pengguna.</p>
+<p>Menampilkan <?= count($data['users']) ?> dari <?= $data['total_users'] ?> total pengguna.</p>
 
 <div class="table-responsive">
     <table class="chat-log-table">
         <thead>
             <tr>
-                <th><a href="<?= get_sort_link('id', $sort_by, $order, ['search' => $search_term]) ?>">User ID</a></th>
-                <th><a href="<?= get_sort_link('first_name', $sort_by, $order, ['search' => $search_term]) ?>">Nama</a></th>
-                <th><a href="<?= get_sort_link('username', $sort_by, $order, ['search' => $search_term]) ?>">Username</a></th>
-                <th><a href="<?= get_sort_link('status', $sort_by, $order, ['search' => $search_term]) ?>">Status</a></th>
-                <th><a href="<?= get_sort_link('roles', $sort_by, $order, ['search' => $search_term]) ?>">Peran</a></th>
+                <th><a href="<?= get_sort_link('id', $data['sort_by'], $data['order'], ['search' => $data['search_term']]) ?>">User ID</a></th>
+                <th><a href="<?= get_sort_link('first_name', $data['sort_by'], $data['order'], ['search' => $data['search_term']]) ?>">Nama</a></th>
+                <th><a href="<?= get_sort_link('username', $data['sort_by'], $data['order'], ['search' => $data['search_term']]) ?>">Username</a></th>
+                <th><a href="<?= get_sort_link('status', $data['sort_by'], $data['order'], ['search' => $data['search_term']]) ?>">Status</a></th>
+                <th><a href="<?= get_sort_link('roles', $data['sort_by'], $data['order'], ['search' => $data['search_term']]) ?>">Peran</a></th>
                 <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
-            <?php if (empty($users)): ?>
+            <?php if (empty($data['users'])): ?>
                 <tr>
                     <td colspan="6" style="text-align:center;">Tidak ada pengguna ditemukan.</td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($users as $user): ?>
+                <?php foreach ($data['users'] as $user): ?>
                 <tr id="user-row-<?= $user['id'] ?>">
                     <td><?= htmlspecialchars($user['id']) ?></td>
                     <td><?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></td>
@@ -67,17 +67,17 @@
 <div class="pagination">
     <?php
     $query_params = $_GET;
-    if ($page > 1) {
-        $query_params['page'] = $page - 1;
+    if ($data['page'] > 1) {
+        $query_params['page'] = $data['page'] - 1;
         echo '<a href="/admin/users?' . http_build_query($query_params) . '">&laquo; Sebelumnya</a>';
     } else {
         echo '<span class="disabled">&laquo; Sebelumnya</span>';
     }
 
-    echo '<span class="current-page">Halaman ' . $page . ' dari ' . $total_pages . '</span>';
+    echo '<span class="current-page">Halaman ' . $data['page'] . ' dari ' . $data['total_pages'] . '</span>';
 
-    if ($page < $total_pages) {
-        $query_params['page'] = $page + 1;
+    if ($data['page'] < $data['total_pages']) {
+        $query_params['page'] = $data['page'] + 1;
         echo '<a href="/admin/users?' . http_build_query($query_params) . '">Berikutnya &raquo;</a>';
     } else {
         echo '<span class="disabled">Berikutnya &raquo;</span>';
@@ -118,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const modalUserIdInput = document.getElementById('modal-user-id');
     const modalTitle = document.getElementById('modal-title');
 
-    const allRoles = <?= json_encode($all_roles) ?>;
+    const allRoles = <?= json_encode($data['all_roles']) ?>;
 
     function openModal(userId, userName) {
         modalUserIdInput.value = userId;

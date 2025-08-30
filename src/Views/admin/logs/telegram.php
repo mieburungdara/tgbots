@@ -1,5 +1,5 @@
 <?php
-// This view assumes $logs, $total_pages, and $page are passed from the controller.
+// This view assumes 'logs', 'total_pages', and 'page' are available in the $data array.
 ?>
 
 <h1>Log Kesalahan API Telegram</h1>
@@ -29,12 +29,12 @@
             </tr>
         </thead>
         <tbody>
-            <?php if (empty($logs)): ?>
+            <?php if (empty($data['logs'])): ?>
                 <tr>
                     <td colspan="8" style="text-align: center; padding: 20px;">Tidak ada log kesalahan yang tercatat.</td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($logs as $log): ?>
+                <?php foreach ($data['logs'] as $log): ?>
                     <tr>
                         <td><?= htmlspecialchars($log['created_at']) ?></td>
                         <td><?= htmlspecialchars($log['method']) ?></td>
@@ -59,19 +59,19 @@
 </div>
 
 <div class="pagination">
-    <?php if ($total_pages > 1): ?>
-        <?php if ($page > 1): ?>
-            <a href="?page=<?= $page - 1 ?>">&laquo; Sebelumnya</a>
+    <?php if ($data['total_pages'] > 1): ?>
+        <?php if ($data['page'] > 1): ?>
+            <a href="?page=<?= $data['page'] - 1 ?>">&laquo; Sebelumnya</a>
         <?php else: ?>
             <span class="disabled">&laquo; Sebelumnya</span>
         <?php endif; ?>
 
-        <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-            <a href="?page=<?= $i ?>" class="<?= ($page == $i) ? 'current-page' : '' ?>"><?= $i ?></a>
+        <?php for ($i = 1; $i <= $data['total_pages']; $i++): ?>
+            <a href="?page=<?= $i ?>" class="<?= ($data['page'] == $i) ? 'current-page' : '' ?>"><?= $i ?></a>
         <?php endfor; ?>
 
-        <?php if ($page < $total_pages): ?>
-            <a href="?page=<?= $page + 1 ?>">Berikutnya &raquo;</a>
+        <?php if ($data['page'] < $data['total_pages']): ?>
+            <a href="?page=<?= $data['page'] + 1 ?>">Berikutnya &raquo;</a>
         <?php else: ?>
             <span class="disabled">Berikutnya &raquo;</span>
         <?php endif; ?>

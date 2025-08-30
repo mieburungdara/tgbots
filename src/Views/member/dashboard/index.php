@@ -1,7 +1,5 @@
 <?php
-// This view assumes all data variables are passed from the controller:
-// $user_info, $periods, $current_period, $seller_summary, $purchase_stats,
-// $chart_labels, $chart_data, $chart_title, $top_selling_items
+// This view assumes all data variables are available in the $data array.
 ?>
 
 <!-- Style untuk pemilih periode -->
@@ -29,7 +27,7 @@
 }
 </style>
 
-<h2>Selamat Datang, <?= htmlspecialchars($user_info['first_name'] ?? '') ?>!</h2>
+<h2>Selamat Datang, <?= htmlspecialchars($data['user_info']['first_name'] ?? '') ?>!</h2>
 <p>Ini adalah ringkasan aktivitas dan statistik Anda di platform kami.</p>
 
 <div class="dashboard-grid">
@@ -37,18 +35,18 @@
     <!-- Seller Analytics -->
     <div class="dashboard-card">
         <h3>Analitik Penjual</h3>
-        <p class="stat-number">Rp <?= number_format($seller_summary['total_revenue'], 0, ',', '.') ?></p>
+        <p class="stat-number">Rp <?= number_format($data['seller_summary']['total_revenue'], 0, ',', '.') ?></p>
         <small>Total Pendapatan</small>
-        <p class="stat-number" style="margin-top: 15px;"><?= number_format($seller_summary['total_sales']) ?></p>
+        <p class="stat-number" style="margin-top: 15px;"><?= number_format($data['seller_summary']['total_sales']) ?></p>
         <small>Total Konten Terjual</small>
     </div>
 
     <!-- Buyer Analytics -->
     <div class="dashboard-card">
         <h3>Analitik Pembeli</h3>
-        <p class="stat-number">Rp <?= number_format($purchase_stats['total_spent'], 0, ',', '.') ?></p>
+        <p class="stat-number">Rp <?= number_format($data['purchase_stats']['total_spent'], 0, ',', '.') ?></p>
         <small>Total Uang Dibelanjakan</small>
-        <p class="stat-number" style="margin-top: 15px;"><?= number_format($purchase_stats['total_purchases']) ?></p>
+        <p class="stat-number" style="margin-top: 15px;"><?= number_format($data['purchase_stats']['total_purchases']) ?></p>
         <small>Total Konten Dibeli</small>
     </div>
 
@@ -58,15 +56,15 @@
         <table class="list-table">
             <tr>
                 <th>Username</th>
-                <td>@<?= htmlspecialchars($user_info['username'] ?? 'Tidak ada') ?></td>
+                <td>@<?= htmlspecialchars($data['user_info']['username'] ?? 'Tidak ada') ?></td>
             </tr>
             <tr>
                 <th>Telegram ID</th>
-                <td><?= htmlspecialchars($user_info['id']) ?></td>
+                <td><?= htmlspecialchars($data['user_info']['id']) ?></td>
             </tr>
             <tr>
                 <th>Terdaftar</th>
-                <td><?= htmlspecialchars(date('d F Y', strtotime($user_info['created_at']))) ?></td>
+                <td><?= htmlspecialchars(date('d F Y', strtotime($data['user_info']['created_at']))) ?></td>
             </tr>
         </table>
     </div>
@@ -74,10 +72,10 @@
     <!-- Sales Chart -->
     <div class="chart-container dashboard-card">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3><?= htmlspecialchars($chart_title) ?></h3>
+            <h3><?= htmlspecialchars($data['chart_title']) ?></h3>
             <div class="period-selector">
-                <?php foreach ($periods as $days => $label): ?>
-                    <a href="/member/dashboard?period=<?= $days ?>" class="<?= $current_period == $days ? 'active' : '' ?>"><?= $label ?></a>
+                <?php foreach ($data['periods'] as $days => $label): ?>
+                    <a href="/member/dashboard?period=<?= $days ?>" class="<?= $data['current_period'] == $days ? 'active' : '' ?>"><?= $label ?></a>
                 <?php endforeach; ?>
             </div>
         </div>
@@ -87,7 +85,7 @@
     <!-- Top Selling Items -->
     <div class="dashboard-card" style="grid-column: 1 / -1;">
         <h3>Top 5 Konten Terlaris Anda</h3>
-        <?php if (empty($top_selling_items)): ?>
+        <?php if (empty($data['top_selling_items'])): ?>
             <p>Anda belum memiliki penjualan.</p>
         <?php else: ?>
             <table class="list-table">
@@ -100,7 +98,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php foreach ($top_selling_items as $item): ?>
+                    <?php foreach ($data['top_selling_items'] as $item): ?>
                         <tr>
                             <td><?= htmlspecialchars($item['public_id']) ?></td>
                             <td><?= htmlspecialchars($item['description']) ?></td>
@@ -122,10 +120,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: <?= json_encode($chart_labels) ?>,
+            labels: <?= json_encode($data['chart_labels']) ?>,
             datasets: [{
                 label: 'Pendapatan (Rp)',
-                data: <?= json_encode($chart_data) ?>,
+                data: <?= json_encode($data['chart_data']) ?>,
                 backgroundColor: 'rgba(0, 123, 255, 0.1)',
                 borderColor: 'rgba(0, 123, 255, 1)',
                 borderWidth: 2,

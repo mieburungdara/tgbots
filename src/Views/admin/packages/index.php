@@ -1,12 +1,12 @@
 <?php
-// This view assumes $packages and $message are passed from the controller.
+// This view assumes 'packages' and 'message' are available in the $data array.
 ?>
 
 <h1>Manajemen Konten</h1>
 <p>Halaman ini menampilkan semua paket konten dalam sistem. Admin dapat menghapus konten secara permanen jika diperlukan.</p>
 
-<?php if ($message): ?>
-    <div class="alert alert-success"><?= htmlspecialchars($message) ?></div>
+<?php if ($data['message']): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($data['message']) ?></div>
 <?php endif; ?>
 
 <table>
@@ -22,12 +22,12 @@
         </tr>
     </thead>
     <tbody>
-        <?php if (empty($packages)): ?>
+        <?php if (empty($data['packages'])): ?>
             <tr>
                 <td colspan="7" style="text-align: center;">Tidak ada konten.</td>
             </tr>
         <?php else: ?>
-            <?php foreach ($packages as $package): ?>
+            <?php foreach ($data['packages'] as $package): ?>
                 <tr>
                     <td><?= htmlspecialchars($package['public_id'] ?? 'N/A') ?></td>
                     <td><?= htmlspecialchars($package['description'] ?: 'N/A') ?></td>

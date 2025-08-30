@@ -1,6 +1,6 @@
 <?php
-// This view assumes the following variables are passed from the controller:
-// $page_title, $bot, $settings, $status_message
+// This view assumes the following variables are available in the $data array:
+// 'page_title', 'bot', 'settings', 'status_message'
 ?>
 
 <style>
@@ -12,58 +12,58 @@
     .actions button { margin-right: 10px; margin-bottom: 10px; }
 </style>
 
-<h1><?= htmlspecialchars($page_title) ?></h1>
+<h1><?= htmlspecialchars($data['page_title']) ?></h1>
 
-<?php if ($status_message): ?>
-    <div class="alert alert-success" style="padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: .25rem; color: #155724; background-color: #d4edda; border-color: #c3e6cb;"><?= htmlspecialchars($status_message) ?></div>
+<?php if ($data['status_message']): ?>
+    <div class="alert alert-success" style="padding: 15px; margin-bottom: 20px; border: 1px solid transparent; border-radius: .25rem; color: #155724; background-color: #d4edda; border-color: #c3e6cb;"><?= htmlspecialchars($data['status_message']) ?></div>
 <?php endif; ?>
 
 <div class="bot-info">
     <h2>Informasi Bot</h2>
-    <p><strong>ID Telegram:</strong> <?= htmlspecialchars($bot['id']) ?></p>
-    <p><strong>Nama Depan:</strong> <?= htmlspecialchars($bot['first_name']) ?></p>
-    <p><strong>Username:</strong> @<?= htmlspecialchars($bot['username'] ?? 'N/A') ?></p>
-    <p><strong>Token:</strong> <code><?= substr(htmlspecialchars($bot['token']), 0, 15) ?>...</code></p>
-    <p><strong>Dibuat pada:</strong> <?= htmlspecialchars($bot['created_at']) ?></p>
+    <p><strong>ID Telegram:</strong> <?= htmlspecialchars($data['bot']['id']) ?></p>
+    <p><strong>Nama Depan:</strong> <?= htmlspecialchars($data['bot']['first_name']) ?></p>
+    <p><strong>Username:</strong> @<?= htmlspecialchars($data['bot']['username'] ?? 'N/A') ?></p>
+    <p><strong>Token:</strong> <code><?= substr(htmlspecialchars($data['bot']['token']), 0, 15) ?>...</code></p>
+    <p><strong>Dibuat pada:</strong> <?= htmlspecialchars($data['bot']['created_at']) ?></p>
 </div>
 
 <div class="actions">
     <h2>Manajemen Bot & Webhook</h2>
     <p>Gunakan tombol di bawah untuk mengelola webhook bot. Aksi ini akan memanggil file `webhook_manager.php` dan `bot_manager.php` yang ada.</p>
-    <button class="set-webhook" data-bot-id="<?= $bot['id'] ?>">Set Webhook</button>
-    <button class="check-webhook" data-bot-id="<?= $bot['id'] ?>">Check Webhook</button>
-    <button class="delete-webhook" data-bot-id="<?= $bot['id'] ?>">Delete Webhook</button>
-    <button class="test-webhook" data-telegram-bot-id="<?= htmlspecialchars($bot['id']) ?>" title="Kirim POST request kosong untuk memeriksa apakah webhook merespons 200 OK">Test Webhook</button>
-    <button class="get-me" data-bot-id="<?= $bot['id'] ?>">Get Me & Update</button>
+    <button class="set-webhook" data-bot-id="<?= $data['bot']['id'] ?>">Set Webhook</button>
+    <button class="check-webhook" data-bot-id="<?= $data['bot']['id'] ?>">Check Webhook</button>
+    <button class="delete-webhook" data-bot-id="<?= $data['bot']['id'] ?>">Delete Webhook</button>
+    <button class="test-webhook" data-telegram-bot-id="<?= htmlspecialchars($data['bot']['id']) ?>" title="Kirim POST request kosong untuk memeriksa apakah webhook merespons 200 OK">Test Webhook</button>
+    <button class="get-me" data-bot-id="<?= $data['bot']['id'] ?>">Get Me & Update</button>
 </div>
 
 <div class="settings">
     <h2>Pengaturan Penyimpanan Pesan</h2>
     <p>Pilih jenis pembaruan (update) dari Telegram yang ingin Anda simpan ke database untuk bot ini.</p>
     <form action="/admin/bots/settings" method="post">
-        <input type="hidden" name="bot_id" value="<?= $bot['id'] ?>">
+        <input type="hidden" name="bot_id" value="<?= $data['bot']['id'] ?>">
 
         <div class="setting-item" style="margin-bottom: 10px;">
             <label>
-                <input type="checkbox" name="settings[save_text_messages]" value="1" <?= $settings['save_text_messages'] ? 'checked' : '' ?>>
+                <input type="checkbox" name="settings[save_text_messages]" value="1" <?= $data['settings']['save_text_messages'] ? 'checked' : '' ?>>
                 Simpan Pesan Teks
             </label>
         </div>
         <div class="setting-item" style="margin-bottom: 10px;">
             <label>
-                <input type="checkbox" name="settings[save_media_messages]" value="1" <?= $settings['save_media_messages'] ? 'checked' : '' ?>>
+                <input type="checkbox" name="settings[save_media_messages]" value="1" <?= $data['settings']['save_media_messages'] ? 'checked' : '' ?>>
                 Simpan Pesan Media (Foto, Video, dll.)
             </label>
         </div>
         <div class="setting-item" style="margin-bottom: 10px;">
             <label>
-                <input type="checkbox" name="settings[save_callback_queries]" value="1" <?= $settings['save_callback_queries'] ? 'checked' : '' ?>>
+                <input type="checkbox" name="settings[save_callback_queries]" value="1" <?= $data['settings']['save_callback_queries'] ? 'checked' : '' ?>>
                 Simpan Penekanan Tombol (Callback Query)
             </label>
         </div>
         <div class="setting-item" style="margin-bottom: 10px;">
             <label>
-                <input type="checkbox" name="settings[save_edited_messages]" value="1" <?= $settings['save_edited_messages'] ? 'checked' : '' ?>>
+                <input type="checkbox" name="settings[save_edited_messages]" value="1" <?= $data['settings']['save_edited_messages'] ? 'checked' : '' ?>>
                 Simpan Pesan yang Diedit
             </label>
         </div>

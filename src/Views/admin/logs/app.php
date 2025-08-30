@@ -1,28 +1,28 @@
 <?php
-// This view assumes all data variables ($logs, $log_levels, etc.) are passed from the controller.
+// This view assumes all data variables are available in the $data array.
 ?>
 
 <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4"><?= htmlspecialchars($page_title) ?></h1>
+    <h1 class="text-2xl font-bold mb-4"><?= htmlspecialchars($data['page_title']) ?></h1>
 
-    <?php if ($message): ?>
-        <div class="alert alert-success"><?= htmlspecialchars($message) ?></div>
+    <?php if ($data['message']): ?>
+        <div class="alert alert-success"><?= htmlspecialchars($data['message']) ?></div>
     <?php endif; ?>
 
     <div class="flex justify-between items-center mb-4">
         <form action="/admin/logs" method="get" class="flex items-center space-x-2">
             <label for="level_select">Filter by Level:</label>
             <select name="level" id="level_select" onchange="this.form.submit()" class="p-2 border rounded-md">
-                <option value="all" <?= ($selected_level === 'all') ? 'selected' : '' ?>>All Levels</option>
-                <?php foreach ($log_levels as $level): ?>
-                    <option value="<?= htmlspecialchars($level) ?>" <?= ($selected_level === $level) ? 'selected' : '' ?>>
+                <option value="all" <?= ($data['selected_level'] === 'all') ? 'selected' : '' ?>>All Levels</option>
+                <?php foreach ($data['log_levels'] as $level): ?>
+                    <option value="<?= htmlspecialchars($level) ?>" <?= ($data['selected_level'] === $level) ? 'selected' : '' ?>>
                         <?= ucfirst(htmlspecialchars($level)) ?>
                     </option>
                 <?php endforeach; ?>
             </select>
         </form>
         <div>
-            <a href="/admin/logs?level=<?= $selected_level ?>" class="btn">Refresh</a>
+            <a href="/admin/logs?level=<?= $data['selected_level'] ?>" class="btn">Refresh</a>
             <form action="/admin/logs/clear" method="post" style="display:inline;" onsubmit="return confirm('Anda yakin ingin MENGHAPUS SEMUA log? Aksi ini tidak dapat diurungkan.');">
                 <button type="submit" class="btn btn-danger">Clear All Logs</button>
             </form>
@@ -41,12 +41,12 @@
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($logs)): ?>
+                <?php if (empty($data['logs'])): ?>
                     <tr>
                         <td colspan="5" class="text-center py-4">No logs found.</td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($logs as $log): ?>
+                    <?php foreach ($data['logs'] as $log): ?>
                         <?php
                             $level_color = match($log['level']) {
                                 'error' => '#ef4444',
@@ -83,25 +83,25 @@
 
     <div class="mt-4 flex justify-center">
         <nav class="inline-flex rounded-md shadow">
-            <?php if ($total_pages > 1): ?>
+            <?php if ($data['total_pages'] > 1): ?>
                 <?php
                 $query_params = [];
-                if ($selected_level !== 'all') {
-                    $query_params['level'] = $selected_level;
+                if ($data['selected_level'] !== 'all') {
+                    $query_params['level'] = $data['selected_level'];
                 }
                 ?>
-                <a href="?<?= http_build_query(array_merge($query_params, ['page' => $current_page - 1])) ?>"
-                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($current_page <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                <a href="?<?= http_build_query(array_merge($query_params, ['page' => $data['current_page'] - 1])) ?>"
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($data['current_page'] <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">
                     &laquo; Previous
                 </a>
-                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                <?php for ($i = 1; $i <= $data['total_pages']; $i++): ?>
                     <a href="?<?= http_build_query(array_merge($query_params, ['page' => $i])) ?>"
-                       class="px-4 py-2 text-sm font-medium <?= ($i == $current_page) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-t border-b border-gray-300' ?> hover:bg-gray-50">
+                       class="px-4 py-2 text-sm font-medium <?= ($i == $data['current_page']) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-t border-b border-gray-300' ?> hover:bg-gray-50">
                         <?= $i ?>
                     </a>
                 <?php endfor; ?>
-                <a href="?<?= http_build_query(array_merge($query_params, ['page' => $current_page + 1])) ?>"
-                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($current_page >= $total_pages) ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                <a href="?<?= http_build_query(array_merge($query_params, ['page' => $data['current_page'] + 1])) ?>"
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($data['current_page'] >= $data['total_pages']) ? 'opacity-50 cursor-not-allowed' : '' ?>">
                     Next &raquo;
                 </a>
             <?php endif; ?>

@@ -1,5 +1,5 @@
 <?php
-// This view assumes $my_packages is passed from the controller.
+// This view assumes 'my_packages' is available in the $data array.
 ?>
 
 <h2>Konten Saya</h2>
@@ -18,12 +18,12 @@
             </tr>
         </thead>
         <tbody>
-            <?php if (empty($my_packages)): ?>
+            <?php if (empty($data['my_packages'])): ?>
                 <tr>
                     <td colspan="6" style="text-align: center;">Anda belum membuat konten apa pun.</td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($my_packages as $package): ?>
+                <?php foreach ($data['my_packages'] as $package): ?>
                     <tr>
                         <td><strong><?= htmlspecialchars($package['public_id']) ?></strong></td>
                         <td><?= htmlspecialchars($package['description']) ?></td>

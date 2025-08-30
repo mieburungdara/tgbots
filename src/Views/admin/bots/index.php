@@ -1,15 +1,15 @@
 <?php
-// This view assumes the following variables are passed from the controller:
-// $page_title, $bots, $error, $success
+// This view assumes the following variables are available in the $data array:
+// 'page_title', 'bots', 'error', 'success'
 ?>
 
-<h1><?= htmlspecialchars($page_title) ?></h1>
+<h1><?= htmlspecialchars($data['page_title']) ?></h1>
 
-<?php if ($error): ?>
-    <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
+<?php if ($data['error']): ?>
+    <div class="alert alert-danger"><?= htmlspecialchars($data['error']) ?></div>
 <?php endif; ?>
-<?php if ($success): ?>
-    <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
+<?php if ($data['success']): ?>
+    <div class="alert alert-success"><?= htmlspecialchars($data['success']) ?></div>
 <?php endif; ?>
 
 <h2>Tambah Bot Baru</h2>
@@ -29,12 +29,12 @@
         </tr>
     </thead>
     <tbody>
-        <?php if (empty($bots)): ?>
+        <?php if (empty($data['bots'])): ?>
             <tr>
                 <td colspan="4" style="text-align: center;">Belum ada bot yang ditambahkan.</td>
             </tr>
         <?php else: ?>
-            <?php foreach ($bots as $bot): ?>
+            <?php foreach ($data['bots'] as $bot): ?>
                 <tr>
                     <td><?= htmlspecialchars($bot['id']) ?></td>
                     <td><?= htmlspecialchars($bot['first_name']) ?></td>
