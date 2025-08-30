@@ -41,23 +41,27 @@
     <!-- Pagination Controls -->
     <div class="mt-6 flex justify-center">
         <nav class="inline-flex rounded-md shadow">
-            <?php if ($data['pagination']['total_pages'] > 1): ?>
-                <a href="?page=<?= $data['pagination']['current_page'] - 1 ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($data['pagination']['current_page'] <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">&laquo; Previous</a>
+            <?php
+            $currentPage = $data['pagination']['current_page'];
+            $totalPages = $data['pagination']['total_pages'];
+            if ($totalPages > 1):
+            ?>
+                <a href="?page=<?= $currentPage - 1 ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($currentPage <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">&laquo; Previous</a>
                 <?php
                 $window = 2;
-                for ($i = 1; $i <= $data['pagination']['total_pages']; $i++):
-                    if ($i == 1 || $i == $data['pagination']['total_pages'] || ($i >= $data['pagination']['current_page'] - $window && $i <= $data['pagination']['current_page'] + $window)):
+                for ($i = 1; $i <= $totalPages; $i++):
+                    if ($i == 1 || $i == $totalPages || ($i >= $currentPage - $window && $i <= $currentPage + $window)):
                 ?>
-                    <a href="?page=<?= $i ?>" class="px-4 py-2 text-sm font-medium <?= ($i == $data['pagination']['current_page']) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-t border-b border-gray-300' ?> hover:bg-gray-50"><?= $i ?></a>
+                    <a href="?page=<?= $i ?>" class="px-4 py-2 text-sm font-medium <?= ($i == $currentPage) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-t border-b border-gray-300' ?> hover:bg-gray-50"><?= $i ?></a>
                 <?php
-                    elseif ($i == $data['pagination']['current_page'] - $window - 1 || $i == $data['pagination']['current_page'] + $window + 1):
+                    elseif ($i == $currentPage - $window - 1 || $i == $currentPage + $window + 1):
                 ?>
                     <span class="px-4 py-2 text-sm font-medium bg-white text-gray-500 border-t border-b border-gray-300">...</span>
                 <?php
                     endif;
                 endfor;
                 ?>
-                <a href="?page=<?= $data['pagination']['current_page'] + 1 ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($data['pagination']['current_page'] >= $data['pagination']['total_pages']) ? 'opacity-50 cursor-not-allowed' : '' ?>">Next &raquo;</a>
+                <a href="?page=<?= $currentPage + 1 ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($currentPage >= $totalPages) ? 'opacity-50 cursor-not-allowed' : '' ?>">Next &raquo;</a>
             <?php endif; ?>
         </nav>
     </div>

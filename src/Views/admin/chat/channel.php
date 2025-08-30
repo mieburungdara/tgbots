@@ -73,18 +73,25 @@
     </form>
 
     <div class="pagination">
-        <?php if ($data['page'] > 1): ?>
-            <a href="/admin/channel_chat?chat_id=<?= $data['chat_id'] ?>&bot_id=<?= $data['bot_info']['id'] ?>&page=<?= $data['page'] - 1 ?>">&laquo; Sebelumnya</a>
-        <?php else: ?>
-            <span class="disabled">&laquo; Sebelumnya</span>
-        <?php endif; ?>
+        <?php
+        $currentPage = $data['page'];
+        $totalPages = $data['total_pages'];
+        if ($totalPages > 1):
+            $queryParams = ['chat_id' => $data['chat_id'], 'bot_id' => $data['bot_info']['id']];
+        ?>
+            <?php if ($currentPage > 1): ?>
+                <a href="/admin/channel_chat?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage - 1])) ?>">&laquo; Sebelumnya</a>
+            <?php else: ?>
+                <span class="disabled">&laquo; Sebelumnya</span>
+            <?php endif; ?>
 
-        <span class="current-page">Halaman <?= $data['page'] ?> dari <?= $data['total_pages'] ?></span>
+            <span class="current-page">Halaman <?= $currentPage ?> dari <?= $totalPages ?></span>
 
-        <?php if ($data['page'] < $data['total_pages']): ?>
-            <a href="/admin/channel_chat?chat_id=<?= $data['chat_id'] ?>&bot_id=<?= $data['bot_info']['id'] ?>&page=<?= $data['page'] + 1 ?>">Berikutnya &raquo;</a>
-        <?php else: ?>
-            <span class="disabled">Berikutnya &raquo;</span>
+            <?php if ($currentPage < $totalPages): ?>
+                <a href="/admin/channel_chat?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage + 1])) ?>">Berikutnya &raquo;</a>
+            <?php else: ?>
+                <span class="disabled">Berikutnya &raquo;</span>
+            <?php endif; ?>
         <?php endif; ?>
     </div>
 

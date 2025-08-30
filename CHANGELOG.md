@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.1.6] - 2025-08-30
+
+### Peningkatan
+- **Keterbacaan Kode Paginasi**: Melakukan refactoring pada logika paginasi di beberapa view admin. Variabel lokal `$currentPage` dan `$totalPages` sekarang didefinisikan di dalam blok paginasi untuk meningkatkan keterbacaan dan menghindari pengulangan, sejalan dengan prinsip DRY dan praktik terbaik kode.
+
 ## [5.1.5] - 2025-08-30
 
 ### Peningkatan

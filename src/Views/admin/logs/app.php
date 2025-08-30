@@ -83,25 +83,27 @@
 
     <div class="mt-4 flex justify-center">
         <nav class="inline-flex rounded-md shadow">
-            <?php if ($data['total_pages'] > 1): ?>
-                <?php
-                $query_params = [];
+            <?php
+            $currentPage = $data['current_page'];
+            $totalPages = $data['total_pages'];
+            if ($totalPages > 1):
+                $queryParams = [];
                 if ($data['selected_level'] !== 'all') {
-                    $query_params['level'] = $data['selected_level'];
+                    $queryParams['level'] = $data['selected_level'];
                 }
-                ?>
-                <a href="?<?= http_build_query(array_merge($query_params, ['page' => $data['current_page'] - 1])) ?>"
-                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($data['current_page'] <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">
+            ?>
+                <a href="?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage - 1])) ?>"
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($currentPage <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">
                     &laquo; Previous
                 </a>
-                <?php for ($i = 1; $i <= $data['total_pages']; $i++): ?>
-                    <a href="?<?= http_build_query(array_merge($query_params, ['page' => $i])) ?>"
-                       class="px-4 py-2 text-sm font-medium <?= ($i == $data['current_page']) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-t border-b border-gray-300' ?> hover:bg-gray-50">
+                <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                    <a href="?<?= http_build_query(array_merge($queryParams, ['page' => $i])) ?>"
+                       class="px-4 py-2 text-sm font-medium <?= ($i == $currentPage) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-t border-b border-gray-300' ?> hover:bg-gray-50">
                         <?= $i ?>
                     </a>
                 <?php endfor; ?>
-                <a href="?<?= http_build_query(array_merge($query_params, ['page' => $data['current_page'] + 1])) ?>"
-                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($data['current_page'] >= $data['total_pages']) ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                <a href="?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage + 1])) ?>"
+                   class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($currentPage >= $totalPages) ? 'opacity-50 cursor-not-allowed' : '' ?>">
                     Next &raquo;
                 </a>
             <?php endif; ?>
