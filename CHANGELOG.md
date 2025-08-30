@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.1.1] - 2025-08-29
+
+### Diperbaiki
+- **Penanganan Error Verifikasi Bot**: Menambahkan pemeriksaan error setelah memanggil `addBotToChannel` di dalam `StorageChannelController`. Sebelumnya, jika penambahan bot ke channel gagal di database, sistem akan tetap melanjutkan ke proses verifikasi, yang kemungkinan besar juga akan gagal. Sekarang, sebuah `Exception` akan dilempar lebih awal, memberikan pesan error yang jelas dan mencegah kegagalan berantai.
+
 ## [5.1.0] - 2025-08-29
 
 ### Peningkatan
