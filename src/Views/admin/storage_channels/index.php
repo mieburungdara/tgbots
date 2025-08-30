@@ -76,7 +76,7 @@
 <h1>Kelola Channel Penyimpanan</h1>
 
 <?php if ($data['message']): ?>
-<div class="alert alert-info"><?php echo nl2br(htmlspecialchars($data['message'])); ?></div>
+<div class="alert alert-info"><?= nl2br(htmlspecialchars($data['message'])) ?></div>
 <?php endif; ?>
 
 <p class="description">Tambahkan channel pribadi yang akan digunakan bot untuk menyimpan file media. Anda dapat mengelola bot mana yang memiliki akses ke setiap channel.</p>
@@ -113,18 +113,18 @@
 		</tr>
 		<?php else: ?>
 		<?php foreach ($data['private_channels'] as $channel): ?>
-		<tr data-row-id="<?php echo $channel['channel_id']; ?>">
-			<td class="channel-name"><?php echo htmlspecialchars($channel['name']); ?></td>
-			<td><?php echo htmlspecialchars($channel['channel_id']); ?></td>
-			<td><?php echo htmlspecialchars($channel['bot_count']); ?></td>
-			<td><?php echo htmlspecialchars($channel['bot_usernames'] ?? 'N/A'); ?></td>
+		<tr data-row-id="<?= $channel['channel_id'] ?>">
+			<td class="channel-name"><?= htmlspecialchars($channel['name']) ?></td>
+			<td><?= htmlspecialchars($channel['channel_id']) ?></td>
+			<td><?= htmlspecialchars($channel['bot_count']) ?></td>
+			<td><?= htmlspecialchars($channel['bot_usernames'] ?? 'N/A') ?></td>
 			<td>
-				<button class="btn btn-primary manage-bots-btn" data-channel-id="<?php echo $channel['channel_id']; ?>" data-channel-name="<?php echo htmlspecialchars($channel['name']); ?>">
+				<button class="btn btn-primary manage-bots-btn" data-channel-id="<?= $channel['channel_id'] ?>" data-channel-name="<?= htmlspecialchars($channel['name']) ?>">
 					Kelola Bot
 				</button>
 			</td>
 			<td>
-				<button class="btn btn-secondary btn-sm refresh-channel-btn" data-channel-id="<?php echo $channel['channel_id']; ?>">
+				<button class="btn btn-secondary btn-sm refresh-channel-btn" data-channel-id="<?= $channel['channel_id'] ?>">
 					Refresh
 				</button>
 			</td>
@@ -175,8 +175,8 @@
 				<select id="bot-select" name="bot_id" required>
 					<option value="">-- Pilih Bot --</option>
 					<?php foreach ($data['all_bots'] as $bot): ?>
-					<option value="<?php echo $bot['id']; ?>">
-						<?php echo htmlspecialchars($bot['first_name'] . ' (@' . $bot['username'] . ')'); ?>
+					<option value="<?= $bot['id'] ?>">
+						<?= htmlspecialchars($bot['first_name'] . ' (@' . $bot['username'] . ')') ?>
 					</option>
 					<?php endforeach; ?>
 				</select>

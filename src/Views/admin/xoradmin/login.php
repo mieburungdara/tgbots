@@ -24,7 +24,7 @@
         <h1>XOR Admin Panel</h1>
 
         <?php if (!empty($_SESSION['xor_error'])): ?>
-            <div class="error"><?php echo htmlspecialchars($_SESSION['xor_error']); unset($_SESSION['xor_error']); ?></div>
+            <div class="error"><?= htmlspecialchars($_SESSION['xor_error']) ?><?php unset($_SESSION['xor_error']); ?></div>
         <?php endif; ?>
 
         <div class="warning"><strong>Peringatan:</strong> Diperlukan otentikasi untuk melanjutkan.</div>
