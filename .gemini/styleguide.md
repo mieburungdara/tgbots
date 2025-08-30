@@ -10,7 +10,6 @@
 ## Konvensi Kode
 
 ### Struktur File
-- Semua file PHP harus pakai `<?php ... ?>`, jangan gunakan short tags.
 - Setiap class satu file, nama file sama dengan nama class.
 
 ### Naming
