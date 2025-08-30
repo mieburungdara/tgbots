@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.1.4] - 2025-08-30
+
+### Peningkatan
+- **Konsistensi Kode View**: Melakukan refactoring pada `debug_feed/index.php` untuk memastikan konsistensi dengan view lain. Variabel paginasi sekarang diakses langsung dari array `$data['pagination']` daripada mendefinisikan variabel lokal, sejalan dengan praktik terbaik di seluruh aplikasi.
+
 ## [5.1.3] - 2025-08-30
 
 ### Peningkatan
