@@ -1,5 +1,5 @@
 <?php
-// This view assumes $private_channels, $all_bots, and $message are passed from the controller.
+// This view assumes 'private_channels', 'all_bots', and 'message' are available in the $data array.
 ?>
 
 <style>
@@ -75,8 +75,8 @@
 
 <h1>Kelola Channel Penyimpanan</h1>
 
-<?php if ($message): ?>
-<div class="alert alert-info"><?php echo nl2br(htmlspecialchars($message)); ?></div>
+<?php if ($data['message']): ?>
+<div class="alert alert-info"><?php echo nl2br(htmlspecialchars($data['message'])); ?></div>
 <?php endif; ?>
 
 <p class="description">Tambahkan channel pribadi yang akan digunakan bot untuk menyimpan file media. Anda dapat mengelola bot mana yang memiliki akses ke setiap channel.</p>
@@ -107,12 +107,12 @@
 		</tr>
 	</thead>
 	<tbody>
-		<?php if (empty($private_channels)): ?>
+		<?php if (empty($data['private_channels'])): ?>
 		<tr>
 			<td colspan="6">Belum ada channel yang ditambahkan.</td>
 		</tr>
 		<?php else: ?>
-		<?php foreach ($private_channels as $channel): ?>
+		<?php foreach ($data['private_channels'] as $channel): ?>
 		<tr data-row-id="<?php echo $channel['channel_id']; ?>">
 			<td class="channel-name"><?php echo htmlspecialchars($channel['name']); ?></td>
 			<td><?php echo htmlspecialchars($channel['channel_id']); ?></td>
@@ -174,7 +174,7 @@
 				<label for="bot-select">Pilih Bot:</label>
 				<select id="bot-select" name="bot_id" required>
 					<option value="">-- Pilih Bot --</option>
-					<?php foreach ($all_bots as $bot): ?>
+					<?php foreach ($data['all_bots'] as $bot): ?>
 					<option value="<?php echo $bot['id']; ?>">
 						<?php echo htmlspecialchars($bot['first_name'] . ' (@' . $bot['username'] . ')'); ?>
 					</option>

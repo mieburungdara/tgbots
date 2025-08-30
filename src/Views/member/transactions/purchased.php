@@ -1,5 +1,5 @@
 <?php
-// This view assumes $purchased_packages is passed from the controller.
+// This view assumes 'purchased_packages' is available in the $data array.
 ?>
 
 <style>
@@ -17,13 +17,13 @@
 
 <h1>Konten yang Anda Beli</h1>
 
-<?php if (empty($purchased_packages)): ?>
+<?php if (empty($data['purchased_packages'])): ?>
     <div class="no-content">
         <p>Anda belum membeli konten apapun.</p>
     </div>
 <?php else: ?>
     <div class="grid">
-        <?php foreach ($purchased_packages as $package): ?>
+        <?php foreach ($data['purchased_packages'] as $package): ?>
             <div class="card">
                 <div class="card-thumbnail">
                     <?php if (!empty($package['thumbnail_file_id'])): ?>

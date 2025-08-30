@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.1.2] - 2025-08-30
+
+### Diubah (Keamanan)
+- **Refactoring View**: Menghapus penggunaan fungsi `extract()` yang berisiko dari `AppController`. Semua variabel sekarang secara eksplisit diakses melalui array `$data` di dalam view (misalnya, `$data['nama_variabel']`). Perubahan ini meningkatkan keamanan dengan mencegah potensi *variable overwriting* dan membuat alur data ke dalam template lebih jelas dan mudah untuk di-debug.
+
 ## [5.1.1] - 2025-08-29
 
 ### Diperbaiki

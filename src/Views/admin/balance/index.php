@@ -1,11 +1,11 @@
 <?php
-// This view assumes all data variables are passed from the controller.
+// This view assumes all data variables are available in the $data array.
 ?>
 
 <h1>Manajemen Saldo</h1>
 
-<?php if (!empty($flash_message)): ?>
-    <div class="alert alert-<?= htmlspecialchars($flash_message_type) ?>"><?= htmlspecialchars($flash_message) ?></div>
+<?php if (!empty($data['flash_message'])): ?>
+    <div class="alert alert-<?= htmlspecialchars($data['flash_message_type']) ?>"><?= htmlspecialchars($data['flash_message']) ?></div>
 <?php endif; ?>
 
 <div class="content-box">
@@ -13,9 +13,9 @@
 
     <div class="search-form" style="margin-bottom: 20px;">
         <form action="/admin/balance" method="get">
-            <input type="text" name="search" placeholder="Cari Nama/Username..." value="<?= htmlspecialchars($search_term) ?>" style="width: 300px; display: inline-block;">
+            <input type="text" name="search" placeholder="Cari Nama/Username..." value="<?= htmlspecialchars($data['search_term']) ?>" style="width: 300px; display: inline-block;">
             <button type="submit" class="btn">Cari</button>
-             <?php if(!empty($search_term)): ?>
+             <?php if(!empty($data['search_term'])): ?>
                 <a href="/admin/balance" class="btn btn-delete">Hapus Filter</a>
             <?php endif; ?>
         </form>
@@ -25,22 +25,22 @@
         <table class="chat-log-table">
             <thead>
                 <tr>
-                    <th><a href="<?= get_sort_link('id', $sort_by, $order, $_GET) ?>">Telegram ID</a></th>
-                    <th><a href="<?= get_sort_link('first_name', $sort_by, $order, $_GET) ?>">Nama</a></th>
-                    <th><a href="<?= get_sort_link('username', $sort_by, $order, $_GET) ?>">Username</a></th>
-                    <th class="sortable"><a href="<?= get_sort_link('balance', $sort_by, $order, $_GET) ?>">Saldo Saat Ini</a></th>
-                    <th class="sortable"><a href="<?= get_sort_link('total_income', $sort_by, $order, $_GET) ?>">Total Pemasukan</a></th>
-                    <th class="sortable"><a href="<?= get_sort_link('total_spending', $sort_by, $order, $_GET) ?>">Total Pengeluaran</a></th>
+                    <th><a href="<?= get_sort_link('id', $data['sort_by'], $data['order'], $_GET) ?>">Telegram ID</a></th>
+                    <th><a href="<?= get_sort_link('first_name', $data['sort_by'], $data['order'], $_GET) ?>">Nama</a></th>
+                    <th><a href="<?= get_sort_link('username', $data['sort_by'], $data['order'], $_GET) ?>">Username</a></th>
+                    <th class="sortable"><a href="<?= get_sort_link('balance', $data['sort_by'], $data['order'], $_GET) ?>">Saldo Saat Ini</a></th>
+                    <th class="sortable"><a href="<?= get_sort_link('total_income', $data['sort_by'], $data['order'], $_GET) ?>">Total Pemasukan</a></th>
+                    <th class="sortable"><a href="<?= get_sort_link('total_spending', $data['sort_by'], $data['order'], $_GET) ?>">Total Pengeluaran</a></th>
                     <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($users_data)): ?>
+                <?php if (empty($data['users_data'])): ?>
                     <tr>
                         <td colspan="7" style="text-align:center;">Tidak ada pengguna ditemukan.</td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($users_data as $user_data): ?>
+                    <?php foreach ($data['users_data'] as $user_data): ?>
                         <tr>
                             <td><?= htmlspecialchars($user_data['telegram_id']) ?></td>
                             <td><?= htmlspecialchars(trim($user_data['first_name'] . ' ' . $user_data['last_name'])) ?></td>
@@ -65,15 +65,15 @@
     <div class="pagination">
         <?php
         $query_params = $_GET;
-        if ($page > 1) {
-            $query_params['page'] = $page - 1;
+        if ($data['page'] > 1) {
+            $query_params['page'] = $data['page'] - 1;
             echo '<a href="/admin/balance?' . http_build_query($query_params) . '">&laquo; Sebelumnya</a>';
         } else {
             echo '<span class="disabled">&laquo; Sebelumnya</span>';
         }
-        echo '<span class="current-page">Halaman ' . $page . ' dari ' . $total_pages . '</span>';
-        if ($page < $total_pages) {
-            $query_params['page'] = $page + 1;
+        echo '<span class="current-page">Halaman ' . $data['page'] . ' dari ' . $data['total_pages'] . '</span>';
+        if ($data['page'] < $data['total_pages']) {
+            $query_params['page'] = $data['page'] + 1;
             echo '<a href="/admin/balance?' . http_build_query($query_params) . '">Berikutnya &raquo;</a>';
         } else {
             echo '<span class="disabled">Berikutnya &raquo;</span>';

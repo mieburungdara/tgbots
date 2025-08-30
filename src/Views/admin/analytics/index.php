@@ -1,16 +1,16 @@
 <?php
-// This view assumes $summary, $chart_labels, $chart_data, and $top_packages are passed from the controller.
+// This view assumes 'summary', 'chart_labels', 'chart_data', and 'top_packages' are available in the $data array.
 ?>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <div class="dashboard-grid">
     <div class="dashboard-card">
         <h3>Total Pendapatan</h3>
-        <p class="stat-number">Rp <?= number_format($summary['total_revenue'], 0, ',', '.') ?></p>
+        <p class="stat-number">Rp <?= number_format($data['summary']['total_revenue'], 0, ',', '.') ?></p>
     </div>
     <div class="dashboard-card">
         <h3>Total Penjualan</h3>
-        <p class="stat-number"><?= number_format($summary['total_sales']) ?> item</p>
+        <p class="stat-number"><?= number_format($data['summary']['total_sales']) ?> item</p>
     </div>
 </div>
 
@@ -31,10 +31,10 @@
             </tr>
         </thead>
         <tbody>
-            <?php if (empty($top_packages)): ?>
+            <?php if (empty($data['top_packages'])): ?>
                 <tr><td colspan="4" style="text-align: center;">Belum ada penjualan.</td></tr>
             <?php else: ?>
-                <?php foreach ($top_packages as $pkg): ?>
+                <?php foreach ($data['top_packages'] as $pkg): ?>
                     <tr>
                         <td>#<?= htmlspecialchars($pkg['id']) ?></td>
                         <td><?= htmlspecialchars($pkg['description']) ?></td>
@@ -53,10 +53,10 @@
         const salesChart = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: <?= json_encode($chart_labels) ?>,
+                labels: <?= json_encode($data['chart_labels']) ?>,
                 datasets: [{
                     label: 'Pendapatan Harian',
-                    data: <?= json_encode($chart_data) ?>,
+                    data: <?= json_encode($data['chart_data']) ?>,
                     backgroundColor: 'rgba(0, 123, 255, 0.2)',
                     borderColor: 'rgba(0, 123, 255, 1)',
                     borderWidth: 2,

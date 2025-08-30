@@ -1,5 +1,5 @@
 <?php
-// This view assumes $sold_packages and $message are passed from the controller.
+// This view assumes 'sold_packages' and 'message' are available in the $data array.
 ?>
 
 <style>
@@ -30,19 +30,19 @@
 
 <h1>Konten yang Anda Jual</h1>
 
-<?php if ($message): ?>
-    <div class="alert alert-success" id="status-message"><?= htmlspecialchars($message) ?></div>
+<?php if ($data['message']): ?>
+    <div class="alert alert-success" id="status-message"><?= htmlspecialchars($data['message']) ?></div>
 <?php endif; ?>
 <div class="alert" id="ajax-message" style="display: none;"></div>
 
 
-<?php if (empty($sold_packages)): ?>
+<?php if (empty($data['sold_packages'])): ?>
     <div class="no-content">
         <p>Anda tidak memiliki konten untuk dijual saat ini.</p>
     </div>
 <?php else: ?>
     <div class="grid">
-        <?php foreach ($sold_packages as $package): ?>
+        <?php foreach ($data['sold_packages'] as $package): ?>
             <div class="card">
                 <div class="card-thumbnail">
                      <span>🖼️</span>

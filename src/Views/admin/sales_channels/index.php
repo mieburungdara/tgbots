@@ -1,5 +1,5 @@
 <?php
-// This view assumes $sales_channels is passed from the controller.
+// This view assumes 'sales_channels' is available in the $data array.
 ?>
 
 <h1>Manajemen Channel Jualan</h1>
@@ -18,12 +18,12 @@
             </tr>
         </thead>
         <tbody>
-            <?php if (empty($sales_channels)): ?>
+            <?php if (empty($data['sales_channels'])): ?>
                 <tr>
                     <td colspan="6" style="text-align:center;">Tidak ada channel jualan yang terdaftar.</td>
                 </tr>
             <?php else: ?>
-                <?php foreach ($sales_channels as $channel): ?>
+                <?php foreach ($data['sales_channels'] as $channel): ?>
                     <tr>
                         <td><?= htmlspecialchars($channel['channel_title']) ?><br><code><?= htmlspecialchars($channel['channel_id']) ?></code></td>
                         <td><?= htmlspecialchars($channel['group_title']) ?><br><code><?= htmlspecialchars($channel['discussion_group_id']) ?></code></td>

@@ -1,13 +1,13 @@
 <?php
-// This view assumes $roles and $message are passed from the controller.
+// This view assumes 'roles' and 'message' are available in the $data array.
 ?>
 
 <h1>Manajemen Daftar Peran</h1>
 <p>Gunakan halaman ini untuk menambah atau menghapus peran yang tersedia secara global di sistem.</p>
 
-<?php if (isset($message)): ?>
+<?php if (isset($data['message'])): ?>
     <div class="alert alert-success">
-        <?= htmlspecialchars($message) ?>
+        <?= htmlspecialchars($data['message']) ?>
     </div>
 <?php endif; ?>
 
@@ -37,12 +37,12 @@
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($roles)): ?>
+                <?php if (empty($data['roles'])): ?>
                     <tr>
                         <td colspan="3" style="text-align: center;">Belum ada peran yang ditambahkan.</td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($roles as $role): ?>
+                    <?php foreach ($data['roles'] as $role): ?>
                         <tr>
                             <td><?= htmlspecialchars($role['id']) ?></td>
                             <td><?= htmlspecialchars($role['name']) ?></td>

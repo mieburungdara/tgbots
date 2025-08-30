@@ -1,11 +1,11 @@
 <?php
-// This view assumes $updates and $pagination are passed from the controller.
-$current_page = $pagination['current_page'];
-$total_pages = $pagination['total_pages'];
+// This view assumes 'updates' and 'pagination' are available in the $data array.
+$current_page = $data['pagination']['current_page'];
+$total_pages = $data['pagination']['total_pages'];
 ?>
 
 <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4"><?= htmlspecialchars($page_title) ?></h1>
+    <h1 class="text-2xl font-bold mb-4"><?= htmlspecialchars($data['page_title']) ?></h1>
     <p class="mb-4">This page displays raw JSON payloads received from Telegram. Newest updates appear first.</p>
 
     <div class="bg-white shadow-md rounded-lg overflow-x-auto">
@@ -18,12 +18,12 @@ $total_pages = $pagination['total_pages'];
                 </tr>
             </thead>
             <tbody>
-                <?php if (empty($updates)): ?>
+                <?php if (empty($data['updates'])): ?>
                     <tr>
                         <td colspan="3" class="text-center py-4 text-gray-500">No updates received yet.</td>
                     </tr>
                 <?php else: ?>
-                    <?php foreach ($updates as $update): ?>
+                    <?php foreach ($data['updates'] as $update): ?>
                         <tr class="border-b">
                             <td class="px-4 py-2 align-top font-mono"><?= htmlspecialchars($update['id']) ?></td>
                             <td class="px-4 py-2 align-top font-mono"><?= htmlspecialchars($update['created_at']) ?></td>

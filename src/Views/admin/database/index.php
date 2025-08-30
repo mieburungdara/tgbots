@@ -1,12 +1,12 @@
 <?php
-// This view assumes $message is passed from the controller.
+// This view assumes 'message' is available in the $data array.
 ?>
 
 <h1>Manajemen Database</h1>
 
-<?php if ($message): ?>
+<?php if ($data['message']): ?>
     <div class="alert alert-info">
-        <?= nl2br(htmlspecialchars($message)); ?>
+        <?= nl2br(htmlspecialchars($data['message'])); ?>
     </div>
 <?php endif; ?>
 

@@ -1,5 +1,5 @@
 <?php
-// This view assumes all data variables ($package, $package_summary, etc.) are passed from the controller.
+// This view assumes all data variables are available in the $data array.
 ?>
 
 <style>
@@ -13,27 +13,27 @@
 .status-deleted { background-color: #6c757d; }
 </style>
 
-<h2>Detail Konten: <?= htmlspecialchars($package['public_id']) ?></h2>
-<p><?= htmlspecialchars($package['description']) ?></p>
+<h2>Detail Konten: <?= htmlspecialchars($data['package']['public_id']) ?></h2>
+<p><?= htmlspecialchars($data['package']['description']) ?></p>
 
 <div class="dashboard-grid" style="margin-top: 20px;">
     <!-- Analytics Summary -->
     <div class="dashboard-card">
         <h3>Total Pendapatan</h3>
-        <p class="stat-number">Rp <?= number_format($package_summary['total_revenue'], 0, ',', '.') ?></p>
+        <p class="stat-number">Rp <?= number_format($data['package_summary']['total_revenue'], 0, ',', '.') ?></p>
     </div>
     <div class="dashboard-card">
         <h3>Total Terjual</h3>
-        <p class="stat-number"><?= number_format($package_summary['total_sales']) ?></p>
+        <p class="stat-number"><?= number_format($data['package_summary']['total_sales']) ?></p>
     </div>
 
     <!-- Package Info -->
     <div class="dashboard-card">
         <h3>Informasi</h3>
         <table class="list-table">
-            <tr><th>Harga</th><td>Rp <?= number_format($package['price'] ?? 0, 0, ',', '.') ?></td></tr>
-            <tr><th>Status</th><td><span class="status-badge status-<?= htmlspecialchars($package['status']) ?>"><?= ucfirst(htmlspecialchars($package['status'])) ?></span></td></tr>
-            <tr><th>Dibuat</th><td><?= htmlspecialchars(date('d M Y H:i', strtotime($package['created_at']))) ?></td></tr>
+            <tr><th>Harga</th><td>Rp <?= number_format($data['package']['price'] ?? 0, 0, ',', '.') ?></td></tr>
+            <tr><th>Status</th><td><span class="status-badge status-<?= htmlspecialchars($data['package']['status']) ?>"><?= ucfirst(htmlspecialchars($data['package']['status'])) ?></span></td></tr>
+            <tr><th>Dibuat</th><td><?= htmlspecialchars(date('d M Y H:i', strtotime($data['package']['created_at']))) ?></td></tr>
         </table>
     </div>
 </div>
@@ -41,10 +41,10 @@
 <!-- Sales Chart for this package -->
 <div class="chart-container dashboard-card" style="margin-top: 20px;">
     <div style="display: flex; justify-content: space-between; align-items: center;">
-        <h3><?= htmlspecialchars($chart_title) ?></h3>
+        <h3><?= htmlspecialchars($data['chart_title']) ?></h3>
         <div class="period-selector">
-            <?php foreach ($periods as $days => $label): ?>
-                <a href="/member/content/show?id=<?= htmlspecialchars($package['public_id']) ?>&period=<?= $days ?>" class="<?= $current_period == $days ? 'active' : '' ?>"><?= $label ?></a>
+            <?php foreach ($data['periods'] as $days => $label): ?>
+                <a href="/member/content/show?id=<?= htmlspecialchars($data['package']['public_id']) ?>&period=<?= $days ?>" class="<?= $data['current_period'] == $days ? 'active' : '' ?>"><?= $label ?></a>
             <?php endforeach; ?>
         </div>
     </div>
@@ -63,10 +63,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const salesChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: <?= json_encode($chart_labels) ?>,
+            labels: <?= json_encode($data['chart_labels']) ?>,
             datasets: [{
                 label: 'Pendapatan (Rp)',
-                data: <?= json_encode($chart_data) ?>,
+                data: <?= json_encode($data['chart_data']) ?>,
                 backgroundColor: 'rgba(40, 167, 69, 0.1)',
                 borderColor: 'rgba(40, 167, 69, 1)',
                 borderWidth: 2,

@@ -1,5 +1,5 @@
 <?php
-// This view assumes all necessary data ($active_tab, $bots, $bot, etc.) is passed from the controller.
+// This view assumes all necessary data is available in the $data array.
 ?>
 <!DOCTYPE html>
 <html lang="id">
@@ -48,13 +48,13 @@
         </form>
 
         <div class="tabs">
-            <a href="?action=bots" class="tab-link <?= $active_tab === 'bots' || $active_tab === 'edit_bot' ? 'active' : '' ?>">Manajemen Bot</a>
-            <a href="?action=roles" class="tab-link <?= $active_tab === 'roles' ? 'active' : '' ?>">Manajemen Peran</a>
-            <a href="?action=db_reset" class="tab-link <?= $active_tab === 'db_reset' ? 'active' : '' ?>">Reset Database</a>
+            <a href="?action=bots" class="tab-link <?= $data['active_tab'] === 'bots' || $data['active_tab'] === 'edit_bot' ? 'active' : '' ?>">Manajemen Bot</a>
+            <a href="?action=roles" class="tab-link <?= $data['active_tab'] === 'roles' ? 'active' : '' ?>">Manajemen Peran</a>
+            <a href="?action=db_reset" class="tab-link <?= $data['active_tab'] === 'db_reset' ? 'active' : '' ?>">Reset Database</a>
         </div>
 
         <div class="main-content">
-            <?php if ($active_tab === 'bots'): ?>
+            <?php if ($data['active_tab'] === 'bots'): ?>
                 <div id="bots" class="tab-content active">
                     <h2>Manajemen Bot</h2>
                     <?php if (!empty($_SESSION['bot_error'])): ?><div class="error"><?= htmlspecialchars($_SESSION['bot_error']); unset($_SESSION['bot_error']); ?></div><?php endif; ?>
@@ -70,10 +70,10 @@
                     <table>
                         <thead><tr><th>ID Bot</th><th>Nama</th><th>Username</th><th>Aksi</th></tr></thead>
                         <tbody>
-                            <?php if (empty($bots)): ?>
+                            <?php if (empty($data['bots'])): ?>
                                 <tr><td colspan="4" style="text-align: center;">Belum ada bot yang ditambahkan.</td></tr>
                             <?php else: ?>
-                                <?php foreach ($bots as $b): ?>
+                                <?php foreach ($data['bots'] as $b): ?>
                                     <tr>
                                         <td><?= htmlspecialchars($b['id']) ?></td>
                                         <td><?= htmlspecialchars($b['first_name']) ?></td>
@@ -86,28 +86,28 @@
                     </table>
                 </div>
 
-            <?php elseif ($active_tab === 'edit_bot' && isset($bot)): ?>
+            <?php elseif ($data['active_tab'] === 'edit_bot' && isset($data['bot'])): ?>
                 <div id="edit-bot" class="tab-content active">
-                    <h2>Edit Bot: <?= htmlspecialchars($bot['first_name']) ?> <a href="/xoradmin?action=bots" style="font-size: 0.7em; float: right;">&laquo; Kembali ke Daftar</a></h2>
-                    <?php if ($status_message): ?><div class="alert-success"><?= htmlspecialchars($status_message) ?></div><?php endif; ?>
+                    <h2>Edit Bot: <?= htmlspecialchars($data['bot']['first_name']) ?> <a href="/xoradmin?action=bots" style="font-size: 0.7em; float: right;">&laquo; Kembali ke Daftar</a></h2>
+                    <?php if ($data['status_message']): ?><div class="alert-success"><?= htmlspecialchars($data['status_message']) ?></div><?php endif; ?>
                     <div class="bot-info">
                         <h3>Informasi Bot</h3>
-                        <p><strong>ID Telegram:</strong> <?= htmlspecialchars($bot['id']) ?></p>
-                        <p><strong>Username:</strong> @<?= htmlspecialchars($bot['username'] ?? 'N/A') ?></p>
-                        <p><strong>Token:</strong> <code><?= substr(htmlspecialchars($bot['token']), 0, 15) ?>...</code></p>
+                        <p><strong>ID Telegram:</strong> <?= htmlspecialchars($data['bot']['id']) ?></p>
+                        <p><strong>Username:</strong> @<?= htmlspecialchars($data['bot']['username'] ?? 'N/A') ?></p>
+                        <p><strong>Token:</strong> <code><?= substr(htmlspecialchars($data['bot']['token']), 0, 15) ?>...</code></p>
                     </div>
                     <div class="actions">
                         <h3>Manajemen Bot & Webhook</h3>
-                        <button class="set-webhook" data-bot-id="<?= $bot['id'] ?>">Set Webhook</button>
-                        <button class="check-webhook" data-bot-id="<?= $bot['id'] ?>">Check Webhook</button>
-                        <button class="delete-webhook" data-bot-id="<?= $bot['id'] ?>">Delete Webhook</button>
-                        <button class="get-me" data-bot-id="<?= $bot['id'] ?>">Get Me & Update</button>
+                        <button class="set-webhook" data-bot-id="<?= $data['bot']['id'] ?>">Set Webhook</button>
+                        <button class="check-webhook" data-bot-id="<?= $data['bot']['id'] ?>">Check Webhook</button>
+                        <button class="delete-webhook" data-bot-id="<?= $data['bot']['id'] ?>">Delete Webhook</button>
+                        <button class="get-me" data-bot-id="<?= $data['bot']['id'] ?>">Get Me & Update</button>
                     </div>
                     <div class="settings">
                         <h3>Pengaturan Penyimpanan Pesan</h3>
                         <form action="/xoradmin/save_bot_settings" method="post">
-                            <input type="hidden" name="bot_id" value="<?= $bot['id'] ?>">
-                            <?php foreach ($settings as $key => $value): ?>
+                            <input type="hidden" name="bot_id" value="<?= $data['bot']['id'] ?>">
+                            <?php foreach ($data['settings'] as $key => $value): ?>
                             <label><input type="checkbox" name="settings[<?= $key ?>]" value="1" <?= $value ? 'checked' : '' ?>> <?= ucwords(str_replace('_', ' ', $key)) ?></label><br>
                             <?php endforeach; ?>
                             <button type="submit">Simpan Pengaturan</button>
@@ -115,17 +115,17 @@
                     </div>
                 </div>
 
-            <?php elseif ($active_tab === 'roles'): ?>
+            <?php elseif ($data['active_tab'] === 'roles'): ?>
                 <div id="roles" class="tab-content active">
                     <h2>Manajemen Peran Pengguna</h2>
                     <p>Tetapkan peran "Admin" untuk pengguna. Pengguna dengan peran ini akan mendapatkan akses ke panel admin utama.</p>
                     <table>
                         <thead><tr><th>ID</th><th>Nama</th><th>Username</th><th>Peran</th><th>Aksi</th></tr></thead>
                         <tbody>
-                            <?php if (empty($users_with_roles)): ?>
+                            <?php if (empty($data['users_with_roles'])): ?>
                                 <tr><td colspan="5" style="text-align: center;">Tidak ada pengguna ditemukan.</td></tr>
                             <?php else: ?>
-                                <?php foreach ($users_with_roles as $user): ?>
+                                <?php foreach ($data['users_with_roles'] as $user): ?>
                                     <tr>
                                         <td><?= htmlspecialchars($user['id']) ?></td>
                                         <td><?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?></td>
@@ -145,7 +145,7 @@
                     </table>
                 </div>
 
-            <?php elseif ($active_tab === 'db_reset'): ?>
+            <?php elseif ($data['active_tab'] === 'db_reset'): ?>
                 <div id="db_reset" class="tab-content danger-zone active">
                     <h2>Reset Database</h2>
                     <div class="warning"><strong>PERINGATAN:</strong> Semua data akan hilang secara permanen.</div>

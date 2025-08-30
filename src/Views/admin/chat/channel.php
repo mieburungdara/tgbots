@@ -1,17 +1,17 @@
 <?php
-// This view assumes all data variables ($chat_title, $bot_info, $messages, etc.) are passed from the controller.
+// This view assumes all data variables are available in the $data array.
 ?>
 
 <div class="chat-container">
     <div class="chat-header">
-        <a href="/admin/dashboard?bot_id=<?= $bot_info['id'] ?>" class="btn">&larr; Kembali</a>
-        <h3>Riwayat Chat: <?= htmlspecialchars($chat_title) ?></h3>
-        <p>Total Pesan: <?= $total_messages ?></p>
+        <a href="/admin/dashboard?bot_id=<?= $data['bot_info']['id'] ?>" class="btn">&larr; Kembali</a>
+        <h3>Riwayat Chat: <?= htmlspecialchars($data['chat_title']) ?></h3>
+        <p>Total Pesan: <?= $data['total_messages'] ?></p>
     </div>
 
     <form id="bulk-action-form" action="/admin/chat/delete" method="post">
-        <input type="hidden" name="chat_id" value="<?= $chat_id ?>">
-        <input type="hidden" name="bot_id" value="<?= $bot_info['id'] ?>">
+        <input type="hidden" name="chat_id" value="<?= $data['chat_id'] ?>">
+        <input type="hidden" name="bot_id" value="<?= $data['bot_info']['id'] ?>">
 
         <div class="bulk-actions-bar">
             <button type="submit" name="action" value="delete_db" class="btn btn-warning" disabled>Hapus dari DB</button>
@@ -33,12 +33,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($messages)): ?>
+                    <?php if (empty($data['messages'])): ?>
                         <tr>
                             <td colspan="6" style="text-align: center;">Tidak ada pesan ditemukan.</td>
                         </tr>
                     <?php else: ?>
-                        <?php foreach ($messages as $msg): ?>
+                        <?php foreach ($data['messages'] as $msg): ?>
                             <tr>
                                 <td class="col-checkbox"><input type="checkbox" class="message-checkbox" name="message_ids[]" value="<?= $msg['id'] ?>"></td>
                                 <td class="col-id"><?= $msg['id'] ?></td>
@@ -47,7 +47,7 @@
                                     <span class="direction-<?= htmlspecialchars($msg['direction']) ?>">
                                         <?php
                                             if ($msg['direction'] === 'outgoing') {
-                                                echo htmlspecialchars($bot_info['first_name']);
+                                                echo htmlspecialchars($data['bot_info']['first_name']);
                                             } else {
                                                 echo htmlspecialchars($msg['sender_first_name'] ?? 'Channel Post');
                                             }
@@ -73,16 +73,16 @@
     </form>
 
     <div class="pagination">
-        <?php if ($page > 1): ?>
-            <a href="/admin/channel_chat?chat_id=<?= $chat_id ?>&bot_id=<?= $bot_info['id'] ?>&page=<?= $page - 1 ?>">&laquo; Sebelumnya</a>
+        <?php if ($data['page'] > 1): ?>
+            <a href="/admin/channel_chat?chat_id=<?= $data['chat_id'] ?>&bot_id=<?= $data['bot_info']['id'] ?>&page=<?= $data['page'] - 1 ?>">&laquo; Sebelumnya</a>
         <?php else: ?>
             <span class="disabled">&laquo; Sebelumnya</span>
         <?php endif; ?>
 
-        <span class="current-page">Halaman <?= $page ?> dari <?= $total_pages ?></span>
+        <span class="current-page">Halaman <?= $data['page'] ?> dari <?= $data['total_pages'] ?></span>
 
-        <?php if ($page < $total_pages): ?>
-            <a href="/admin/channel_chat?chat_id=<?= $chat_id ?>&bot_id=<?= $bot_info['id'] ?>&page=<?= $page + 1 ?>">Berikutnya &raquo;</a>
+        <?php if ($data['page'] < $data['total_pages']): ?>
+            <a href="/admin/channel_chat?chat_id=<?= $data['chat_id'] ?>&bot_id=<?= $data['bot_info']['id'] ?>&page=<?= $data['page'] + 1 ?>">Berikutnya &raquo;</a>
         <?php else: ?>
             <span class="disabled">Berikutnya &raquo;</span>
         <?php endif; ?>

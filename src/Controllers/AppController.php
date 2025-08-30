@@ -10,9 +10,6 @@ abstract class AppController {
      * @param string|null $layout The layout file to wrap the view in (e.g., 'admin_layout').
      */
     protected function view($view, $data = [], $layout = null) {
-        // Make variables from the $data array available to the view
-        extract($data);
-
         // Start output buffering
         ob_start();
 

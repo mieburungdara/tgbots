@@ -1,13 +1,13 @@
 <?php
-// This view assumes the following variables are passed from the controller:
-// $page_title, $error_message, $token_from_url
+// This view assumes the following variables are available in the $data array:
+// 'page_title', 'error_message', 'token_from_url'
 ?>
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?= htmlspecialchars($page_title ?? 'Login Member') ?></title>
+    <title><?= htmlspecialchars($data['page_title'] ?? 'Login Member') ?></title>
     <style>
         body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background-color: #f4f4f4; margin: 0; }
         .login-container { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); text-align: center; width: 90%; max-width: 400px;}
@@ -29,12 +29,12 @@
 
         <form action="/member/login" method="POST">
             <label for="token">Token Login</label>
-            <input type="text" id="token" name="token" value="<?= htmlspecialchars($token_from_url); ?>" required>
+            <input type="text" id="token" name="token" value="<?= htmlspecialchars($data['token_from_url']); ?>" required>
             <button type="submit">Login</button>
         </form>
 
-        <?php if (isset($error_message)): ?>
-            <p class="error"><?php echo htmlspecialchars($error_message); ?></p>
+        <?php if (isset($data['error_message'])): ?>
+            <p class="error"><?php echo htmlspecialchars($data['error_message']); ?></p>
         <?php endif; ?>
     </div>
 </body>

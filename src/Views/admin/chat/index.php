@@ -1,17 +1,17 @@
 <?php
-// This view assumes all data variables ($user_info, $bot_info, $messages, etc.) are passed from the controller.
+// This view assumes all data variables are available in the $data array.
 ?>
 
 <div class="chat-container">
     <div class="chat-header">
-        <a href="/admin/dashboard?bot_id=<?= $bot_info['id'] ?>" class="btn">&larr; Kembali</a>
-        <h3>Riwayat Chat dengan <?= htmlspecialchars($user_info['first_name'] ?? '') ?></h3>
-        <p>Total Pesan: <?= $total_messages ?></p>
+        <a href="/admin/dashboard?bot_id=<?= $data['bot_info']['id'] ?>" class="btn">&larr; Kembali</a>
+        <h3>Riwayat Chat dengan <?= htmlspecialchars($data['user_info']['first_name'] ?? '') ?></h3>
+        <p>Total Pesan: <?= $data['total_messages'] ?></p>
     </div>
 
     <form id="bulk-action-form" action="/admin/chat/delete" method="post">
-        <input type="hidden" name="user_id" value="<?= $user_info['id'] ?>">
-        <input type="hidden" name="bot_id" value="<?= $bot_info['id'] ?>">
+        <input type="hidden" name="user_id" value="<?= $data['user_info']['id'] ?>">
+        <input type="hidden" name="bot_id" value="<?= $data['bot_info']['id'] ?>">
 
         <div class="bulk-actions-bar">
             <button type="submit" name="action" value="delete_db" class="btn btn-warning" disabled>Hapus dari DB</button>
@@ -33,12 +33,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <?php if (empty($messages)): ?>
+                    <?php if (empty($data['messages'])): ?>
                         <tr>
                             <td colspan="6" style="text-align: center;">Tidak ada pesan ditemukan.</td>
                         </tr>
                     <?php else: ?>
-                        <?php foreach ($messages as $msg): ?>
+                        <?php foreach ($data['messages'] as $msg): ?>
                             <tr>
                                 <td class="col-checkbox"><input type="checkbox" class="message-checkbox" name="message_ids[]" value="<?= $msg['id'] ?>"></td>
                                 <td class="col-id"><?= $msg['id'] ?></td>
@@ -67,16 +67,16 @@
     </form>
 
     <div class="pagination">
-        <?php if ($page > 1): ?>
-            <a href="/admin/chat?telegram_id=<?= $user_info['id'] ?>&bot_id=<?= $bot_info['id'] ?>&page=<?= $page - 1 ?>">&laquo; Sebelumnya</a>
+        <?php if ($data['page'] > 1): ?>
+            <a href="/admin/chat?telegram_id=<?= $data['user_info']['id'] ?>&bot_id=<?= $data['bot_info']['id'] ?>&page=<?= $data['page'] - 1 ?>">&laquo; Sebelumnya</a>
         <?php else: ?>
             <span class="disabled">&laquo; Sebelumnya</span>
         <?php endif; ?>
 
-        <span class="current-page">Halaman <?= $page ?> dari <?= $total_pages ?></span>
+        <span class="current-page">Halaman <?= $data['page'] ?> dari <?= $data['total_pages'] ?></span>
 
-        <?php if ($page < $total_pages): ?>
-            <a href="/admin/chat?telegram_id=<?= $user_info['id'] ?>&bot_id=<?= $bot_info['id'] ?>&page=<?= $page + 1 ?>">Berikutnya &raquo;</a>
+        <?php if ($data['page'] < $data['total_pages']): ?>
+            <a href="/admin/chat?telegram_id=<?= $data['user_info']['id'] ?>&bot_id=<?= $data['bot_info']['id'] ?>&page=<?= $data['page'] + 1 ?>">Berikutnya &raquo;</a>
         <?php else: ?>
             <span class="disabled">Berikutnya &raquo;</span>
         <?php endif; ?>
@@ -84,8 +84,8 @@
 
     <div class="chat-reply-form" style="margin-top: 20px;">
         <form action="/admin/chat/reply" method="post">
-            <input type="hidden" name="user_id" value="<?= $user_info['id'] ?>">
-            <input type="hidden" name="bot_id" value="<?= $bot_info['id'] ?>">
+            <input type="hidden" name="user_id" value="<?= $data['user_info']['id'] ?>">
+            <input type="hidden" name="bot_id" value="<?= $data['bot_info']['id'] ?>">
             <textarea name="reply_text" rows="3" placeholder="Ketik balasan Anda..." required style="width: 100%; box-sizing: border-box;"></textarea>
             <button type="submit" name="reply_message" class="btn" style="margin-top: 10px;">Kirim</button>
         </form>

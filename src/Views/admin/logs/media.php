@@ -1,5 +1,5 @@
 <?php
-// This view assumes $grouped_logs is passed from the controller.
+// This view assumes 'grouped_logs' is available in the $data array.
 ?>
 
 <h1>Log Media</h1>
@@ -16,12 +16,12 @@
         </tr>
     </thead>
     <tbody>
-        <?php if (empty($grouped_logs)): ?>
+        <?php if (empty($data['grouped_logs'])): ?>
             <tr>
                 <td colspan="5" style="text-align: center;">Belum ada log media.</td>
             </tr>
         <?php else: ?>
-            <?php foreach ($grouped_logs as $group): ?>
+            <?php foreach ($data['grouped_logs'] as $group): ?>
                 <tr class="group-header">
                     <td><?= htmlspecialchars($group['group_info']['time']) ?></td>
                     <td><?= htmlspecialchars($group['group_info']['user']) ?></td>

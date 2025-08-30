@@ -1,5 +1,5 @@
 <?php
-// This view assumes $bots is passed from the controller.
+// This view assumes 'bots' is available in the $data array.
 ?>
 <div class="api-tester-container">
     <h1>Tes API Langsung untuk Metode Bot</h1>
@@ -8,7 +8,7 @@
     <form id="bot-selector-form" class="form-section">
         <label for="bot_id"><strong>Pilih Bot:</strong></label>
         <select name="bot_id" id="bot_id">
-            <?php foreach ($bots as $bot): ?>
+            <?php foreach ($data['bots'] as $bot): ?>
                 <option value="<?= htmlspecialchars($bot['id']) ?>">
                     <?= htmlspecialchars($bot['first_name']) ?>
                 </option>
