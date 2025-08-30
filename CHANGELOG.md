@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.1.5] - 2025-08-30
+
+### Peningkatan
+- **Konsistensi Gaya Kode**: Memperbarui beberapa file view untuk menggunakan tag echo pendek `<?= ... ?>` daripada `<?php echo ...; ?>`. Perubahan ini menyelaraskan kode dengan standar PSR-12 dan praktik yang sudah ada di seluruh proyek, meningkatkan keterbacaan dan konsistensi.
+
 ## [5.1.4] - 2025-08-30
 
 ### Peningkatan

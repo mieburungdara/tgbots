@@ -34,7 +34,7 @@
         </form>
 
         <?php if (isset($data['error_message'])): ?>
-            <p class="error"><?php echo htmlspecialchars($data['error_message']); ?></p>
+            <p class="error"><?= htmlspecialchars($data['error_message']) ?></p>
         <?php endif; ?>
     </div>
 </body>
