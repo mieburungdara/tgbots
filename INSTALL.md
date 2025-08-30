@@ -53,8 +53,9 @@ Aplikasi ini dikonfigurasi melalui file `config.php`.
 
     // --- (OPSIONAL) PASSWORD ADMIN XOR ---
     // Password untuk mengakses panel admin alternatif.
-    // Ganti dengan password yang kuat dan aman.
-    define('XOR_ADMIN_PASSWORD', 'PasswordSangatAman123!');
+    // Ganti dengan password yang kuat dan unik. Sangat disarankan menggunakan
+    // password generator untuk membuat password yang tidak mudah ditebak.
+    define('XOR_ADMIN_PASSWORD', 'ganti_dengan_password_yang_sangat_kuat');
 
     ?>
     ```
@@ -131,15 +132,15 @@ Jika Anda menggunakan server web Apache (yang paling umum di shared hosting), An
     <IfModule mod_rewrite.c>
         RewriteEngine On
 
-        # Jika aplikasi ada di subdirektori, uncomment dan sesuaikan baris di bawah ini
+        # Jika aplikasi Anda berada di subdirektori, uncomment dan sesuaikan baris di bawah ini
         # RewriteBase /subfolder/
 
         RewriteCond %{REQUEST_FILENAME} !-f
         RewriteCond %{REQUEST_FILENAME} !-d
-        RewriteRule ^(.*)$ public/index.php?/$1 [L]
+        RewriteRule . public/index.php [L,QSA]
     </IfModule>
     ```
-    **Catatan**: `RewriteRule` di atas akan membuat URL seperti `example.my.id/admin/bots` berfungsi.
+    **Catatan**: Aturan ini mengarahkan semua permintaan ke `public/index.php`, sementara flag `[QSA]` (Query String Append) memastikan parameter seperti `?page=2` tetap utuh.
 
 ### Untuk Nginx
 
