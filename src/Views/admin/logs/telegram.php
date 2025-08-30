@@ -59,19 +59,23 @@
 </div>
 
 <div class="pagination">
-    <?php if ($data['total_pages'] > 1): ?>
-        <?php if ($data['page'] > 1): ?>
-            <a href="?page=<?= $data['page'] - 1 ?>">&laquo; Sebelumnya</a>
+    <?php
+    $currentPage = $data['page'];
+    $totalPages = $data['total_pages'];
+    if ($totalPages > 1):
+    ?>
+        <?php if ($currentPage > 1): ?>
+            <a href="?page=<?= $currentPage - 1 ?>">&laquo; Sebelumnya</a>
         <?php else: ?>
             <span class="disabled">&laquo; Sebelumnya</span>
         <?php endif; ?>
 
-        <?php for ($i = 1; $i <= $data['total_pages']; $i++): ?>
-            <a href="?page=<?= $i ?>" class="<?= ($data['page'] == $i) ? 'current-page' : '' ?>"><?= $i ?></a>
+        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+            <a href="?page=<?= $i ?>" class="<?= ($currentPage == $i) ? 'current-page' : '' ?>"><?= $i ?></a>
         <?php endfor; ?>
 
-        <?php if ($data['page'] < $data['total_pages']): ?>
-            <a href="?page=<?= $data['page'] + 1 ?>">Berikutnya &raquo;</a>
+        <?php if ($currentPage < $totalPages): ?>
+            <a href="?page=<?= $currentPage + 1 ?>">Berikutnya &raquo;</a>
         <?php else: ?>
             <span class="disabled">Berikutnya &raquo;</span>
         <?php endif; ?>

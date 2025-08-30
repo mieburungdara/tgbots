@@ -66,22 +66,27 @@
 
 <div class="pagination">
     <?php
+    $currentPage = $data['page'];
+    $totalPages = $data['total_pages'];
     $query_params = $_GET;
-    if ($data['page'] > 1) {
-        $query_params['page'] = $data['page'] - 1;
-        echo '<a href="/admin/users?' . http_build_query($query_params) . '">&laquo; Sebelumnya</a>';
-    } else {
-        echo '<span class="disabled">&laquo; Sebelumnya</span>';
-    }
 
-    echo '<span class="current-page">Halaman ' . $data['page'] . ' dari ' . $data['total_pages'] . '</span>';
+    if ($totalPages > 1):
+        if ($currentPage > 1) {
+            $query_params['page'] = $currentPage - 1;
+            echo '<a href="/admin/users?' . http_build_query($query_params) . '">&laquo; Sebelumnya</a>';
+        } else {
+            echo '<span class="disabled">&laquo; Sebelumnya</span>';
+        }
 
-    if ($data['page'] < $data['total_pages']) {
-        $query_params['page'] = $data['page'] + 1;
-        echo '<a href="/admin/users?' . http_build_query($query_params) . '">Berikutnya &raquo;</a>';
-    } else {
-        echo '<span class="disabled">Berikutnya &raquo;</span>';
-    }
+        echo '<span class="current-page">Halaman ' . $currentPage . ' dari ' . $totalPages . '</span>';
+
+        if ($currentPage < $totalPages) {
+            $query_params['page'] = $currentPage + 1;
+            echo '<a href="/admin/users?' . http_build_query($query_params) . '">Berikutnya &raquo;</a>';
+        } else {
+            echo '<span class="disabled">Berikutnya &raquo;</span>';
+        }
+    endif;
     ?>
 </div>
 
