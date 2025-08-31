@@ -86,7 +86,7 @@ class PrivateChannelRepository
             LEFT JOIN
                 bots b ON pcb.bot_id = b.id
             GROUP BY
-                pc.id, pc.channel_id, pc.name
+                pc.id, pc.channel_id, pc.name, pc.is_default
             ORDER BY
                 pc.id ASC
         ";
