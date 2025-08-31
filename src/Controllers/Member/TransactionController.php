@@ -1,10 +1,10 @@
 <?php
 
-require_once __DIR__ . '/../MemberBaseController.php';
+require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../../../core/database/SaleRepository.php';
 require_once __DIR__ . '/../../../core/database/PackageRepository.php';
 
-class TransactionController extends MemberBaseController {
+class TransactionController extends BaseController {
 
     public function purchased() {
         $pdo = get_db_connection();
