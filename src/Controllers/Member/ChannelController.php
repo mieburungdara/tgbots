@@ -1,11 +1,11 @@
 <?php
 
-require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/MemberBaseController.php';
 require_once __DIR__ . '/../../../core/database/SellerSalesChannelRepository.php';
 require_once __DIR__ . '/../../../core/TelegramAPI.php';
 require_once __DIR__ . '/../../../core/helpers.php';
 
-class ChannelController extends BaseController {
+class ChannelController extends MemberBaseController {
 
     public function index() {
         $pdo = get_db_connection();

@@ -1,9 +1,9 @@
 <?php
 
-require_once __DIR__ . '/BaseController.php';
+require_once __DIR__ . '/MemberBaseController.php';
 require_once __DIR__ . '/../../../core/database/PackageRepository.php';
 
-class ContentController extends BaseController {
+class ContentController extends MemberBaseController {
 
     public function index() {
         $pdo = get_db_connection();
