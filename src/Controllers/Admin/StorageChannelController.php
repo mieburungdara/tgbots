@@ -5,6 +5,7 @@ namespace TGBot\Controllers\Admin;
 require_once __DIR__ . '/../BaseController.php';
 
 use Exception;
+use RuntimeException;
 use TGBot\Controllers\BaseController;
 use TGBot\Database\PrivateChannelRepository;
 use TGBot\Database\BotRepository;
@@ -21,7 +22,7 @@ class StorageChannelController extends BaseController {
         parent::__construct();
         $pdo = get_db_connection();
         if (!$pdo) {
-            throw new \RuntimeException("Koneksi database gagal.");
+            throw new RuntimeException("Koneksi database gagal.");
         }
         $this->channelRepo = new PrivateChannelRepository($pdo);
         $this->botRepo = new BotRepository($pdo);

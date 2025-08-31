@@ -2,6 +2,9 @@
 
 namespace TGBot\Controllers;
 
+use PDO;
+use Exception;
+
 require_once __DIR__ . '/AppController.php';
 
 abstract class BaseController extends AppController {
