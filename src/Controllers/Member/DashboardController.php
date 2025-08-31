@@ -1,9 +1,9 @@
 <?php
 
-require_once __DIR__ . '/../MemberBaseController.php';
+require_once __DIR__ . '/BaseController.php';
 require_once __DIR__ . '/../../../core/database/AnalyticsRepository.php';
 
-class DashboardController extends MemberBaseController {
+class DashboardController extends BaseController {
 
     public function index() {
         // The constructor of MemberBaseController already handles the session check.
