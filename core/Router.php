@@ -8,8 +8,6 @@ class Router {
 
     public static function load($file) {
         $router = new static;
-        // The $file will define the routes.
-        // We will create this file later.
         require $file;
         return $router;
     }
@@ -23,32 +21,39 @@ class Router {
     }
 
     public function direct($uri, $requestType) {
-        // Trim slashes and parse the URL
         $uri = trim($uri, '/');
 
-        if (array_key_exists($uri, $this->routes[$requestType])) {
-            try {
-                return $this->callAction(
-                    ...explode('@', $this->routes[$requestType][$uri])
-                );
-            } catch (Exception $e) {
-                // Log the error message
-                error_log("Router Error: " . $e->getMessage());
-                // Show a generic error page
-                http_response_code(500);
-                require __DIR__ . '/../src/Views/500.php'; // We'll create this view
-                exit();
+        foreach ($this->routes[$requestType] as $route => $controller) {
+            // Convert route with params like {id} to a regex
+            $routeRegex = preg_replace('/\{([a-zA-Z_]+)\}/', '(?<${1}>[^/]+)', $route);
+            $routeRegex = '#^' . $routeRegex . '$#';
+
+            // Check if the current request URI matches the route regex
+            if (preg_match($routeRegex, $uri, $matches)) {
+                try {
+                    // Extract named capture groups into the params array
+                    $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+
+                    return $this->callAction(
+                        ...explode('@', $controller),
+                        $params
+                    );
+                } catch (Exception $e) {
+                    error_log("Router Error: " . $e->getMessage());
+                    http_response_code(500);
+                    require __DIR__ . '/../src/Views/500.php';
+                    exit();
+                }
             }
         }
 
         // Handle 404
         http_response_code(404);
-        require __DIR__ . '/../src/Views/404.php'; // We'll create this view
+        require __DIR__ . '/../src/Views/404.php';
         exit();
     }
 
-    protected function callAction($controller, $action) {
-        // Example controller string: 'Admin/DashboardController'
+    protected function callAction($controller, $action, $params = []) {
         $controllerFile = __DIR__ . "/../src/Controllers/{$controller}.php";
 
         if (!file_exists($controllerFile)) {
@@ -57,7 +62,6 @@ class Router {
 
         require_once $controllerFile;
 
-        // The controller class name is the last part of the path
         $parts = explode('/', $controller);
         $controllerClass = end($parts);
 
@@ -71,6 +75,7 @@ class Router {
             throw new Exception("{$controllerClass} does not respond to the {$action} action.");
         }
 
-        return $controllerInstance->$action();
+        // Call the controller action with the extracted parameters
+        return $controllerInstance->$action($params);
     }
 }
