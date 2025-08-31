@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.17] - 2025-08-31
+
+### Diperbaiki
+- **Fatal Error Class Not Found**: Memperbaiki error fatal `Class "TGBot\Controllers\BaseController" not found` yang terjadi secara sporadis di berbagai controller di dalam panel admin.
+  - **Penyebab**: Kurangnya autoloader terpusat (seperti Composer) menyebabkan `BaseController.php` tidak selalu dimuat sebelum controller turunan yang membutuhkannya.
+  - **Solusi**: Menambahkan `require_once __DIR__ . '/../BaseController.php';` secara eksplisit di semua controller admin yang mewarisi `BaseController`. Ini memastikan kelas dasar selalu tersedia, menstabilkan seluruh panel admin dan mencegah error serupa di masa depan.
+
 ## [5.1.16] - 2025-08-30
 
 ### Fitur

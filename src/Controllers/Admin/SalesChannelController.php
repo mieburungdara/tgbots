@@ -2,6 +2,8 @@
 
 namespace TGBot\Controllers\Admin;
 
+require_once __DIR__ . '/../BaseController.php';
+
 use Exception;
 use TGBot\Controllers\BaseController;
 use TGBot\Database\SellerSalesChannelRepository;
