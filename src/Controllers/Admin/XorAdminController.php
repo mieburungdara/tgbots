@@ -59,72 +59,85 @@ class XorAdminController extends AppController
      */
     public function index()
     {
-        $data = [
-            'page_title' => 'XOR Admin Panel',
-            'is_authenticated' => $this->isAuthenticated(),
-            'error' => '',
-            'active_tab' => $_GET['action'] ?? 'bots',
-            'bots' => [],
-            'users_with_roles' => [],
-            'bot' => null,
-            'settings' => [],
-            'status_message' => null,
-            'db_message' => '',
-            'db_error' => '',
-        ];
-
-        if (!$this->isAuthenticated()) {
-            return $this->view('admin/xoradmin/login', $data);
-        }
-
-        $this->connectDb();
-
-        if (isset($_GET['action']) && $_GET['action'] === 'edit_bot' && isset($_GET['id'])) {
-            $bot_id = filter_var($_GET['id'], FILTER_VALIDATE_INT);
-            $stmt = $this->pdo->prepare("SELECT id, first_name, username, token, created_at FROM bots WHERE id = ?");
-            $stmt->execute([$bot_id]);
-            $data['bot'] = $stmt->fetch();
-            if (!$data['bot']) {
-                header("Location: /xoradmin");
-                exit;
-            }
-            $stmt_settings = $this->pdo->prepare("SELECT setting_key, setting_value FROM bot_settings WHERE bot_id = ?");
-            $stmt_settings->execute([$bot_id]);
-            $bot_settings_raw = $stmt_settings->fetchAll(PDO::FETCH_KEY_PAIR);
-            $data['settings'] = [
-                'save_text_messages'    => $bot_settings_raw['save_text_messages'] ?? '1',
-                'save_media_messages'   => $bot_settings_raw['save_media_messages'] ?? '1',
-                'save_callback_queries' => $bot_settings_raw['save_callback_queries'] ?? '0',
-                'save_edited_messages'  => $bot_settings_raw['save_edited_messages'] ?? '0',
+        try {
+            $data = [
+                'page_title' => 'XOR Admin Panel',
+                'is_authenticated' => $this->isAuthenticated(),
+                'error' => '',
+                'active_tab' => $_GET['action'] ?? 'bots',
+                'bots' => [],
+                'users_with_roles' => [],
+                'bot' => null,
+                'settings' => [],
+                'status_message' => null,
+                'db_message' => '',
+                'db_error' => '',
             ];
-            $data['status_message'] = $_SESSION['status_message'] ?? null;
-            unset($_SESSION['status_message']);
+
+            if (!$this->isAuthenticated()) {
+                return $this->view('admin/xoradmin/login', $data);
+            }
+
+            $this->connectDb();
+
+            if (isset($_GET['action']) && $_GET['action'] === 'edit_bot' && isset($_GET['id'])) {
+                $bot_id = filter_var($_GET['id'], FILTER_VALIDATE_INT);
+                $stmt = $this->pdo->prepare("SELECT id, first_name, username, token, created_at FROM bots WHERE id = ?");
+                $stmt->execute([$bot_id]);
+                $data['bot'] = $stmt->fetch();
+                if (!$data['bot']) {
+                    header("Location: /xoradmin");
+                    exit;
+                }
+                $stmt_settings = $this->pdo->prepare("SELECT setting_key, setting_value FROM bot_settings WHERE bot_id = ?");
+                $stmt_settings->execute([$bot_id]);
+                $bot_settings_raw = $stmt_settings->fetchAll(PDO::FETCH_KEY_PAIR);
+                $data['settings'] = [
+                    'save_text_messages'    => $bot_settings_raw['save_text_messages'] ?? '1',
+                    'save_media_messages'   => $bot_settings_raw['save_media_messages'] ?? '1',
+                    'save_callback_queries' => $bot_settings_raw['save_callback_queries'] ?? '0',
+                    'save_edited_messages'  => $bot_settings_raw['save_edited_messages'] ?? '0',
+                ];
+                $data['status_message'] = $_SESSION['status_message'] ?? null;
+                unset($_SESSION['status_message']);
+            }
+
+            $data['bots'] = $this->pdo->query("SELECT id, first_name, username, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
+
+            if ($data['active_tab'] === 'roles') {
+                 $sql = "
+                    SELECT u.id, u.first_name, u.last_name, u.username, GROUP_CONCAT(r.name SEPARATOR ', ') as roles
+                    FROM users u
+                    LEFT JOIN user_roles ur ON u.id = ur.user_id
+                    LEFT JOIN roles r ON ur.role_id = r.id
+                    GROUP BY u.id
+                    ORDER BY u.first_name, u.last_name
+                ";
+                $data['users_with_roles'] = $this->pdo->query($sql)->fetchAll();
+            }
+
+            $this->view('admin/xoradmin/index', $data);
+        } catch (Exception $e) {
+            app_log('Error in XorAdminController/index: ' . $e->getMessage(), 'error');
+            $this->view('admin/error', [
+                'page_title' => 'Error',
+                'error_message' => 'An error occurred while loading the XOR admin page.'
+            ], 'admin_layout');
         }
-
-        $data['bots'] = $this->pdo->query("SELECT id, first_name, username, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
-
-        if ($data['active_tab'] === 'roles') {
-             $sql = "
-                SELECT u.id, u.first_name, u.last_name, u.username, GROUP_CONCAT(r.name SEPARATOR ', ') as roles
-                FROM users u
-                LEFT JOIN user_roles ur ON u.id = ur.user_id
-                LEFT JOIN roles r ON ur.role_id = r.id
-                GROUP BY u.id
-                ORDER BY u.first_name, u.last_name
-            ";
-            $data['users_with_roles'] = $this->pdo->query($sql)->fetchAll();
-        }
-
-        $this->view('admin/xoradmin/index', $data);
     }
 
     public function login()
     {
-        if (isset($_POST['password']) && is_string($_POST['password']) && !empty($this->correct_password) && hash_equals($this->correct_password, $_POST['password'])) {
-            $_SESSION['xor_is_authenticated'] = true;
-        } else {
-            $_SESSION['xor_error'] = "Password salah!";
-            unset($_SESSION['xor_is_authenticated']);
+        try {
+            if (isset($_POST['password']) && is_string($_POST['password']) && !empty($this->correct_password) && hash_equals($this->correct_password, $_POST['password'])) {
+                $_SESSION['xor_is_authenticated'] = true;
+            } else {
+                $_SESSION['xor_error'] = "Password salah!";
+                unset($_SESSION['xor_is_authenticated']);
+            }
+        } catch (Exception $e) {
+            app_log('Error in XorAdminController/login: ' . $e->getMessage(), 'error');
+            $_SESSION['xor_error'] = "An internal error occurred.";
         }
         header("Location: /xoradmin");
         exit;
@@ -132,7 +145,11 @@ class XorAdminController extends AppController
 
     public function logout()
     {
-        unset($_SESSION['xor_is_authenticated']);
+        try {
+            unset($_SESSION['xor_is_authenticated']);
+        } catch (Exception $e) {
+            app_log('Error in XorAdminController/logout: ' . $e->getMessage(), 'error');
+        }
         header("Location: /xoradmin");
         exit;
     }

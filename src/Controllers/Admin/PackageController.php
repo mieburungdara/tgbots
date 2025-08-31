@@ -7,19 +7,27 @@ require_once __DIR__ . '/../../../core/TelegramAPI.php';
 class PackageController extends BaseController {
 
     public function index() {
-        $pdo = get_db_connection();
-        $packageRepo = new PackageRepository($pdo);
+        try {
+            $pdo = get_db_connection();
+            $packageRepo = new PackageRepository($pdo);
 
-        $message = $_SESSION['flash_message'] ?? null;
-        unset($_SESSION['flash_message']);
+            $message = $_SESSION['flash_message'] ?? null;
+            unset($_SESSION['flash_message']);
 
-        $packages = $packageRepo->findAll();
+            $packages = $packageRepo->findAll();
 
-        $this->view('admin/packages/index', [
-            'page_title' => 'Manajemen Konten',
-            'packages' => $packages,
-            'message' => $message
-        ], 'admin_layout');
+            $this->view('admin/packages/index', [
+                'page_title' => 'Manajemen Konten',
+                'packages' => $packages,
+                'message' => $message
+            ], 'admin_layout');
+        } catch (Exception $e) {
+            app_log('Error in PackageController/index: ' . $e->getMessage(), 'error');
+            $this->view('admin/error', [
+                'page_title' => 'Error',
+                'error_message' => 'An error occurred while loading the package management page.'
+            ], 'admin_layout');
+        }
     }
 
     public function hardDelete() {

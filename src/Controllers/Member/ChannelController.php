@@ -8,43 +8,51 @@ require_once __DIR__ . '/../../../core/helpers.php';
 class ChannelController extends MemberBaseController {
 
     public function index() {
-        $pdo = get_db_connection();
-        $channelRepo = new SellerSalesChannelRepository($pdo);
-        $user_id = $_SESSION['member_user_id'];
+        try {
+            $pdo = get_db_connection();
+            $channelRepo = new SellerSalesChannelRepository($pdo);
+            $user_id = $_SESSION['member_user_id'];
 
-        $error_message = $_SESSION['flash_error'] ?? null;
-        $success_message = $_SESSION['flash_success'] ?? null;
-        unset($_SESSION['flash_error'], $_SESSION['flash_success']);
+            $error_message = $_SESSION['flash_error'] ?? null;
+            $success_message = $_SESSION['flash_success'] ?? null;
+            unset($_SESSION['flash_error'], $_SESSION['flash_success']);
 
-        $all_bots = get_all_bots($pdo);
-        $current_channel = $channelRepo->findBySellerId($user_id);
-        $bot_details = null;
+            $all_bots = get_all_bots($pdo);
+            $current_channel = $channelRepo->findBySellerId($user_id);
+            $bot_details = null;
 
-        if ($current_channel && !empty($current_channel['bot_id'])) {
-            $bot_details = get_bot_details($pdo, $current_channel['bot_id']);
-            try {
-                if ($bot_details) {
-                    $telegram_api_for_info = new TelegramAPI($bot_details['token']);
-                    $chat_info = $telegram_api_for_info->getChat($current_channel['channel_id']);
-                    $current_channel['title'] = ($chat_info && $chat_info['ok']) ? $chat_info['result']['title'] : 'Info tidak tersedia';
-                    if (!empty($current_channel['discussion_group_id'])) {
-                         $group_info = $telegram_api_for_info->getChat($current_channel['discussion_group_id']);
-                         $current_channel['group_title'] = ($group_info && $group_info['ok']) ? $group_info['result']['title'] : 'Info tidak tersedia';
+            if ($current_channel && !empty($current_channel['bot_id'])) {
+                $bot_details = get_bot_details($pdo, $current_channel['bot_id']);
+                try {
+                    if ($bot_details) {
+                        $telegram_api_for_info = new TelegramAPI($bot_details['token']);
+                        $chat_info = $telegram_api_for_info->getChat($current_channel['channel_id']);
+                        $current_channel['title'] = ($chat_info && $chat_info['ok']) ? $chat_info['result']['title'] : 'Info tidak tersedia';
+                        if (!empty($current_channel['discussion_group_id'])) {
+                             $group_info = $telegram_api_for_info->getChat($current_channel['discussion_group_id']);
+                             $current_channel['group_title'] = ($group_info && $group_info['ok']) ? $group_info['result']['title'] : 'Info tidak tersedia';
+                        }
                     }
+                } catch (Exception $e) {
+                    $error_message = $error_message ?? "Gagal menghubungi Telegram untuk memperbarui info: " . $e->getMessage();
                 }
-            } catch (Exception $e) {
-                $error_message = $error_message ?? "Gagal menghubungi Telegram untuk memperbarui info: " . $e->getMessage();
             }
-        }
 
-        $this->view('member/channels/index', [
-            'page_title' => 'Manajemen Channel',
-            'all_bots' => $all_bots,
-            'current_channel' => $current_channel,
-            'bot_details' => $bot_details,
-            'error_message' => $error_message,
-            'success_message' => $success_message
-        ], 'member_layout');
+            $this->view('member/channels/index', [
+                'page_title' => 'Manajemen Channel',
+                'all_bots' => $all_bots,
+                'current_channel' => $current_channel,
+                'bot_details' => $bot_details,
+                'error_message' => $error_message,
+                'success_message' => $success_message
+            ], 'member_layout');
+        } catch (Exception $e) {
+            app_log('Error in ChannelController/index: ' . $e->getMessage(), 'error');
+            $this->view('member/error', [
+                'page_title' => 'Error',
+                'error_message' => 'An error occurred while loading the channel management page.'
+            ], 'member_layout');
+        }
     }
 
     public function register() {

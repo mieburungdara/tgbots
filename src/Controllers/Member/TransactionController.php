@@ -7,33 +7,49 @@ require_once __DIR__ . '/../../../core/database/PackageRepository.php';
 class TransactionController extends MemberBaseController {
 
     public function purchased() {
-        $pdo = get_db_connection();
-        $saleRepo = new SaleRepository($pdo);
-        $user_id = $_SESSION['member_user_id'];
+        try {
+            $pdo = get_db_connection();
+            $saleRepo = new SaleRepository($pdo);
+            $user_id = $_SESSION['member_user_id'];
 
-        $purchased_packages = $saleRepo->findPackagesByBuyerId($user_id);
+            $purchased_packages = $saleRepo->findPackagesByBuyerId($user_id);
 
-        $this->view('member/transactions/purchased', [
-            'page_title' => 'Konten Dibeli',
-            'purchased_packages' => $purchased_packages
-        ], 'member_layout');
+            $this->view('member/transactions/purchased', [
+                'page_title' => 'Konten Dibeli',
+                'purchased_packages' => $purchased_packages
+            ], 'member_layout');
+        } catch (Exception $e) {
+            app_log('Error in TransactionController/purchased: ' . $e->getMessage(), 'error');
+            $this->view('member/error', [
+                'page_title' => 'Error',
+                'error_message' => 'An error occurred while loading your purchased content.'
+            ], 'member_layout');
+        }
     }
 
     public function sold() {
-        $pdo = get_db_connection();
-        $packageRepo = new PackageRepository($pdo);
-        $user_id = $_SESSION['member_user_id'];
+        try {
+            $pdo = get_db_connection();
+            $packageRepo = new PackageRepository($pdo);
+            $user_id = $_SESSION['member_user_id'];
 
-        $message = $_SESSION['flash_message'] ?? null;
-        unset($_SESSION['flash_message']);
+            $message = $_SESSION['flash_message'] ?? null;
+            unset($_SESSION['flash_message']);
 
-        $sold_packages = $packageRepo->findAllBySellerId($user_id);
+            $sold_packages = $packageRepo->findAllBySellerId($user_id);
 
-        $this->view('member/transactions/sold', [
-            'page_title' => 'Konten Dijual',
-            'sold_packages' => $sold_packages,
-            'message' => $message
-        ], 'member_layout');
+            $this->view('member/transactions/sold', [
+                'page_title' => 'Konten Dijual',
+                'sold_packages' => $sold_packages,
+                'message' => $message
+            ], 'member_layout');
+        } catch (Exception $e) {
+            app_log('Error in TransactionController/sold: ' . $e->getMessage(), 'error');
+            $this->view('member/error', [
+                'page_title' => 'Error',
+                'error_message' => 'An error occurred while loading your sold content.'
+            ], 'member_layout');
+        }
     }
 
     public function softDeletePackage() {

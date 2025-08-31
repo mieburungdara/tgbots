@@ -24,37 +24,50 @@ class StorageChannelController extends BaseController {
     }
 
     public function index() {
-        $message = $_SESSION['flash_message'] ?? null;
-        unset($_SESSION['flash_message']);
+        try {
+            $message = $_SESSION['flash_message'] ?? null;
+            unset($_SESSION['flash_message']);
 
-        $private_channels = $this->channelRepo->getAllChannels();
-        $all_bots = $this->botRepo->getAllBots();
+            $private_channels = $this->channelRepo->getAllChannels();
+            $all_bots = $this->botRepo->getAllBots();
 
-        $this->view('admin/storage_channels/index', [
-            'page_title' => 'Kelola Channel Penyimpanan',
-            'private_channels' => $private_channels,
-            'all_bots' => $all_bots,
-            'message' => $message
-        ], 'admin_layout');
+            $this->view('admin/storage_channels/index', [
+                'page_title' => 'Kelola Channel Penyimpanan',
+                'private_channels' => $private_channels,
+                'all_bots' => $all_bots,
+                'message' => $message
+            ], 'admin_layout');
+        } catch (Exception $e) {
+            app_log('Error in StorageChannelController/index: ' . $e->getMessage(), 'error');
+            $this->view('admin/error', [
+                'page_title' => 'Error',
+                'error_message' => 'An error occurred while loading the storage channel management page.'
+            ], 'admin_layout');
+        }
     }
 
     public function store() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /admin/storage_channels');
-            exit();
-        }
-
-        $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
-        $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
-
-        if ($channel_id && $name) {
-            if ($this->channelRepo->addChannel($channel_id, $name)) {
-                $_SESSION['flash_message'] = "Channel '{$name}' berhasil ditambahkan.";
-            } else {
-                $_SESSION['flash_message'] = "Gagal menambahkan channel. Mungkin ID sudah ada.";
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: /admin/storage_channels');
+                exit();
             }
-        } else {
-            $_SESSION['flash_message'] = "Data channel tidak valid.";
+
+            $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
+            $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
+
+            if ($channel_id && $name) {
+                if ($this->channelRepo->addChannel($channel_id, $name)) {
+                    $_SESSION['flash_message'] = "Channel '{$name}' berhasil ditambahkan.";
+                } else {
+                    $_SESSION['flash_message'] = "Gagal menambahkan channel. Mungkin ID sudah ada.";
+                }
+            } else {
+                $_SESSION['flash_message'] = "Data channel tidak valid.";
+            }
+        } catch (Exception $e) {
+            app_log('Error in StorageChannelController/store: ' . $e->getMessage(), 'error');
+            $_SESSION['flash_message'] = "An error occurred while adding the storage channel.";
         }
 
         header("Location: /admin/storage_channels");
@@ -62,23 +75,28 @@ class StorageChannelController extends BaseController {
     }
 
     public function update() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /admin/storage_channels');
-            exit();
-        }
-
-        $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
-        $new_name = filter_input(INPUT_POST, 'new_name', FILTER_SANITIZE_STRING);
-        $new_channel_id = filter_input(INPUT_POST, 'new_channel_id', FILTER_VALIDATE_INT);
-
-        if ($channel_id && $new_name && $new_channel_id) {
-            if ($this->channelRepo->updateChannel($channel_id, $new_name, $new_channel_id)) {
-                $_SESSION['flash_message'] = "Channel berhasil diperbarui.";
-            } else {
-                $_SESSION['flash_message'] = "Gagal memperbarui channel.";
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: /admin/storage_channels');
+                exit();
             }
-        } else {
-            $_SESSION['flash_message'] = "Data untuk pembaruan channel tidak valid.";
+
+            $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
+            $new_name = filter_input(INPUT_POST, 'new_name', FILTER_SANITIZE_STRING);
+            $new_channel_id = filter_input(INPUT_POST, 'new_channel_id', FILTER_VALIDATE_INT);
+
+            if ($channel_id && $new_name && $new_channel_id) {
+                if ($this->channelRepo->updateChannel($channel_id, $new_name, $new_channel_id)) {
+                    $_SESSION['flash_message'] = "Channel berhasil diperbarui.";
+                } else {
+                    $_SESSION['flash_message'] = "Gagal memperbarui channel.";
+                }
+            } else {
+                $_SESSION['flash_message'] = "Data untuk pembaruan channel tidak valid.";
+            }
+        } catch (Exception $e) {
+            app_log('Error in StorageChannelController/update: ' . $e->getMessage(), 'error');
+            $_SESSION['flash_message'] = "An error occurred while updating the storage channel.";
         }
 
         header("Location: /admin/storage_channels");
@@ -86,21 +104,26 @@ class StorageChannelController extends BaseController {
     }
 
     public function setDefault() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /admin/storage_channels');
-            exit();
-        }
-
-        $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
-
-        if ($channel_id) {
-            if ($this->channelRepo->setDefaultChannel($channel_id)) {
-                $_SESSION['flash_message'] = "Channel default berhasil diatur.";
-            } else {
-                $_SESSION['flash_message'] = "Gagal mengatur channel default.";
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: /admin/storage_channels');
+                exit();
             }
-        } else {
-            $_SESSION['flash_message'] = "ID Channel tidak valid.";
+
+            $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
+
+            if ($channel_id) {
+                if ($this->channelRepo->setDefaultChannel($channel_id)) {
+                    $_SESSION['flash_message'] = "Channel default berhasil diatur.";
+                } else {
+                    $_SESSION['flash_message'] = "Gagal mengatur channel default.";
+                }
+            } else {
+                $_SESSION['flash_message'] = "ID Channel tidak valid.";
+            }
+        } catch (Exception $e) {
+            app_log('Error in StorageChannelController/setDefault: ' . $e->getMessage(), 'error');
+            $_SESSION['flash_message'] = "An error occurred while setting the default channel.";
         }
 
         header("Location: /admin/storage_channels");
@@ -108,21 +131,26 @@ class StorageChannelController extends BaseController {
     }
 
     public function destroy() {
-        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /admin/storage_channels');
-            exit();
-        }
-
-        $channel_id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
-
-        if ($channel_id) {
-            if ($this->channelRepo->deleteChannel($channel_id)) {
-                $_SESSION['flash_message'] = "Channel berhasil dihapus.";
-            } else {
-                $_SESSION['flash_message'] = "Gagal menghapus channel.";
+        try {
+            if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+                header('Location: /admin/storage_channels');
+                exit();
             }
-        } else {
-            $_SESSION['flash_message'] = "ID Channel tidak valid untuk penghapusan.";
+
+            $channel_id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+
+            if ($channel_id) {
+                if ($this->channelRepo->deleteChannel($channel_id)) {
+                    $_SESSION['flash_message'] = "Channel berhasil dihapus.";
+                } else {
+                    $_SESSION['flash_message'] = "Gagal menghapus channel.";
+                }
+            } else {
+                $_SESSION['flash_message'] = "ID Channel tidak valid untuk penghapusan.";
+            }
+        } catch (Exception $e) {
+            app_log('Error in StorageChannelController/destroy: ' . $e->getMessage(), 'error');
+            $_SESSION['flash_message'] = "An error occurred while deleting the storage channel.";
         }
 
         header("Location: /admin/storage_channels");

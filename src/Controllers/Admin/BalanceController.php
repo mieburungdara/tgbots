@@ -5,38 +5,39 @@ require_once __DIR__ . '/../BaseController.php';
 class BalanceController extends BaseController {
 
     public function index() {
-        $pdo = get_db_connection();
+        try {
+            $pdo = get_db_connection();
 
-        $flash_message = $_SESSION['flash_message'] ?? '';
-        $flash_message_type = $_SESSION['flash_message_type'] ?? 'success';
-        unset($_SESSION['flash_message'], $_SESSION['flash_message_type']);
+            $flash_message = $_SESSION['flash_message'] ?? '';
+            $flash_message_type = $_SESSION['flash_message_type'] ?? 'success';
+            unset($_SESSION['flash_message'], $_SESSION['flash_message_type']);
 
-        $search_term = $_GET['search'] ?? '';
-        $page = (int)($_GET['page'] ?? 1);
-        $sort_by = $_GET['sort'] ?? 'id';
-        $order = strtolower($_GET['order'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
-        $limit = 50;
+            $search_term = $_GET['search'] ?? '';
+            $page = (int)($_GET['page'] ?? 1);
+            $sort_by = $_GET['sort'] ?? 'id';
+            $order = strtolower($_GET['order'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
+            $limit = 50;
 
-        $allowed_sort_columns = ['id', 'first_name', 'username', 'balance', 'total_income', 'total_spending'];
-        if (!in_array($sort_by, $allowed_sort_columns)) {
-            $sort_by = 'id';
-        }
+            $allowed_sort_columns = ['id', 'first_name', 'username', 'balance', 'total_income', 'total_spending'];
+            if (!in_array($sort_by, $allowed_sort_columns)) {
+                $sort_by = 'id';
+            }
 
-        $where_clause = '';
-        $params = [];
-        if (!empty($search_term)) {
-            $where_clause = "WHERE u.first_name LIKE :search1 OR u.last_name LIKE :search2 OR u.username LIKE :search3";
-            $params = [':search1' => "%$search_term%", ':search2' => "%$search_term%", ':search3' => "%$search_term%"];
-        }
+            $where_clause = '';
+            $params = [];
+            if (!empty($search_term)) {
+                $where_clause = "WHERE u.first_name LIKE :search1 OR u.last_name LIKE :search2 OR u.username LIKE :search3";
+                $params = [':search1' => "%$search_term%", ':search2' => "%$search_term%", ':search3' => "%$search_term%"];
+            }
 
-        $count_sql = "SELECT COUNT(*) FROM users u {$where_clause}";
-        $count_stmt = $pdo->prepare($count_sql);
-        $count_stmt->execute($params);
-        $total_users = $count_stmt->fetchColumn();
-        $total_pages = ceil($total_users / $limit);
-        $offset = ($page - 1) * $limit;
+            $count_sql = "SELECT COUNT(*) FROM users u {$where_clause}";
+            $count_stmt = $pdo->prepare($count_sql);
+            $count_stmt->execute($params);
+            $total_users = $count_stmt->fetchColumn();
+            $total_pages = ceil($total_users / $limit);
+            $offset = ($page - 1) * $limit;
 
-        $sql = "
+            $sql = "
             SELECT
                 u.id as telegram_id, u.first_name, u.last_name, u.username, u.balance,
                 (SELECT SUM(price) FROM sales WHERE seller_user_id = u.id) as total_income,
@@ -46,26 +47,33 @@ class BalanceController extends BaseController {
             ORDER BY {$sort_by} {$order}
             LIMIT :limit OFFSET :offset
         ";
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
-        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
-        foreach ($params as $key => $value) {
-            $stmt->bindValue($key, $value);
-        }
-        $stmt->execute();
-        $users_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+            $stmt = $pdo->prepare($sql);
+            $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+            $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+            foreach ($params as $key => $value) {
+                $stmt->bindValue($key, $value);
+            }
+            $stmt->execute();
+            $users_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-        $this->view('admin/balance/index', [
-            'page_title' => 'Manajemen Saldo',
-            'users_data' => $users_data,
-            'total_pages' => $total_pages,
-            'page' => $page,
-            'sort_by' => $sort_by,
-            'order' => $order,
-            'search_term' => $search_term,
-            'flash_message' => $flash_message,
-            'flash_message_type' => $flash_message_type
-        ], 'admin_layout');
+            $this->view('admin/balance/index', [
+                'page_title' => 'Manajemen Saldo',
+                'users_data' => $users_data,
+                'total_pages' => $total_pages,
+                'page' => $page,
+                'sort_by' => $sort_by,
+                'order' => $order,
+                'search_term' => $search_term,
+                'flash_message' => $flash_message,
+                'flash_message_type' => $flash_message_type
+            ], 'admin_layout');
+        } catch (Exception $e) {
+            app_log('Error in BalanceController/index: ' . $e->getMessage(), 'error');
+            $this->view('admin/error', [
+                'page_title' => 'Error',
+                'error_message' => 'An error occurred while loading the balance management page.'
+            ], 'admin_layout');
+        }
     }
 
     public function adjust() {

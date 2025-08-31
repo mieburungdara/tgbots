@@ -9,13 +9,21 @@ class DatabaseController extends BaseController
      */
     public function index()
     {
-        $message = $_SESSION['flash_message'] ?? null;
-        unset($_SESSION['flash_message']);
+        try {
+            $message = $_SESSION['flash_message'] ?? null;
+            unset($_SESSION['flash_message']);
 
-        $this->view('admin/database/index', [
-            'page_title' => 'Manajemen Database',
-            'message' => $message
-        ], 'admin_layout');
+            $this->view('admin/database/index', [
+                'page_title' => 'Manajemen Database',
+                'message' => $message
+            ], 'admin_layout');
+        } catch (Exception $e) {
+            app_log('Error in DatabaseController/index: ' . $e->getMessage(), 'error');
+            $this->view('admin/error', [
+                'page_title' => 'Error',
+                'error_message' => 'An error occurred while loading the database management page.'
+            ], 'admin_layout');
+        }
     }
 
     /**
