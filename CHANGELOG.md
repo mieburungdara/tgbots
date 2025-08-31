@@ -1,6 +1,11 @@
 # Changelog
 
-## [5.1.18] - 2025-08-31
+## [5.1.19] - 2025-08-31
+
+### Diperbaiki
+- **Fatal Error `undefined function` (Workaround)**: Menambahkan `require_once` untuk `core/helpers.php` secara eksplisit di `BaseController.php` dan `AppController.php`. Ini adalah workaround untuk memastikan fungsi-fungsi helper selalu tersedia, mengatasi error fatal `Call to undefined function` yang dilaporkan oleh pengguna, yang kemungkinan disebabkan oleh masalah lingkungan server.
+
+
 
 ### Diperbaiki
 - **Fatal Error `require_once` dan `undefined function`**: Melakukan refactoring besar dengan mengganti semua pemanggilan `require_once` yang berulang dengan autoloader terpusat. Ini memperbaiki serangkaian error fatal, termasuk `Class not found` dan `Call to undefined function`.

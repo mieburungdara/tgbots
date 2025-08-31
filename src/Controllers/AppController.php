@@ -2,6 +2,8 @@
 
 namespace TGBot\Controllers;
 
+require_once __DIR__ . '/../../core/helpers.php';
+
 abstract class AppController {
 
     /**
