@@ -1,7 +1,10 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
-require_once __DIR__ . '/../../../core/database/RawUpdateRepository.php';
+namespace TGBot\Controllers\Admin;
+
+use Exception;
+use TGBot\Controllers\BaseController;
+use TGBot\Database\RawUpdateRepository;
 
 class DebugFeedController extends BaseController
 {

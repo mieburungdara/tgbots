@@ -1,7 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../AppController.php';
-require_once __DIR__ . '/../../../core/TelegramAPI.php';
+namespace TGBot\Controllers\Admin;
+
+use Exception;
+use PDO;
+use TGBot\Controllers\AppController;
+use TGBot\TelegramAPI;
 
 class XorAdminController extends AppController
 {

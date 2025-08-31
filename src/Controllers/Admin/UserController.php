@@ -1,6 +1,10 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
+namespace TGBot\Controllers\Admin;
+
+use Exception;
+use PDO;
+use TGBot\Controllers\BaseController;
 
 class UserController extends BaseController {
 

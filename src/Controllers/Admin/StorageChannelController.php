@@ -1,10 +1,13 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
-require_once __DIR__ . '/../../../core/database/PrivateChannelRepository.php';
-require_once __DIR__ . '/../../../core/database/BotRepository.php';
-require_once __DIR__ . '/../../../core/database/PrivateChannelBotRepository.php';
-require_once __DIR__ . '/../../../core/TelegramAPI.php';
+namespace TGBot\Controllers\Admin;
+
+use Exception;
+use TGBot\Controllers\BaseController;
+use TGBot\Database\PrivateChannelRepository;
+use TGBot\Database\BotRepository;
+use TGBot\Database\PrivateChannelBotRepository;
+use TGBot\TelegramAPI;
 
 class StorageChannelController extends BaseController {
 

@@ -1,9 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
-require_once __DIR__ . '/../../../core/database/SellerSalesChannelRepository.php';
-require_once __DIR__ . '/../../../core/TelegramAPI.php';
-require_once __DIR__ . '/../../../core/helpers.php'; // For get_bot_token
+namespace TGBot\Controllers\Admin;
+
+use Exception;
+use TGBot\Controllers\BaseController;
+use TGBot\Database\SellerSalesChannelRepository;
+use TGBot\TelegramAPI;
 
 class SalesChannelController extends BaseController
 {

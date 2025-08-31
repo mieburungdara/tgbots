@@ -1,7 +1,10 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
-require_once __DIR__ . '/../../../core/database/RoleRepository.php';
+namespace TGBot\Controllers\Admin;
+
+use Exception;
+use TGBot\Controllers\BaseController;
+use TGBot\Database\RoleRepository;
 
 class RoleController extends BaseController
 {

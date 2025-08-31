@@ -1,6 +1,11 @@
 <?php
 declare(strict_types=1);
 
+use TGBot\Database\BotRepository;
+use TGBot\Database\RawUpdateRepository;
+use TGBot\UpdateDispatcher;
+use TGBot\TelegramAPI;
+
 require_once __DIR__ . '/../../core/database.php';
 require_once __DIR__ . '/../../core/helpers.php';
 require_once __DIR__ . '/../../core/database/BotRepository.php';

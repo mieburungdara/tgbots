@@ -1,6 +1,9 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
+namespace TGBot\Controllers\Admin;
+
+use Exception;
+use TGBot\Controllers\BaseController;
 
 class DashboardController extends BaseController {
 

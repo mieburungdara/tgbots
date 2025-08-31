@@ -1,8 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
-require_once __DIR__ . '/../../../core/database/PackageRepository.php';
-require_once __DIR__ . '/../../../core/TelegramAPI.php';
+namespace TGBot\Controllers\Admin;
+
+use Exception;
+use TGBot\Controllers\BaseController;
+use TGBot\Database\PackageRepository;
+use TGBot\TelegramAPI;
 
 class PackageController extends BaseController {
 

@@ -1,7 +1,11 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
-require_once __DIR__ . '/../../../core/TelegramAPI.php';
+namespace TGBot\Controllers\Admin;
+
+use Exception;
+use PDO;
+use TGBot\Controllers\BaseController;
+use TGBot\TelegramAPI;
 
 class ForwardManagerController extends BaseController
 {

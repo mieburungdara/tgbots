@@ -136,7 +136,6 @@ class LogController extends BaseController {
     public function telegram() {
         try {
             $pdo = get_db_connection();
-            require_once __DIR__ . '/../../../core/database/TelegramErrorLogRepository.php';
             $logRepo = new TelegramErrorLogRepository($pdo);
 
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
