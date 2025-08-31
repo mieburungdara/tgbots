@@ -146,17 +146,17 @@ class Router
 
         require_once $controllerFile;
 
-        $parts = explode('/', $controller);
-        $controllerClass = end($parts);
+        // Construct the fully qualified class name
+        $className = "TGBot\\Controllers\\" . str_replace('/', '\\', $controller);
 
-        if (!class_exists($controllerClass)) {
-            throw new Exception("Controller class not found: {$controllerClass}");
+        if (!class_exists($className)) {
+            throw new Exception("Controller class not found: {$className}");
         }
 
-        $controllerInstance = new $controllerClass;
+        $controllerInstance = new $className;
 
         if (!method_exists($controllerInstance, $action)) {
-            throw new Exception("{$controllerClass} does not respond to the {$action} action.");
+            throw new Exception("{$className} does not respond to the {$action} action.");
         }
 
         // Fix #1: Use Reflection to call method correctly based on its signature
