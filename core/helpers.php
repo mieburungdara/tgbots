@@ -173,8 +173,33 @@ function get_bot_details(PDO $pdo, int $bot_id): ?array
  */
 function get_all_bots(PDO $pdo): array
 {
-    $stmt = $pdo->query("SELECT id, name, username FROM bots ORDER BY name ASC");
+    $stmt = $pdo->query("SELECT id, first_name, username FROM bots ORDER BY first_name ASC");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Mendapatkan inisial dari sebuah nama atau judul.
+ * Contoh: "John Doe" -> "JD", "Grup Diskusi" -> "GD"
+ *
+ * @param string $name Nama atau judul.
+ * @param int $max_initials Jumlah maksimal inisial yang dihasilkan.
+ * @return string Inisial yang dihasilkan.
+ */
+function get_initials(string $name, int $max_initials = 2): string
+{
+    $words = explode(' ', trim($name));
+    $initials = '';
+    $i = 0;
+    foreach ($words as $word) {
+        if (!empty($word)) {
+            $initials .= strtoupper($word[0]);
+            $i++;
+        }
+        if ($i >= $max_initials) {
+            break;
+        }
+    }
+    return $initials;
 }
 
 /**
