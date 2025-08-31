@@ -1,0 +1,10 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Jika aplikasi Anda berada di subdirektori, uncomment dan sesuaikan baris di bawah ini
+    # RewriteBase /subfolder/
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule . public/index.php [L,QSA]
+</IfModule>
