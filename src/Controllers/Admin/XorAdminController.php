@@ -20,7 +20,7 @@ class XorAdminController extends BaseController
 
     private function isAuthenticated()
     {
-        return isset($_SESSION['is_authenticated']) && $_SESSION['is_authenticated'];
+        return isset($_SESSION['xor_is_authenticated']) && $_SESSION['xor_is_authenticated'];
     }
 
     private function connectDb()
@@ -113,11 +113,11 @@ class XorAdminController extends BaseController
 
     public function login()
     {
-                if (isset($_POST['password']) && is_string($_POST['password']) && !empty($this->correct_password) && hash_equals($this->correct_password, $_POST['password'])) {
-            $_SESSION['is_authenticated'] = true;
+        if (isset($_POST['password']) && is_string($_POST['password']) && !empty($this->correct_password) && hash_equals($this->correct_password, $_POST['password'])) {
+            $_SESSION['xor_is_authenticated'] = true;
         } else {
             $_SESSION['xor_error'] = "Password salah!";
-            unset($_SESSION['is_authenticated']);
+            unset($_SESSION['xor_is_authenticated']);
         }
         header("Location: /xoradmin");
         exit;
@@ -125,7 +125,7 @@ class XorAdminController extends BaseController
 
     public function logout()
     {
-        session_destroy();
+        unset($_SESSION['xor_is_authenticated']);
         header("Location: /xoradmin");
         exit;
     }
