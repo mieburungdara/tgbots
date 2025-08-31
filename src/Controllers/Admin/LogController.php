@@ -1,6 +1,12 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
+namespace TGBot\Controllers\Admin;
+
+use TGBot\Controllers\BaseController;
+use TGBot\Database\TelegramErrorLogRepository;
+use PDO;
+use Exception;
+use PDOException;
 
 class LogController extends BaseController {
 

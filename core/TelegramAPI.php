@@ -66,14 +66,6 @@ class TelegramAPI
         $this->bot_id = $internal_bot_id;
 
         if ($this->pdo) {
-            // Pastikan file-file ini belum di-include sebelumnya jika ada autoloader
-            if (!class_exists('TGBot\Database\TelegramErrorLogRepository')) {
-                require_once __DIR__ . '/database/TelegramErrorLogRepository.php';
-            }
-            if (!class_exists('TGBot\Database\UserRepository')) {
-                require_once __DIR__ . '/database/UserRepository.php';
-            }
-
             $this->errorLogRepo = new TelegramErrorLogRepository($this->pdo);
             if ($this->bot_id) {
                 $this->userRepo = new UserRepository($this->pdo, $this->bot_id);

@@ -1,25 +1,14 @@
 <?php
 declare(strict_types=1);
 
+namespace TGBot\Controllers;
+
 use TGBot\Database\BotRepository;
 use TGBot\Database\RawUpdateRepository;
 use TGBot\UpdateDispatcher;
 use TGBot\TelegramAPI;
+use Throwable;
 
-require_once __DIR__ . '/../../core/database.php';
-require_once __DIR__ . '/../../core/helpers.php';
-require_once __DIR__ . '/../../core/database/BotRepository.php';
-require_once __DIR__ . '/../../core/database/RawUpdateRepository.php';
-require_once __DIR__ . '/../../core/UpdateDispatcher.php';
-require_once __DIR__ . '/../../core/handlers/UpdateHandler.php';
-
-/**
- * Class WebhookController
- *
- * @purpose Ini adalah salah satu controller paling penting. Tugasnya adalah untuk menerima 
- * dan memproses update (pesan, tombol, dll.) yang dikirim oleh server Telegram 
- * ke bot Anda secara real-time.
- */
 class WebhookController
 {
     /**
@@ -61,7 +50,7 @@ class WebhookController
                 exit;
             }
 
-            require_once __DIR__ . '/../../core/TelegramAPI.php';
+            
             $api_for_globals = new TelegramAPI($bot['token'], $pdo, $bot_id);
             $bot_info = $api_for_globals->getMe();
             if ($bot_info['ok'] && !defined('BOT_USERNAME')) {

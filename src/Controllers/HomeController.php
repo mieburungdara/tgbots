@@ -1,6 +1,8 @@
 <?php
 
-require_once __DIR__ . '/AppController.php';
+namespace TGBot\Controllers;
+
+use Exception;
 
 class HomeController extends AppController
 {

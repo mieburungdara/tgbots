@@ -1,5 +1,10 @@
 <?php
 
+namespace TGBot\Database;
+
+use PDO;
+use PDOException;
+
 /**
  * Repositori untuk mengelola log kesalahan yang spesifik dari interaksi dengan API Telegram.
  * Ini membantu dalam melacak dan menganalisis kegagalan panggilan API.

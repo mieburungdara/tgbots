@@ -1,5 +1,10 @@
 <?php
 
+namespace TGBot\Database;
+
+use PDO;
+use PDOException;
+
 /**
  * Repositori untuk menyimpan dan mengambil data mentah (raw) pembaruan dari Telegram.
  * Berguna untuk keperluan debugging dan analisis.
