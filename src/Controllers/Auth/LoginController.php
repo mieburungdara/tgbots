@@ -49,14 +49,10 @@ class LoginController extends AppController {
         }
 
         // If token is invalid, expired, or not for an admin, deny access.
-        // A more robust solution might redirect non-admin users to the member login.
         session_unset();
         session_destroy();
         http_response_code(403);
-        $this->view('500', [
-            'page_title' => 'Akses Ditolak',
-            'error_message' => 'Akses Ditolak: Tautan login tidak valid, kedaluwarsa, atau bukan untuk admin.'
-        ]);
+        $this->view('auth/access_denied', ['bot_username' => null, 'error_message' => 'Tautan login tidak valid, kedaluwarsa, atau bukan untuk admin.']);
     }
 
     /**
@@ -69,9 +65,7 @@ class LoginController extends AppController {
         session_unset();
         session_destroy();
 
-        // For now, just show a logged out message.
-        // A redirect to a homepage would be better in a full app.
-        echo "Anda telah berhasil logout.";
+        header("Location: /");
         exit();
     }
 }
