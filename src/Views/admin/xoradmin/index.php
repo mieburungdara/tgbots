@@ -133,7 +133,7 @@
                                         <td><?= !empty($user['roles']) ? htmlspecialchars($user['roles']) : '<span style="color: #888;">Tidak ada</span>' ?></td>
                                         <td>
                                             <?php if (strpos($user['roles'] ?? '', 'Admin') === false): ?>
-                                                <button class="btn-make-admin" data-user-id="<?= $user['id'] ?>">Jadikan Admin</button>
+                                                <button class="btn-make-admin" data-user-id="<?= htmlspecialchars($user['id']) ?>">Jadikan Admin</button>
                                             <?php else: ?>
                                                 <span style="color: green;">✓ Admin</span>
                                             <?php endif; ?>
@@ -150,7 +150,7 @@
                     <h2>Reset Database</h2>
                     <div class="warning"><strong>PERINGATAN:</strong> Semua data akan hilang secara permanen.</div>
                     <?php if (!empty($_SESSION['db_error'])): ?><div class="error"><?= htmlspecialchars($_SESSION['db_error']); unset($_SESSION['db_error']); ?></div><?php endif; ?>
-                    <?php if (!empty($_SESSION['db_message'])): ?><div class="message"><?= $_SESSION['db_message']; unset($_SESSION['db_message']); ?></div><?php endif; ?>
+                    <?php if (!empty($_SESSION['db_message'])): ?><div class="message"><?= htmlspecialchars($_SESSION['db_message']); unset($_SESSION['db_message']); ?></div><?php endif; ?>
                     <form action="/xoradmin/reset_db" method="post" onsubmit="return confirm('APAKAH ANDA YAKIN INGIN MERESET DATABASE?');">
                         <input type="submit" value="HAPUS DAN RESET DATABASE SEKARANG">
                     </form>

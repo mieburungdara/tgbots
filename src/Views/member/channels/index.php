@@ -47,7 +47,7 @@
             <select id="bot_id" name="bot_id" required>
                 <option value="">-- Pilih Bot --</option>
                 <?php foreach ($data['all_bots'] as $bot): ?>
-                    <option value="<?= $bot['id'] ?>" <?= (isset($data['current_channel']['bot_id']) && $data['current_channel']['bot_id'] == $bot['id']) ? 'selected' : '' ?>>
+                    <option value="<?= htmlspecialchars($bot['id']) ?>" <?= (isset($data['current_channel']['bot_id']) && $data['current_channel']['bot_id'] == $bot['id']) ? 'selected' : '' ?>>
                         <?= htmlspecialchars($bot['name']) ?> (@<?= htmlspecialchars($bot['username']) ?>)
                     </option>
                 <?php endforeach; ?>

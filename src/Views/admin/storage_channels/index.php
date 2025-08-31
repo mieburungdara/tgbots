@@ -175,7 +175,7 @@
 				<select id="bot-select" name="bot_id" required>
 					<option value="">-- Pilih Bot --</option>
 					<?php foreach ($data['all_bots'] as $bot): ?>
-					<option value="<?= $bot['id'] ?>">
+					<option value="<?= htmlspecialchars($bot['id']) ?>">
 						<?= htmlspecialchars($bot['first_name'] . ' (@' . $bot['username'] . ')') ?>
 					</option>
 					<?php endforeach; ?>

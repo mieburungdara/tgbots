@@ -65,17 +65,17 @@
     if ($totalPages > 1):
     ?>
         <?php if ($currentPage > 1): ?>
-            <a href="?page=<?= $currentPage - 1 ?>">&laquo; Sebelumnya</a>
+            <a href="?page=<?= htmlspecialchars($currentPage - 1) ?>">&laquo; Sebelumnya</a>
         <?php else: ?>
             <span class="disabled">&laquo; Sebelumnya</span>
         <?php endif; ?>
 
         <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-            <a href="?page=<?= $i ?>" class="<?= ($currentPage == $i) ? 'current-page' : '' ?>"><?= $i ?></a>
+            <a href="?page=<?= htmlspecialchars($i) ?>" class="<?= ($currentPage == $i) ? 'current-page' : '' ?>"><?= htmlspecialchars($i) ?></a>
         <?php endfor; ?>
 
         <?php if ($currentPage < $totalPages): ?>
-            <a href="?page=<?= $currentPage + 1 ?>">Berikutnya &raquo;</a>
+            <a href="?page=<?= htmlspecialchars($currentPage + 1) ?>">Berikutnya &raquo;</a>
         <?php else: ?>
             <span class="disabled">Berikutnya &raquo;</span>
         <?php endif; ?>

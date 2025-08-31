@@ -19,11 +19,17 @@ use TGBot\TelegramAPI;
 /**
  * Class BotController
  * @package TGBot\Controllers\Admin
+ *
+ * @purpose Mengelola semua operasi yang terkait dengan bot dari panel admin, 
+ * seperti menambah, mengedit, dan mengonfigurasi bot.
  */
 class BotController extends BaseController
 {
     /**
-     * Display the bot management page.
+     * Menampilkan halaman manajemen bot.
+     *
+     * @purpose Menampilkan halaman utama "Kelola Bot" yang berisi daftar semua bot 
+     * yang terdaftar di sistem.
      *
      * @return void
      */
@@ -56,7 +62,10 @@ class BotController extends BaseController
     }
 
     /**
-     * Store a new bot.
+     * Menyimpan bot baru.
+     *
+     * @purpose Memproses formulir penambahan bot baru. Fungsi ini mengambil token bot, 
+     * memvalidasinya dengan menghubungi API Telegram, dan jika valid, menyimpannya ke database.
      *
      * @return void
      */
@@ -127,7 +136,9 @@ class BotController extends BaseController
     }
 
     /**
-     * Show the bot edit page.
+     * Menampilkan halaman edit bot.
+     *
+     * @purpose Menampilkan halaman untuk mengedit pengaturan bot tertentu.
      *
      * @return void
      */
@@ -180,7 +191,9 @@ class BotController extends BaseController
     }
 
     /**
-     * Update bot settings.
+     * Memperbarui pengaturan bot.
+     *
+     * @purpose Menyimpan perubahan pengaturan yang dibuat di halaman edit.
      *
      * @return void
      */
@@ -225,12 +238,12 @@ class BotController extends BaseController
 
         $_SESSION['flash_status'] = $status_message;
 
-        header("Location: /admin/bots/edit?id=" . $bot_id);
+        header("Location: /admin/bots/edit?id = " . $bot_id);
         exit();
     }
 
     /**
-     * Get bot and API instance.
+     * Mendapatkan instance bot dan API.
      *
      * @param int $bot_id
      * @return TelegramAPI
@@ -256,7 +269,9 @@ class BotController extends BaseController
     }
 
     /**
-     * Set webhook for a bot.
+     * Mengatur webhook untuk bot.
+     *
+     * @purpose Fungsi API untuk mengatur webhook bot langsung dari panel admin.
      *
      * @return void
      */
@@ -278,7 +293,9 @@ class BotController extends BaseController
     }
 
     /**
-     * Get webhook info for a bot.
+     * Mendapatkan info webhook untuk bot.
+     *
+     * @purpose Fungsi API untuk memeriksa status webhook bot langsung dari panel admin.
      *
      * @return void
      */
@@ -296,7 +313,9 @@ class BotController extends BaseController
     }
 
     /**
-     * Delete webhook for a bot.
+     * Menghapus webhook untuk bot.
+     *
+     * @purpose Fungsi API untuk menghapus webhook bot langsung dari panel admin.
      *
      * @return void
      */
@@ -314,7 +333,10 @@ class BotController extends BaseController
     }
 
     /**
-     * Get bot info from Telegram.
+     * Mendapatkan info bot dari Telegram.
+     *
+     * @purpose Menghubungi API Telegram untuk mendapatkan informasi terbaru tentang bot 
+     * (nama, username) dan memperbaruinya di database.
      *
      * @return void
      */
@@ -352,7 +374,7 @@ class BotController extends BaseController
     }
 
     /**
-     * Test webhook for a bot.
+     * Menguji webhook untuk bot.
      *
      * @return void
      */

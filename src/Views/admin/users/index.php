@@ -73,16 +73,16 @@
     if ($totalPages > 1):
         if ($currentPage > 1) {
             $query_params['page'] = $currentPage - 1;
-            echo '<a href="/admin/users?' . http_build_query($query_params) . '">&laquo; Sebelumnya</a>';
+            echo '<a href="/admin/users?' . htmlspecialchars(http_build_query($query_params)) . '">&laquo; Sebelumnya</a>';
         } else {
             echo '<span class="disabled">&laquo; Sebelumnya</span>';
         }
 
-        echo '<span class="current-page">Halaman ' . $currentPage . ' dari ' . $totalPages . '</span>';
+        echo '<span class="current-page">Halaman ' . htmlspecialchars($currentPage) . ' dari ' . htmlspecialchars($totalPages) . '</span>';
 
         if ($currentPage < $totalPages) {
             $query_params['page'] = $currentPage + 1;
-            echo '<a href="/admin/users?' . http_build_query($query_params) . '">Berikutnya &raquo;</a>';
+            echo '<a href="/admin/users?' . htmlspecialchars(http_build_query($query_params)) . '">Berikutnya &raquo;</a>';
         } else {
             echo '<span class="disabled">Berikutnya &raquo;</span>';
         }

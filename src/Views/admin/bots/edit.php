@@ -41,7 +41,7 @@
     <h2>Pengaturan Penyimpanan Pesan</h2>
     <p>Pilih jenis pembaruan (update) dari Telegram yang ingin Anda simpan ke database untuk bot ini.</p>
     <form action="/admin/bots/settings" method="post">
-        <input type="hidden" name="bot_id" value="<?= $data['bot']['id'] ?>">
+        <input type="hidden" name="bot_id" value="<?= htmlspecialchars($data['bot']['id']) ?>">
 
         <div class="setting-item" style="margin-bottom: 10px;">
             <label>

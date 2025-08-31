@@ -8,12 +8,27 @@ require_once __DIR__ . '/../../core/database/RawUpdateRepository.php';
 require_once __DIR__ . '/../../core/UpdateDispatcher.php';
 require_once __DIR__ . '/../../core/handlers/UpdateHandler.php';
 
+/**
+ * Class WebhookController
+ *
+ * @purpose Ini adalah salah satu controller paling penting. Tugasnya adalah untuk menerima 
+ * dan memproses update (pesan, tombol, dll.) yang dikirim oleh server Telegram 
+ * ke bot Anda secara real-time.
+ */
 class WebhookController
 {
     /**
-     * Handles the incoming webhook request from Telegram.
+     * Menangani permintaan webhook yang masuk dari Telegram.
      *
-     * @param array $params Parameters from the router, e.g., ['id' => 123]
+     * @purpose Method ini bertugas untuk:
+     * 1. Menerima data JSON yang dikirim oleh Telegram.
+     * 2. Memvalidasi ID bot dari URL untuk memastikan permintaan itu sah.
+     * 3. Menyimpan data mentah dari Telegram ke dalam database (untuk logging dan debug).
+     * 4. Memanggil UpdateDispatcher, sebuah kelas lain yang bertugas menganalisis jenis update 
+     *    (misalnya, apakah itu pesan teks, perintah, atau klik tombol) dan meneruskannya 
+     *    ke handler yang sesuai.
+     *
+     * @param array $params Parameter dari router, contoh: ['id' => 123]
      */
     public function handle($params)
     {

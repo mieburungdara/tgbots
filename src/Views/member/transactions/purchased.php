@@ -36,7 +36,7 @@
                     <p class="card-text">Dibeli pada: <?= htmlspecialchars(date('d F Y', strtotime($package['purchased_at']))) ?></p>
                     <h2 class="card-title"><?= htmlspecialchars($package['description'] ?: 'Tanpa deskripsi') ?></h2>
                     <p class="card-price">Harga Beli: Rp <?= number_format($package['price'], 0, ',', '.') ?></p>
-                    <a href="#" class="btn-download" onclick="alert('Gunakan perintah /konten <?= $package['public_id'] ?> di bot untuk mengunduh.'); return false;">
+                    <a href="#" class="btn-download" onclick="alert('Gunakan perintah /konten <?= htmlspecialchars($package['public_id']) ?> di bot untuk mengunduh.'); return false;">
                         Unduh Konten
                     </a>
                 </div>

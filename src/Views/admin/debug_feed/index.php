@@ -46,13 +46,13 @@
             $totalPages = $data['pagination']['total_pages'];
             if ($totalPages > 1):
             ?>
-                <a href="?page=<?= $currentPage - 1 ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($currentPage <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">&laquo; Previous</a>
+                <a href="?page=<?= htmlspecialchars($currentPage - 1) ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($currentPage <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">&laquo; Previous</a>
                 <?php
                 $window = 2;
                 for ($i = 1; $i <= $totalPages; $i++):
                     if ($i == 1 || $i == $totalPages || ($i >= $currentPage - $window && $i <= $currentPage + $window)):
                 ?>
-                    <a href="?page=<?= $i ?>" class="px-4 py-2 text-sm font-medium <?= ($i == $currentPage) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-t border-b border-gray-300' ?> hover:bg-gray-50"><?= $i ?></a>
+                    <a href="?page=<?= htmlspecialchars($i) ?>" class="px-4 py-2 text-sm font-medium <?= ($i == $currentPage) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-t border-b border-gray-300' ?> hover:bg-gray-50"><?= htmlspecialchars($i) ?></a>
                 <?php
                     elseif ($i == $currentPage - $window - 1 || $i == $currentPage + $window + 1):
                 ?>
@@ -61,7 +61,7 @@
                     endif;
                 endfor;
                 ?>
-                <a href="?page=<?= $currentPage + 1 ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($currentPage >= $totalPages) ? 'opacity-50 cursor-not-allowed' : '' ?>">Next &raquo;</a>
+                <a href="?page=<?= htmlspecialchars($currentPage + 1) ?>" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($currentPage >= $totalPages) ? 'opacity-50 cursor-not-allowed' : '' ?>">Next &raquo;</a>
             <?php endif; ?>
         </nav>
     </div>

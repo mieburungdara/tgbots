@@ -31,8 +31,8 @@
                         <td><span class="status-badge status-<?= htmlspecialchars($package['status']) ?>"><?= ucfirst(htmlspecialchars($package['status'])) ?></span></td>
                         <td><?= htmlspecialchars(date('d M Y H:i', strtotime($package['created_at']))) ?></td>
                         <td style="white-space: nowrap;">
-                            <a href="/member/content/show?id=<?= $package['public_id'] ?>" class="btn btn-sm">Lihat</a>
-                            <a href="/member/content/edit?id=<?= $package['public_id'] ?>" class="btn btn-edit btn-sm">Edit</a>
+                            <a href="/member/content/show?id=<?= htmlspecialchars($package['public_id']) ?>" class="btn btn-sm">Lihat</a>
+                            <a href="/member/content/edit?id=<?= htmlspecialchars($package['public_id']) ?>" class="btn btn-edit btn-sm">Edit</a>
                             <a href="#" class="btn btn-delete btn-sm">Hapus</a>
                         </td>
                     </tr>

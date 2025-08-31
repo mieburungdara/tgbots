@@ -227,40 +227,78 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderHistory(history) {
+        historyContainer.innerHTML = ''; // Clear previous content
         if (history.length === 0) {
-            historyContainer.innerHTML = '<p>Belum ada riwayat untuk bot ini.</p>';
+            const p = document.createElement('p');
+            p.textContent = 'Belum ada riwayat untuk bot ini.';
+            historyContainer.appendChild(p);
             return;
         }
-        let tableHtml = `
-            <table class="table">
-                <thead><tr><th>Waktu</th><th>Metode</th><th>Request</th><th>Response</th></tr></thead>
-                <tbody>`;
+
+        const table = document.createElement('table');
+        table.className = 'table';
+        const thead = document.createElement('thead');
+        const tbody = document.createElement('tbody');
+        const headerRow = document.createElement('tr');
+        ['Waktu', 'Metode', 'Request', 'Response'].forEach(text => {
+            const th = document.createElement('th');
+            th.textContent = text;
+            headerRow.appendChild(th);
+        });
+        thead.appendChild(headerRow);
+
         for (const item of history) {
-            tableHtml += `
-                <tr>
-                    <td>${item.created_at}</td>
-                    <td>${item.method}</td>
-                    <td><pre>${JSON.stringify(JSON.parse(item.request_payload), null, 2)}</pre></td>
-                    <td><pre>${JSON.stringify(JSON.parse(item.response_payload), null, 2)}</pre></td>
-                </tr>`;
+            const row = document.createElement('tr');
+            
+            const timeCell = document.createElement('td');
+            timeCell.textContent = item.created_at;
+            row.appendChild(timeCell);
+
+            const methodCell = document.createElement('td');
+            methodCell.textContent = item.method;
+            row.appendChild(methodCell);
+
+            const requestCell = document.createElement('td');
+            const requestPre = document.createElement('pre');
+            requestPre.textContent = JSON.stringify(JSON.parse(item.request_payload), null, 2);
+            requestCell.appendChild(requestPre);
+            row.appendChild(requestCell);
+
+            const responseCell = document.createElement('td');
+            const responsePre = document.createElement('pre');
+            responsePre.textContent = JSON.stringify(JSON.parse(item.response_payload), null, 2);
+            responseCell.appendChild(responsePre);
+            row.appendChild(responseCell);
+
+            tbody.appendChild(row);
         }
-        tableHtml += `</tbody></table>`;
-        historyContainer.innerHTML = tableHtml;
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        historyContainer.appendChild(table);
     }
 
     function renderPagination(pagination) {
         paginationContainer.innerHTML = '';
         if (pagination.total_pages <= 1) return;
 
-        let paginationHtml = 'Halaman: ';
+        const textLabel = document.createTextNode('Halaman: ');
+        paginationContainer.appendChild(textLabel);
+
         for (let i = 1; i <= pagination.total_pages; i++) {
             if (i === pagination.current_page) {
-                paginationHtml += `<strong>${i}</strong> `;
+                const strong = document.createElement('strong');
+                strong.textContent = i + ' ';
+                paginationContainer.appendChild(strong);
             } else {
-                paginationHtml += `<a href="#" class="pagination-btn" data-page="${i}">${i}</a> `;
+                const a = document.createElement('a');
+                a.href = '#';
+                a.className = 'pagination-btn';
+                a.dataset.page = i;
+                a.textContent = i + ' ';
+                paginationContainer.appendChild(a);
             }
         }
-        paginationContainer.innerHTML = paginationHtml;
     }
 
     botSelector.addEventListener('change', () => fetchHistory(1));

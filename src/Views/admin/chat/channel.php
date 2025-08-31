@@ -80,15 +80,15 @@
             $queryParams = ['chat_id' => $data['chat_id'], 'bot_id' => $data['bot_info']['id']];
         ?>
             <?php if ($currentPage > 1): ?>
-                <a href="/admin/channel_chat?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage - 1])) ?>">&laquo; Sebelumnya</a>
+                <a href="/admin/channel_chat?<?= htmlspecialchars(http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))) ?>">&laquo; Sebelumnya</a>
             <?php else: ?>
                 <span class="disabled">&laquo; Sebelumnya</span>
             <?php endif; ?>
 
-            <span class="current-page">Halaman <?= $currentPage ?> dari <?= $totalPages ?></span>
+            <span class="current-page">Halaman <?= htmlspecialchars($currentPage) ?> dari <?= htmlspecialchars($totalPages) ?></span>
 
             <?php if ($currentPage < $totalPages): ?>
-                <a href="/admin/channel_chat?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage + 1])) ?>">Berikutnya &raquo;</a>
+                <a href="/admin/channel_chat?<?= htmlspecialchars(http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))) ?>">Berikutnya &raquo;</a>
             <?php else: ?>
                 <span class="disabled">Berikutnya &raquo;</span>
             <?php endif; ?>

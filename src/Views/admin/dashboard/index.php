@@ -86,7 +86,7 @@
                                 }
                             ?>
                             <li class="conv-card">
-                                <a href="/admin/channel_chat?chat_id=<?= $chat['chat_id'] ?>&bot_id=<?= $data['selected_bot_id'] ?>">
+                                <a href="/admin/channel_chat?chat_id=<?= htmlspecialchars($chat['chat_id']) ?>&bot_id=<?= htmlspecialchars($data['selected_bot_id']) ?>">
                                     <div class="conv-avatar" style="background-color: #6c757d;"><?= get_initials($chat_title) ?></div>
                                     <div class="conv-details">
                                         <div class="conv-header">

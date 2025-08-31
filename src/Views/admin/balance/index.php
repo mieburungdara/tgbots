@@ -71,16 +71,16 @@
         if ($totalPages > 1):
             if ($currentPage > 1) {
                 $query_params['page'] = $currentPage - 1;
-                echo '<a href="/admin/balance?' . http_build_query($query_params) . '">&laquo; Sebelumnya</a>';
+                echo '<a href="/admin/balance?' . htmlspecialchars(http_build_query($query_params)) . '">&laquo; Sebelumnya</a>';
             } else {
                 echo '<span class="disabled">&laquo; Sebelumnya</span>';
             }
 
-            echo '<span class="current-page">Halaman ' . $currentPage . ' dari ' . $totalPages . '</span>';
+            echo '<span class="current-page">Halaman ' . htmlspecialchars($currentPage) . ' dari ' . htmlspecialchars($totalPages) . '</span>';
 
             if ($currentPage < $totalPages) {
                 $query_params['page'] = $currentPage + 1;
-                echo '<a href="/admin/balance?' . http_build_query($query_params) . '">Berikutnya &raquo;</a>';
+                echo '<a href="/admin/balance?' . htmlspecialchars(http_build_query($query_params)) . '">Berikutnya &raquo;</a>';
             } else {
                 echo '<span class="disabled">Berikutnya &raquo;</span>';
             }
@@ -192,14 +192,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     logModalBody.innerHTML = '<p>Tidak ada riwayat ditemukan.</p>';
                     return;
                 }
-                let tableHTML = '<table class="chat-log-table"><thead><tr>';
-                headers.forEach(h => tableHTML += `<th>${h}</th>`);
-                tableHTML += '</tr></thead><tbody>';
-                data.forEach(item => {
-                    tableHTML += `<tr>${dataBuilder(item)}</tr>`;
+                const table = document.createElement('table');
+                table.className = 'chat-log-table';
+                const thead = document.createElement('thead');
+                const tbody = document.createElement('tbody');
+                const headerRow = document.createElement('tr');
+                headers.forEach(h => {
+                    const th = document.createElement('th');
+                    th.textContent = h;
+                    headerRow.appendChild(th);
                 });
-                tableHTML += '</tbody></table>';
-                logModalBody.innerHTML = tableHTML;
+                thead.appendChild(headerRow);
+                data.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = dataBuilder(item);
+                    tbody.appendChild(row);
+                });
+                table.appendChild(thead);
+                table.appendChild(tbody);
+                logModalBody.innerHTML = '';
+                logModalBody.appendChild(table);
             } catch (error) {
                 logModalBody.innerHTML = `<p class="alert alert-danger">Gagal memuat data: ${error.message}</p>`;
             }

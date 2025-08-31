@@ -19,11 +19,17 @@ use TGBot\Database\AnalyticsRepository;
 /**
  * Class ContentController
  * @package TGBot\Controllers\Member
+ *
+ * @purpose Mengelola konten yang dimiliki oleh anggota (penjual), seperti paket file 
+ * yang mereka jual.
  */
 class ContentController extends MemberBaseController
 {
     /**
-     * Display the content management page.
+     * Menampilkan halaman manajemen konten.
+     *
+     * @purpose Menampilkan halaman "Konten Saya" yang berisi daftar semua paket konten 
+     * yang dimiliki oleh anggota yang sedang login.
      *
      * @return void
      */
@@ -50,7 +56,10 @@ class ContentController extends MemberBaseController
     }
 
     /**
-     * Show the content edit page.
+     * Menampilkan halaman edit konten.
+     *
+     * @purpose Menampilkan halaman untuk mengedit detail sebuah paket konten 
+     * (misalnya, deskripsi dan harga).
      *
      * @return void
      */
@@ -88,7 +97,9 @@ class ContentController extends MemberBaseController
     }
 
     /**
-     * Update content details.
+     * Memperbarui detail konten.
+     *
+     * @purpose Memproses dan menyimpan perubahan yang dibuat pada halaman edit konten.
      *
      * @return void
      */
@@ -140,7 +151,10 @@ class ContentController extends MemberBaseController
     }
 
     /**
-     * Show content details.
+     * Menampilkan detail konten.
+     *
+     * @purpose Menampilkan detail dan statistik penjualan untuk sebuah paket konten, 
+     * termasuk grafik pendapatan.
      *
      * @return void
      */
@@ -199,7 +213,10 @@ class ContentController extends MemberBaseController
     }
 
     /**
-     * Toggle content protection.
+     * Mengubah status proteksi konten.
+     *
+     * @purpose Fungsi API untuk mengaktifkan atau menonaktifkan proteksi konten 
+     * (misalnya, anti-salin) untuk sebuah paket.
      *
      * @return void
      */

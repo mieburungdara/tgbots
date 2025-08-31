@@ -42,7 +42,9 @@
                                 <span>
                                     <strong><?= htmlspecialchars(ucfirst($item['type'])) ?></strong>
                                     <?= $item['file_name'] ? '- ' . htmlspecialchars($item['file_name']) : '' ?>
-                                    <?= $item['caption'] ? '<br><small><em>' . htmlspecialchars($item['caption']) . '</em></small>' : '' ?>
+                                    <?php if (!empty($item['caption'])): ?>
+                                        <br><small><em><?= nl2br(htmlspecialchars($item['caption'])) ?></em></small>
+                                    <?php endif; ?>
                                 </span>
                             </div>
                         <?php endforeach; ?>

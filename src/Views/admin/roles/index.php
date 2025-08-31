@@ -48,7 +48,7 @@
                             <td><?= htmlspecialchars($role['name']) ?></td>
                             <td>
                                 <form action="/admin/roles/delete" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menghapus peran ini? Ini akan menghapus peran ini dari SEMUA pengguna yang memilikinya.');">
-                                    <input type="hidden" name="role_id" value="<?= $role['id'] ?>">
+                                    <input type="hidden" name="role_id" value="<?= htmlspecialchars($role['id']) ?>">
                                     <button type="submit" name="delete_role" class="btn btn-delete btn-sm">Hapus</button>
                                 </form>
                             </td>

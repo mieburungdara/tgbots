@@ -91,8 +91,8 @@
 
     <div class="chat-reply-form" style="margin-top: 20px;">
         <form action="/admin/chat/reply" method="post">
-            <input type="hidden" name="user_id" value="<?= $data['user_info']['id'] ?>">
-            <input type="hidden" name="bot_id" value="<?= $data['bot_info']['id'] ?>">
+            <input type="hidden" name="user_id" value="<?= htmlspecialchars($data['user_info']['id']) ?>">
+            <input type="hidden" name="bot_id" value="<?= htmlspecialchars($data['bot_info']['id']) ?>">
             <textarea name="reply_text" rows="3" placeholder="Ketik balasan Anda..." required style="width: 100%; box-sizing: border-box;"></textarea>
             <button type="submit" name="reply_message" class="btn" style="margin-top: 10px;">Kirim</button>
         </form>

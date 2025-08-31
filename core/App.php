@@ -17,25 +17,26 @@ use PDO;
  * Class App
  * @package TGBot
  *
- * Sebuah wadah sederhana untuk menampung objek dan data yang sering digunakan
- * di seluruh aplikasi, seperti koneksi database, instance API, dan pengguna saat ini.
- * Ini membantu mengurangi jumlah argumen yang perlu dilewatkan ke berbagai handler.
+ * @purpose Berfungsi sebagai "wadah" atau kontainer untuk menyimpan objek-objek penting 
+ * yang sering diakses di seluruh bagian aplikasi. Tujuannya adalah untuk mempermudah 
+ * pengelolaan dan akses ke sumber daya seperti koneksi database dan informasi bot 
+ * tanpa harus membuatnya berulang kali.
  */
 class App
 {
-    /** @var PDO Koneksi database. */
+    /** @var PDO Koneksi ke database. */
     public PDO $pdo;
 
-    /** @var TelegramAPI Klien API Telegram. */
+    /** @var TelegramAPI Klien untuk berinteraksi dengan API Telegram. */
     public TelegramAPI $telegram_api;
 
-    /** @var array Informasi tentang bot yang sedang berjalan. */
+    /** @var array Data bot yang sedang aktif (ID, nama, dll.). */
     public array $bot;
 
-    /** @var array Pengaturan spesifik untuk bot ini. */
+    /** @var array Pengaturan spesifik untuk bot tersebut. */
     public array $bot_settings;
 
-    /** @var array Informasi pengguna yang berinteraksi dengan bot. */
+    /** @var array Data pengguna yang sedang berinteraksi dengan bot. */
     public array $user;
 
     /** @var int ID obrolan saat ini. */
@@ -43,6 +44,9 @@ class App
 
     /**
      * App constructor.
+     *
+     * @purpose Method ini dijalankan saat objek App dibuat. Fungsinya adalah untuk 
+     * menginisialisasi semua properti kelas dengan data yang relevan.
      *
      * @param PDO $pdo
      * @param TelegramAPI $telegram_api

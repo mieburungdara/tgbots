@@ -108,7 +108,7 @@ function format_currency($number, string $currency = 'Rp'): string {
  * @param array $existing_params Parameter GET yang sudah ada.
  * @return string URL lengkap untuk tautan pengurutan.
  */
-function get_sort_link(string $column, string $current_sort_by, string $current_order, array $existing_params = []): string {
+function get_sort_link(string $column, string $current_sort_by, string $current_order, array $existing_params = []): array {
     $new_order = ($column === $current_sort_by && $current_order === 'asc') ? 'desc' : 'asc';
     $arrow = ($column === $current_sort_by) ? ($current_order === 'asc' ? ' &#9650;' : ' &#9660;') : '';
 
@@ -118,7 +118,10 @@ function get_sort_link(string $column, string $current_sort_by, string $current_
         'order' => $new_order
     ]);
 
-    return basename($_SERVER['PHP_SELF']) . '?' . http_build_query($query_params) . $arrow;
+    return [
+        'url' => basename($_SERVER['PHP_SELF']) . '?' . http_build_query($query_params),
+        'arrow' => $arrow
+    ];
 }
 
 /**

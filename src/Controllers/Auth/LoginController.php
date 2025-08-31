@@ -18,17 +18,17 @@ use TGBot\Controllers\AppController;
  * Class LoginController
  * @package TGBot\Controllers\Auth
  *
- * Kontroler ini menangani proses otentikasi untuk admin.
- * Ini memvalidasi token login sekali pakai dan mengelola sesi login dan logout.
+ * @purpose Mengelola semua logika yang berkaitan dengan otentikasi (login dan logout) 
+ * untuk pengguna admin.
  */
 class LoginController extends AppController
 {
     /**
      * Menangani token login sekali pakai dari URL.
      *
-     * Metode ini memvalidasi token yang diberikan, memeriksa apakah token tersebut milik seorang admin, valid, dan belum kedaluwarsa.
-     * Jika valid, metode ini membuat sesi admin dan menampilkan halaman pilihan panel.
-     * Jika tidak, akses ditolak.
+     * @purpose Memproses login admin melalui tautan khusus yang berisi token sekali pakai. 
+     * Fungsi ini akan memvalidasi token, memeriksa masa berlakunya, dan jika valid, 
+     * akan membuat sesi login untuk admin.
      *
      * @return void
      */
@@ -86,6 +86,9 @@ class LoginController extends AppController
 
     /**
      * Menghancurkan sesi dan melakukan logout pengguna.
+     *
+     * @purpose Menghancurkan sesi pengguna, secara efektif mengeluarkan mereka dari sistem, 
+     * dan mengarahkannya kembali ke halaman utama.
      *
      * @return void
      */

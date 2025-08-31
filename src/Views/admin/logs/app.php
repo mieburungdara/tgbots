@@ -92,17 +92,17 @@
                     $queryParams['level'] = $data['selected_level'];
                 }
             ?>
-                <a href="?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage - 1])) ?>"
+                <a href="?<?= htmlspecialchars(http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))) ?>"
                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-l-md hover:bg-gray-50 <?= ($currentPage <= 1) ? 'opacity-50 cursor-not-allowed' : '' ?>">
                     &laquo; Previous
                 </a>
                 <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                    <a href="?<?= http_build_query(array_merge($queryParams, ['page' => $i])) ?>"
+                    <a href="?<?= htmlspecialchars(http_build_query(array_merge($queryParams, ['page' => $i]))) ?>"
                        class="px-4 py-2 text-sm font-medium <?= ($i == $currentPage) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-t border-b border-gray-300' ?> hover:bg-gray-50">
-                        <?= $i ?>
+                        <?= htmlspecialchars($i) ?>
                     </a>
                 <?php endfor; ?>
-                <a href="?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage + 1])) ?>"
+                <a href="?<?= htmlspecialchars(http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))) ?>"
                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-r-md hover:bg-gray-50 <?= ($currentPage >= $totalPages) ? 'opacity-50 cursor-not-allowed' : '' ?>">
                     Next &raquo;
                 </a>

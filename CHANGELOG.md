@@ -1,5 +1,50 @@
 # Changelog
 
+## [5.1.16] - 2025-08-30
+
+### Fitur
+- **Halaman Laporan Keuangan**: Menambahkan halaman "Laporan Keuangan" baru di panel admin (`/admin/reports/financial`). Halaman ini menampilkan ringkasan pendapatan (harian, mingguan, bulanan, total) serta tabel rincian pendapatan harian dan bulanan, berdasarkan data dari tabel `sales`.
+
+## [5.1.15] - 2025-08-30
+
+### Dokumentasi
+- **Dokumentasi Struktur Database**: Menambahkan bagian baru "Struktur Database" ke dalam `DOCUMENTATION.md`. Bagian ini memberikan penjelasan rinci tentang setiap tabel utama (seperti `users`, `bots`, `media_packages`, `sales`) dan kolom-kolomnya, membantu pengembang memahami model data aplikasi.
+
+## [5.1.14] - 2025-08-30
+
+### Dokumentasi
+- **Panduan Pembaruan (Upgrade)**: Menambahkan file `UPGRADE.md` baru. File ini menyediakan instruksi langkah-demi-langkah yang aman bagi pengguna untuk memperbarui aplikasi mereka, mencakup proses pencadangan file dan database, penggantian file inti, dan menjalankan migrasi database.
+
+## [5.1.13] - 2025-08-30
+
+### Dokumentasi
+- **Panduan Praktik Terbaik**: Menambahkan bagian baru "💡 Praktik Terbaik (Best Practices)" ke dalam `DOCUMENTATION.md`. Bagian ini memberikan tips penting tentang manajemen keamanan (backup, password), pengelolaan konten (channel penyimpanan, deskripsi), dan pemeliharaan rutin (monitoring log, migrasi) untuk membantu pengguna mengelola bot mereka secara efisien dan aman.
+
+## [5.1.12] - 2025-08-30
+
+### Dokumentasi
+- **Langkah Verifikasi Instalasi**: Menambahkan bagian "Langkah 7: Verifikasi Instalasi" ke dalam `DOCUMENTATION.md`. Bagian ini memberikan daftar periksa (checklist) bagi pengguna untuk memastikan semua komponen (panel admin, respons bot, koneksi database) berfungsi dengan benar setelah proses instalasi selesai.
+
+## [5.1.11] - 2025-08-30
+
+### Dokumentasi
+- **Panduan Troubleshooting**: Menambahkan bagian "Penyelesaian Masalah Umum" (Troubleshooting) baru ke dalam `DOCUMENTATION.md`. Bagian ini memberikan solusi langkah-demi-langkah untuk masalah umum seperti bot yang tidak merespons, error 500, masalah routing URL (`.htaccess`), dan kegagalan koneksi database.
+
+## [5.1.10] - 2025-08-30
+
+### Dokumentasi
+- **Konsolidasi Dokumentasi**: Menggabungkan file `INSTALL.md` dan `howto.md` ke dalam satu file `DOCUMENTATION.md` yang komprehensif. File-file lama dihapus untuk menyederhanakan struktur dokumentasi dan menyediakan satu sumber informasi terpusat.
+
+## [5.1.9] - 2025-08-30
+
+### Dokumentasi
+- **Panduan Kontributor**: Menambahkan file `CONTRIBUTING.md` baru. File ini berisi panduan lengkap bagi kontributor manusia, mencakup standar kode, alur kerja kontribusi menggunakan Pull Request, format pesan commit, dan cara melaporkan bug. Tujuannya adalah untuk memudahkan kontributor baru bergabung dan menjaga konsistensi proyek.
+
+## [5.1.8] - 2025-08-30
+
+### Refactoring
+- **Konsolidasi Panduan Kontribusi**: Menggabungkan beberapa file panduan (`GEMINI.md`, `AGENTS.md`, `.gemini/styleguide.md`) yang tumpang tindih ke dalam satu file `GEMINI.md` tunggal sebagai sumber kebenaran utama. File-file yang berlebihan telah dihapus untuk menyederhanakan dokumentasi proyek dan menghindari kebingungan.
+
 ## [5.1.7] - 2025-08-30
 
 ### Dokumentasi

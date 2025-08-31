@@ -17,6 +17,10 @@ use ReflectionMethod;
 /**
  * Class Router
  * @package TGBot
+ *
+ * @purpose Kelas ini bertanggung jawab untuk mengatur dan mengarahkan permintaan HTTP 
+ * (misalnya, saat Anda membuka URL di browser) ke controller dan metode yang sesuai. 
+ * Ini adalah inti dari sistem routing aplikasi.
  */
 class Router
 {
@@ -29,9 +33,11 @@ class Router
     ];
 
     /**
-     * Load a routes file.
+     * Memuat file yang berisi definisi rute.
      *
-     * @param string $file
+     * @purpose Fungsi statis untuk memuat file yang berisi definisi rute (dalam kasus ini, `routes.php`).
+     *
+     * @param string $file Path ke file rute.
      * @return static
      */
     public static function load(string $file): static
@@ -42,10 +48,10 @@ class Router
     }
 
     /**
-     * Register a GET route.
+     * Mendaftarkan sebuah rute baru yang hanya merespons metode HTTP GET.
      *
-     * @param string $uri
-     * @param string $controller
+     * @param string $uri Pola URI yang akan dicocokkan.
+     * @param string $controller Nama controller dan metode yang akan menangani rute ini (format: 'Controller@method').
      * @return void
      */
     public function get(string $uri, string $controller): void
@@ -54,10 +60,10 @@ class Router
     }
 
     /**
-     * Register a POST route.
+     * Mendaftarkan sebuah rute baru yang hanya merespons metode HTTP POST.
      *
-     * @param string $uri
-     * @param string $controller
+     * @param string $uri Pola URI yang akan dicocokkan.
+     * @param string $controller Nama controller dan metode yang akan menangani rute ini (format: 'Controller@method').
      * @return void
      */
     public function post(string $uri, string $controller): void
@@ -66,10 +72,14 @@ class Router
     }
 
     /**
-     * Direct the request to the appropriate controller and action.
+     * Mengarahkan permintaan ke controller dan aksi yang sesuai.
      *
-     * @param string $uri
-     * @param string $requestType
+     * @purpose Fungsi utama yang mengambil URI dan tipe permintaan (GET/POST), mencocokkannya 
+     * dengan rute yang terdaftar, dan memanggil metode controller yang sesuai. Jika tidak 
+     * ada rute yang cocok, ia akan menampilkan halaman 404 (Tidak Ditemukan).
+     *
+     * @param string $uri URI yang diminta.
+     * @param string $requestType Tipe permintaan (GET atau POST).
      * @return mixed
      */
     public function direct(string $uri, string $requestType)
@@ -114,11 +124,15 @@ class Router
     }
 
     /**
-     * Call the action on the controller.
+     * Memanggil aksi pada controller.
      *
-     * @param string $controller
-     * @param string $action
-     * @param array $params
+     * @purpose Fungsi internal yang dipanggil oleh `direct()`. Tugasnya adalah membuat instance 
+     * dari kelas controller yang benar dan memanggil metode (aksi) yang ditentukan, sambil 
+     * meneruskan parameter dari URL jika ada.
+     *
+     * @param string $controller Nama kelas controller.
+     * @param string $action Nama metode (aksi) yang akan dipanggil.
+     * @param array $params Parameter yang diekstrak dari URI.
      * @return mixed
      * @throws Exception
      */

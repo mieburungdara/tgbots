@@ -44,7 +44,7 @@
         <h3><?= htmlspecialchars($data['chart_title']) ?></h3>
         <div class="period-selector">
             <?php foreach ($data['periods'] as $days => $label): ?>
-                <a href="/member/content/show?id=<?= htmlspecialchars($data['package']['public_id']) ?>&period=<?= $days ?>" class="<?= $data['current_period'] == $days ? 'active' : '' ?>"><?= $label ?></a>
+                <a href="/member/content/show?id=<?= htmlspecialchars($data['package']['public_id']) ?>&period=<?= htmlspecialchars($days) ?>" class="<?= $data['current_period'] == $days ? 'active' : '' ?>"><?= htmlspecialchars($label) ?></a>
             <?php endforeach; ?>
         </div>
     </div>
