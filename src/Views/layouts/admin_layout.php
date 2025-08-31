@@ -64,6 +64,17 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
         .conv-name { font-weight: 600; }
         .conv-time { font-size: 0.75rem; color: #6c757d; }
         .conv-message { font-size: 0.9rem; color: #495057; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 95%; }
+
+        /* Modal Styles */
+        .modal-overlay { display: none; position: fixed; z-index: 1050; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); align-items: center; justify-content: center; }
+        .modal-content { background-color: #fff; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; box-shadow: 0 5px 15px rgba(0,0,0,0.3); position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e5e5e5; padding-bottom: 10px; margin-bottom: 20px; }
+        .modal-header h2 { margin: 0; }
+        .modal-close-adjust, .modal-close-log { background: none; border: none; font-size: 1.5rem; font-weight: bold; line-height: 1; color: #000; text-shadow: 0 1px 0 #fff; opacity: 0.5; cursor: pointer; }
+        .modal-close-adjust:hover, .modal-close-log:hover { opacity: 0.8; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
+        .form-actions { margin-top: 20px; text-align: right; }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" />
 </head>

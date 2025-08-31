@@ -30,10 +30,12 @@ abstract class AppController {
         if ($layout) {
             $layoutPath = __DIR__ . "/../Views/layouts/{$layout}.php";
             if (file_exists($layoutPath)) {
-                // The $content variable will be available in the layout file
+                // The $content and $data variables will be available in the layout file
                 require $layoutPath;
             } else {
-                throw new Exception("Layout not found at path: {$layoutPath}");
+                // Fallback for missing layout: echo content directly to avoid blank page
+                echo "<!-- LAYOUT NOT FOUND: " . htmlspecialchars($layoutPath) . " -->\n";
+                echo $content;
             }
         } else {
             // If no layout, just echo the content
