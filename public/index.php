@@ -3,7 +3,6 @@
 use TGBot\Router;
 
 // Bootstrap the application
-define('ENTRY_POINT_LOADED', true);
 require_once __DIR__ . '/../core/autoloader.php';
 
 // Get the request URI

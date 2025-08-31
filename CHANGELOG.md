@@ -1,6 +1,13 @@
 # Changelog
 
-## [5.1.20] - 2025-08-31
+## [5.1.21] - 2025-08-31
+
+### Diperbaiki
+- **Fatal Error `undefined function` (Final Fix)**: Menambahkan `require_once` untuk `core/database.php` ke dalam `core/autoloader.php`. Ini adalah perbaikan definitif untuk error `Call to undefined function get_db_connection()` yang terus-menerus terjadi.
+  - **Penyebab Akar**: Fungsi `get_db_connection()` didefinisikan di `core/database.php`, tetapi file ini tidak pernah di-include oleh autoloader, sehingga tidak tersedia secara global.
+  - **Solusi**: Dengan secara eksplisit me-require `core/database.php` di autoloader, fungsi koneksi database sekarang dijamin tersedia untuk semua bagian aplikasi yang membutuhkannya.
+
+
 
 ### Diperbaiki
 - **Diagnostik Tambahan**: Menambahkan kode diagnostik untuk memverifikasi bahwa titik masuk aplikasi (`public/index.php` dan `run_migrations_cli.php`) dieksekusi dengan benar. Ini untuk membantu melacak masalah lingkungan server yang persisten yang menyebabkan error `undefined function`.

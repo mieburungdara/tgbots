@@ -26,7 +26,6 @@ echo "=============================================\n\n";
 
 try {
     // Sertakan file-file yang diperlukan
-    define('ENTRY_POINT_LOADED', true);
     require_once __DIR__ . '/core/autoloader.php';
 
     echo "Menghubungkan ke database...\n";

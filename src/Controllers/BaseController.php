@@ -12,9 +12,6 @@ use Exception;
 abstract class BaseController extends AppController {
 
     public function __construct() {
-        if (!defined('ENTRY_POINT_LOADED')) {
-            die('Entry point not loaded');
-        }
         if (session_status() == PHP_SESSION_NONE) {
             session_start();
         }
