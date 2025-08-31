@@ -439,17 +439,17 @@ EOT;
         $app->pdo->prepare("UPDATE users SET login_token = ?, token_created_at = NOW(), token_used = 0 WHERE id = ?")
              ->execute([$login_token, $app->user['id']]);
 
+        // Unified login link for both Admins and Members using the new route
+        $login_link = rtrim(BASE_URL, '/') . '/member/token-login?token=' . $login_token;
+
         if ($app->user['role'] === 'Admin') {
-            $login_link = rtrim(BASE_URL, '/') . '/login_choice.php?token=' . $login_token;
-            $response = "Anda adalah seorang Admin. Silakan pilih panel yang ingin Anda masuki.";
-            $keyboard = ['inline_keyboard' => [[['text' => 'Pilih Panel Login', 'url' => $login_link]]]];
-            $app->telegram_api->sendMessage($app->chat_id, $response, null, json_encode($keyboard));
+            $response = "Anda adalah seorang Admin. Klik tombol di bawah untuk masuk ke Panel Anda. Tombol ini hanya dapat digunakan satu kali.";
         } else {
-            $login_link = rtrim(BASE_URL, '/') . '/member/index.php?token=' . $login_token;
             $response = "Klik tombol di bawah ini untuk masuk ke Panel Member Anda. Tombol ini hanya dapat digunakan satu kali.";
-            $keyboard = ['inline_keyboard' => [[['text' => 'Login ke Panel Member', 'url' => $login_link]]]];
-            $app->telegram_api->sendMessage($app->chat_id, $response, null, json_encode($keyboard));
         }
+
+        $keyboard = ['inline_keyboard' => [[['text' => 'Login ke Panel', 'url' => $login_link]]]];
+        $app->telegram_api->sendMessage($app->chat_id, $response, null, json_encode($keyboard));
     }
 
     /**
