@@ -39,10 +39,9 @@ class Router {
                 try {
                     $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
 
-                    return $this->callAction(
-                        ...explode('@', $controller),
-                        $params
-                    );
+                    $parts = explode('@', $controller);
+
+                    return $this->callAction($parts[0], $parts[1], $params);
                 } catch (Exception $e) {
                     error_log("Router Error: " . $e->getMessage());
                     http_response_code(500);
