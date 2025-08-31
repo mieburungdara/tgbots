@@ -1,10 +1,30 @@
 <?php
 
-require_once __DIR__ . '/../AppController.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-abstract class MemberBaseController extends AppController {
+namespace TGBot\Controllers\Member;
 
-    public function __construct() {
+use Exception;
+use TGBot\Controllers\AppController;
+
+/**
+ * Class MemberBaseController
+ * @package TGBot\Controllers\Member
+ */
+abstract class MemberBaseController extends AppController
+{
+    /**
+     * MemberBaseController constructor.
+     */
+    public function __construct()
+    {
         try {
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();

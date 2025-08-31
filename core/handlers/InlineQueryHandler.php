@@ -1,19 +1,31 @@
 <?php
 
-require_once __DIR__ . '/../database/PackageRepository.php';
-require_once __DIR__ . '/HandlerInterface.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Handlers;
+
+use TGBot\App;
+use TGBot\Database\PackageRepository;
 
 /**
- * Menangani permintaan inline query dari pengguna.
- * Memungkinkan pengguna untuk mencari dan berbagi paket konten langsung dari chat manapun.
+ * Class InlineQueryHandler
+ * @package TGBot\Handlers
  */
 class InlineQueryHandler implements HandlerInterface
 {
     /**
-     * Titik masuk utama untuk menangani inline query.
+     * Handle an inline query.
      *
-     * @param App $app Wadah aplikasi (mungkin tidak sepenuhnya terisi untuk inline query).
-     * @param array $inline_query Data inline query lengkap dari Telegram.
+     * @param App $app
+     * @param array $inline_query
+     * @return void
      */
     public function handle(App $app, array $inline_query): void
     {

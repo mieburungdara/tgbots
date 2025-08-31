@@ -1,13 +1,41 @@
 <?php
 
-require_once __DIR__ . '/MemberBaseController.php';
-require_once __DIR__ . '/../../../core/database/SellerSalesChannelRepository.php';
-require_once __DIR__ . '/../../../core/TelegramAPI.php';
-require_once __DIR__ . '/../../../core/helpers.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-class ChannelController extends MemberBaseController {
+namespace TGBot\Controllers\Member;
 
-    public function index() {
+use Exception;
+use TGBot\Controllers\Member\MemberBaseController;
+use TGBot\Database\SellerSalesChannelRepository;
+use TGBot\TelegramAPI;
+
+/**
+ * Class ChannelController
+ * @package TGBot\Controllers\Member
+ *
+ * Kontroler ini menangani semua logika yang terkait dengan manajemen channel penjualan oleh member.
+ * Ini memungkinkan member untuk mendaftarkan, melihat, dan mengelola channel penjualan mereka.
+ */
+class ChannelController extends MemberBaseController
+{
+    /**
+     * Menampilkan halaman manajemen channel.
+     *
+     * Metode ini mengambil informasi tentang channel penjualan yang saat ini terdaftar untuk member,
+     * serta daftar bot yang tersedia. Jika channel sudah terdaftar, metode ini juga mencoba mengambil
+     * nama channel dan grup diskusi dari Telegram API untuk ditampilkan kepada pengguna.
+     *
+     * @return void
+     */
+    public function index(): void
+    {
         try {
             $pdo = get_db_connection();
             $channelRepo = new SellerSalesChannelRepository($pdo);
@@ -55,7 +83,16 @@ class ChannelController extends MemberBaseController {
         }
     }
 
-    public function register() {
+    /**
+     * Mendaftarkan channel penjualan baru.
+     *
+     * Metode ini memvalidasi input dari form pendaftaran, memeriksa apakah bot adalah admin di channel dan grup diskusi,
+     * dan menyimpan informasi channel ke database jika semua validasi berhasil.
+     *
+     * @return void
+     */
+    public function register(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /member/channels');
             exit();

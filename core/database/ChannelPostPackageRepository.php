@@ -1,18 +1,34 @@
 <?php
 
 /**
- * Repositori untuk mengelola hubungan antara post di channel dengan paket konten.
- * Tabel `channel_post_packages` digunakan untuk melacak paket mana yang diiklankan
- * oleh pesan tertentu di sebuah channel.
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Database;
+
+use PDO;
+use PDOException;
+
+/**
+ * Class ChannelPostPackageRepository
+ * @package TGBot\Database
  */
 class ChannelPostPackageRepository
 {
-    private $pdo;
+    /**
+     * @var PDO
+     */
+    private PDO $pdo;
 
     /**
-     * Membuat instance ChannelPostPackageRepository.
+     * ChannelPostPackageRepository constructor.
      *
-     * @param PDO $pdo Objek koneksi database.
+     * @param PDO $pdo
      */
     public function __construct(PDO $pdo)
     {
@@ -20,12 +36,12 @@ class ChannelPostPackageRepository
     }
 
     /**
-     * Membuat catatan baru untuk menautkan sebuah post di channel ke sebuah paket.
+     * Create a new channel post package.
      *
-     * @param int $channel_id ID dari channel.
-     * @param int $message_id ID dari pesan di channel.
-     * @param int $package_id ID dari paket yang ditautkan.
-     * @return bool True jika berhasil, false jika gagal.
+     * @param int $channel_id
+     * @param int $message_id
+     * @param int $package_id
+     * @return bool
      */
     public function create(int $channel_id, int $message_id, int $package_id): bool
     {
@@ -41,12 +57,11 @@ class ChannelPostPackageRepository
     }
 
     /**
-     * Menemukan detail paket berdasarkan ID channel dan ID pesan.
-     * Berguna untuk menemukan paket mana yang terkait dengan forward otomatis dari channel.
+     * Find a package by channel and message ID.
      *
-     * @param int $channel_id ID dari channel tempat pesan asli berada.
-     * @param int $message_id ID dari pesan asli di channel tersebut.
-     * @return array|null Data paket sebagai array asosiatif, atau null jika tidak ditemukan.
+     * @param int $channel_id
+     * @param int $message_id
+     * @return array|null
      */
     public function findByChannelAndMessage(int $channel_id, int $message_id): ?array
     {

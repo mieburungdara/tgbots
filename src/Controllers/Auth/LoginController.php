@@ -1,15 +1,39 @@
 <?php
 
-require_once __DIR__ . '/../AppController.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-class LoginController extends AppController {
+namespace TGBot\Controllers\Auth;
 
+use Exception;
+use TGBot\Controllers\AppController;
+
+/**
+ * Class LoginController
+ * @package TGBot\Controllers\Auth
+ *
+ * Kontroler ini menangani proses otentikasi untuk admin.
+ * Ini memvalidasi token login sekali pakai dan mengelola sesi login dan logout.
+ */
+class LoginController extends AppController
+{
     /**
-     * Handles the one-time login token from the URL.
-     * If the user is an admin, it shows a choice page.
-     * Otherwise, it should handle normal user login (TBD or handled by Member/LoginController).
+     * Menangani token login sekali pakai dari URL.
+     *
+     * Metode ini memvalidasi token yang diberikan, memeriksa apakah token tersebut milik seorang admin, valid, dan belum kedaluwarsa.
+     * Jika valid, metode ini membuat sesi admin dan menampilkan halaman pilihan panel.
+     * Jika tidak, akses ditolak.
+     *
+     * @return void
      */
-    public function handleToken() {
+    public function handleToken(): void
+    {
         try {
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
@@ -41,7 +65,8 @@ class LoginController extends AppController {
                     $_SESSION['user_first_name'] = $user['first_name'];
 
                     // Show the choice page instead of redirecting
-                    return $this->view('auth/login_choice', ['page_title' => 'Pilih Panel']);
+                    $this->view('auth/login_choice', ['page_title' => 'Pilih Panel']);
+                    return;
                 }
             }
 
@@ -60,9 +85,12 @@ class LoginController extends AppController {
     }
 
     /**
-     * Destroys the session and logs the user out.
+     * Menghancurkan sesi dan melakukan logout pengguna.
+     *
+     * @return void
      */
-    public function logout() {
+    public function logout(): void
+    {
         try {
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();

@@ -1,19 +1,31 @@
 <?php
 
-require_once __DIR__ . '/../database/MediaFileRepository.php';
-require_once __DIR__ . '/HandlerInterface.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Handlers;
+
+use TGBot\App;
+use TGBot\Database\MediaFileRepository;
 
 /**
- * Menangani pesan yang berisi media (foto, video, dokumen, dll.).
- * Tugas utamanya adalah mengekstrak metadata media dan menyimpannya ke database.
+ * Class MediaHandler
+ * @package TGBot\Handlers
  */
 class MediaHandler implements HandlerInterface
 {
     /**
-     * Titik masuk utama untuk menangani pesan media.
+     * Handle a media message.
      *
-     * @param App $app Wadah aplikasi.
-     * @param array $message Data pesan lengkap dari Telegram.
+     * @param App $app
+     * @param array $message
+     * @return void
      */
     public function handle(App $app, array $message): void
     {

@@ -1,16 +1,33 @@
 <?php
 
 /**
- * Repositori untuk mengelola data terkait bot, seperti token dan pengaturan.
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Database;
+
+use PDO;
+
+/**
+ * Class BotRepository
+ * @package TGBot\Database
  */
 class BotRepository
 {
-    private $pdo;
+    /**
+     * @var PDO
+     */
+    private PDO $pdo;
 
     /**
-     * Membuat instance BotRepository.
+     * BotRepository constructor.
      *
-     * @param PDO $pdo Objek koneksi database.
+     * @param PDO $pdo
      */
     public function __construct(PDO $pdo)
     {
@@ -18,9 +35,9 @@ class BotRepository
     }
 
     /**
-     * Mengambil semua bot dari database.
+     * Get all bots.
      *
-     * @return array Daftar semua bot.
+     * @return array
      */
     public function getAllBots(): array
     {
@@ -29,10 +46,10 @@ class BotRepository
     }
 
     /**
-     * Mencari bot berdasarkan ID Telegram-nya dan mengembalikan data bot.
+     * Find a bot by its Telegram ID.
      *
-     * @param int $bot_id ID numerik bot di Telegram.
-     * @return array|false Mengembalikan data bot sebagai array asosiatif jika ditemukan, atau `false` jika tidak.
+     * @param int $bot_id
+     * @return array|false
      */
     public function findBotByTelegramId(int $bot_id)
     {
@@ -43,10 +60,10 @@ class BotRepository
     }
 
     /**
-     * Mengambil semua pengaturan untuk bot tertentu, dengan nilai default jika tidak disetel.
+     * Get bot settings.
      *
-     * @param int $bot_id ID internal bot dari tabel `bots`.
-     * @return array Pengaturan bot sebagai array asosiatif.
+     * @param int $bot_id
+     * @return array
      */
     public function getBotSettings(int $bot_id): array
     {

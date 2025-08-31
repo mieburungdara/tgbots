@@ -1,11 +1,33 @@
 <?php
 
-require_once __DIR__ . '/MemberBaseController.php';
-require_once __DIR__ . '/../../../core/database/AnalyticsRepository.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-class DashboardController extends MemberBaseController {
+namespace TGBot\Controllers\Member;
 
-    public function index() {
+use Exception;
+use TGBot\Controllers\Member\MemberBaseController;
+use TGBot\Database\AnalyticsRepository;
+
+/**
+ * Class DashboardController
+ * @package TGBot\Controllers\Member
+ */
+class DashboardController extends MemberBaseController
+{
+    /**
+     * Display the member dashboard.
+     *
+     * @return void
+     */
+    public function index(): void
+    {
         try {
             // The constructor of MemberBaseController already handles the session check.
             $pdo = get_db_connection();

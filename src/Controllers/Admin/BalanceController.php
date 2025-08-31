@@ -1,10 +1,34 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-class BalanceController extends BaseController {
+namespace TGBot\Controllers\Admin;
 
-    public function index() {
+use Exception;
+use PDO;
+use PDOException;
+use TGBot\Controllers\BaseController;
+
+/**
+ * Class BalanceController
+ * @package TGBot\Controllers\Admin
+ */
+class BalanceController extends BaseController
+{
+    /**
+     * Display the balance management page.
+     *
+     * @return void
+     */
+    public function index(): void
+    {
         try {
             $pdo = get_db_connection();
 
@@ -76,7 +100,13 @@ class BalanceController extends BaseController {
         }
     }
 
-    public function adjust() {
+    /**
+     * Adjust user balance.
+     *
+     * @return void
+     */
+    public function adjust(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
             header('Location: /admin/balance');
             exit();
@@ -114,61 +144,79 @@ class BalanceController extends BaseController {
         exit;
     }
 
-    // --- API Methods for balance logs ---
-
-    public function getBalanceLog() {
+    /**
+     * Get balance log for a user.
+     *
+     * @return void
+     */
+    public function getBalanceLog(): void
+    {
         $user_id = isset($_GET['telegram_id']) ? (int)$_GET['telegram_id'] : 0;
-        if (!$user_id) return $this->jsonResponse(['error' => 'Telegram ID tidak valid.'], 400);
+        if (!$user_id) {
+            $this->jsonResponse(['error' => 'Telegram ID tidak valid.'], 400);
+            return;
+        }
 
         $pdo = get_db_connection();
         try {
             $stmt = $pdo->prepare("SELECT amount, type, description, created_at FROM balance_transactions WHERE user_id = ? ORDER BY created_at DESC");
             $stmt->execute([$user_id]);
             $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $this->jsonResponse($logs);
+            $this->jsonResponse($logs);
         } catch (PDOException $e) {
-            return $this->jsonResponse(['error' => 'Gagal mengambil data transaksi.'], 500);
+            $this->jsonResponse(['error' => 'Gagal mengambil data transaksi.'], 500);
         }
     }
 
-    public function getSalesLog() {
+    /**
+     * Get sales log for a user.
+     *
+     * @return void
+     */
+    public function getSalesLog(): void
+    {
         $user_id = isset($_GET['telegram_id']) ? (int)$_GET['telegram_id'] : 0;
-        if (!$user_id) return $this->jsonResponse(['error' => 'Telegram ID tidak valid.'], 400);
+        if (!$user_id) {
+            $this->jsonResponse(['error' => 'Telegram ID tidak valid.'], 400);
+            return;
+        }
 
         $pdo = get_db_connection();
         try {
             $stmt = $pdo->prepare(
-                "SELECT s.price, s.purchased_at, mp.title as package_title, u_buyer.first_name as buyer_name
-                 FROM sales s
-                 JOIN media_packages mp ON s.package_id = mp.id
-                 JOIN users u_buyer ON s.buyer_user_id = u_buyer.id
-                 WHERE s.seller_user_id = ? ORDER BY s.purchased_at DESC"
+                "SELECT s.price, s.purchased_at, mp.title as package_title, u_buyer.first_name as buyer_name\n                 FROM sales s\n                 JOIN media_packages mp ON s.package_id = mp.id\n                 JOIN users u_buyer ON s.buyer_user_id = u_buyer.id\n                 WHERE s.seller_user_id = ? ORDER BY s.purchased_at DESC"
             );
             $stmt->execute([$user_id]);
             $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $this->jsonResponse($logs);
+            $this->jsonResponse($logs);
         } catch (PDOException $e) {
-            return $this->jsonResponse(['error' => 'Gagal mengambil data penjualan.'], 500);
+            $this->jsonResponse(['error' => 'Gagal mengambil data penjualan.'], 500);
         }
     }
 
-    public function getPurchasesLog() {
+    /**
+     * Get purchases log for a user.
+     *
+     * @return void
+     */
+    public function getPurchasesLog(): void
+    {
         $user_id = isset($_GET['telegram_id']) ? (int)$_GET['telegram_id'] : 0;
-        if (!$user_id) return $this->jsonResponse(['error' => 'Telegram ID tidak valid.'], 400);
+        if (!$user_id) {
+            $this->jsonResponse(['error' => 'Telegram ID tidak valid.'], 400);
+            return;
+        }
 
         $pdo = get_db_connection();
         try {
             $stmt = $pdo->prepare(
-                "SELECT s.price, s.purchased_at, mp.title as package_title
-                 FROM sales s
-                 JOIN media_packages mp ON s.package_id = mp.id
-                 WHERE s.buyer_user_id = ? ORDER BY s.purchased_at DESC"
+                "SELECT s.price, s.purchased_at, mp.title as package_title\n                 FROM sales s\n                 JOIN media_packages mp ON s.package_id = mp.id\n                 WHERE s.buyer_user_id = ? ORDER BY s.purchased_at DESC"
             );
             $stmt->execute([$user_id]);
             $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
-            return $this->jsonResponse($logs);
+            $this->jsonResponse($logs);
         } catch (PDOException $e) {
-            return $this->jsonResponse(['error' => 'Gagal mengambil data pembelian.'], 500);
+            $this->jsonResponse(['error' => 'Gagal mengambil data pembelian.'], 500);
         }
     }
 }

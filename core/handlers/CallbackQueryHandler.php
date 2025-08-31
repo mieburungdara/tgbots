@@ -1,19 +1,36 @@
 <?php
 
-require_once __DIR__ . '/../database/PackageRepository.php';
-require_once __DIR__ . '/../database/SaleRepository.php';
-require_once __DIR__ . '/../database/UserRepository.php';
-require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
-require_once __DIR__ . '/../database/ChannelPostPackageRepository.php';
-require_once __DIR__ . '/HandlerInterface.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Handlers;
+
+use Exception;
+use TGBot\App;
+use TGBot\Database\PackageRepository;
+use TGBot\Database\SaleRepository;
+use TGBot\Database\UserRepository;
+use TGBot\Database\SellerSalesChannelRepository;
+use TGBot\Database\ChannelPostPackageRepository;
 
 /**
- * Menangani logika untuk callback query yang diterima dari tombol inline Telegram.
+ * Class CallbackQueryHandler
+ * @package TGBot\Handlers
  */
 class CallbackQueryHandler implements HandlerInterface
 {
     /**
-     * Titik masuk utama untuk menangani callback query.
+     * Handle a callback query.
+     *
+     * @param App $app
+     * @param array $callback_query
+     * @return void
      */
     public function handle(App $app, array $callback_query): void
     {
@@ -33,9 +50,14 @@ class CallbackQueryHandler implements HandlerInterface
     }
 
     /**
-     * Menangani permintaan untuk mem-posting pratinjau paket ke channel penjualan.
+     * Handle a request to post a package preview to a sales channel.
+     *
+     * @param App $app
+     * @param array $callback_query
+     * @param string $public_id
+     * @return void
      */
-    private function handlePostToChannel(App $app, array $callback_query, string $public_id)
+    private function handlePostToChannel(App $app, array $callback_query, string $public_id): void
     {
         $package_repo = new PackageRepository($app->pdo);
         $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
@@ -91,9 +113,14 @@ class CallbackQueryHandler implements HandlerInterface
     }
 
     /**
-     * Menangani permintaan untuk melihat halaman tertentu dari sebuah paket konten.
+     * Handle a request to view a specific page of a content package.
+     *
+     * @param App $app
+     * @param array $callback_query
+     * @param string $params
+     * @return void
      */
-    private function handleViewPage(App $app, array $callback_query, string $params)
+    private function handleViewPage(App $app, array $callback_query, string $params): void
     {
         $package_repo = new PackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
@@ -154,9 +181,13 @@ class CallbackQueryHandler implements HandlerInterface
     }
 
     /**
-     * Menangani permintaan pengguna untuk mendaftar sebagai penjual.
+     * Handle a user's request to register as a seller.
+     *
+     * @param App $app
+     * @param array $callback_query
+     * @return void
      */
-    private function handleRegisterSeller(App $app, array $callback_query)
+    private function handleRegisterSeller(App $app, array $callback_query): void
     {
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
 
@@ -177,9 +208,14 @@ class CallbackQueryHandler implements HandlerInterface
     }
 
     /**
-     * Menangani permintaan pengguna untuk membeli sebuah paket.
+     * Handle a user's request to buy a package.
+     *
+     * @param App $app
+     * @param array $callback_query
+     * @param string $public_id
+     * @return void
      */
-    private function handleBuy(App $app, array $callback_query, string $public_id)
+    private function handleBuy(App $app, array $callback_query, string $public_id): void
     {
         $package_repo = new PackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);

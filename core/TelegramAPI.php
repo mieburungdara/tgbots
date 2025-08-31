@@ -1,28 +1,65 @@
 <?php
 
 /**
- * Kelas wrapper untuk berinteraksi dengan API Bot Telegram.
- * Menyediakan metode untuk semua endpoint API umum, serta penanganan error
- * yang terintegrasi dengan database untuk logging dan tindakan korektif.
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
  */
-class TelegramAPI {
-    protected $token;
-    protected $api_url = 'https://api.telegram.org/bot';
 
-    // Properti baru untuk interaksi database
-    protected $pdo;
-    protected $errorLogRepo;
-    protected $userRepo;
-    protected $bot_id;
+namespace TGBot;
+
+use Exception;
+use PDO;
+use TGBot\Database\TelegramErrorLogRepository;
+use TGBot\Database\UserRepository;
+
+/**
+ * Class TelegramAPI
+ * @package TGBot
+ */
+class TelegramAPI
+{
+    /**
+     * @var string
+     */
+    protected string $token;
 
     /**
-     * Membuat instance TelegramAPI.
-     *
-     * @param string $token Token Bot Telegram.
-     * @param PDO|null $pdo Objek koneksi database (opsional, untuk logging error).
-     * @param int|null $internal_bot_id ID internal bot dari database (opsional, untuk operasi terkait pengguna).
+     * @var string
      */
-    public function __construct($token, PDO $pdo = null, int $internal_bot_id = null)
+    protected string $api_url = 'https://api.telegram.org/bot';
+
+    /**
+     * @var PDO|null
+     */
+    protected ?PDO $pdo;
+
+    /**
+     * @var TelegramErrorLogRepository|null
+     */
+    protected ?TelegramErrorLogRepository $errorLogRepo;
+
+    /**
+     * @var UserRepository|null
+     */
+    protected ?UserRepository $userRepo;
+
+    /**
+     * @var int|null
+     */
+    protected ?int $bot_id;
+
+    /**
+     * TelegramAPI constructor.
+     *
+     * @param string $token
+     * @param PDO|null $pdo
+     * @param int|null $internal_bot_id
+     */
+    public function __construct(string $token, ?PDO $pdo = null, ?int $internal_bot_id = null)
     {
         $this->token = $token;
         $this->pdo = $pdo;
@@ -30,10 +67,10 @@ class TelegramAPI {
 
         if ($this->pdo) {
             // Pastikan file-file ini belum di-include sebelumnya jika ada autoloader
-            if (!class_exists('TelegramErrorLogRepository')) {
+            if (!class_exists('TGBot\Database\TelegramErrorLogRepository')) {
                 require_once __DIR__ . '/database/TelegramErrorLogRepository.php';
             }
-            if (!class_exists('UserRepository')) {
+            if (!class_exists('TGBot\Database\UserRepository')) {
                 require_once __DIR__ . '/database/UserRepository.php';
             }
 
@@ -45,14 +82,13 @@ class TelegramAPI {
     }
 
     /**
-     * Metode inti untuk mengirim permintaan ke API Telegram menggunakan cURL.
-     * Dilengkapi dengan penanganan error terpusat melalui `handleApiError`.
+     * Send a request to the Telegram API.
      *
-     * @param string $method Metode API yang akan dipanggil (misal: 'sendMessage').
-     * @param array $data Data yang akan dikirim dalam permintaan.
-     * @return array Hasil dekode JSON dari API Telegram, atau array error kustom jika gagal.
+     * @param string $method
+     * @param array $data
+     * @return array
      */
-    protected function apiRequest($method, $data = [])
+    protected function apiRequest(string $method, array $data = []): array
     {
         $ch = null;
         $response = null;
@@ -104,17 +140,15 @@ class TelegramAPI {
     }
 
     /**
-     * Menangani, mencatat, dan mengambil tindakan berdasarkan kesalahan API.
-     * Metode ini mencatat error ke log aplikasi dan database, serta dapat
-     * memicu tindakan spesifik seperti menandai pengguna yang memblokir.
+     * Handle API errors.
      *
-     * @param Exception $e Exception yang ditangkap dari `apiRequest`.
-     * @param array|null $response Body respons dari API jika ada.
-     * @param string $method Metode API yang dipanggil.
-     * @param array $requestData Data yang dikirim dalam permintaan.
+     * @param Exception $e
+     * @param array|null $response
+     * @param string $method
+     * @param array $requestData
      * @return void
      */
-    protected function handleApiError(Exception $e, ?array $response, string $method, array $requestData)
+    protected function handleApiError(Exception $e, ?array $response, string $method, array $requestData): void
     {
         $errorCode = $e->getCode();
         $description = $e->getMessage();
@@ -171,28 +205,31 @@ class TelegramAPI {
     }
 
     /**
-     * Melakukan escape karakter khusus untuk digunakan dalam mode parse Markdown lama.
+     * Escape text for Markdown.
      *
-     * @param string $text Teks yang akan di-escape.
-     * @return string Teks yang sudah di-escape.
+     * @param string $text
+     * @return string
      */
-    public function escapeMarkdown($text)
+    public function escapeMarkdown(string $text): string
     {
         // Karakter yang perlu di-escape untuk Markdown lama
         $escape_chars = '_*`[';
-        return preg_replace('/([' . preg_quote($escape_chars, '/') . '])/', '\\\\$1', $text);
+        return preg_replace('/([' . preg_quote($escape_chars, '/') . '])/', '\\$1', $text);
     }
 
     /**
-     * Mengirim pesan teks ke sebuah chat.
+     * Send a message.
      *
-     * @param int|string $chat_id ID dari chat tujuan.
-     * @param string $text Teks pesan yang akan dikirim.
-     * @param string|null $parse_mode Mode parsing: 'Markdown', 'HTML', atau null.
-     * @param string|null $reply_markup Keyboard inline atau kustom dalam format JSON.
-     * @return mixed Hasil dari API Telegram, atau false jika gagal.
+     * @param int|string $chat_id
+     * @param string $text
+     * @param string|null $parse_mode
+     * @param string|null $reply_markup
+     * @param int|null $message_thread_id
+     * @param array|null $reply_parameters
+     * @return array
      */
-    public function sendMessage($chat_id, $text, $parse_mode = 'Markdown', $reply_markup = null, $message_thread_id = null, $reply_parameters = null) {
+    public function sendMessage($chat_id, string $text, ?string $parse_mode = 'Markdown', ?string $reply_markup = null, ?int $message_thread_id = null, ?array $reply_parameters = null): array
+    {
         $data = [
             'chat_id' => $chat_id,
             'text' => $text,
@@ -214,13 +251,14 @@ class TelegramAPI {
     }
 
     /**
-     * Mengirim sekelompok foto atau video sebagai album.
+     * Send a media group.
      *
-     * @param int|string $chat_id ID dari chat tujuan.
-     * @param string $media JSON-encoded array of InputMediaPhoto and InputMediaVideo.
-     * @return mixed Hasil dari API Telegram, atau false jika gagal.
+     * @param int|string $chat_id
+     * @param string $media
+     * @return array
      */
-    public function sendMediaGroup($chat_id, $media) {
+    public function sendMediaGroup($chat_id, string $media): array
+    {
         $data = [
             'chat_id' => $chat_id,
             'media' => $media,
@@ -229,18 +267,19 @@ class TelegramAPI {
     }
 
     /**
-     * Menyalin sebuah pesan dari satu chat ke chat lain.
+     * Copy a message.
      *
-     * @param int|string $chat_id ID chat tujuan.
-     * @param int|string $from_chat_id ID chat sumber.
-     * @param int $message_id ID pesan yang akan disalin.
-     * @param string|null $caption Caption baru untuk media (opsional).
-     * @param string|null $parse_mode Mode parse untuk caption baru.
-     * @param string|null $reply_markup Keyboard inline dalam format JSON (opsional).
-     * @param bool $protect_content Jika true, melindungi konten dari forward dan penyimpanan.
-     * @return array Hasil dari API Telegram.
+     * @param int|string $chat_id
+     * @param int|string $from_chat_id
+     * @param int $message_id
+     * @param string|null $caption
+     * @param string|null $parse_mode
+     * @param string|null $reply_markup
+     * @param bool $protect_content
+     * @return array
      */
-    public function copyMessage($chat_id, $from_chat_id, $message_id, $caption = null, $parse_mode = 'Markdown', $reply_markup = null, bool $protect_content = false) {
+    public function copyMessage($chat_id, $from_chat_id, int $message_id, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null, bool $protect_content = false): array
+    {
         $data = [
             'chat_id' => $chat_id,
             'from_chat_id' => $from_chat_id,
@@ -262,16 +301,16 @@ class TelegramAPI {
     }
 
     /**
-     * Menyalin beberapa pesan sebagai satu grup dari satu chat ke chat lain.
-     * Berguna untuk menyalin album.
+     * Copy messages.
      *
-     * @param int|string $chat_id ID chat tujuan.
-     * @param int|string $from_chat_id ID chat sumber.
-     * @param string $message_ids Array ID pesan yang di-encode sebagai JSON.
-     * @param bool $protect_content Jika true, melindungi konten dari forward dan penyimpanan.
-     * @return array Hasil dari API Telegram.
+     * @param int|string $chat_id
+     * @param int|string $from_chat_id
+     * @param string $message_ids
+     * @param bool $protect_content
+     * @return array
      */
-    public function copyMessages($chat_id, $from_chat_id, $message_ids, bool $protect_content = false) {
+    public function copyMessages($chat_id, $from_chat_id, string $message_ids, bool $protect_content = false): array
+    {
         $data = [
             'chat_id' => $chat_id,
             'from_chat_id' => $from_chat_id,
@@ -284,14 +323,15 @@ class TelegramAPI {
     }
 
     /**
-     * Menjawab callback query (misalnya, dari tombol inline).
+     * Answer a callback query.
      *
-     * @param string $callback_query_id ID dari callback query.
-     * @param string|null $text Teks notifikasi yang akan ditampilkan.
-     * @param bool $show_alert Jika true, notifikasi akan ditampilkan sebagai dialog alert.
-     * @return mixed Hasil dari API Telegram.
+     * @param string $callback_query_id
+     * @param string|null $text
+     * @param bool $show_alert
+     * @return array
      */
-    public function answerCallbackQuery($callback_query_id, $text = null, $show_alert = false) {
+    public function answerCallbackQuery(string $callback_query_id, ?string $text = null, bool $show_alert = false): array
+    {
         $data = [
             'callback_query_id' => $callback_query_id,
         ];
@@ -302,15 +342,18 @@ class TelegramAPI {
         return $this->apiRequest('answerCallbackQuery', $data);
     }
 
-    // --- Metode untuk mengirim berbagai jenis media ---
-
     /**
-     * Metode-metode berikut adalah wrapper sederhana untuk mengirim berbagai jenis media.
-     * Mereka semua menerima `chat_id`, sumber media (`photo`, `video`, dll.),
-     * dan parameter opsional seperti `caption`, `parse_mode`, dan `reply_markup`.
-     * @return array Hasil dari API Telegram.
+     * Send a photo.
+     *
+     * @param int|string $chat_id
+     * @param string $photo
+     * @param string|null $caption
+     * @param string|null $parse_mode
+     * @param string|null $reply_markup
+     * @return array
      */
-    public function sendPhoto($chat_id, $photo, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
+    public function sendPhoto($chat_id, string $photo, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
+    {
         $data = ['chat_id' => $chat_id, 'photo' => $photo];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -318,7 +361,18 @@ class TelegramAPI {
         return $this->apiRequest('sendPhoto', $data);
     }
 
-    public function sendVideo($chat_id, $video, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
+    /**
+     * Send a video.
+     *
+     * @param int|string $chat_id
+     * @param string $video
+     * @param string|null $caption
+     * @param string|null $parse_mode
+     * @param string|null $reply_markup
+     * @return array
+     */
+    public function sendVideo($chat_id, string $video, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
+    {
         $data = ['chat_id' => $chat_id, 'video' => $video];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -326,7 +380,18 @@ class TelegramAPI {
         return $this->apiRequest('sendVideo', $data);
     }
 
-    public function sendAudio($chat_id, $audio, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
+    /**
+     * Send an audio file.
+     *
+     * @param int|string $chat_id
+     * @param string $audio
+     * @param string|null $caption
+     * @param string|null $parse_mode
+     * @param string|null $reply_markup
+     * @return array
+     */
+    public function sendAudio($chat_id, string $audio, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
+    {
         $data = ['chat_id' => $chat_id, 'audio' => $audio];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -334,7 +399,18 @@ class TelegramAPI {
         return $this->apiRequest('sendAudio', $data);
     }
 
-    public function sendDocument($chat_id, $document, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
+    /**
+     * Send a document.
+     *
+     * @param int|string $chat_id
+     * @param string $document
+     * @param string|null $caption
+     * @param string|null $parse_mode
+     * @param string|null $reply_markup
+     * @return array
+     */
+    public function sendDocument($chat_id, string $document, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
+    {
         $data = ['chat_id' => $chat_id, 'document' => $document];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -342,7 +418,18 @@ class TelegramAPI {
         return $this->apiRequest('sendDocument', $data);
     }
 
-    public function sendAnimation($chat_id, $animation, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
+    /**
+     * Send an animation.
+     *
+     * @param int|string $chat_id
+     * @param string $animation
+     * @param string|null $caption
+     * @param string|null $parse_mode
+     * @param string|null $reply_markup
+     * @return array
+     */
+    public function sendAnimation($chat_id, string $animation, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
+    {
         $data = ['chat_id' => $chat_id, 'animation' => $animation];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -350,7 +437,18 @@ class TelegramAPI {
         return $this->apiRequest('sendAnimation', $data);
     }
 
-    public function sendVoice($chat_id, $voice, $caption = null, $parse_mode = 'Markdown', $reply_markup = null) {
+    /**
+     * Send a voice message.
+     *
+     * @param int|string $chat_id
+     * @param string $voice
+     * @param string|null $caption
+     * @param string|null $parse_mode
+     * @param string|null $reply_markup
+     * @return array
+     */
+    public function sendVoice($chat_id, string $voice, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
+    {
         $data = ['chat_id' => $chat_id, 'voice' => $voice];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
@@ -359,51 +457,55 @@ class TelegramAPI {
     }
 
     /**
-     * Mengatur URL webhook untuk bot agar dapat menerima pembaruan dari Telegram.
+     * Set a webhook.
      *
-     * @param string $url URL HTTPS dari skrip webhook Anda.
-     * @return array Hasil dari API Telegram.
+     * @param string $url
+     * @return array
      */
-    public function setWebhook($url) {
+    public function setWebhook(string $url): array
+    {
         return $this->apiRequest('setWebhook', ['url' => $url]);
     }
 
     /**
-     * Mendapatkan informasi tentang status webhook saat ini.
+     * Get webhook info.
      *
-     * @return array Hasil dari API Telegram.
+     * @return array
      */
-    public function getWebhookInfo() {
+    public function getWebhookInfo(): array
+    {
         return $this->apiRequest('getWebhookInfo');
     }
 
     /**
-     * Menghapus URL webhook yang sedang terpasang.
-     * Berguna untuk beralih kembali ke mode getUpdates (polling).
+     * Delete a webhook.
      *
-     * @return array Hasil dari API Telegram.
+     * @return array
      */
-    public function deleteWebhook() {
+    public function deleteWebhook(): array
+    {
         return $this->apiRequest('deleteWebhook');
     }
 
     /**
-     * Mendapatkan informasi dasar tentang bot itu sendiri (username, ID, dll.).
+     * Get bot info.
      *
-     * @return array Hasil dari API Telegram.
+     * @return array
      */
-    public function getMe() {
+    public function getMe(): array
+    {
         return $this->apiRequest('getMe');
     }
 
     /**
-     * Menghapus sebuah pesan dari sebuah chat.
+     * Delete a message.
      *
-     * @param int|string $chat_id ID dari chat tempat pesan berada.
-     * @param int $message_id ID dari pesan yang akan dihapus.
-     * @return array Hasil dari API Telegram.
+     * @param int|string $chat_id
+     * @param int $message_id
+     * @return array
      */
-    public function deleteMessage($chat_id, $message_id) {
+    public function deleteMessage($chat_id, int $message_id): array
+    {
         $data = [
             'chat_id' => $chat_id,
             'message_id' => $message_id,
@@ -412,14 +514,13 @@ class TelegramAPI {
     }
 
     /**
-     * Mendapatkan informasi tentang seorang anggota (member) di sebuah chat.
-     * Berguna untuk memeriksa status (admin, member, dll.) dari bot atau pengguna.
+     * Get chat member info.
      *
-     * @param int|string $chat_id ID dari chat.
-     * @param int $user_id ID dari pengguna yang akan diperiksa.
-     * @return array Hasil dari API Telegram.
+     * @param int|string $chat_id
+     * @param int $user_id
+     * @return array
      */
-    public function getChatMember($chat_id, $user_id)
+    public function getChatMember($chat_id, int $user_id): array
     {
         $data = [
             'chat_id' => $chat_id,
@@ -429,23 +530,23 @@ class TelegramAPI {
     }
 
     /**
-     * Mendapatkan ID numerik dari bot saat ini dengan memanggil metode `getMe`.
+     * Get bot ID.
      *
-     * @return int|null ID bot atau null jika panggilan API gagal.
+     * @return int|null
      */
-    public function getBotId()
+    public function getBotId(): ?int
     {
         $response = $this->getMe();
         return $response['ok'] ? $response['result']['id'] : null;
     }
 
     /**
-     * Mendapatkan informasi mendetail tentang sebuah chat (channel, grup, atau pengguna).
+     * Get chat info.
      *
-     * @param int|string $chat_id ID unik atau username dari chat target.
-     * @return array Hasil dari API Telegram.
+     * @param int|string $chat_id
+     * @return array
      */
-    public function getChat($chat_id)
+    public function getChat($chat_id): array
     {
         $data = [
             'chat_id' => $chat_id,
@@ -454,13 +555,13 @@ class TelegramAPI {
     }
 
     /**
-     * Mengirim balasan untuk sebuah inline query.
+     * Answer an inline query.
      *
-     * @param string $inline_query_id ID dari inline query yang akan dijawab.
-     * @param array $results Array yang berisi objek InlineQueryResult.
-     * @return array Hasil dari API Telegram.
+     * @param string $inline_query_id
+     * @param array $results
+     * @return array
      */
-    public function answerInlineQuery(string $inline_query_id, array $results)
+    public function answerInlineQuery(string $inline_query_id, array $results): array
     {
         $data = [
             'inline_query_id' => $inline_query_id,
@@ -470,16 +571,14 @@ class TelegramAPI {
     }
 
     /**
-     * Mengirim pesan teks yang panjang dengan memecahnya menjadi beberapa bagian
-     * yang lebih kecil agar sesuai dengan batas karakter Telegram.
-     * Pesan dipecah berdasarkan paragraf untuk menjaga keterbacaan.
+     * Send a long message.
      *
-     * @param int|string $chat_id ID dari chat tujuan.
-     * @param string $text Teks panjang yang akan dikirim.
-     * @param string|null $parse_mode Mode parsing: 'Markdown', 'HTML', atau null.
+     * @param int|string $chat_id
+     * @param string $text
+     * @param string|null $parse_mode
      * @return void
      */
-    public function sendLongMessage($chat_id, $text, $parse_mode = null)
+    public function sendLongMessage($chat_id, string $text, ?string $parse_mode = null): void
     {
         $max_length = 4096;
         $paragraphs = preg_split('/(\r\n|\n|\r){2,}/', $text);

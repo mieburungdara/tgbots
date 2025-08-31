@@ -1,11 +1,39 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
-require_once __DIR__ . '/../../../core/database/AnalyticsRepository.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-class AnalyticsController extends BaseController {
+namespace TGBot\Controllers\Admin;
 
-    public function index() {
+use Exception;
+use TGBot\Controllers\BaseController;
+use TGBot\Database\AnalyticsRepository;
+
+/**
+ * Class AnalyticsController
+ * @package TGBot\Controllers\Admin
+ *
+ * Kontroler ini bertanggung jawab untuk menangani semua logika yang terkait dengan analitik dan statistik penjualan.
+ * Ini mengumpulkan data dari repositori dan menampilkannya di dasbor analitik.
+ */
+class AnalyticsController extends BaseController
+{
+    /**
+     * Menampilkan dasbor analitik.
+     *
+     * Metode ini mengambil data ringkasan penjualan global, penjualan harian, dan paket terlaris dari repositori.
+     * Kemudian, data tersebut diproses untuk ditampilkan dalam bentuk grafik dan tabel di halaman analitik.
+     *
+     * @return void
+     */
+    public function index(): void
+    {
         try {
             $pdo = get_db_connection();
             $analyticsRepo = new AnalyticsRepository($pdo);

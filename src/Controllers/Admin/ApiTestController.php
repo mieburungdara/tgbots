@@ -1,12 +1,42 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
-require_once __DIR__ . '/../../../core/TelegramAPI.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
+namespace TGBot\Controllers\Admin;
+
+use Exception;
+use PDO;
+use ReflectionClass;
+use ReflectionMethod;
+use TGBot\Controllers\BaseController;
+use TGBot\TelegramAPI;
+
+/**
+ * Class ApiTestController
+ * @package TGBot\Controllers\Admin
+ *
+ * Kontroler ini menyediakan antarmuka untuk menguji metode-metode dari Telegram Bot API secara langsung dari panel admin.
+ * Ini memungkinkan developer untuk memanggil metode API, melihat riwayat panggilan, dan mendapatkan daftar metode yang tersedia.
+ */
 class ApiTestController extends BaseController
 {
-    private $pdo;
+    /**
+     * @var PDO
+     */
+    private PDO $pdo;
 
+    /**
+     * ApiTestController constructor.
+     *
+     * Menginisialisasi koneksi database.
+     */
     public function __construct()
     {
         parent::__construct();
@@ -14,9 +44,14 @@ class ApiTestController extends BaseController
     }
 
     /**
-     * Menampilkan halaman utama untuk Tes API.
+     * Menampilkan halaman utama untuk pengujian API.
+     *
+     * Metode ini mengambil daftar bot dari database untuk ditampilkan di dropdown,
+     * lalu merender halaman utama antarmuka pengujian API.
+     *
+     * @return void
      */
-    public function index()
+    public function index(): void
     {
         try {
             $bots = $this->pdo->query("SELECT id, first_name, token FROM bots ORDER BY first_name")->fetchAll();
@@ -36,9 +71,11 @@ class ApiTestController extends BaseController
 
     /**
      * Menangani permintaan AJAX untuk metode API.
-     * Bertindak sebagai router untuk berbagai aksi.
+     * Bertindak sebagai router untuk berbagai aksi seperti mengambil metode, menjalankan metode, dan melihat riwayat.
+     *
+     * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         header('Content-Type: application/json');
         $action = $_GET['action'] ?? (json_decode(file_get_contents('php://input'), true)['action'] ?? null);
@@ -67,8 +104,13 @@ class ApiTestController extends BaseController
 
     /**
      * Mengambil daftar metode publik dari kelas TelegramAPI menggunakan Reflection.
+     *
+     * Metode ini secara dinamis memeriksa kelas TelegramAPI dan mengekstrak semua metode publik,
+     * mengabaikan metode internal, dan mengembalikan daftar tersebut sebagai JSON untuk digunakan di frontend.
+     *
+     * @return void
      */
-    private function getMethods()
+    private function getMethods(): void
     {
         try {
             $reflection = new ReflectionClass('TelegramAPI');
@@ -111,8 +153,14 @@ class ApiTestController extends BaseController
 
     /**
      * Menjalankan metode API Telegram yang dipilih.
+     *
+     * Metode ini menerima data dari frontend, memvalidasi input, mengambil token bot,
+     * dan memanggil metode yang sesuai di kelas TelegramAPI dengan parameter yang diberikan.
+     *
+     * @param array $data Data dari permintaan AJAX, berisi bot_id, metode, dan parameter.
+     * @return void
      */
-    private function runMethod($data)
+    private function runMethod(array $data): void
     {
         try {
             $bot_id = $data['bot_id'] ?? null;
@@ -171,9 +219,15 @@ class ApiTestController extends BaseController
     }
 
     /**
-     * Mengambil riwayat permintaan API.
+     * Mengambil riwayat permintaan API untuk bot tertentu.
+     *
+     * Metode ini mengambil data dari tabel `api_request_logs` dengan paginasi
+     * dan mengembalikannya sebagai JSON.
+     *
+     * @param array $query Parameter dari permintaan GET, berisi bot_id dan halaman.
+     * @return void
      */
-    private function getHistory($query)
+    private function getHistory(array $query): void
     {
         try {
             $bot_id = $query['bot_id'] ?? null;
@@ -204,8 +258,13 @@ class ApiTestController extends BaseController
 
     /**
      * Helper untuk mendefinisikan struktur parameter kustom.
+     *
+     * Metode ini menyediakan metadata untuk parameter API yang memerlukan perlakuan khusus di frontend,
+     * seperti dropdown untuk `parse_mode` atau input objek untuk `reply_parameters`.
+     *
+     * @return array
      */
-    private function getSpecialParamStructures()
+    private function getSpecialParamStructures(): array
     {
         return [
             'parse_mode' => ['type' => 'dropdown', 'choices' => ['HTML', 'Markdown', 'MarkdownV2']],

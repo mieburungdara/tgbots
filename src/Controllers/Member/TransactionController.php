@@ -1,12 +1,34 @@
 <?php
 
-require_once __DIR__ . '/MemberBaseController.php';
-require_once __DIR__ . '/../../../core/database/SaleRepository.php';
-require_once __DIR__ . '/../../../core/database/PackageRepository.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-class TransactionController extends MemberBaseController {
+namespace TGBot\Controllers\Member;
 
-    public function purchased() {
+use Exception;
+use TGBot\Controllers\Member\MemberBaseController;
+use TGBot\Database\SaleRepository;
+use TGBot\Database\PackageRepository;
+
+/**
+ * Class TransactionController
+ * @package TGBot\Controllers\Member
+ */
+class TransactionController extends MemberBaseController
+{
+    /**
+     * Display the purchased content page.
+     *
+     * @return void
+     */
+    public function purchased(): void
+    {
         try {
             $pdo = get_db_connection();
             $saleRepo = new SaleRepository($pdo);
@@ -27,7 +49,13 @@ class TransactionController extends MemberBaseController {
         }
     }
 
-    public function sold() {
+    /**
+     * Display the sold content page.
+     *
+     * @return void
+     */
+    public function sold(): void
+    {
         try {
             $pdo = get_db_connection();
             $packageRepo = new PackageRepository($pdo);
@@ -52,7 +80,13 @@ class TransactionController extends MemberBaseController {
         }
     }
 
-    public function softDeletePackage() {
+    /**
+     * Soft delete a package.
+     *
+     * @return void
+     */
+    public function softDeletePackage(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /member/my_content'); // Or sold page
             exit();

@@ -1,13 +1,33 @@
 <?php
 
-require_once __DIR__ . '/../AppController.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-class LoginController extends AppController {
+namespace TGBot\Controllers\Member;
 
+use Exception;
+use PDO;
+use TGBot\Controllers\AppController;
+
+/**
+ * Class LoginController
+ * @package TGBot\Controllers\Member
+ */
+class LoginController extends AppController
+{
     /**
      * Shows the login form, pre-filling the token and showing an error if available.
+     *
+     * @return void
      */
-    public function showLoginForm() {
+    public function showLoginForm(): void
+    {
         try {
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
@@ -37,8 +57,11 @@ class LoginController extends AppController {
 
     /**
      * Processes a login attempt from a submitted form.
+     *
+     * @return void
      */
-    public function processFormLogin() {
+    public function processFormLogin(): void
+    {
         try {
             $token = $_POST['token'] ?? '';
             $this->handleToken($token);
@@ -52,8 +75,11 @@ class LoginController extends AppController {
 
     /**
      * Processes a login attempt from a URL token.
+     *
+     * @return void
      */
-    public function processLinkLogin() {
+    public function processLinkLogin(): void
+    {
         try {
             $token = $_GET['token'] ?? '';
             $this->handleToken($token);
@@ -67,9 +93,12 @@ class LoginController extends AppController {
 
     /**
      * Central token validation logic.
+     *
      * @param string $token The token to validate.
+     * @return void
      */
-    private function handleToken(string $token) {
+    private function handleToken(string $token): void
+    {
         try {
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();

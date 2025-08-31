@@ -1,11 +1,34 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
-require_once __DIR__ . '/../../../core/TelegramAPI.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-class BotController extends BaseController {
+namespace TGBot\Controllers\Admin;
 
-    public function index() {
+use Exception;
+use PDO;
+use TGBot\Controllers\BaseController;
+use TGBot\TelegramAPI;
+
+/**
+ * Class BotController
+ * @package TGBot\Controllers\Admin
+ */
+class BotController extends BaseController
+{
+    /**
+     * Display the bot management page.
+     *
+     * @return void
+     */
+    public function index(): void
+    {
         try {
             $pdo = get_db_connection();
             $bots = $pdo->query("SELECT id, first_name, username, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
@@ -32,7 +55,13 @@ class BotController extends BaseController {
         }
     }
 
-    public function store() {
+    /**
+     * Store a new bot.
+     *
+     * @return void
+     */
+    public function store(): void
+    {
         $pdo = get_db_connection();
         $error = null;
         $success = null;
@@ -97,7 +126,13 @@ class BotController extends BaseController {
         exit();
     }
 
-    public function edit() {
+    /**
+     * Show the bot edit page.
+     *
+     * @return void
+     */
+    public function edit(): void
+    {
         try {
             if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
                 header("Location: /admin/bots");
@@ -144,7 +179,13 @@ class BotController extends BaseController {
         }
     }
 
-    public function updateSettings() {
+    /**
+     * Update bot settings.
+     *
+     * @return void
+     */
+    public function updateSettings(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['bot_id'])) {
             header('Location: /admin/bots');
             exit();
@@ -170,9 +211,7 @@ class BotController extends BaseController {
                 $value = isset($submitted_settings[$key]) ? '1' : '0';
 
                 $stmt = $pdo->prepare(
-                    "INSERT INTO bot_settings (bot_id, setting_key, setting_value)
-                     VALUES (?, ?, ?)
-                     ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)"
+                    "INSERT INTO bot_settings (bot_id, setting_key, setting_value)\n                     VALUES (?, ?, ?)\n                     ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)"
                 );
                 $stmt->execute([$bot_id, $key, $value]);
             }
@@ -190,9 +229,14 @@ class BotController extends BaseController {
         exit();
     }
 
-    // --- API Methods for bot management ---
-
-    private function getBotAndApi($bot_id) {
+    /**
+     * Get bot and API instance.
+     *
+     * @param int $bot_id
+     * @return TelegramAPI
+     */
+    private function getBotAndApi(int $bot_id): TelegramAPI
+    {
         try {
             if (!$bot_id) {
                 $this->jsonResponse(['error' => 'ID Bot tidak valid.'], 400);
@@ -211,7 +255,13 @@ class BotController extends BaseController {
         }
     }
 
-    public function setWebhook() {
+    /**
+     * Set webhook for a bot.
+     *
+     * @return void
+     */
+    public function setWebhook(): void
+    {
         try {
             $bot_id = (int)($_POST['bot_id'] ?? 0);
             $telegram = $this->getBotAndApi($bot_id);
@@ -227,7 +277,13 @@ class BotController extends BaseController {
         }
     }
 
-    public function getWebhookInfo() {
+    /**
+     * Get webhook info for a bot.
+     *
+     * @return void
+     */
+    public function getWebhookInfo(): void
+    {
         try {
             $bot_id = (int)($_POST['bot_id'] ?? 0);
             $telegram = $this->getBotAndApi($bot_id);
@@ -239,7 +295,13 @@ class BotController extends BaseController {
         }
     }
 
-    public function deleteWebhook() {
+    /**
+     * Delete webhook for a bot.
+     *
+     * @return void
+     */
+    public function deleteWebhook(): void
+    {
         try {
             $bot_id = (int)($_POST['bot_id'] ?? 0);
             $telegram = $this->getBotAndApi($bot_id);
@@ -251,7 +313,13 @@ class BotController extends BaseController {
         }
     }
 
-    public function getMe() {
+    /**
+     * Get bot info from Telegram.
+     *
+     * @return void
+     */
+    public function getMe(): void
+    {
         try {
             $bot_id = (int)($_POST['bot_id'] ?? 0);
             $telegram = $this->getBotAndApi($bot_id);
@@ -283,13 +351,20 @@ class BotController extends BaseController {
         }
     }
 
-    public function testWebhook() {
+    /**
+     * Test webhook for a bot.
+     *
+     * @return void
+     */
+    public function testWebhook(): void
+    {
         try {
             // This is a bit tricky as it's a request from the browser to the server itself.
             // The original script was making a request to webhook.php. We will do the same.
             $bot_id = (int)($_POST['bot_id'] ?? 0);
             if (!$bot_id) {
-                return $this->jsonResponse(['error' => 'ID Bot tidak valid.'], 400);
+                $this->jsonResponse(['error' => 'ID Bot tidak valid.'], 400);
+                return;
             }
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
             $domain = $_SERVER['HTTP_HOST'];

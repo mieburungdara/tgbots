@@ -1,20 +1,31 @@
 <?php
 
-require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
-require_once __DIR__ . '/HandlerInterface.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Handlers;
+
+use TGBot\App;
+use TGBot\Handlers\HandlerInterface;
 
 /**
- * Menangani pembaruan yang berasal dari sebuah channel (channel post).
- * Terutama untuk menangani perintah administrasi yang dikirim di channel
- * dan menyimpan post itu sendiri jika diperlukan.
+ * Class ChannelPostHandler
+ * @package TGBot\Handlers
  */
 class ChannelPostHandler implements HandlerInterface
 {
     /**
-     * Titik masuk utama untuk menangani post dari channel.
+     * Handle a channel post.
      *
-     * @param App $app Wadah aplikasi.
-     * @param array $channel_post Data post channel lengkap dari Telegram.
+     * @param App $app
+     * @param array $channel_post
+     * @return void
      */
     public function handle(App $app, array $channel_post): void
     {
@@ -28,8 +39,7 @@ class ChannelPostHandler implements HandlerInterface
         $update_json = json_encode(['channel_post' => $channel_post]); // Re-encode for storage
 
         $stmt = $app->pdo->prepare(
-            "INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, chat_type, update_type, text, raw_data, direction, telegram_timestamp)
-             VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, 'incoming', ?)"
+            "INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, chat_type, update_type, text, raw_data, direction, telegram_timestamp)\n             VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, 'incoming', ?)"
         );
         $stmt->execute([
             $app->bot['id'],
@@ -57,9 +67,13 @@ class ChannelPostHandler implements HandlerInterface
     }
 
     /**
-     * Menangani perintah `/register_channel` yang dikirim di sebuah channel.
+     * Handle the /register_channel command.
+     *
+     * @param App $app
+     * @param array $channel_post
+     * @return void
      */
-    private function handleRegisterChannelCommand(App $app, array $channel_post)
+    private function handleRegisterChannelCommand(App $app, array $channel_post): void
     {
         $channel_id = $channel_post['chat']['id'];
 

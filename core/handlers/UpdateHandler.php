@@ -1,13 +1,31 @@
 <?php
 
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Handlers;
+
+/**
+ * Class UpdateHandler
+ * @package TGBot\Handlers
+ */
 class UpdateHandler
 {
-    private $bot_settings;
+    /**
+     * @var array
+     */
+    private array $bot_settings;
 
     /**
-     * Membuat instance baru dari UpdateHandler.
+     * UpdateHandler constructor.
      *
-     * @param array $bot_settings Pengaturan untuk bot yang sedang menangani pembaruan.
+     * @param array $bot_settings
      */
     public function __construct(array $bot_settings)
     {
@@ -15,10 +33,10 @@ class UpdateHandler
     }
 
     /**
-     * Menentukan jenis pembaruan dan memeriksa apakah harus diproses.
+     * Get the update type.
      *
-     * @param array $update Pembaruan yang masuk dari Telegram.
-     * @return string|null Jenis pembaruan, atau null jika harus diabaikan.
+     * @param array $update
+     * @return string|null
      */
     public function getUpdateType(array $update): ?string
     {
@@ -63,10 +81,10 @@ class UpdateHandler
     }
 
     /**
-     * Mengekstrak konteks utama dari pembaruan (misalnya, objek pesan).
+     * Get the message context.
      *
-     * @param array $update Data pembaruan lengkap dari Telegram.
-     * @return array|null Konteks pesan yang relevan atau null jika tidak ditemukan.
+     * @param array $update
+     * @return array|null
      */
     public static function getMessageContext(array $update): ?array
     {
@@ -88,10 +106,10 @@ class UpdateHandler
     }
 
     /**
-     * Memeriksa apakah sebuah pesan berisi media yang dapat disimpan.
+     * Check if a message is a media message.
      *
-     * @param array $message Objek pesan dari Telegram.
-     * @return bool True jika pesan berisi media, false jika tidak.
+     * @param array $message
+     * @return bool
      */
     public static function isMediaMessage(array $message): bool
     {

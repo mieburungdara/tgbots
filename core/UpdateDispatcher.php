@@ -1,31 +1,72 @@
 <?php
 
-declare(strict_types=1);
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-require_once __DIR__ . '/App.php';
-require_once __DIR__ . '/handlers/HandlerInterface.php';
-require_once __DIR__ . '/handlers/MessageHandler.php';
-require_once __DIR__ . '/handlers/CallbackQueryHandler.php';
-require_once __DIR__ . '/handlers/EditedMessageHandler.php';
-require_once __DIR__ . '/handlers/InlineQueryHandler.php';
-require_once __DIR__ . '/handlers/ChannelPostHandler.php';
-require_once __DIR__ . '/handlers/MediaHandler.php';
-require_once __DIR__ . '/database/UserRepository.php';
-require_once __DIR__ . '/database/BotRepository.php';
+namespace TGBot;
+
+use Exception;
+use PDO;
+use Throwable;
+use TGBot\Handlers\HandlerInterface;
+use TGBot\Handlers\MessageHandler;
+use TGBot\Handlers\CallbackQueryHandler;
+use TGBot\Handlers\EditedMessageHandler;
+use TGBot\Handlers\InlineQueryHandler;
+use TGBot\Handlers\ChannelPostHandler;
+use TGBot\Handlers\MediaHandler;
+use TGBot\Database\UserRepository;
+use TGBot\Database\BotRepository;
 
 /**
  * Class UpdateDispatcher
- * Menerima pembaruan, menentukan jenisnya, dan mendelegasikannya ke handler yang sesuai.
+ * @package TGBot
  */
 class UpdateDispatcher
 {
-    private $pdo;
-    private $bot;
-    private $update;
-    private $update_handler;
-    private $telegram_api;
-    private $bot_settings;
+    /**
+     * @var PDO
+     */
+    private PDO $pdo;
 
+    /**
+     * @var array
+     */
+    private array $bot;
+
+    /**
+     * @var array
+     */
+    private array $update;
+
+    /**
+     * @var UpdateHandler
+     */
+    private UpdateHandler $update_handler;
+
+    /**
+     * @var TelegramAPI
+     */
+    private TelegramAPI $telegram_api;
+
+    /**
+     * @var array
+     */
+    private array $bot_settings;
+
+    /**
+     * UpdateDispatcher constructor.
+     *
+     * @param PDO $pdo
+     * @param array $bot
+     * @param array $update
+     */
     public function __construct(PDO $pdo, array $bot, array $update)
     {
         $this->pdo = $pdo;
@@ -40,7 +81,13 @@ class UpdateDispatcher
         $this->telegram_api = new TelegramAPI($bot['token'], $pdo, (int)$bot['id']);
     }
 
-    public function dispatch()
+    /**
+     * Dispatch the update to the appropriate handler.
+     *
+     * @return void
+     * @throws Throwable
+     */
+    public function dispatch(): void
     {
         $update_type = $this->update_handler->getUpdateType($this->update);
         if ($update_type === null) {
@@ -113,6 +160,12 @@ class UpdateDispatcher
         }
     }
 
+    /**
+     * Get the handler for the update type.
+     *
+     * @param string $update_type
+     * @return HandlerInterface|null
+     */
     private function getHandlerForUpdate(string $update_type): ?HandlerInterface
     {
         switch ($update_type) {
@@ -130,7 +183,15 @@ class UpdateDispatcher
         }
     }
 
-    private function logIncomingMessage(array $context, string $update_type, ?int $user_id)
+    /**
+     * Log an incoming message.
+     *
+     * @param array $context
+     * @param string $update_type
+     * @param int|null $user_id
+     * @return void
+     */
+    private function logIncomingMessage(array $context, string $update_type, ?int $user_id): void
     {
         $telegram_message_id = $context['message_id'] ?? 0;
         $chat_id = $context['chat']['id'];
@@ -140,8 +201,7 @@ class UpdateDispatcher
         $message_date = date('Y-m-d H:i:s', $timestamp);
 
         $stmt = $this->pdo->prepare(
-            "INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, chat_type, update_type, text, raw_data, direction, telegram_timestamp)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'incoming', ?)"
+            "INSERT INTO messages (user_id, bot_id, telegram_message_id, chat_id, chat_type, update_type, text, raw_data, direction, telegram_timestamp)\n             VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'incoming', ?)"
         );
         $stmt->execute([
             $user_id,

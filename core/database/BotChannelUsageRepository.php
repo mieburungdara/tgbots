@@ -1,21 +1,39 @@
 <?php
 
-require_once __DIR__ . '/PrivateChannelRepository.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Database;
+
+use PDO;
+use PrivateChannelRepository; // Added this import based on the original file
 
 /**
- * Repositori untuk mengelola penggunaan channel penyimpanan oleh bot.
- * Bertanggung jawab untuk melacak channel mana yang terakhir digunakan oleh setiap bot
- * untuk menerapkan strategi rotasi (round-robin).
+ * Class BotChannelUsageRepository
+ * @package TGBot\Database
  */
 class BotChannelUsageRepository
 {
-    private $pdo;
-    private $privateChannelRepo;
+    /**
+     * @var PDO
+     */
+    private PDO $pdo;
 
     /**
-     * Membuat instance BotChannelUsageRepository.
+     * @var PrivateChannelRepository
+     */
+    private PrivateChannelRepository $privateChannelRepo;
+
+    /**
+     * BotChannelUsageRepository constructor.
      *
-     * @param PDO $pdo Objek koneksi database.
+     * @param PDO $pdo
      */
     public function __construct(PDO $pdo)
     {
@@ -24,11 +42,10 @@ class BotChannelUsageRepository
     }
 
     /**
-     * Mendapatkan channel penyimpanan berikutnya untuk digunakan oleh bot tertentu,
-     * menerapkan strategi round-robin untuk mendistribusikan beban.
+     * Get the next channel for a bot.
      *
-     * @param int $botId ID dari bot yang akan menggunakan channel.
-     * @return array|null Detail channel yang dipilih (asosiatif array), atau null jika tidak ada channel yang tersedia.
+     * @param int $botId
+     * @return array|null
      */
     public function getNextChannelForBot(int $botId): ?array
     {
@@ -69,8 +86,7 @@ class BotChannelUsageRepository
         // 2. Perbarui catatan penggunaan channel untuk bot ini
         if ($nextChannel) {
             $stmt = $this->pdo->prepare(
-                "INSERT INTO bot_channel_usage (bot_id, last_used_channel_id) VALUES (?, ?)
-                 ON DUPLICATE KEY UPDATE last_used_channel_id = VALUES(last_used_channel_id)"
+                "INSERT INTO bot_channel_usage (bot_id, last_used_channel_id) VALUES (?, ?)\n                 ON DUPLICATE KEY UPDATE last_used_channel_id = VALUES(last_used_channel_id)"
             );
             $stmt->execute([$botId, $nextChannel['id']]);
         }

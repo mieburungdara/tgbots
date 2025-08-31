@@ -1,17 +1,33 @@
 <?php
 
 /**
- * Repositori untuk mengelola data file media di database.
- * Menyimpan metadata untuk setiap foto, video, atau dokumen yang diterima bot.
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Database;
+
+use PDO;
+
+/**
+ * Class MediaFileRepository
+ * @package TGBot\Database
  */
 class MediaFileRepository
 {
-    private $pdo;
+    /**
+     * @var PDO
+     */
+    private PDO $pdo;
 
     /**
-     * Membuat instance MediaFileRepository.
+     * MediaFileRepository constructor.
      *
-     * @param PDO $pdo Objek koneksi database.
+     * @param PDO $pdo
      */
     public function __construct(PDO $pdo)
     {
@@ -19,10 +35,10 @@ class MediaFileRepository
     }
 
     /**
-     * Menyimpan metadata file media baru ke dalam database.
+     * Save a new media file.
      *
-     * @param array $params Parameter untuk file media, berisi kunci seperti 'type', 'file_size', 'user_id', dll.
-     * @return string ID dari baris yang baru disisipkan.
+     * @param array $params
+     * @return string
      */
     public function saveMediaFile(array $params): string
     {

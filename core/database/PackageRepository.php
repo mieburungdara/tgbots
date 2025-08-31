@@ -1,17 +1,34 @@
 <?php
 
 /**
- * Repositori untuk mengelola paket media (`media_packages`).
- * Menyediakan semua operasi CRUD dan query terkait untuk paket konten.
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Database;
+
+use Exception;
+use PDO;
+
+/**
+ * Class PackageRepository
+ * @package TGBot\Database
  */
 class PackageRepository
 {
-    private $pdo;
+    /**
+     * @var PDO
+     */
+    private PDO $pdo;
 
     /**
-     * Membuat instance PackageRepository.
+     * PackageRepository constructor.
      *
-     * @param PDO $pdo Objek koneksi database.
+     * @param PDO $pdo
      */
     public function __construct(PDO $pdo)
     {
@@ -19,10 +36,10 @@ class PackageRepository
     }
 
     /**
-     * Menemukan sebuah paket berdasarkan ID internalnya.
+     * Find a package by its ID.
      *
-     * @param int $id ID internal paket.
-     * @return array|false Data paket atau false jika tidak ditemukan.
+     * @param int $id
+     * @return array|false
      */
     public function find(int $id)
     {
@@ -32,10 +49,10 @@ class PackageRepository
     }
 
     /**
-     * Mengambil semua file yang tersimpan (di channel penyimpanan) yang terkait dengan sebuah paket.
+     * Get package files.
      *
-     * @param int $package_id ID internal paket.
-     * @return array Daftar file, masing-masing berisi `storage_channel_id` dan `storage_message_id`.
+     * @param int $package_id
+     * @return array
      */
     public function getPackageFiles(int $package_id): array
     {
@@ -45,19 +62,15 @@ class PackageRepository
     }
 
     /**
-     * Mengambil file paket dan mengelompokkannya berdasarkan media_group_id.
-     * Setiap grup atau file tunggal dianggap sebagai satu "halaman".
+     * Get grouped package content.
      *
      * @param int $package_id
-     * @return array Array yang berisi halaman-halaman, di mana setiap halaman adalah array file.
+     * @return array
      */
     public function getGroupedPackageContent(int $package_id): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT storage_channel_id, storage_message_id, media_group_id
-             FROM media_files
-             WHERE package_id = ? AND storage_message_id IS NOT NULL
-             ORDER BY storage_message_id ASC"
+            "SELECT storage_channel_id, storage_message_id, media_group_id\n             FROM media_files\n             WHERE package_id = ? AND storage_message_id IS NOT NULL\n             ORDER BY storage_message_id ASC"
         );
         $stmt->execute([$package_id]);
         $all_files = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -98,11 +111,10 @@ class PackageRepository
     }
 
     /**
-     * Menemukan paket yang tersedia untuk dibeli berdasarkan ID-nya.
-     * Hanya mengembalikan paket dengan status 'available'.
+     * Find a package for purchase.
      *
-     * @param int $package_id ID internal paket.
-     * @return array|false Data harga dan penjual, atau false jika tidak tersedia untuk dibeli.
+     * @param int $package_id
+     * @return array|false
      */
     public function findForPurchase(int $package_id)
     {
@@ -112,42 +124,39 @@ class PackageRepository
     }
 
     /**
-     * Menandai sebuah paket sebagai 'terjual' (sold).
+     * Mark a package as sold.
      *
-     * @param int $package_id ID internal paket yang akan ditandai.
+     * @param int $package_id
      * @return void
      */
-    public function markAsSold(int $package_id)
+    public function markAsSold(int $package_id): void
     {
         $stmt = $this->pdo->prepare("UPDATE media_packages SET status = 'sold' WHERE id = ?");
         $stmt->execute([$package_id]);
     }
 
     /**
-     * Menemukan semua paket yang dijual oleh ID penjual tertentu.
+     * Find all packages by seller ID.
      *
-     * @param int $seller_user_id ID Telegram pengguna penjual.
-     * @return array Daftar paket yang dijual.
+     * @param int $seller_user_id
+     * @return array
      */
     public function findAllBySellerId(int $seller_user_id): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT mp.*
-             FROM media_packages mp
-             WHERE mp.seller_user_id = ? AND mp.status != 'deleted'
-             ORDER BY mp.created_at DESC"
+            "SELECT mp.*\n             FROM media_packages mp\n             WHERE mp.seller_user_id = ? AND mp.status != 'deleted'\n             ORDER BY mp.created_at DESC"
         );
         $stmt->execute([$seller_user_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 
     /**
-     * Melakukan soft delete pada sebuah paket dengan mengubah statusnya menjadi 'deleted'.
+     * Soft delete a package.
      *
-     * @param int $packageId ID paket yang akan dihapus.
-     * @param int $seller_user_id ID Telegram penjual yang meminta penghapusan, untuk verifikasi kepemilikan.
-     * @return bool True jika berhasil, false jika gagal.
-     * @throws Exception Jika paket tidak ditemukan, bukan milik penjual, atau sudah terjual.
+     * @param int $packageId
+     * @param int $seller_user_id
+     * @return bool
+     * @throws Exception
      */
     public function softDeletePackage(int $packageId, int $seller_user_id): bool
     {
@@ -174,12 +183,11 @@ class PackageRepository
     }
 
     /**
-     * Menghapus paket secara permanen dari database, termasuk file media terkait.
-     * Metode ini sebaiknya dijalankan dalam sebuah transaksi.
+     * Hard delete a package.
      *
-     * @param int $packageId ID paket yang akan dihapus.
-     * @return array Informasi file media yang dihapus, untuk keperluan pembersihan di Telegram.
-     * @throws Exception Jika paket tidak ditemukan atau sudah terjual (untuk melindungi riwayat).
+     * @param int $packageId
+     * @return array
+     * @throws Exception
      */
     public function hardDeletePackage(int $packageId): array
     {
@@ -214,12 +222,11 @@ class PackageRepository
     }
 
     /**
-     * Menemukan semua paket dengan paginasi, biasanya untuk panel admin.
-     * Menggabungkan dengan data pengguna untuk menampilkan username penjual.
+     * Find all packages.
      *
-     * @param int $limit Jumlah maksimum paket per halaman.
-     * @param int $offset Jumlah paket yang akan dilewati (untuk paginasi).
-     * @return array Daftar paket.
+     * @param int $limit
+     * @param int $offset
+     * @return array
      */
     public function findAll(int $limit = 100, int $offset = 0): array
     {
@@ -238,10 +245,10 @@ class PackageRepository
     }
 
     /**
-     * Menemukan sebuah paket berdasarkan ID publiknya yang unik.
+     * Find a package by its public ID.
      *
-     * @param string $publicId ID publik paket (misal: 'ABCD_0001').
-     * @return array|false Data paket atau false jika tidak ditemukan.
+     * @param string $publicId
+     * @return array|false
      */
     public function findByPublicId(string $publicId)
     {
@@ -251,12 +258,12 @@ class PackageRepository
     }
 
     /**
-     * Mengubah status proteksi konten (`protect_content`) sebuah paket.
+     * Toggle content protection.
      *
-     * @param int $packageId ID paket yang akan diubah.
-     * @param int $seller_user_id ID Telegram penjual yang meminta, untuk verifikasi kepemilikan.
-     * @return bool Status proteksi konten yang baru (true jika aktif, false jika tidak).
-     * @throws Exception Jika paket tidak ditemukan atau pengguna bukan pemiliknya.
+     * @param int $packageId
+     * @param int $seller_user_id
+     * @return bool
+     * @throws Exception
      */
     public function toggleProtection(int $packageId, int $seller_user_id): bool
     {
@@ -281,14 +288,14 @@ class PackageRepository
     }
 
     /**
-     * Memperbarui detail sebuah paket (deskripsi dan harga).
+     * Update package details.
      *
-     * @param int $packageId ID paket yang akan diperbarui.
-     * @param int $seller_user_id ID Telegram penjual yang meminta, untuk verifikasi kepemilikan.
-     * @param string $description Deskripsi baru untuk paket.
-     * @param int|null $price Harga baru untuk paket (bisa null jika tidak diubah).
-     * @return bool True jika berhasil, false jika gagal.
-     * @throws Exception Jika paket tidak ditemukan atau pengguna bukan pemiliknya.
+     * @param int $packageId
+     * @param int $seller_user_id
+     * @param string $description
+     * @param int|null $price
+     * @return bool
+     * @throws Exception
      */
     public function updatePackageDetails(int $packageId, int $seller_user_id, string $description, ?int $price): bool
     {
@@ -309,16 +316,14 @@ class PackageRepository
     }
 
     /**
-     * Membuat paket baru dengan ID publik yang unik dan diformat secara otomatis.
-     * Metode ini secara atomik menaikkan nomor urut paket penjual dan membuat ID.
-     * Sebaiknya dijalankan di dalam sebuah transaksi.
+     * Create a new package with a public ID.
      *
-     * @param int $seller_user_id ID Telegram penjual.
-     * @param int $bot_id ID Telegram bot yang digunakan untuk membuat paket.
-     * @param string $description Deskripsi paket.
-     * @param int $thumbnail_media_id ID internal dari file media yang dijadikan thumbnail.
-     * @return int ID internal dari paket yang baru dibuat.
-     * @throws Exception Jika terjadi kegagalan dalam transaksi atau jika penjual tidak valid.
+     * @param int $seller_user_id
+     * @param int $bot_id
+     * @param string $description
+     * @param int $thumbnail_media_id
+     * @return int
+     * @throws Exception
      */
     public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id): int
     {
@@ -343,13 +348,12 @@ class PackageRepository
 
             // 4. Masukkan paket baru
             $stmt_package = $this->pdo->prepare(
-                "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id)
-                 VALUES (?, ?, ?, ?, 'pending', ?)"
+                "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id)\n                 VALUES (?, ?, ?, ?, 'pending', ?)"
             );
             $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $public_id]);
             $package_id = $this->pdo->lastInsertId();
 
-            return $package_id;
+            return (int)$package_id;
 
         } catch (Exception $e) {
             // Rollback akan ditangani oleh penangan eksepsi global di webhook.php
@@ -358,12 +362,10 @@ class PackageRepository
     }
 
     /**
-     * Mendapatkan data file media yang dijadikan thumbnail untuk sebuah paket.
-     * Jika thumbnail spesifik telah diatur, metode ini akan mengembalikannya.
-     * Jika tidak, metode ini akan mengembalikan file media pertama yang ditambahkan ke paket.
+     * Get the thumbnail file for a package.
      *
-     * @param int $package_id ID internal paket.
-     * @return array|false Data file thumbnail sebagai array asosiatif, atau false jika tidak ditemukan.
+     * @param int $package_id
+     * @return array|false
      */
     public function getThumbnailFile(int $package_id)
     {

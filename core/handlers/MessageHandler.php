@@ -1,26 +1,39 @@
 <?php
 
-require_once __DIR__ . '/../database/PackageRepository.php';
-require_once __DIR__ . '/../database/SaleRepository.php';
-require_once __DIR__ . '/../database/MediaFileRepository.php';
-require_once __DIR__ . '/../database/BotChannelUsageRepository.php';
-require_once __DIR__ . '/../database/AnalyticsRepository.php';
-require_once __DIR__ . '/../database/SellerSalesChannelRepository.php';
-require_once __DIR__ . '/../database/ChannelPostPackageRepository.php';
-require_once __DIR__ . '/../database/UserRepository.php';
-require_once __DIR__ . '/HandlerInterface.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Handlers;
+
+use PDO;
+use TGBot\App;
+use TGBot\Database\PackageRepository;
+use TGBot\Database\SaleRepository;
+use TGBot\Database\MediaFileRepository;
+use TGBot\Database\BotChannelUsageRepository;
+use TGBot\Database\AnalyticsRepository;
+use TGBot\Database\SellerSalesChannelRepository;
+use TGBot\Database\ChannelPostPackageRepository;
+use TGBot\Database\UserRepository;
 
 /**
- * Menangani pesan teks yang masuk, terutama perintah (commands).
- * Kelas ini bertindak sebagai router utama untuk mendelegasikan perintah
- * ke metode-metode penanganan yang sesuai.
+ * Class MessageHandler
+ * @package TGBot\Handlers
  */
 class MessageHandler implements HandlerInterface
 {
     /**
-     * Titik masuk utama untuk menangani pesan.
-     * Mengidentifikasi apakah pesan adalah forward otomatis, perintah, atau lainnya,
-     * lalu mendelegasikannya ke metode yang sesuai.
+     * Handle a message.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
      */
     public function handle(App $app, array $message): void
     {
@@ -85,7 +98,11 @@ class MessageHandler implements HandlerInterface
     }
 
     /**
-     * Menangani logika state machine yang sebelumnya ada di webhook.
+     * Handle the state machine.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
      */
     private function handleState(App $app, array $message): void
     {
@@ -107,9 +124,14 @@ class MessageHandler implements HandlerInterface
     }
 
     /**
-     * Menangani perintah `/register_channel` untuk mendaftarkan channel jualan.
+     * Handle the /register_channel command.
+     *
+     * @param App $app
+     * @param array $message
+     * @param array $parts
+     * @return void
      */
-    private function handleRegisterChannelCommand(App $app, array $message, array $parts)
+    private function handleRegisterChannelCommand(App $app, array $message, array $parts): void
     {
         $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
 
@@ -156,9 +178,13 @@ class MessageHandler implements HandlerInterface
     }
 
     /**
-     * Menangani perintah `/me` untuk menampilkan ringkasan profil pengguna.
+     * Handle the /me command.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
      */
-    private function handleMeCommand(App $app, array $message)
+    private function handleMeCommand(App $app, array $message): void
     {
         $analytics_repo = new AnalyticsRepository($app->pdo);
         $user_id = $app->user['id'];
@@ -185,16 +211,20 @@ class MessageHandler implements HandlerInterface
     }
 
     /**
-     * Menangani perintah `/help` untuk menampilkan pesan bantuan.
+     * Handle the /help command.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
      */
-    private function handleHelpCommand(App $app, array $message)
+    private function handleHelpCommand(App $app, array $message): void
     {
         $help_text = <<<EOT
 *🤖 Panduan Perintah Bot 🤖*
 
 Berikut adalah perintah utama yang bisa Anda gunakan:
 
-*--- UNTUK PENJUAL ---*
+*--- UNTUK PENJUAL ---
 ➡️ `/sell`
 Balas (reply) sebuah media (foto/video/album) dengan perintah ini untuk mulai menjual.
 ➡️ `/addmedia`
@@ -204,7 +234,7 @@ Gunakan sambil me-reply media baru untuk menambahkan media tersebut ke paket yan
 ➡️ `/register_channel <ID_CHANNEL>`
 Daftarkan channel jualan Anda. Bot harus menjadi admin di channel tersebut.
 
-*--- UNTUK SEMUA PENGGUNA ---*
+*--- UNTUK SEMUA PENGGUNA ---
 ➡️ `/konten <ID_PAKET>`
 Lihat detail atau beli sebuah konten.
 ➡️ `/me`
@@ -219,7 +249,7 @@ EOT;
             $admin_help_text = <<<EOT
 
 
-*--- KHUSUS ADMIN ---*
+*--- KHUSUS ADMIN ---
 ➡️ `/dev_addsaldo <user_id> <jumlah>`
 Menambah saldo ke pengguna.
 ➡️ `/feature <package_id> <channel_id>`
@@ -232,9 +262,14 @@ EOT;
     }
 
     /**
-     * Menangani perintah `/start`.
+     * Handle the /start command.
+     *
+     * @param App $app
+     * @param array $message
+     * @param array $parts
+     * @return void
      */
-    private function handleStartCommand(App $app, array $message, array $parts)
+    private function handleStartCommand(App $app, array $message, array $parts): void
     {
         $package_repo = new PackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
@@ -302,9 +337,13 @@ EOT;
     }
 
     /**
-     * Menangani perintah `/sell`.
+     * Handle the /sell command.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
      */
-    private function handleSellCommand(App $app, array $message)
+    private function handleSellCommand(App $app, array $message): void
     {
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
 
@@ -361,9 +400,14 @@ EOT;
     }
 
     /**
-     * Menangani perintah `/konten`.
+     * Handle the /konten command.
+     *
+     * @param App $app
+     * @param array $message
+     * @param array $parts
+     * @return void
      */
-    private function handleKontenCommand(App $app, array $message, array $parts)
+    private function handleKontenCommand(App $app, array $message, array $parts): void
     {
         $package_repo = new PackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
@@ -417,18 +461,26 @@ EOT;
     }
 
     /**
-     * Menangani perintah `/balance`.
+     * Handle the /balance command.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
      */
-    private function handleBalanceCommand(App $app, array $message)
+    private function handleBalanceCommand(App $app, array $message): void
     {
         $balance = "Rp " . number_format($app->user['balance'], 2, ',', '.');
         $app->telegram_api->sendMessage($app->chat_id, "Saldo Anda saat ini: {$balance}");
     }
 
     /**
-     * Menangani perintah `/login`.
+     * Handle the /login command.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
      */
-    private function handleLoginCommand(App $app, array $message)
+    private function handleLoginCommand(App $app, array $message): void
     {
         if (!defined('BASE_URL') || empty(BASE_URL)) {
             $app->telegram_api->sendMessage($app->chat_id, "Maaf, terjadi kesalahan teknis (ERR:CFG01).");
@@ -453,9 +505,15 @@ EOT;
     }
 
     /**
-     * Menangani perintah khusus admin.
+     * Handle admin commands.
+     *
+     * @param App $app
+     * @param array $message
+     * @param string $command
+     * @param array $parts
+     * @return void
      */
-    private function handleAdminCommands(App $app, array $message, string $command, array $parts)
+    private function handleAdminCommands(App $app, array $message, string $command, array $parts): void
     {
         if ($app->user['role'] !== 'Admin') {
             return;
@@ -464,9 +522,13 @@ EOT;
     }
 
     /**
-     * Router untuk perintah `/addmedia`.
+     * Handle the /addmedia command.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
      */
-    private function handleAddMediaCommand(App $app, array $message)
+    private function handleAddMediaCommand(App $app, array $message): void
     {
         $parts = explode(' ', $message['text']);
         if (count($parts) > 1) {
@@ -477,9 +539,13 @@ EOT;
     }
 
     /**
-     * Menambahkan media ke paket baru yang sedang dibuat.
+     * Add media to a new package.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
      */
-    private function addMediaToNewPackage(App $app, array $message)
+    private function addMediaToNewPackage(App $app, array $message): void
     {
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
 
@@ -497,9 +563,14 @@ EOT;
     }
 
     /**
-     * Menambahkan media ke paket yang sudah ada.
+     * Add media to an existing package.
+     *
+     * @param App $app
+     * @param array $message
+     * @param string $public_package_id
+     * @return void
      */
-    private function addMediaToExistingPackage(App $app, array $message, $public_package_id)
+    private function addMediaToExistingPackage(App $app, array $message, string $public_package_id): void
     {
         $package_repo = new PackageRepository($app->pdo);
 
@@ -518,9 +589,13 @@ EOT;
     }
 
     /**
-     * Menangani pesan yang di-forward otomatis.
+     * Handle automatic forwards.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
      */
-    private function handleAutomaticForward(App $app, array $message)
+    private function handleAutomaticForward(App $app, array $message): void
     {
         $post_package_repo = new ChannelPostPackageRepository($app->pdo);
         $forward_origin = $message['forward_origin'] ?? null;

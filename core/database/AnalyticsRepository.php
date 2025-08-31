@@ -1,17 +1,33 @@
 <?php
 
 /**
- * Repositori untuk mengambil data analitik dan statistik dari database.
- * Menyediakan metode untuk mendapatkan ringkasan penjualan, statistik pengguna, dll.
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Database;
+
+use PDO;
+
+/**
+ * Class AnalyticsRepository
+ * @package TGBot\Database
  */
 class AnalyticsRepository
 {
-    private $pdo;
+    /**
+     * @var PDO
+     */
+    private PDO $pdo;
 
     /**
-     * Membuat instance AnalyticsRepository.
+     * AnalyticsRepository constructor.
      *
-     * @param PDO $pdo Objek koneksi database.
+     * @param PDO $pdo
      */
     public function __construct(PDO $pdo)
     {
@@ -19,9 +35,9 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil ringkasan data penjualan global.
+     * Get global sales summary.
      *
-     * @return array Mengembalikan array dengan `total_sales` dan `total_revenue`.
+     * @return array
      */
     public function getGlobalSummary(): array
     {
@@ -34,10 +50,10 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil ringkasan statistik pembelian untuk seorang pengguna.
+     * Get user purchase stats.
      *
-     * @param int $buyer_user_id ID Telegram pengguna (pembeli).
-     * @return array Mengembalikan array dengan `total_purchases` dan `total_spent`.
+     * @param int $buyer_user_id
+     * @return array
      */
     public function getUserPurchaseStats(int $buyer_user_id): array
     {
@@ -51,10 +67,10 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil ringkasan statistik penjualan untuk seorang penjual.
+     * Get seller summary.
      *
-     * @param int $seller_user_id ID Telegram pengguna (penjual).
-     * @return array Mengembalikan array dengan `total_sales` dan `total_revenue`.
+     * @param int $seller_user_id
+     * @return array
      */
     public function getSellerSummary(int $seller_user_id): array
     {
@@ -68,15 +84,14 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil data pendapatan harian atau bulanan untuk ditampilkan dalam grafik.
-     * Agregasi beralih ke bulanan jika rentang hari lebih dari 90.
+     * Get sales by day.
      *
-     * @param int|null $seller_user_id Jika null, ambil data global. Jika diisi, filter berdasarkan ID penjual.
-     * @param int $days Jumlah hari terakhir yang akan diambil datanya.
-     * @param int|null $packageId Jika diisi, filter berdasarkan ID paket.
-     * @return array Daftar data, masing-masing berisi `sales_date` dan `daily_revenue`.
+     * @param int|null $seller_user_id
+     * @param int $days
+     * @param int|null $packageId
+     * @return array
      */
-    public function getSalesByDay(int $seller_user_id = null, int $days = 30, int $packageId = null): array
+    public function getSalesByDay(?int $seller_user_id = null, int $days = 30, ?int $packageId = null): array
     {
         $params = [date('Y-m-d H:i:s', strtotime("-{$days} days"))];
 
@@ -110,10 +125,10 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil daftar paket konten terlaris.
+     * Get top selling packages.
      *
-     * @param int $limit Jumlah maksimum paket yang akan diambil.
-     * @return array Daftar paket terlaris.
+     * @param int $limit
+     * @return array
      */
     public function getTopSellingPackages(int $limit = 5): array
     {
@@ -132,11 +147,11 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil daftar paket konten terlaris untuk seorang penjual.
+     * Get top selling packages for a seller.
      *
-     * @param int $seller_user_id ID Telegram penjual.
-     * @param int $limit Jumlah maksimum paket yang akan diambil.
-     * @return array Daftar paket terlaris.
+     * @param int $seller_user_id
+     * @param int $limit
+     * @return array
      */
     public function getTopSellingPackagesForSeller(int $seller_user_id, int $limit = 5): array
     {
@@ -157,10 +172,10 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil ringkasan statistik untuk satu paket konten.
+     * Get summary for a package.
      *
-     * @param int $packageId ID internal paket.
-     * @return array Mengembalikan array dengan `total_sales` dan `total_revenue`.
+     * @param int $packageId
+     * @return array
      */
     public function getSummaryForPackage(int $packageId): array
     {
@@ -174,11 +189,11 @@ class AnalyticsRepository
     }
 
     /**
-     * Mengambil daftar penjualan terakhir untuk sebuah paket.
+     * Get recent sales for a package.
      *
-     * @param int $packageId ID internal paket.
-     * @param int $limit Jumlah maksimum data penjualan yang akan diambil.
-     * @return array Daftar penjualan terakhir.
+     * @param int $packageId
+     * @param int $limit
+     * @return array
      */
     public function getRecentSalesForPackage(int $packageId, int $limit = 10): array
     {

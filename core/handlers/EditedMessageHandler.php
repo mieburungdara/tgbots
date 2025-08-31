@@ -1,18 +1,31 @@
 <?php
 
-require_once __DIR__ . '/HandlerInterface.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot\Handlers;
+
+use Exception;
+use TGBot\App;
 
 /**
- * Menangani pembaruan ketika sebuah pesan diedit.
- * Saat ini, fokus utamanya adalah memperbarui caption dari media yang telah diedit.
+ * Class EditedMessageHandler
+ * @package TGBot\Handlers
  */
 class EditedMessageHandler implements HandlerInterface
 {
     /**
-     * Titik masuk utama untuk menangani pesan yang diedit.
+     * Handle an edited message.
      *
-     * @param App $app Wadah aplikasi.
-     * @param array $edited_message Data pesan yang diedit dari Telegram.
+     * @param App $app
+     * @param array $edited_message
+     * @return void
      */
     public function handle(App $app, array $edited_message): void
     {

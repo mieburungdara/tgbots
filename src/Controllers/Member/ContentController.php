@@ -1,11 +1,34 @@
 <?php
 
-require_once __DIR__ . '/MemberBaseController.php';
-require_once __DIR__ . '/../../../core/database/PackageRepository.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-class ContentController extends MemberBaseController {
+namespace TGBot\Controllers\Member;
 
-    public function index() {
+use Exception;
+use TGBot\Controllers\Member\MemberBaseController;
+use TGBot\Database\PackageRepository;
+use TGBot\Database\AnalyticsRepository;
+
+/**
+ * Class ContentController
+ * @package TGBot\Controllers\Member
+ */
+class ContentController extends MemberBaseController
+{
+    /**
+     * Display the content management page.
+     *
+     * @return void
+     */
+    public function index(): void
+    {
         try {
             $pdo = get_db_connection();
             $packageRepo = new PackageRepository($pdo);
@@ -26,7 +49,13 @@ class ContentController extends MemberBaseController {
         }
     }
 
-    public function edit() {
+    /**
+     * Show the content edit page.
+     *
+     * @return void
+     */
+    public function edit(): void
+    {
         $public_id = $_GET['id'] ?? null;
         if (!$public_id) {
             header("Location: /member/my_content");
@@ -58,7 +87,13 @@ class ContentController extends MemberBaseController {
         unset($_SESSION['flash_error']);
     }
 
-    public function update() {
+    /**
+     * Update content details.
+     *
+     * @return void
+     */
+    public function update(): void
+    {
         $public_id = $_POST['public_id'] ?? null;
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !$public_id) {
             header('Location: /member/my_content');
@@ -104,7 +139,13 @@ class ContentController extends MemberBaseController {
         }
     }
 
-    public function show() {
+    /**
+     * Show content details.
+     *
+     * @return void
+     */
+    public function show(): void
+    {
         $public_id = $_GET['id'] ?? null;
         if (!$public_id) {
             header("Location: /member/my_content");
@@ -157,29 +198,37 @@ class ContentController extends MemberBaseController {
         ], 'member_layout');
     }
 
-    public function toggleProtection() {
+    /**
+     * Toggle content protection.
+     *
+     * @return void
+     */
+    public function toggleProtection(): void
+    {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['package_id'])) {
-            return $this->jsonResponse(['status' => 'error', 'message' => 'Permintaan tidak valid.'], 400);
+            $this->jsonResponse(['status' => 'error', 'message' => 'Permintaan tidak valid.'], 400);
+            return;
         }
 
         $package_id = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
         $user_id = $_SESSION['member_user_id'];
 
         if (!$package_id) {
-            return $this->jsonResponse(['status' => 'error', 'message' => 'ID paket tidak valid.'], 400);
+            $this->jsonResponse(['status' => 'error', 'message' => 'ID paket tidak valid.'], 400);
+            return;
         }
 
         try {
             $pdo = get_db_connection();
             $packageRepo = new PackageRepository($pdo);
             $new_status = $packageRepo->toggleProtection($package_id, $user_id);
-            return $this->jsonResponse([
+            $this->jsonResponse([
                 'status' => 'success',
                 'message' => 'Status proteksi berhasil diubah.',
                 'is_protected' => $new_status
             ]);
         } catch (Exception $e) {
-            return $this->jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
+            $this->jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
 }

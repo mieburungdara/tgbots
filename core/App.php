@@ -1,9 +1,21 @@
 <?php
 
-declare(strict_types=1);
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot;
+
+use PDO;
 
 /**
  * Class App
+ * @package TGBot
  *
  * Sebuah wadah sederhana untuk menampung objek dan data yang sering digunakan
  * di seluruh aplikasi, seperti koneksi database, instance API, dan pengguna saat ini.
@@ -12,22 +24,22 @@ declare(strict_types=1);
 class App
 {
     /** @var PDO Koneksi database. */
-    public $pdo;
+    public PDO $pdo;
 
     /** @var TelegramAPI Klien API Telegram. */
-    public $telegram_api;
+    public TelegramAPI $telegram_api;
 
     /** @var array Informasi tentang bot yang sedang berjalan. */
-    public $bot;
+    public array $bot;
 
     /** @var array Pengaturan spesifik untuk bot ini. */
-    public $bot_settings;
+    public array $bot_settings;
 
     /** @var array Informasi pengguna yang berinteraksi dengan bot. */
-    public $user;
+    public array $user;
 
     /** @var int ID obrolan saat ini. */
-    public $chat_id;
+    public int $chat_id;
 
     /**
      * App constructor.

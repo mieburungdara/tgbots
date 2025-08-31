@@ -1,26 +1,79 @@
 <?php
 
-class Router {
-    protected $routes = [
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
+
+namespace TGBot;
+
+use Exception;
+use ReflectionMethod;
+
+/**
+ * Class Router
+ * @package TGBot
+ */
+class Router
+{
+    /**
+     * @var array
+     */
+    protected array $routes = [
         'GET' => [],
         'POST' => []
     ];
 
-    public static function load($file) {
+    /**
+     * Load a routes file.
+     *
+     * @param string $file
+     * @return static
+     */
+    public static function load(string $file): static
+    {
         $router = new static;
         require $file;
         return $router;
     }
 
-    public function get($uri, $controller) {
+    /**
+     * Register a GET route.
+     *
+     * @param string $uri
+     * @param string $controller
+     * @return void
+     */
+    public function get(string $uri, string $controller): void
+    {
         $this->routes['GET'][$uri] = $controller;
     }
 
-    public function post($uri, $controller) {
+    /**
+     * Register a POST route.
+     *
+     * @param string $uri
+     * @param string $controller
+     * @return void
+     */
+    public function post(string $uri, string $controller): void
+    {
         $this->routes['POST'][$uri] = $controller;
     }
 
-    public function direct($uri, $requestType) {
+    /**
+     * Direct the request to the appropriate controller and action.
+     *
+     * @param string $uri
+     * @param string $requestType
+     * @return mixed
+     */
+    public function direct(string $uri, string $requestType)
+    {
         $uri = trim($uri, '/');
 
         // Fix #2: Handle unregistered HTTP methods
@@ -60,7 +113,17 @@ class Router {
         exit();
     }
 
-    protected function callAction($controller, $action, $params = []) {
+    /**
+     * Call the action on the controller.
+     *
+     * @param string $controller
+     * @param string $action
+     * @param array $params
+     * @return mixed
+     * @throws Exception
+     */
+    protected function callAction(string $controller, string $action, array $params = [])
+    {
         $controllerFile = __DIR__ . "/../src/Controllers/{$controller}.php";
 
         if (!file_exists($controllerFile)) {

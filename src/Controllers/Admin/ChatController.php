@@ -1,11 +1,34 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
-require_once __DIR__ . '/../../../core/TelegramAPI.php';
+/**
+ * This file is part of the TGBot package.
+ *
+ * (c) Zidin Mitra Abadi <zidinmitra@gmail.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
-class ChatController extends BaseController {
+namespace TGBot\Controllers\Admin;
 
-    public function index() {
+use Exception;
+use PDO;
+use TGBot\Controllers\BaseController;
+use TGBot\TelegramAPI;
+
+/**
+ * Class ChatController
+ * @package TGBot\Controllers\Admin
+ */
+class ChatController extends BaseController
+{
+    /**
+     * Display the chat page.
+     *
+     * @return void
+     */
+    public function index(): void
+    {
         try {
             $pdo = get_db_connection();
             $telegram_id = isset($_GET['telegram_id']) ? (int)$_GET['telegram_id'] : 0;
@@ -65,7 +88,13 @@ class ChatController extends BaseController {
         }
     }
 
-    public function reply() {
+    /**
+     * Reply to a chat.
+     *
+     * @return void
+     */
+    public function reply(): void
+    {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['reply_message'])) {
                 header('Location: /admin/dashboard');
@@ -102,7 +131,13 @@ class ChatController extends BaseController {
         }
     }
 
-    public function channel() {
+    /**
+     * Display the channel chat page.
+     *
+     * @return void
+     */
+    public function channel(): void
+    {
         try {
             $pdo = get_db_connection();
             $chat_id = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
@@ -164,7 +199,13 @@ class ChatController extends BaseController {
         }
     }
 
-    public function delete() {
+    /**
+     * Delete messages.
+     *
+     * @return void
+     */
+    public function delete(): void
+    {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
                 header("Location: /admin/dashboard");
