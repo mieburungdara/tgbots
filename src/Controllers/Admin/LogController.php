@@ -14,7 +14,7 @@ class LogController extends BaseController {
 
     public function app() {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $items_per_page = 50;
 
             $stmt_levels = $pdo->query("SELECT DISTINCT level FROM app_logs ORDER BY level ASC");
@@ -65,7 +65,7 @@ class LogController extends BaseController {
                 'message' => $message
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in LogController/app: ' . $e->getMessage(), 'error');
+            \app_log('Error in LogController/app: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the app logs.'
@@ -79,10 +79,10 @@ class LogController extends BaseController {
             exit();
         }
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         try {
             $pdo->query("TRUNCATE TABLE app_logs");
-            app_log("Tabel app_logs dibersihkan oleh admin.", 'system');
+            \app_log("Tabel app_logs dibersihkan oleh admin.", 'system');
             $_SESSION['flash_message'] = "Semua log berhasil dibersihkan.";
         } catch (PDOException $e) {
             $_SESSION['flash_message'] = "Gagal membersihkan log: " . $e->getMessage();
@@ -94,7 +94,7 @@ class LogController extends BaseController {
 
     public function media() {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $sql = "
                 SELECT
                     mf.id, mf.type, mf.file_name, mf.caption, mf.file_size, mf.media_group_id, mf.created_at,
@@ -133,7 +133,7 @@ class LogController extends BaseController {
                 'grouped_logs' => $grouped_logs
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in LogController/media: ' . $e->getMessage(), 'error');
+            \app_log('Error in LogController/media: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the media logs.'
@@ -143,7 +143,7 @@ class LogController extends BaseController {
 
     public function telegram() {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $logRepo = new TelegramErrorLogRepository($pdo);
 
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
@@ -162,7 +162,7 @@ class LogController extends BaseController {
                 'page' => $page
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in LogController/telegram: ' . $e->getMessage(), 'error');
+            \app_log('Error in LogController/telegram: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the Telegram error logs.'

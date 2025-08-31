@@ -46,7 +46,7 @@ abstract class AppController {
                 echo $content;
             }
         } catch (Exception $e) {
-            app_log('Error in view rendering: ' . $e->getMessage());
+            \app_log('Error in view rendering: ' . $e->getMessage());
             // Optionally, show a generic error page
             http_response_code(500);
             echo "<h1>An error occurred</h1>";

@@ -20,7 +20,7 @@ class StorageChannelController extends BaseController {
 
     public function __construct() {
         parent::__construct();
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         if (!$pdo) {
             throw new RuntimeException("Koneksi database gagal.");
         }
@@ -44,7 +44,7 @@ class StorageChannelController extends BaseController {
                 'message' => $message
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in StorageChannelController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in StorageChannelController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the storage channel management page.'
@@ -72,7 +72,7 @@ class StorageChannelController extends BaseController {
                 $_SESSION['flash_message'] = "Data channel tidak valid.";
             }
         } catch (Exception $e) {
-            app_log('Error in StorageChannelController/store: ' . $e->getMessage(), 'error');
+            \app_log('Error in StorageChannelController/store: ' . $e->getMessage(), 'error');
             $_SESSION['flash_message'] = "An error occurred while adding the storage channel.";
         }
 
@@ -101,7 +101,7 @@ class StorageChannelController extends BaseController {
                 $_SESSION['flash_message'] = "Data untuk pembaruan channel tidak valid.";
             }
         } catch (Exception $e) {
-            app_log('Error in StorageChannelController/update: ' . $e->getMessage(), 'error');
+            \app_log('Error in StorageChannelController/update: ' . $e->getMessage(), 'error');
             $_SESSION['flash_message'] = "An error occurred while updating the storage channel.";
         }
 
@@ -128,7 +128,7 @@ class StorageChannelController extends BaseController {
                 $_SESSION['flash_message'] = "ID Channel tidak valid.";
             }
         } catch (Exception $e) {
-            app_log('Error in StorageChannelController/setDefault: ' . $e->getMessage(), 'error');
+            \app_log('Error in StorageChannelController/setDefault: ' . $e->getMessage(), 'error');
             $_SESSION['flash_message'] = "An error occurred while setting the default channel.";
         }
 
@@ -155,7 +155,7 @@ class StorageChannelController extends BaseController {
                 $_SESSION['flash_message'] = "ID Channel tidak valid untuk penghapusan.";
             }
         } catch (Exception $e) {
-            app_log('Error in StorageChannelController/destroy: ' . $e->getMessage(), 'error');
+            \app_log('Error in StorageChannelController/destroy: ' . $e->getMessage(), 'error');
             $_SESSION['flash_message'] = "An error occurred while deleting the storage channel.";
         }
 

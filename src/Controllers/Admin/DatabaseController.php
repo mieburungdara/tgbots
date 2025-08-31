@@ -25,7 +25,7 @@ class DatabaseController extends BaseController
                 'message' => $message
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in DatabaseController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in DatabaseController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the database management page.'
@@ -43,7 +43,7 @@ class DatabaseController extends BaseController
             exit();
         }
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         $allowed_files = ['updated_schema.sql', 'setup.sql'];
         $selected_file = $_POST['sql_file'] ?? '';
 
@@ -83,7 +83,7 @@ class DatabaseController extends BaseController
                 throw new Exception("Metode permintaan harus POST.");
             }
 
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             if (!$pdo) {
                 throw new Exception("Koneksi database gagal.");
             }

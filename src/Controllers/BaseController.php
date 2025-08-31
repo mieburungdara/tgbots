@@ -24,7 +24,7 @@ abstract class BaseController extends AppController {
 
             // Coba ambil bot default atau bot pertama dari database
             try {
-                $pdo = get_db_connection();
+                $pdo = \get_db_connection();
                 if ($pdo) {
                     // Query untuk mengambil username dari bot pertama yang ditemukan
                     // Ini asumsi, bisa disesuaikan jika ada logika bot "default"
@@ -37,7 +37,7 @@ abstract class BaseController extends AppController {
             } catch (Exception $e) {
                 // Log the database error and continue, so the user sees the access denied page
                 // instead of a fatal error.
-                app_log('Kesalahan database saat mengambil nama pengguna bot untuk halaman akses ditolak: ' . $e->getMessage());
+                \app_log('Kesalahan database saat mengambil nama pengguna bot untuk halaman akses ditolak: ' . $e->getMessage());
             }
 
             // Render halaman akses ditolak

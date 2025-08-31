@@ -47,7 +47,7 @@ class LoginController extends AppController
                 'token_from_url' => $_GET['token'] ?? '' // Pre-fill from URL on redirect
             ]);
         } catch (Exception $e) {
-            app_log('Error in Member/LoginController/showLoginForm: ' . $e->getMessage(), 'error');
+            \app_log('Error in Member/LoginController/showLoginForm: ' . $e->getMessage(), 'error');
             $this->view('member/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the login page.'
@@ -66,7 +66,7 @@ class LoginController extends AppController
             $token = $_POST['token'] ?? '';
             $this->handleToken($token);
         } catch (Exception $e) {
-            app_log('Error in Member/LoginController/processFormLogin: ' . $e->getMessage(), 'error');
+            \app_log('Error in Member/LoginController/processFormLogin: ' . $e->getMessage(), 'error');
             $_SESSION['flash_login_error'] = 'An internal error occurred.';
             header("Location: /member/login");
             exit();
@@ -84,7 +84,7 @@ class LoginController extends AppController
             $token = $_GET['token'] ?? '';
             $this->handleToken($token);
         } catch (Exception $e) {
-            app_log('Error in Member/LoginController/processLinkLogin: ' . $e->getMessage(), 'error');
+            \app_log('Error in Member/LoginController/processLinkLogin: ' . $e->getMessage(), 'error');
             $_SESSION['flash_login_error'] = 'An internal error occurred.';
             header("Location: /member/login");
             exit();
@@ -110,7 +110,7 @@ class LoginController extends AppController
                 exit();
             }
 
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $error_message = null;
 
             $stmt = $pdo->prepare("SELECT * FROM users WHERE login_token = ? AND token_used = 0");
@@ -137,7 +137,7 @@ class LoginController extends AppController
             header("Location: /member/login?token=" . urlencode($token));
             exit();
         } catch (Exception $e) {
-            app_log('Error in Member/LoginController/handleToken: ' . $e->getMessage(), 'error');
+            \app_log('Error in Member/LoginController/handleToken: ' . $e->getMessage(), 'error');
             $_SESSION['flash_login_error'] = 'An internal error occurred.';
             header("Location: /member/login");
             exit();

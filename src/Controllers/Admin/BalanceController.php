@@ -32,7 +32,7 @@ class BalanceController extends BaseController
     public function index(): void
     {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
 
             $flash_message = $_SESSION['flash_message'] ?? '';
             $flash_message_type = $_SESSION['flash_message_type'] ?? 'success';
@@ -94,7 +94,7 @@ class BalanceController extends BaseController
                 'flash_message_type' => $flash_message_type
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in BalanceController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in BalanceController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the balance management page.'
@@ -114,7 +114,7 @@ class BalanceController extends BaseController
             exit();
         }
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         $user_id = (int)($_POST['user_id'] ?? 0);
         $amount = filter_var($_POST['amount'] ?? 0, FILTER_VALIDATE_FLOAT);
         $description = trim($_POST['description'] ?? '');
@@ -159,7 +159,7 @@ class BalanceController extends BaseController
             return;
         }
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         try {
             $stmt = $pdo->prepare("SELECT amount, type, description, created_at FROM balance_transactions WHERE user_id = ? ORDER BY created_at DESC");
             $stmt->execute([$user_id]);
@@ -183,7 +183,7 @@ class BalanceController extends BaseController
             return;
         }
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         try {
             $stmt = $pdo->prepare(
                 "SELECT s.price, s.purchased_at, mp.title as package_title, u_buyer.first_name as buyer_name\n                 FROM sales s\n                 JOIN media_packages mp ON s.package_id = mp.id\n                 JOIN users u_buyer ON s.buyer_user_id = u_buyer.id\n                 WHERE s.seller_user_id = ? ORDER BY s.purchased_at DESC"
@@ -209,7 +209,7 @@ class BalanceController extends BaseController
             return;
         }
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         try {
             $stmt = $pdo->prepare(
                 "SELECT s.price, s.purchased_at, mp.title as package_title\n                 FROM sales s\n                 JOIN media_packages mp ON s.package_id = mp.id\n                 WHERE s.buyer_user_id = ? ORDER BY s.purchased_at DESC"

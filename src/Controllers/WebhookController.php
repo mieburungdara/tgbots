@@ -30,14 +30,14 @@ class WebhookController
             $bot_id = $params['id'] ?? null;
             if (!$bot_id || !filter_var($bot_id, FILTER_VALIDATE_INT)) {
                 http_response_code(400);
-                app_log("Webhook Error: ID bot dari URL tidak valid atau tidak ada.", 'bot');
+                \app_log("Webhook Error: ID bot dari URL tidak valid atau tidak ada.", 'bot');
                 exit;
             }
             $bot_id = (int)$bot_id;
 
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             if (!$pdo) {
-                app_log("Webhook Error: Gagal terkoneksi ke database.", 'critical');
+                \app_log("Webhook Error: Gagal terkoneksi ke database.", 'critical');
                 http_response_code(500);
                 exit;
             }
@@ -46,7 +46,7 @@ class WebhookController
             $bot = $bot_repo->findBotByTelegramId($bot_id);
             if (!$bot) {
                 http_response_code(404);
-                app_log("Webhook Error: Bot dengan ID Telegram {$bot_id} tidak ditemukan.", 'bot');
+                \app_log("Webhook Error: Bot dengan ID Telegram {$bot_id} tidak ditemukan.", 'bot');
                 exit;
             }
 
@@ -68,7 +68,7 @@ class WebhookController
 
             $update = json_decode($update_json, true);
             if (!$update) {
-                app_log("Webhook Error: Gagal mendekode JSON dari Telegram.", 'warning');
+                \app_log("Webhook Error: Gagal mendekode JSON dari Telegram.", 'warning');
                 http_response_code(200);
                 exit;
             }
@@ -80,7 +80,7 @@ class WebhookController
 
         } catch (Throwable $e) {
             $error_message = sprintf("Fatal Webhook Error: %s in %s on line %d", $e->getMessage(), $e->getFile(), $e->getLine());
-            app_log($error_message, 'error');
+            \app_log($error_message, 'error');
             http_response_code(500);
         }
         exit;

@@ -37,7 +37,7 @@ class XorAdminController extends AppController
     private function connectDb()
     {
         if ($this->pdo === null) {
-            $this->pdo = get_db_connection();
+            $this->pdo = \get_db_connection();
         }
     }
 
@@ -122,7 +122,7 @@ class XorAdminController extends AppController
 
             $this->view('admin/xoradmin/index', $data);
         } catch (Exception $e) {
-            app_log('Error in XorAdminController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in XorAdminController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the XOR admin page.'
@@ -140,7 +140,7 @@ class XorAdminController extends AppController
                 unset($_SESSION['xor_is_authenticated']);
             }
         } catch (Exception $e) {
-            app_log('Error in XorAdminController/login: ' . $e->getMessage(), 'error');
+            \app_log('Error in XorAdminController/login: ' . $e->getMessage(), 'error');
             $_SESSION['xor_error'] = "An internal error occurred.";
         }
         header("Location: /xoradmin");
@@ -152,7 +152,7 @@ class XorAdminController extends AppController
         try {
             unset($_SESSION['xor_is_authenticated']);
         } catch (Exception $e) {
-            app_log('Error in XorAdminController/logout: ' . $e->getMessage(), 'error');
+            \app_log('Error in XorAdminController/logout: ' . $e->getMessage(), 'error');
         }
         header("Location: /xoradmin");
         exit;

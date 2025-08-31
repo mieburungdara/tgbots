@@ -36,7 +36,7 @@ class ContentController extends MemberBaseController
     public function index(): void
     {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $packageRepo = new PackageRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
@@ -47,7 +47,7 @@ class ContentController extends MemberBaseController
                 'my_packages' => $my_packages
             ], 'member_layout');
         } catch (Exception $e) {
-            app_log('Error in ContentController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in ContentController/index: ' . $e->getMessage(), 'error');
             $this->view('member/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading your content.'
@@ -71,7 +71,7 @@ class ContentController extends MemberBaseController
             exit;
         }
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         $packageRepo = new PackageRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
 
@@ -111,7 +111,7 @@ class ContentController extends MemberBaseController
             exit();
         }
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         $packageRepo = new PackageRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
 
@@ -166,7 +166,7 @@ class ContentController extends MemberBaseController
             exit;
         }
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         $packageRepo = new PackageRepository($pdo);
         $analyticsRepo = new AnalyticsRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
@@ -236,7 +236,7 @@ class ContentController extends MemberBaseController
         }
 
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $packageRepo = new PackageRepository($pdo);
             $new_status = $packageRepo->toggleProtection($package_id, $user_id);
             $this->jsonResponse([

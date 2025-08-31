@@ -28,7 +28,7 @@ class ForwardManagerController extends BaseController
                 throw new Exception("ID Grup atau ID Bot tidak ada.");
             }
 
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
 
             $bot_stmt = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
             $bot_stmt->execute([$bot_id]);
@@ -111,7 +111,7 @@ Waktu Kirim: {$sender_info['created_at']}
 
         } catch (Exception $e) {
             $response['message'] = $e->getMessage();
-            app_log("Forwarding error: " . $e->getMessage(), 'error');
+            \app_log("Forwarding error: " . $e->getMessage(), 'error');
         }
 
         echo json_encode($response);

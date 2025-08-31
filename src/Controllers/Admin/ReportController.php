@@ -26,7 +26,7 @@ class ReportController extends AdminBaseController
                 'monthlyRevenue' => $this->reportRepo->getMonthlyRevenueThisYear(),
             ]);
         } catch (Exception $e) {
-            app_log('Error fetching financial report: ' . $e->getMessage(), 'error');
+            \app_log('Error fetching financial report: ' . $e->getMessage(), 'error');
             $this->render('admin/reports/financial', [
                 'title' => 'Laporan Keuangan',
                 'error' => 'Gagal memuat laporan keuangan. Silakan periksa log untuk detailnya.'

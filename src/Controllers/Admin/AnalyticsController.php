@@ -37,7 +37,7 @@ class AnalyticsController extends BaseController
     public function index(): void
     {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $analyticsRepo = new AnalyticsRepository($pdo);
 
             $summary = $analyticsRepo->getGlobalSummary();
@@ -59,7 +59,7 @@ class AnalyticsController extends BaseController
                 'top_packages' => $top_packages
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in AnalyticsController: ' . $e->getMessage(), 'error');
+            \app_log('Error in AnalyticsController: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the analytics page.'

@@ -23,7 +23,7 @@ class HomeController extends AppController
             // Catat error jika view tidak ditemukan atau ada masalah lain
             // Gunakan app_log jika tersedia, jika tidak, gunakan error_log bawaan
             if (function_exists('app_log')) {
-                app_log('Error in HomeController: ' . $e->getMessage(), 'error');
+                \app_log('Error in HomeController: ' . $e->getMessage(), 'error');
             } else {
                 error_log('Error in HomeController: ' . $e->getMessage());
             }

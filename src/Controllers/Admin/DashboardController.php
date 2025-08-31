@@ -13,7 +13,7 @@ class DashboardController extends BaseController {
         try {
             // The BaseController's constructor already handles session start and auth check.
 
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
 
             // The helper function 'get_initials' is loaded via the front controller,
             // so it will be available in the view scope.
@@ -87,7 +87,7 @@ class DashboardController extends BaseController {
                 'bot_exists' => $bot_exists
             ], 'admin_layout'); // Using a layout
         } catch (Exception $e) {
-            app_log('Error in DashboardController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in DashboardController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the dashboard.'

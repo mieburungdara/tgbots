@@ -38,7 +38,7 @@ abstract class MemberBaseController extends AppController
                 exit();
             }
         } catch (Exception $e) {
-            app_log('Error in MemberBaseController/__construct: ' . $e->getMessage(), 'error');
+            \app_log('Error in MemberBaseController/__construct: ' . $e->getMessage(), 'error');
             // For a base controller, it might be best to show a generic error page
             // as we don't know the context of the request yet.
             $this->view('member/error', [

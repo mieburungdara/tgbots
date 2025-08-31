@@ -13,7 +13,7 @@ class PackageController extends BaseController {
 
     public function index() {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $packageRepo = new PackageRepository($pdo);
 
             $message = $_SESSION['flash_message'] ?? null;
@@ -27,7 +27,7 @@ class PackageController extends BaseController {
                 'message' => $message
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in PackageController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in PackageController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the package management page.'
@@ -41,7 +41,7 @@ class PackageController extends BaseController {
             exit();
         }
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         $packageRepo = new PackageRepository($pdo);
         $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
 

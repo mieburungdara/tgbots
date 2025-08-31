@@ -38,7 +38,7 @@ class BotController extends BaseController
     public function index(): void
     {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $bots = $pdo->query("SELECT id, first_name, username, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
 
             $error = $_SESSION['flash_error'] ?? null;
@@ -55,7 +55,7 @@ class BotController extends BaseController
                 'success' => $success
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in BotController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in BotController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the bot management page.'
@@ -73,7 +73,7 @@ class BotController extends BaseController
      */
     public function store(): void
     {
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         $error = null;
         $success = null;
 
@@ -152,7 +152,7 @@ class BotController extends BaseController
                 exit;
             }
             $bot_id = (int)$_GET['id'];
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
 
             $stmt = $pdo->prepare("SELECT id, first_name, username, token, created_at FROM bots WHERE id = ?");
             $stmt->execute([$bot_id]);
@@ -184,7 +184,7 @@ class BotController extends BaseController
                 'status_message' => $status_message
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in BotController/edit: ' . $e->getMessage(), 'error');
+            \app_log('Error in BotController/edit: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the bot edit page.'
@@ -208,7 +208,7 @@ class BotController extends BaseController
 
         $bot_id = (int)$_POST['bot_id'];
         $submitted_settings = $_POST['settings'] ?? [];
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
 
         // Define all possible settings to ensure we process all of them
         $all_setting_keys = [
@@ -256,7 +256,7 @@ class BotController extends BaseController
             if (!$bot_id) {
                 $this->jsonResponse(['error' => 'ID Bot tidak valid.'], 400);
             }
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $stmt = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
             $stmt->execute([$bot_id]);
             $bot = $stmt->fetch();
@@ -265,7 +265,7 @@ class BotController extends BaseController
             }
             return new TelegramAPI($bot['token']);
         } catch (Exception $e) {
-            app_log('Error in BotController/getBotAndApi: ' . $e->getMessage(), 'error');
+            \app_log('Error in BotController/getBotAndApi: ' . $e->getMessage(), 'error');
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }
@@ -289,7 +289,7 @@ class BotController extends BaseController
             $result = $telegram->setWebhook($webhook_url);
             $this->jsonResponse($result);
         } catch (Exception $e) {
-            app_log('Error in BotController/setWebhook: ' . $e->getMessage(), 'error');
+            \app_log('Error in BotController/setWebhook: ' . $e->getMessage(), 'error');
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }
@@ -309,7 +309,7 @@ class BotController extends BaseController
             $result = $telegram->getWebhookInfo();
             $this->jsonResponse($result);
         } catch (Exception $e) {
-            app_log('Error in BotController/getWebhookInfo: ' . $e->getMessage(), 'error');
+            \app_log('Error in BotController/getWebhookInfo: ' . $e->getMessage(), 'error');
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }
@@ -329,7 +329,7 @@ class BotController extends BaseController
             $result = $telegram->deleteWebhook();
             $this->jsonResponse($result);
         } catch (Exception $e) {
-            app_log('Error in BotController/deleteWebhook: ' . $e->getMessage(), 'error');
+            \app_log('Error in BotController/deleteWebhook: ' . $e->getMessage(), 'error');
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }
@@ -361,7 +361,7 @@ class BotController extends BaseController
             $first_name = $bot_result['first_name'];
             $username = $bot_result['username'] ?? null;
 
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $stmt_update = $pdo->prepare("UPDATE bots SET first_name = ?, username = ? WHERE id = ?");
             $stmt_update->execute([$first_name, $username, $bot_id]);
 
@@ -370,7 +370,7 @@ class BotController extends BaseController
                 'data' => ['first_name' => $first_name, 'username' => $username]
             ]);
         } catch (Exception $e) {
-            app_log('Error in BotController/getMe: ' . $e->getMessage(), 'error');
+            \app_log('Error in BotController/getMe: ' . $e->getMessage(), 'error');
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }
@@ -410,7 +410,7 @@ class BotController extends BaseController
                 'body' => $response_body
             ]);
         } catch (Exception $e) {
-            app_log('Error in BotController/testWebhook: ' . $e->getMessage(), 'error');
+            \app_log('Error in BotController/testWebhook: ' . $e->getMessage(), 'error');
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }

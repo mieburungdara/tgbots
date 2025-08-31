@@ -12,7 +12,7 @@ class UserController extends BaseController {
 
     public function index() {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
 
             // --- Logika Pencarian ---
             $search_term = $_GET['search'] ?? '';
@@ -85,7 +85,7 @@ class UserController extends BaseController {
 
             unset($_SESSION['flash_message']);
         } catch (Exception $e) {
-            app_log('Error in UserController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in UserController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the user management page.'
@@ -98,7 +98,7 @@ class UserController extends BaseController {
             return $this->jsonResponse(['error' => 'Telegram ID tidak valid atau tidak diberikan.'], 400);
         }
         $user_id = (int)$_GET['telegram_id'];
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         try {
             $stmt = $pdo->prepare("SELECT role_id FROM user_roles WHERE user_id = ?");
             $stmt->execute([$user_id]);
@@ -124,7 +124,7 @@ class UserController extends BaseController {
 
         $user_id_to_update = (int)$data['telegram_id'];
         $role_ids = array_filter(array_map('intval', $data['role_ids']), fn($id) => $id > 0);
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
 
         try {
             $pdo->beginTransaction();

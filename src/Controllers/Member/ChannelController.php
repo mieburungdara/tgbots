@@ -37,7 +37,7 @@ class ChannelController extends MemberBaseController
     public function index(): void
     {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $channelRepo = new SellerSalesChannelRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
@@ -45,12 +45,12 @@ class ChannelController extends MemberBaseController
             $success_message = $_SESSION['flash_success'] ?? null;
             unset($_SESSION['flash_error'], $_SESSION['flash_success']);
 
-            $all_bots = get_all_bots($pdo);
+            $all_bots = \get_all_bots($pdo);
             $current_channel = $channelRepo->findBySellerId($user_id);
             $bot_details = null;
 
             if ($current_channel && !empty($current_channel['bot_id'])) {
-                $bot_details = get_bot_details($pdo, $current_channel['bot_id']);
+                $bot_details = \get_bot_details($pdo, $current_channel['bot_id']);
                 try {
                     if ($bot_details) {
                         $telegram_api_for_info = new TelegramAPI($bot_details['token']);
@@ -75,7 +75,7 @@ class ChannelController extends MemberBaseController
                 'success_message' => $success_message
             ], 'member_layout');
         } catch (Exception $e) {
-            app_log('Error in ChannelController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in ChannelController/index: ' . $e->getMessage(), 'error');
             $this->view('member/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the channel management page.'
@@ -106,7 +106,7 @@ class ChannelController extends MemberBaseController
         }
         $_SESSION['last_channel_check'] = time();
 
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         $channelRepo = new SellerSalesChannelRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
 
@@ -121,7 +121,7 @@ class ChannelController extends MemberBaseController
         }
 
         try {
-            $bot_token = get_bot_token($pdo, $selected_bot_id);
+            $bot_token = \get_bot_token($pdo, $selected_bot_id);
             if (!$bot_token) throw new Exception("Bot yang dipilih tidak valid.");
 
             $telegram_api = new TelegramAPI($bot_token);

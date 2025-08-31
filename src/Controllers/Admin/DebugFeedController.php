@@ -13,7 +13,7 @@ class DebugFeedController extends BaseController
     public function index()
     {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $raw_update_repo = new RawUpdateRepository($pdo);
 
             // Pagination Logic
@@ -35,7 +35,7 @@ class DebugFeedController extends BaseController
                 ]
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in DebugFeedController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in DebugFeedController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the debug feed.'

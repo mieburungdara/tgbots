@@ -42,7 +42,7 @@ class ApiTestController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $this->pdo = get_db_connection();
+        $this->pdo = \get_db_connection();
     }
 
     /**
@@ -63,7 +63,7 @@ class ApiTestController extends BaseController
                 'bots' => $bots
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in ApiTestController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in ApiTestController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the API Test page.'

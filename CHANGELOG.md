@@ -1,5 +1,15 @@
 # Changelog
 
+## [5.1.18] - 2025-08-31
+
+### Diperbaiki
+- **Fatal Error `require_once` dan `undefined function`**: Melakukan refactoring besar dengan mengganti semua pemanggilan `require_once` yang berulang dengan autoloader terpusat. Ini memperbaiki serangkaian error fatal, termasuk `Class not found` dan `Call to undefined function`.
+  - **Penyebab**: Ketergantungan pada `require_once` manual menyebabkan file tidak dimuat dalam urutan yang benar, dan pemanggilan fungsi global dari dalam namespace menyebabkan konflik.
+  - **Solusi**:
+    1.  Membuat `core/autoloader.php` baru yang secara cerdas memuat kelas dari direktori `src` dan `core` berdasarkan namespace `TGBot`.
+    2.  Menghapus semua `require_once` yang berlebihan dari seluruh file controller dan file inti.
+    3.  Memperbaiki semua pemanggilan fungsi helper global (seperti `get_db_connection`, `app_log`) dengan menambahkan prefix `\` untuk memanggilnya dari namespace global, menyelesaikan semua error `undefined function`.
+
 ## [5.1.17] - 2025-08-31
 
 ### Diperbaiki

@@ -32,7 +32,7 @@ class ChatController extends BaseController
     public function index(): void
     {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $telegram_id = isset($_GET['telegram_id']) ? (int)$_GET['telegram_id'] : 0;
             $bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
 
@@ -82,7 +82,7 @@ class ChatController extends BaseController
                 'page' => $page
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in ChatController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in ChatController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the chat page.'
@@ -103,7 +103,7 @@ class ChatController extends BaseController
                 exit();
             }
 
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
             $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
             $reply_text = trim($_POST['reply_text']);
@@ -123,7 +123,7 @@ class ChatController extends BaseController
             header("Location: /admin/chat?telegram_id=$user_id&bot_id=$bot_id");
             exit;
         } catch (Exception $e) {
-            app_log('Error in ChatController/reply: ' . $e->getMessage(), 'error');
+            \app_log('Error in ChatController/reply: ' . $e->getMessage(), 'error');
             // Redirect back with an error message
             $user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
             $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
@@ -141,7 +141,7 @@ class ChatController extends BaseController
     public function channel(): void
     {
         try {
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $chat_id = isset($_GET['chat_id']) ? (int)$_GET['chat_id'] : 0;
             $bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
 
@@ -193,7 +193,7 @@ class ChatController extends BaseController
                 'chat_id' => $chat_id
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in ChatController/channel: ' . $e->getMessage(), 'error');
+            \app_log('Error in ChatController/channel: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the channel chat page.'
@@ -214,7 +214,7 @@ class ChatController extends BaseController
                 exit;
             }
 
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
             $message_ids = $_POST['message_ids'] ?? [];
             $action = $_POST['action'] ?? '';
             $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
@@ -263,7 +263,7 @@ class ChatController extends BaseController
             header("Location: " . $redirect_url);
             exit;
         } catch (Exception $e) {
-            app_log('Error in ChatController/delete: ' . $e->getMessage(), 'error');
+            \app_log('Error in ChatController/delete: ' . $e->getMessage(), 'error');
             // Redirect back with an error message
             $user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
             $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;

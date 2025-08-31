@@ -15,7 +15,7 @@ class RoleController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $pdo = get_db_connection();
+        $pdo = \get_db_connection();
         $this->roleRepo = new RoleRepository($pdo);
     }
 
@@ -33,7 +33,7 @@ class RoleController extends BaseController
                 'message' => $message
             ], 'admin_layout');
         } catch (Exception $e) {
-            app_log('Error in RoleController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in RoleController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the role management page.'
@@ -61,7 +61,7 @@ class RoleController extends BaseController
                 $_SESSION['flash_message'] = "Gagal menambahkan peran karena kesalahan database.";
             }
         } catch (Exception $e) {
-            app_log('Error in RoleController/store: ' . $e->getMessage(), 'error');
+            \app_log('Error in RoleController/store: ' . $e->getMessage(), 'error');
             $_SESSION['flash_message'] = "An error occurred while adding the role.";
         }
 
@@ -94,7 +94,7 @@ class RoleController extends BaseController
                 $_SESSION['flash_message'] = "Gagal menghapus peran karena kesalahan database.";
             }
         } catch (Exception $e) {
-            app_log('Error in RoleController/destroy: ' . $e->getMessage(), 'error');
+            \app_log('Error in RoleController/destroy: ' . $e->getMessage(), 'error');
             $_SESSION['flash_message'] = "An error occurred while deleting the role.";
         }
 

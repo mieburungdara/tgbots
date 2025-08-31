@@ -45,7 +45,7 @@ class LoginController extends AppController
             }
 
             $token = $_GET['token'];
-            $pdo = get_db_connection();
+            $pdo = \get_db_connection();
 
             if ($pdo) {
                 // Check if token is valid and belongs to an admin
@@ -76,7 +76,7 @@ class LoginController extends AppController
             http_response_code(403);
             $this->view('auth/access_denied', ['bot_username' => null, 'error_message' => 'Tautan login tidak valid, kedaluwarsa, atau bukan untuk admin.']);
         } catch (Exception $e) {
-            app_log('Error in LoginController/handleToken: ' . $e->getMessage(), 'error');
+            \app_log('Error in LoginController/handleToken: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred during login.'
@@ -101,7 +101,7 @@ class LoginController extends AppController
             session_unset();
             session_destroy();
         } catch (Exception $e) {
-            app_log('Error in LoginController/logout: ' . $e->getMessage(), 'error');
+            \app_log('Error in LoginController/logout: ' . $e->getMessage(), 'error');
         }
 
         header("Location: /");
