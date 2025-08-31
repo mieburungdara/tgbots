@@ -79,53 +79,53 @@ $router->get('api/admin/balance/purchases', 'Admin/BalanceController@getPurchase
 $router->get('admin/analytics', 'Admin/AnalyticsController@index');
 
 // Admin - Storage Channels
-$router->get('/admin/storage_channels', 'Admin/StorageChannelController@index');
-$router->post('/admin/storage_channels/store', 'Admin/StorageChannelController@store');
-$router->post('/admin/storage_channels/update', 'Admin/StorageChannelController@update');
-$router->post('/admin/storage_channels/delete', 'Admin/StorageChannelController@destroy');
-$router->post('/admin/storage_channels/set_default', 'Admin/StorageChannelController@setDefault');
+$router->get('admin/storage_channels', 'Admin/StorageChannelController@index');
+$router->post('admin/storage_channels/store', 'Admin/StorageChannelController@store');
+$router->post('admin/storage_channels/update', 'Admin/StorageChannelController@update');
+$router->post('admin/storage_channels/delete', 'Admin/StorageChannelController@destroy');
+$router->post('admin/storage_channels/set_default', 'Admin/StorageChannelController@setDefault');
 
 // API for Storage Channels
-$router->get('/api/admin/storage_channels/bots', 'Admin/StorageChannelController@getBots');
-$router->post('/api/admin/storage_channels/bots/add', 'Admin/StorageChannelController@addBot');
-$router->post('/api/admin/storage_channels/bots/remove', 'Admin/StorageChannelController@removeBot');
-$router->post('/api/admin/storage_channels/bots/verify', 'Admin/StorageChannelController@verifyBot');
+$router->get('api/admin/storage_channels/bots', 'Admin/StorageChannelController@getBots');
+$router->post('api/admin/storage_channels/bots/add', 'Admin/StorageChannelController@addBot');
+$router->post('api/admin/storage_channels/bots/remove', 'Admin/StorageChannelController@removeBot');
+$router->post('api/admin/storage_channels/bots/verify', 'Admin/StorageChannelController@verifyBot');
 
 // Admin - Roles
-$router->get('/admin/roles', 'Admin/RoleController@index');
-$router->post('/admin/roles/store', 'Admin/RoleController@store');
-$router->post('/admin/roles/delete', 'Admin/RoleController@destroy');
+$router->get('admin/roles', 'Admin/RoleController@index');
+$router->post('admin/roles/store', 'Admin/RoleController@store');
+$router->post('admin/roles/delete', 'Admin/RoleController@destroy');
 
 // Admin - Database
-$router->get('/admin/database', 'Admin/DatabaseController@index');
-$router->post('/admin/database/reset', 'Admin/DatabaseController@reset');
-$router->post('/api/admin/database/migrate', 'Admin/DatabaseController@migrate');
+$router->get('admin/database', 'Admin/DatabaseController@index');
+$router->post('admin/database/reset', 'Admin/DatabaseController@reset');
+$router->post('api/admin/database/migrate', 'Admin/DatabaseController@migrate');
 
 // Admin - Sales Channels
-$router->get('/admin/sales_channels', 'Admin/SalesChannelController@index');
+$router->get('admin/sales_channels', 'Admin/SalesChannelController@index');
 
 // Admin - API Tester
-$router->get('/admin/api_test', 'Admin/ApiTestController@index');
-$router->get('/api/admin/api_test', 'Admin/ApiTestController@handle');
-$router->post('/api/admin/api_test', 'Admin/ApiTestController@handle');
+$router->get('admin/api_test', 'Admin/ApiTestController@index');
+$router->get('api/admin/api_test', 'Admin/ApiTestController@handle');
+$router->post('api/admin/api_test', 'Admin/ApiTestController@handle');
 
 // Admin - Debug Feed
-$router->get('/admin/debug_feed', 'Admin/DebugFeedController@index');
+$router->get('admin/debug_feed', 'Admin/DebugFeedController@index');
 
 // Admin - Forward Manager
-$router->post('/api/admin/media/forward', 'Admin/ForwardManagerController@forward');
+$router->post('api/admin/media/forward', 'Admin/ForwardManagerController@forward');
 
 // XOR Admin Panel
-$router->get('/xoradmin', 'Admin/XorAdminController@index');
-$router->post('/xoradmin/login', 'Admin/XorAdminController@login');
-$router->post('/xoradmin/logout', 'Admin/XorAdminController@logout');
-$router->post('/xoradmin/add_bot', 'Admin/XorAdminController@addBot');
-$router->post('/xoradmin/save_bot_settings', 'Admin/XorAdminController@saveBotSettings');
-$router->post('/xoradmin/reset_db', 'Admin/XorAdminController@resetDb');
-$router->post('/api/xoradmin', 'Admin/XorAdminController@api');
+$router->get('xoradmin', 'Admin/XorAdminController@index');
+$router->post('xoradmin/login', 'Admin/XorAdminController@login');
+$router->post('xoradmin/logout', 'Admin/XorAdminController@logout');
+$router->post('xoradmin/add_bot', 'Admin/XorAdminController@addBot');
+$router->post('xoradmin/save_bot_settings', 'Admin/XorAdminController@saveBotSettings');
+$router->post('xoradmin/reset_db', 'Admin/XorAdminController@resetDb');
+$router->post('api/xoradmin', 'Admin/XorAdminController@api');
 
 // Webhook
-$router->post('/webhook/{id}', 'WebhookController@handle');
+$router->post('webhook/{id}', 'WebhookController@handle');
 
 // Add more routes here as the refactoring progresses.
 // e.g., $router->get('admin/users', 'Admin/UsersController@index');
