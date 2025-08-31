@@ -33,16 +33,29 @@ function check_tables_exist(PDO $pdo) {
  * @return void
  */
 function app_log(string $message, string $level = 'info', ?array $context = null): void {
-    // --- TEMPORARY DEBUGGING MODIFICATION ---
-    // This will stop execution and print the first captured error to the screen.
-    header('Content-Type: text/plain; charset=utf-8');
-    die(
-        "DEBUG - Error Captured:\n\n" .
-        "Level: " . htmlspecialchars($level) . "\n" .
-        "Message: " . htmlspecialchars($message) . "\n\n" .
-        "Context: " . print_r($context, true)
-    );
-    // --- END OF TEMPORARY MODIFICATION ---
+    try {
+        $pdo = get_db_connection();
+        if (!$pdo) {
+            // Fallback to file logging if DB connection fails
+            error_log("DB_LOG_FALLBACK: [$level] $message");
+            return;
+        }
+
+        $sql = "INSERT INTO app_logs (level, message, context) VALUES (:level, :message, :context)";
+        $stmt = $pdo->prepare($sql);
+
+        $context_json = $context ? json_encode($context) : null;
+
+        $stmt->bindParam(':level', $level, PDO::PARAM_STR);
+        $stmt->bindParam(':message', $message, PDO::PARAM_STR);
+        $stmt->bindParam(':context', $context_json, PDO::PARAM_STR);
+
+        $stmt->execute();
+
+    } catch (Throwable $e) {
+        // Fallback to error_log if anything goes wrong with DB logging
+        error_log("Failed to write to DB log. Error: " . $e->getMessage() . ". Original log message: [$level] $message");
+    }
 }
 
 /**
@@ -160,33 +173,8 @@ function get_bot_details(PDO $pdo, int $bot_id): ?array
  */
 function get_all_bots(PDO $pdo): array
 {
-    $stmt = $pdo->query("SELECT id, first_name, username FROM bots ORDER BY first_name ASC");
+    $stmt = $pdo->query("SELECT id, name, username FROM bots ORDER BY name ASC");
     return $stmt->fetchAll(PDO::FETCH_ASSOC);
-}
-
-/**
- * Mendapatkan inisial dari sebuah nama atau judul.
- * Contoh: "John Doe" -> "JD", "Grup Diskusi" -> "GD"
- *
- * @param string $name Nama atau judul.
- * @param int $max_initials Jumlah maksimal inisial yang dihasilkan.
- * @return string Inisial yang dihasilkan.
- */
-function get_initials(string $name, int $max_initials = 2): string
-{
-    $words = explode(' ', trim($name));
-    $initials = '';
-    $i = 0;
-    foreach ($words as $word) {
-        if (!empty($word)) {
-            $initials .= strtoupper($word[0]);
-            $i++;
-        }
-        if ($i >= $max_initials) {
-            break;
-        }
-    }
-    return $initials;
 }
 
 /**

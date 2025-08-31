@@ -76,7 +76,6 @@ class PrivateChannelRepository
                 pc.id,
                 pc.channel_id,
                 pc.name,
-                pc.is_default,
                 COUNT(pcb.bot_id) as bot_count,
                 GROUP_CONCAT(b.username SEPARATOR ', ') as bot_usernames
             FROM
@@ -86,7 +85,7 @@ class PrivateChannelRepository
             LEFT JOIN
                 bots b ON pcb.bot_id = b.id
             GROUP BY
-                pc.id, pc.channel_id, pc.name, pc.is_default
+                pc.id, pc.channel_id, pc.name
             ORDER BY
                 pc.id ASC
         ";
@@ -144,6 +143,11 @@ class PrivateChannelRepository
      */
     public function setDefaultChannel(int $id): bool
     {
+        // This feature is deprecated as the 'is_default' column has been removed.
+        // Returning true to not break the controller, but doing nothing.
+        error_log("Attempted to call deprecated function setDefaultChannel.");
+        return true;
+        /*
         $this->pdo->beginTransaction();
         try {
             // Reset semua channel agar tidak ada yang default
@@ -162,6 +166,7 @@ class PrivateChannelRepository
             error_log("Failed to set default channel: " . $e->getMessage());
             return false;
         }
+        */
     }
 
     /**
