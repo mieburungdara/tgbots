@@ -1,5 +1,7 @@
 <?php
 
+namespace TGBot\Controllers;
+
 abstract class AppController {
 
     /**
