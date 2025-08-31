@@ -23,15 +23,20 @@ class Router {
     public function direct($uri, $requestType) {
         $uri = trim($uri, '/');
 
+        // Fix #2: Handle unregistered HTTP methods
+        if (!isset($this->routes[$requestType])) {
+            http_response_code(404);
+            require __DIR__ . '/../src/Views/404.php';
+            exit();
+        }
+
         foreach ($this->routes[$requestType] as $route => $controller) {
-            // Convert route with params like {id} to a regex
-            $routeRegex = preg_replace('/\{([a-zA-Z_]+)\}/', '(?<${1}>[^/]+)', $route);
+            // Fix #3: Allow numbers in placeholder names
+            $routeRegex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?<${1}>[^/]+)', $route);
             $routeRegex = '#^' . $routeRegex . '$#';
 
-            // Check if the current request URI matches the route regex
             if (preg_match($routeRegex, $uri, $matches)) {
                 try {
-                    // Extract named capture groups into the params array
                     $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
 
                     return $this->callAction(
@@ -47,7 +52,6 @@ class Router {
             }
         }
 
-        // Handle 404
         http_response_code(404);
         require __DIR__ . '/../src/Views/404.php';
         exit();
@@ -75,7 +79,12 @@ class Router {
             throw new Exception("{$controllerClass} does not respond to the {$action} action.");
         }
 
-        // Call the controller action with the extracted parameters
+        // Fix #1: Use Reflection to call method correctly based on its signature
+        $reflection = new ReflectionMethod($controllerInstance, $action);
+        if ($reflection->getNumberOfParameters() === 0) {
+            return $controllerInstance->$action();
+        }
+
         return $controllerInstance->$action($params);
     }
 }
