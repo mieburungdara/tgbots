@@ -1,6 +1,11 @@
 # Changelog
 
-## [5.1.19] - 2025-08-31
+## [5.1.20] - 2025-08-31
+
+### Diperbaiki
+- **Diagnostik Tambahan**: Menambahkan kode diagnostik untuk memverifikasi bahwa titik masuk aplikasi (`public/index.php` dan `run_migrations_cli.php`) dieksekusi dengan benar. Ini untuk membantu melacak masalah lingkungan server yang persisten yang menyebabkan error `undefined function`.
+
+
 
 ### Diperbaiki
 - **Fatal Error `undefined function` (Workaround)**: Menambahkan `require_once` untuk `core/helpers.php` secara eksplisit di `BaseController.php` dan `AppController.php`. Ini adalah workaround untuk memastikan fungsi-fungsi helper selalu tersedia, mengatasi error fatal `Call to undefined function` yang dilaporkan oleh pengguna, yang kemungkinan disebabkan oleh masalah lingkungan server.
