@@ -106,7 +106,8 @@ $router->get('/admin/sales_channels', 'Admin/SalesChannelController@index');
 
 // Admin - API Tester
 $router->get('/admin/api_test', 'Admin/ApiTestController@index');
-$router->any('/api/admin/api_test', 'Admin/ApiTestController@handle');
+$router->get('/api/admin/api_test', 'Admin/ApiTestController@handle');
+$router->post('/api/admin/api_test', 'Admin/ApiTestController@handle');
 
 // Admin - Debug Feed
 $router->get('/admin/debug_feed', 'Admin/DebugFeedController@index');
