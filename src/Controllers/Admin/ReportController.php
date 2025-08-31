@@ -2,7 +2,7 @@
 
 namespace App\Controllers\Admin;
 
-use App\Controllers\AdminBaseController;
+
 use App\Models\Repositories\ReportRepository;
 use Exception;
 

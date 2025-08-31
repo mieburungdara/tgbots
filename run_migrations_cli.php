@@ -26,8 +26,7 @@ echo "=============================================\n\n";
 
 try {
     // Sertakan file-file yang diperlukan
-    require_once __DIR__ . '/core/database.php';
-    require_once __DIR__ . '/core/helpers.php';
+    require_once __DIR__ . '/core/autoloader.php';
 
     echo "Menghubungkan ke database...\n";
     $pdo = get_db_connection();

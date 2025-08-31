@@ -6,7 +6,7 @@
  *
  * @return PDO|null Objek PDO jika koneksi berhasil, null jika gagal.
  */
-require_once __DIR__ . '/helpers.php';
+
 
 function get_db_connection() {
     // Memerlukan file config yang akan dibuat oleh pengguna dari contoh.
@@ -16,7 +16,7 @@ function get_db_connection() {
         app_log("Error: config.php tidak ditemukan. Harap salin dari config.php.example dan isi kredensialnya.", 'error');
         return null;
     }
-    require_once __DIR__ . '/../config.php';
+    
 
     // DSN (Data Source Name) untuk koneksi PDO
     $dsn = "mysql:host=" . DB_HOST . ";dbname=" . DB_NAME . ";charset=utf8mb4";

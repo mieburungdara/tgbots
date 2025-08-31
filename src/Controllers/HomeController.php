@@ -2,7 +2,7 @@
 
 namespace TGBot\Controllers;
 
-require_once __DIR__ . '/AppController.php';
+
 
 use Exception;
 

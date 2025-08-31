@@ -2,7 +2,7 @@
 
 namespace TGBot\Controllers\Admin;
 
-require_once __DIR__ . '/../BaseController.php';
+
 
 use TGBot\Controllers\BaseController;
 use TGBot\Database\TelegramErrorLogRepository;

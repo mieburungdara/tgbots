@@ -24,7 +24,7 @@ class XorAdminController extends AppController
         }
 
         if (file_exists(BASE_PATH . '/config.php')) {
-            require_once BASE_PATH . '/config.php';
+            
         }
         $this->correct_password = defined('XOR_ADMIN_PASSWORD') ? XOR_ADMIN_PASSWORD : 'sup3r4dmin';
     }
