@@ -33,29 +33,16 @@ function check_tables_exist(PDO $pdo) {
  * @return void
  */
 function app_log(string $message, string $level = 'info', ?array $context = null): void {
-    try {
-        $pdo = get_db_connection();
-        if (!$pdo) {
-            // Fallback to file logging if DB connection fails
-            error_log("DB_LOG_FALLBACK: [$level] $message");
-            return;
-        }
-
-        $sql = "INSERT INTO app_logs (level, message, context) VALUES (:level, :message, :context)";
-        $stmt = $pdo->prepare($sql);
-
-        $context_json = $context ? json_encode($context) : null;
-
-        $stmt->bindParam(':level', $level, PDO::PARAM_STR);
-        $stmt->bindParam(':message', $message, PDO::PARAM_STR);
-        $stmt->bindParam(':context', $context_json, PDO::PARAM_STR);
-
-        $stmt->execute();
-
-    } catch (Throwable $e) {
-        // Fallback to error_log if anything goes wrong with DB logging
-        error_log("Failed to write to DB log. Error: " . $e->getMessage() . ". Original log message: [$level] $message");
-    }
+    // --- TEMPORARY DEBUGGING MODIFICATION ---
+    // This will stop execution and print the first captured error to the screen.
+    header('Content-Type: text/plain; charset=utf-8');
+    die(
+        "DEBUG - Error Captured:\n\n" .
+        "Level: " . htmlspecialchars($level) . "\n" .
+        "Message: " . htmlspecialchars($message) . "\n\n" .
+        "Context: " . print_r($context, true)
+    );
+    // --- END OF TEMPORARY MODIFICATION ---
 }
 
 /**
