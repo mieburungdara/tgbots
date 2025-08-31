@@ -41,8 +41,8 @@ class Router {
 
                     $parts = explode('@', $controller);
 
-                    if (count($parts) !== 2) {
-                        throw new Exception("Format controller tidak valid pada definisi rute: {$controller}. Diharapkan format 'Controller@action'.");
+                    if (count($parts) !== 2 || empty(trim($parts[0])) || empty(trim($parts[1]))) {
+                        throw new Exception("Format controller tidak valid pada definisi rute: '{$controller}'. Diharapkan format 'Controller@action' dengan bagian controller dan action yang tidak kosong.");
                     }
 
                     return $this->callAction($parts[0], $parts[1], $params);

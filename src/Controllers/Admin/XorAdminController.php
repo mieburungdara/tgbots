@@ -1,21 +1,28 @@
 <?php
 
-require_once __DIR__ . '/../BaseController.php';
+require_once __DIR__ . '/../AppController.php';
 require_once __DIR__ . '/../../../core/TelegramAPI.php';
 
-class XorAdminController extends BaseController
+class XorAdminController extends AppController
 {
     private $pdo;
     private $correct_password;
 
     public function __construct()
     {
-        parent::__construct();
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Define BASE_PATH if it's not already defined
+        if (!defined('BASE_PATH')) {
+            define('BASE_PATH', realpath(__DIR__ . '/../../../'));
+        }
+
         if (file_exists(BASE_PATH . '/config.php')) {
             require_once BASE_PATH . '/config.php';
         }
         $this->correct_password = defined('XOR_ADMIN_PASSWORD') ? XOR_ADMIN_PASSWORD : 'sup3r4dmin';
-
     }
 
     private function isAuthenticated()
