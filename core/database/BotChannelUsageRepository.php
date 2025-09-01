@@ -12,7 +12,7 @@
 namespace TGBot\Database;
 
 use PDO;
-use PrivateChannelRepository; // Added this import based on the original file
+use TGBot\Database\PrivateChannelRepository;
 
 /**
  * Class BotChannelUsageRepository

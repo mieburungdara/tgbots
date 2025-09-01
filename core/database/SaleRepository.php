@@ -1,5 +1,10 @@
 <?php
 
+namespace TGBot\Database;
+
+use PDO;
+use Exception;
+
 /**
  * Repositori untuk mengelola data penjualan (`sales`).
  * Menyediakan metode untuk membuat catatan penjualan, memeriksa riwayat pembelian, dll.

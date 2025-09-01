@@ -1,5 +1,10 @@
 <?php
 
+namespace TGBot\Database;
+
+use PDO;
+use PDOException;
+
 class RoleRepository
 {
     private $pdo;

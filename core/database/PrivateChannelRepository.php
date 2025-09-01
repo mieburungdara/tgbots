@@ -1,5 +1,10 @@
 <?php
 
+namespace TGBot\Database;
+
+use PDO;
+use PDOException;
+
 /**
  * Repositori untuk mengelola channel pribadi yang digunakan sebagai penyimpanan media.
  * Channel-channel ini tidak terkait langsung dengan penjual, melainkan digunakan oleh bot

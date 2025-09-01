@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.30] - 2025-09-01
+
+### Diperbaiki
+- **Fatal Error `Class not found` (Global Repositories)**: Memperbaiki serangkaian error fatal `Class ... not found` yang terjadi di berbagai bagian aplikasi karena file-file Repository di `core/database/` tidak memiliki deklarasi namespace yang benar.
+  - **Penyebab**: Beberapa file repository (`RoleRepository`, `PrivateChannelBotRepository`, `PrivateChannelRepository`, `SaleRepository`, `SellerSalesChannelRepository`) tidak mendeklarasikan `namespace TGBot\Database;` dan tidak mengimpor dependensi seperti `PDO` dengan benar.
+  - **Solusi**: Melakukan audit dan perbaikan global pada semua file di `core/database/` untuk memastikan setiap file memiliki deklarasi `namespace` dan pernyataan `use` yang lengkap dan benar, menstabilkan proses autoloading di seluruh aplikasi.
+
 ## [5.1.29] - 2025-09-01
 
 ### Fitur
