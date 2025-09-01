@@ -121,7 +121,7 @@ class BalanceController extends BaseController
         $action = $_POST['action'];
 
         // Get admin ID from session
-        $admin_id = $_SESSION['user']['id'] ?? null;
+        $admin_id = $_SESSION['user_id'] ?? null;
         if (!$admin_id) {
             $_SESSION['flash_message'] = "Sesi admin tidak valid atau telah berakhir. Silakan login kembali.";
             $_SESSION['flash_message_type'] = 'danger';
