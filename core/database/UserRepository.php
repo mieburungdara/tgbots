@@ -1,12 +1,17 @@
 <?php
 
+namespace TGBot\Database;
+
+use PDO;
+use Exception;
+
 /**
  * Repositori untuk mengelola data pengguna (`users`, `rel_user_bot`).
  * Menangani pembuatan pengguna, pencarian, pengelolaan state, dan peran.
  */
 class UserRepository
 {
-    private $pdo;
+    private PDO $pdo;
     private $bot_id;
 
     /**
