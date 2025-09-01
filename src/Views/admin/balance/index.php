@@ -107,167 +107,67 @@
 
                 <!-- Dropdown pilihan cepat -->
                 <select id="preset-description" onchange="updateDescription()" style="margin-bottom: 8px; width: 100%; padding: 8px;">
-                    <option value="">-- Pilih deskripsi cepat --</option>
-                    <optgroup label="Bonus & Hadiah">
-                        <option value="Bonus Pendaftaran">Bonus Pendaftaran</option>
-                        <option value="Hadiah topup">Hadiah topup</option>
-                        <option value="Bonus referral">Bonus referral</option>
-                        <option value="Bonus Kinerja">Bonus Kinerja</option>
-                        <option value="Bonus Loyalitas">Bonus Loyalitas</option>
-                        <option value="Bonus pencapaian target">Bonus pencapaian target</option>
-                        <option value="Bonus hari raya">Bonus hari raya</option>
-                        <option value="Bonus Ulang Tahun">Bonus Ulang Tahun</option>
-                        <option value="Cashback">Cashback</option>
-                        <option value="Saldo event">Saldo event</option>
-                        <option value="Hadiah Giveaway">Hadiah Giveaway</option>
-                        <option value="Hadiah kontes/kompetisi">Hadiah kontes/kompetisi</option>
-                        <option value="Saldo promosi khusus">Saldo promosi khusus</option>
+                    <option value="">-- 💡 Pilih deskripsi cepat --</option>
+                    <optgroup label="🎁 Bonus & Hadiah">
+                        <option value="Bonus Pendaftaran">🎉 Bonus Pendaftaran</option>
+                        <option value="Hadiah topup">🛍️ Hadiah topup</option>
+                        <option value="Bonus referral">🤝 Bonus referral</option>
+                        <option value="Bonus Kinerja">🏆 Bonus Kinerja</option>
+                        <option value="Bonus Loyalitas">💖 Bonus Loyalitas</option>
+                        <option value="Bonus pencapaian target">🎯 Bonus pencapaian target</option>
+                        <option value="Bonus hari raya">🕌 Bonus hari raya</option>
+                        <option value="Bonus Ulang Tahun">🎂 Bonus Ulang Tahun</option>
+                        <option value="Cashback">💸 Cashback</option>
+                        <option value="Saldo event">🎟️ Saldo event</option>
+                        <option value="Hadiah Giveaway">🎁 Hadiah Giveaway</option>
+                        <option value="Hadiah kontes/kompetisi">🏅 Hadiah kontes/kompetisi</option>
+                        <option value="Saldo promosi khusus">📢 Saldo promosi khusus</option>
                     </optgroup>
-                    <optgroup label="Pembayaran & Komisi">
-                        <option value="Gaji">Gaji</option>
-                        <option value="Pencairan Komisi">Pencairan Komisi</option>
-                        <option value="Pencairan Afiliasi">Pencairan Afiliasi</option>
-                        <option value="Pembayaran freelance">Pembayaran freelance</option>
-                        <option value="Pembayaran royalti">Pembayaran royalti</option>
-                        <option value="Insentif penjualan">Insentif penjualan</option>
-                        <option value="Reimbursement Biaya">Reimbursement Biaya</option>
+                    <optgroup label="💰 Pembayaran & Komisi">
+                        <option value="Gaji">💵 Gaji</option>
+                        <option value="Pencairan Komisi">📈 Pencairan Komisi</option>
+                        <option value="Pencairan Afiliasi">🔗 Pencairan Afiliasi</option>
+                        <option value="Pembayaran freelance">👨‍💻 Pembayaran freelance</option>
+                        <option value="Pembayaran royalti">👑 Pembayaran royalti</option>
+                        <option value="Insentif penjualan">🚀 Insentif penjualan</option>
+                        <option value="Reimbursement Biaya">🧾 Reimbursement Biaya</option>
                     </optgroup>
-                    <optgroup label="Kompensasi & Pengembalian">
-                        <option value="Pengembalian Dana (Refund)">Pengembalian Dana (Refund)</option>
-                        <option value="Refund Transaksi Gagal">Refund Transaksi Gagal</option>
-                        <option value="Refund kelebihan bayar">Refund kelebihan bayar</option>
-                        <option value="Kompensasi Gangguan Layanan">Kompensasi Gangguan Layanan</option>
-                        <option value="Kompensasi Kesalahan Sistem">Kompensasi Kesalahan Sistem</option>
-                        <option value="Kompensasi keterlambatan">Kompensasi keterlambatan</option>
-                        <option value="Pembalikan Transaksi">Pembalikan Transaksi</option>
-                        <option value="Penyelesaian Sengketa">Penyelesaian Sengketa</option>
-                        <option value="Ganti rugi barang/jasa">Ganti rugi barang/jasa</option>
+                    <optgroup label="🔄 Kompensasi & Pengembalian">
+                        <option value="Pengembalian Dana (Refund)">🔙 Pengembalian Dana (Refund)</option>
+                        <option value="Refund Transaksi Gagal">❌ Refund Transaksi Gagal</option>
+                        <option value="Refund kelebihan bayar">➕ Refund kelebihan bayar</option>
+                        <option value="Kompensasi Gangguan Layanan">🛠️ Kompensasi Gangguan Layanan</option>
+                        <option value="Kompensasi Kesalahan Sistem">🖥️ Kompensasi Kesalahan Sistem</option>
+                        <option value="Kompensasi keterlambatan">⏳ Kompensasi keterlambatan</option>
+                        <option value="Pembalikan Transaksi">↩️ Pembalikan Transaksi</option>
+                        <option value="Penyelesaian Sengketa">⚖️ Penyelesaian Sengketa</option>
+                        <option value="Ganti rugi barang/jasa">📦 Ganti rugi barang/jasa</option>
                     </optgroup>
-                    <optgroup label="Penyesuaian & Koreksi">
-                        <option value="Koreksi salah input">Koreksi salah input</option>
-                        <option value="Penyesuaian manual">Penyesuaian manual</option>
-                        <option value="Penyesuaian Saldo Awal">Penyesuaian Saldo Awal</option>
-                        <option value="Migrasi saldo dari sistem lama">Migrasi saldo dari sistem lama</option>
-                        <option value="Penyesuaian audit internal">Penyesuaian audit internal</option>
-                        <option value="Koreksi transaksi duplikat">Koreksi transaksi duplikat</option>
-                        <option value="Koreksi Saldo Negatif">Koreksi Saldo Negatif</option>
+                    <optgroup label="✏️ Penyesuaian & Koreksi">
+                        <option value="Koreksi salah input">✍️ Koreksi salah input</option>
+                        <option value="Penyesuaian manual">🔧 Penyesuaian manual</option>
+                        <option value="Penyesuaian Saldo Awal">🌅 Penyesuaian Saldo Awal</option>
+                        <option value="Migrasi saldo dari sistem lama">💾 Migrasi saldo dari sistem lama</option>
+                        <option value="Penyesuaian audit internal">📊 Penyesuaian audit internal</option>
+                        <option value="Koreksi transaksi duplikat">👯 Koreksi transaksi duplikat</option>
+                        <option value="Koreksi Saldo Negatif">📉 Koreksi Saldo Negatif</option>
                     </optgroup>
-                    <optgroup label="Potongan & Biaya">
-                        <option value="Biaya Administrasi">Biaya Administrasi</option>
-                        <option value="Biaya keanggotaan (membership)">Biaya keanggotaan (membership)</option>
-                        <option value="Biaya Layanan">Biaya Layanan</option>
-                        <option value="Biaya Penarikan">Biaya Penarikan</option>
-                        <option value="Biaya upgrade akun">Biaya upgrade akun</option>
-                        <option value="Biaya Pembatalan">Biaya Pembatalan</option>
-                        <option value="Denda Pelanggaran">Denda Pelanggaran</option>
-                        <option value="Denda keterlambatan pembayaran">Denda keterlambatan pembayaran</option>
-                        <option value="Potongan pajak">Potongan pajak</option>
+                    <optgroup label="💸 Potongan & Biaya">
+                        <option value="Biaya Administrasi">🏛️ Biaya Administrasi</option>
+                        <option value="Biaya keanggotaan (membership)">💳 Biaya keanggotaan (membership)</option>
+                        <option value="Biaya Layanan">🛎️ Biaya Layanan</option>
+                        <option value="Biaya Penarikan">🏧 Biaya Penarikan</option>
+                        <option value="Biaya upgrade akun">🌟 Biaya upgrade akun</option>
+                        <option value="Biaya Pembatalan">🚫 Biaya Pembatalan</option>
+                        <option value="Denda Pelanggaran">📜 Denda Pelanggaran</option>
+                        <option value="Denda keterlambatan pembayaran">⌛ Denda keterlambatan pembayaran</option>
+                        <option value="Potongan pajak">🧾 Potongan pajak</option>
                     </optgroup>
-                    <optgroup label="Operasional & Lain-lain">
-                        <option value="Deposit untuk layanan">Deposit untuk layanan</option>
-                        <option value="Pembelian kredit/poin internal">Pembelian kredit/poin internal</option>
-                        <option value="Transfer Antar Pengguna (Admin)">Transfer Antar Pengguna (Admin)</option>
-                        <option value="Penarikan dana (Withdrawal)">Penarikan dana (Withdrawal)</option>
-                    </optgroup>
-                        <option value="Hadiah Giveaway">Hadiah Giveaway</option>
-                        <option value="Hadiah kontes/kompetisi">Hadiah kontes/kompetisi</option>
-                        <option value="Saldo promosi khusus">Saldo promosi khusus</option>
-                    </optgroup>
-                    <optgroup label="Pembayaran & Komisi">
-                        <option value="Gaji">Gaji</option>
-                        <option value="Pencairan Komisi">Pencairan Komisi</option>
-                        <option value="Pencairan Afiliasi">Pencairan Afiliasi</option>
-                        <option value="Pembayaran freelance">Pembayaran freelance</option>
-                        <option value="Pembayaran royalti">Pembayaran royalti</option>
-                        <option value="Insentif penjualan">Insentif penjualan</option>
-                        <option value="Reimbursement Biaya">Reimbursement Biaya</option>
-                    </optgroup>
-                    <optgroup label="Kompensasi & Pengembalian">
-                        <option value="Pengembalian Dana (Refund)">Pengembalian Dana (Refund)</option>
-                        <option value="Refund Transaksi Gagal">Refund Transaksi Gagal</option>
-                        <option value="Refund kelebihan bayar">Refund kelebihan bayar</option>
-                        <option value="Kompensasi Gangguan Layanan">Kompensasi Gangguan Layanan</option>
-                        <option value="Kompensasi Kesalahan Sistem">Kompensasi Kesalahan Sistem</option>
-                        <option value="Kompensasi keterlambatan">Kompensasi keterlambatan</option>
-                        <option value="Pembalikan Transaksi">Pembalikan Transaksi</option>
-                        <option value="Penyelesaian Sengketa">Penyelesaian Sengketa</option>
-                        <option value="Ganti rugi barang/jasa">Ganti rugi barang/jasa</option>
-                    </optgroup>
-                    <optgroup label="Penyesuaian & Koreksi">
-                        <option value="Koreksi salah input">Koreksi salah input</option>
-                        <option value="Penyesuaian manual">Penyesuaian manual</option>
-                        <option value="Penyesuaian Saldo Awal">Penyesuaian Saldo Awal</option>
-                        <option value="Migrasi saldo dari sistem lama">Migrasi saldo dari sistem lama</option>
-                        <option value="Penyesuaian audit internal">Penyesuaian audit internal</option>
-                        <option value="Koreksi transaksi duplikat">Koreksi transaksi duplikat</option>
-                        <option value="Koreksi Saldo Negatif">Koreksi Saldo Negatif</option>
-                    </optgroup>
-                    <optgroup label="Potongan & Biaya">
-                        <option value="Biaya Administrasi">Biaya Administrasi</option>
-                        <option value="Biaya keanggotaan (membership)">Biaya keanggotaan (membership)</option>
-                        <option value="Biaya Layanan">Biaya Layanan</option>
-                        <option value="Biaya Penarikan">Biaya Penarikan</option>
-                        <option value="Biaya upgrade akun">Biaya upgrade akun</option>
-                        <option value="Biaya Pembatalan">Biaya Pembatalan</option>
-                        <option value="Denda Pelanggaran">Denda Pelanggaran</option>
-                        <option value="Denda keterlambatan pembayaran">Denda keterlambatan pembayaran</option>
-                        <option value="Potongan pajak">Potongan pajak</option>
-                    </optgroup>
-                    <optgroup label="Operasional & Lain-lain">
-                        <option value="Deposit untuk layanan">Deposit untuk layanan</option>
-                        <option value="Pembelian kredit/poin internal">Pembelian kredit/poin internal</option>
-                        <option value="Transfer Antar Pengguna (Admin)">Transfer Antar Pengguna (Admin)</option>
-                        <option value="Penarikan dana (Withdrawal)">Penarikan dana (Withdrawal)</option>
-                    </optgroup>
-                        <option value="Hadiah Giveaway">Hadiah Giveaway</option>
-                        <option value="Hadiah kontes/kompetisi">Hadiah kontes/kompetisi</option>
-                        <option value="Saldo promosi khusus">Saldo promosi khusus</option>
-                    </optgroup>
-                    <optgroup label="Pembayaran & Komisi">
-                        <option value="Gaji">Gaji</option>
-                        <option value="Pencairan Komisi">Pencairan Komisi</option>
-                        <option value="Pencairan Afiliasi">Pencairan Afiliasi</option>
-                        <option value="Pembayaran freelance">Pembayaran freelance</option>
-                        <option value="Pembayaran royalti">Pembayaran royalti</option>
-                        <option value="Insentif penjualan">Insentif penjualan</option>
-                        <option value="Reimbursement Biaya">Reimbursement Biaya</option>
-                    </optgroup>
-                    <optgroup label="Kompensasi & Pengembalian">
-                        <option value="Pengembalian Dana (Refund)">Pengembalian Dana (Refund)</option>
-                        <option value="Refund Transaksi Gagal">Refund Transaksi Gagal</option>
-                        <option value="Refund kelebihan bayar">Refund kelebihan bayar</option>
-                        <option value="Kompensasi Gangguan Layanan">Kompensasi Gangguan Layanan</option>
-                        <option value="Kompensasi Kesalahan Sistem">Kompensasi Kesalahan Sistem</option>
-                        <option value="Kompensasi keterlambatan">Kompensasi keterlambatan</option>
-                        <option value="Pembalikan Transaksi">Pembalikan Transaksi</option>
-                        <option value="Penyelesaian Sengketa">Penyelesaian Sengketa</option>
-                        <option value="Ganti rugi barang/jasa">Ganti rugi barang/jasa</option>
-                    </optgroup>
-                    <optgroup label="Penyesuaian & Koreksi">
-                        <option value="Koreksi salah input">Koreksi salah input</option>
-                        <option value="Penyesuaian manual">Penyesuaian manual</option>
-                        <option value="Penyesuaian Saldo Awal">Penyesuaian Saldo Awal</option>
-                        <option value="Migrasi saldo dari sistem lama">Migrasi saldo dari sistem lama</option>
-                        <option value="Penyesuaian audit internal">Penyesuaian audit internal</option>
-                        <option value="Koreksi transaksi duplikat">Koreksi transaksi duplikat</option>
-                        <option value="Koreksi Saldo Negatif">Koreksi Saldo Negatif</option>
-                    </optgroup>
-                    <optgroup label="Potongan & Biaya">
-                        <option value="Biaya Administrasi">Biaya Administrasi</option>
-                        <option value="Biaya keanggotaan (membership)">Biaya keanggotaan (membership)</option>
-                        <option value="Biaya Layanan">Biaya Layanan</option>
-                        <option value="Biaya Penarikan">Biaya Penarikan</option>
-                        <option value="Biaya upgrade akun">Biaya upgrade akun</option>
-                        <option value="Biaya Pembatalan">Biaya Pembatalan</option>
-                        <option value="Denda Pelanggaran">Denda Pelanggaran</option>
-                        <option value="Denda keterlambatan pembayaran">Denda keterlambatan pembayaran</option>
-                        <option value="Potongan pajak">Potongan pajak</option>
-                    </optgroup>
-                    <optgroup label="Operasional & Lain-lain">
-                        <option value="Deposit untuk layanan">Deposit untuk layanan</option>
-                        <option value="Pembelian kredit/poin internal">Pembelian kredit/poin internal</option>
-                        <option value="Transfer Antar Pengguna (Admin)">Transfer Antar Pengguna (Admin)</option>
-                        <option value="Penarikan dana (Withdrawal)">Penarikan dana (Withdrawal)</option>
+                    <optgroup label="⚙️ Operasional & Lain-lain">
+                        <option value="Deposit untuk layanan">📥 Deposit untuk layanan</option>
+                        <option value="Pembelian kredit/poin internal">🪙 Pembelian kredit/poin internal</option>
+                        <option value="Transfer Antar Pengguna (Admin)">↔️ Transfer Antar Pengguna (Admin)</option>
+                        <option value="Penarikan dana (Withdrawal)">📤 Penarikan dana (Withdrawal)</option>
                     </optgroup>
                 </select>
 
