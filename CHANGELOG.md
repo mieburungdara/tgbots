@@ -3,20 +3,6 @@
 ## [5.1.29] - 2025-09-01
 
 ### Fitur
-- **Deskripsi Preset di Modal Saldo**: Menambahkan dropdown dengan deskripsi preset di modal "Ubah Saldo" pada halaman Manajemen Saldo.
-  - **Penyebab**: Untuk mempercepat dan menstandarisasi input deskripsi saat admin melakukan penyesuaian saldo.
-  - **Solusi**: Menambahkan elemen `<select>` dengan opsi-opsi umum (misalnya "Hadiah topup", "Bonus referral", "Koreksi salah input") dan fungsi JavaScript `updateDescription()` untuk secara otomatis mengisi textarea deskripsi saat sebuah opsi dipilih.
-
-## [5.1.28] - 2025-09-01
-
-### Diperbaiki
-- **Fatal Error `Call to undefined function get_initials()`**: Memperbaiki error fatal yang terjadi di dasbor admin.
-  - **Penyebab**: Fungsi helper `get_initials()`, yang digunakan untuk menampilkan avatar di daftar percakapan, dipanggil di view tetapi belum pernah didefinisikan.
-  - **Solusi**: Menambahkan fungsi `get_initials()` baru ke dalam `core/helpers.php` untuk membuat dan mengembalikan inisial dari nama pengguna atau judul channel.
-
-## [5.1.27] - 2025-09-01
-
-### Diperbaiki
 - **Fatal Error `Interface not found` (Global)**: Memperbaiki serangkaian error fatal `Interface "TGBot\Handlers\HandlerInterface" not found` yang terjadi di semua file handler.
   - **Penyebab**: File `core/handlers/HandlerInterface.php` tidak memiliki deklarasi namespace, dan semua file handler yang mengimplementasikannya (`MessageHandler`, `CallbackQueryHandler`, dll.) tidak mengimpor interface tersebut dengan benar menggunakan pernyataan `use`.
   - **Solusi**:
