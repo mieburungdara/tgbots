@@ -195,3 +195,40 @@ function is_active_nav(string $path, string $current_path, bool $exact = false):
     // Check if the current path starts with the given path, and also handles the base case e.g. /admin for /admin/dashboard
     return strpos($current_path, $path) === 0 || ($path === 'admin/dashboard' && $current_path === 'admin');
 }
+
+/**
+ * Mendapatkan inisial dari sebuah nama.
+ *
+ * @param string|null $name Nama lengkap.
+ * @return string Inisial yang dihasilkan (1 atau 2 karakter).
+ */
+function get_initials(?string $name): string
+{
+    if (empty(trim($name ?? ''))) {
+        return '?';
+    }
+
+    $words = preg_split("/[\s,]+/", trim($name));
+    $initials = '';
+
+    if (count($words) > 0) {
+        $first_letter = mb_substr($words[0], 0, 1);
+        if (ctype_alpha($first_letter)) {
+            $initials .= $first_letter;
+        }
+    }
+
+    if (count($words) > 1) {
+        $last_letter = mb_substr($words[count($words) - 1], 0, 1);
+         if (ctype_alpha($last_letter)) {
+            $initials .= $last_letter;
+        }
+    }
+
+    if (empty($initials)) {
+        // Fallback for names with no standard alpha characters (e.g., "😊")
+        return mb_substr(trim($name), 0, 1);
+    }
+
+    return strtoupper($initials);
+}
