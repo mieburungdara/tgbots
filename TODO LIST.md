@@ -17,3 +17,6 @@ Berikut adalah daftar fitur atau perbaikan yang perlu dipertimbangkan untuk peng
 
 Akses Ditolak. Silakan login melalui bot Telegram menggunakan perintah /login.
 buat agar yg tak punya hak akses diarahkan ke halaman tertenut yg mengatakan jika perlu login atau sesi anda berakhir, gunakan bot dibawah ini untuk login
+
+
+tambahkan kolom user last interaction pada table users, untuk mengetahui kapan terakhir kali user aktif dan berinteraksi dengan bot
