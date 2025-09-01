@@ -1,5 +1,14 @@
 # Changelog
 
+## [5.1.27] - 2025-09-01
+
+### Diperbaiki
+- **Fatal Error `Interface not found` (Global)**: Memperbaiki serangkaian error fatal `Interface "TGBot\Handlers\HandlerInterface" not found` yang terjadi di semua file handler.
+  - **Penyebab**: File `core/handlers/HandlerInterface.php` tidak memiliki deklarasi namespace, dan semua file handler yang mengimplementasikannya (`MessageHandler`, `CallbackQueryHandler`, dll.) tidak mengimpor interface tersebut dengan benar menggunakan pernyataan `use`.
+  - **Solusi**:
+    1.  Menambahkan `namespace TGBot\Handlers;` dan `use TGBot\App;` ke `HandlerInterface.php`.
+    2.  Menambahkan `use TGBot\Handlers\HandlerInterface;` ke semua kelas handler yang relevan untuk memastikan konsistensi dan autoloading yang benar.
+
 ## [5.1.26] - 2025-09-01
 
 ### Diperbaiki
