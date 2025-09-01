@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.1.25] - 2025-09-01
+
+### Peningkatan
+- **Logging Diagnostik di Webhook**: Menambahkan logging yang lebih detail di `WebhookController.php` untuk membantu mendiagnosis masalah 500 Internal Server Error yang persisten.
+  - **Detail Log**: Sistem sekarang akan mencatat ID bot yang memanggil, data bot yang ditemukan di database, dan payload JSON mentah yang diterima dari Telegram. Ini akan memberikan visibilitas penuh pada alur eksekusi webhook untuk identifikasi masalah yang lebih cepat.
+
 ## [5.1.24] - 2025-09-01
 
 ### Diperbaiki
@@ -448,7 +454,7 @@
 - **Mengembalikan ke Mode `Markdown` Legacy**: Sesuai permintaan pengguna, semua penggunaan `parse_mode` diubah kembali dari `MarkdownV2` ke mode `Markdown` legacy.
   - **Penyebab**: Pengguna meminta untuk menggunakan mode parsing Markdown yang biasa, bukan `MarkdownV2`.
   - **Solusi**:
-    1.  Mengganti nama fungsi `escapeMarkdownV2` menjadi `escapeMarkdown` di `TelegramAPI.php` dan menyesuaikan logikanya untuk hanya melakukan escape pada karakter `_`, `*`, `\``, dan `[`. 
+    1.  Mengganti nama fungsi `escapeMarkdownV2` menjadi `escapeMarkdown` di `TelegramAPI.php` dan menyesuaikan logikanya untuk hanya melakukan escape pada karakter `_`, `*`, `\``, dan `[`.
     2.  Mengubah semua `parse_mode` dari `\'MarkdownV2\'` menjadi `\'Markdown\'` di semua file handler (`MessageHandler`, `CallbackQueryHandler`, `ChannelPostHandler`) dan `webhook.php`.
     3.  Menghapus escaping manual untuk karakter yang tidak relevan dengan mode `Markdown` legacy (seperti `.`, `!`, `(`, `)`).
 

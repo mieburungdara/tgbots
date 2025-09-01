@@ -34,6 +34,7 @@ class WebhookController
                 exit;
             }
             $bot_id = (int)$bot_id;
+            \app_log("Webhook dipanggil untuk bot ID: {$bot_id}", 'info');
 
             $pdo = \get_db_connection();
             if (!$pdo) {
@@ -49,6 +50,7 @@ class WebhookController
                 \app_log("Webhook Error: Bot dengan ID Telegram {$bot_id} tidak ditemukan.", 'bot');
                 exit;
             }
+            \app_log("Bot ditemukan: " . json_encode($bot), 'info');
 
             
             $api_for_globals = new TelegramAPI($bot['token'], $pdo, $bot_id);
@@ -62,6 +64,7 @@ class WebhookController
                 http_response_code(200);
                 exit;
             }
+            \app_log("Update mentah diterima: {$update_json}", 'info');
 
             $raw_update_repo = new RawUpdateRepository($pdo);
             $raw_update_repo->create($update_json);
