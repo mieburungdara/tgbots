@@ -13,11 +13,18 @@ spl_autoload_register(function ($class) {
     $relative_class = substr($class, strlen($prefix));
     $base_dir = __DIR__ . '/../';
 
-    // Map TGBot\Router to core/Router.php
-    if ($relative_class === 'Router') {
-        $file = $base_dir . 'core/Router.php';
+    $core_classes = [
+        'TelegramAPI',
+        'Router',
+        'UpdateDispatcher',
+        'App',
+    ];
+
+    $file = '';
+    if (in_array($relative_class, $core_classes)) {
+        $file = $base_dir . '/core/' . $relative_class . '.php';
     } else {
-        $file = $base_dir . 'src/' . str_replace('\\', '/', $relative_class) . '.php';
+        $file = $base_dir . '/src/' . str_replace('\\', '/', $relative_class) . '.php';
     }
 
     if (file_exists($file)) {
