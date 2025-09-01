@@ -12,6 +12,7 @@
 namespace TGBot\Handlers;
 
 use TGBot\App;
+use TGBot\Handlers\HandlerInterface;
 use TGBot\Database\PackageRepository;
 
 /**

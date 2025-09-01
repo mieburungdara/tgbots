@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+namespace TGBot\Handlers;
 
+use TGBot\App;
 
 /**
  * Interface HandlerInterface

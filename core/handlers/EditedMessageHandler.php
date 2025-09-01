@@ -13,6 +13,7 @@ namespace TGBot\Handlers;
 
 use Exception;
 use TGBot\App;
+use TGBot\Handlers\HandlerInterface;
 
 /**
  * Class EditedMessageHandler
