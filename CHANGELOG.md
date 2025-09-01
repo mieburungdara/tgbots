@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.28] - 2025-09-01
+
+### Diperbaiki
+- **Fatal Error `Call to undefined function get_initials()`**: Memperbaiki error fatal yang terjadi di dasbor admin.
+  - **Penyebab**: Fungsi helper `get_initials()`, yang digunakan untuk menampilkan avatar di daftar percakapan, dipanggil di view tetapi belum pernah didefinisikan.
+  - **Solusi**: Menambahkan fungsi `get_initials()` baru ke dalam `core/helpers.php` untuk membuat dan mengembalikan inisial dari nama pengguna atau judul channel.
+
 ## [5.1.27] - 2025-09-01
 
 ### Diperbaiki
