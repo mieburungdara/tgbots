@@ -120,20 +120,37 @@ class BalanceController extends BaseController
         $description = trim($_POST['description'] ?? '');
         $action = $_POST['action'];
 
+        // Get admin ID from session
+        $admin_id = $_SESSION['user']['id'] ?? null;
+        if (!$admin_id) {
+            $_SESSION['flash_message'] = "Sesi admin tidak valid atau telah berakhir. Silakan login kembali.";
+            $_SESSION['flash_message_type'] = 'danger';
+            header("Location: /admin/balance");
+            exit;
+        }
+
         if ($user_id && $amount > 0) {
             $transaction_amount = ($action === 'add_balance') ? $amount : -$amount;
             $pdo->beginTransaction();
             try {
                 $stmt_update_user = $pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
                 $stmt_update_user->execute([$transaction_amount, $user_id]);
-                $stmt_insert_trans = $pdo->prepare("INSERT INTO balance_transactions (user_id, amount, type, description) VALUES (?, ?, ?, ?)");
-                $stmt_insert_trans->execute([$user_id, $transaction_amount, 'admin_adjustment', $description]);
+
+                // Add admin_telegram_id to the insert query
+                $stmt_insert_trans = $pdo->prepare("INSERT INTO balance_transactions (user_id, amount, type, description, admin_telegram_id) VALUES (?, ?, ?, ?, ?)");
+                $stmt_insert_trans->execute([$user_id, $transaction_amount, 'admin_adjustment', $description, $admin_id]);
+
                 $pdo->commit();
                 $_SESSION['flash_message'] = "Saldo pengguna berhasil diperbarui.";
                 $_SESSION['flash_message_type'] = 'success';
             } catch (Exception $e) {
                 $pdo->rollBack();
-                $_SESSION['flash_message'] = "Terjadi kesalahan: " . $e->getMessage();
+                // Check for column not found error to give a more specific message
+                if (str_contains($e->getMessage(), 'admin_telegram_id')) {
+                    $_SESSION['flash_message'] = "Terjadi kesalahan: Kolom 'admin_telegram_id' tidak ditemukan di tabel 'balance_transactions'. Harap jalankan migrasi database.";
+                } else {
+                    $_SESSION['flash_message'] = "Terjadi kesalahan: " . $e->getMessage();
+                }
                 $_SESSION['flash_message_type'] = 'danger';
             }
         } else {
@@ -161,12 +178,30 @@ class BalanceController extends BaseController
 
         $pdo = \get_db_connection();
         try {
-            $stmt = $pdo->prepare("SELECT amount, type, description, created_at FROM balance_transactions WHERE user_id = ? ORDER BY created_at DESC");
+            // Join with users table to get admin's name
+            $stmt = $pdo->prepare("
+                SELECT 
+                    bt.amount, 
+                    bt.type, 
+                    bt.description, 
+                    bt.created_at, 
+                    bt.admin_telegram_id,
+                    a.first_name AS admin_name
+                FROM balance_transactions bt
+                LEFT JOIN users a ON bt.admin_telegram_id = a.id
+                WHERE bt.user_id = ? 
+                ORDER BY bt.created_at DESC
+            ");
             $stmt->execute([$user_id]);
             $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $this->jsonResponse($logs);
         } catch (PDOException $e) {
-            $this->jsonResponse(['error' => 'Gagal mengambil data transaksi.'], 500);
+            // Check for column not found error
+            if (str_contains($e->getMessage(), 'admin_telegram_id')) {
+                 $this->jsonResponse(['error' => "Kolom 'admin_telegram_id' tidak ditemukan. Harap jalankan migrasi database."], 500);
+            } else {
+                $this->jsonResponse(['error' => 'Gagal mengambil data transaksi.'], 500);
+            }
         }
     }
 

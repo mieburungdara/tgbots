@@ -234,8 +234,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 case 'balance':
                     apiUrl = `/api/admin/balance/log?telegram_id=${telegramId}`;
                     title = `Riwayat Penyesuaian Saldo untuk ${userName}`;
-                    headers = ['Waktu', 'Tipe', 'Jumlah', 'Deskripsi'];
-                    dataBuilder = (item) => `<td>${item.created_at}</td><td>${item.type}</td><td>${formatCurrency(item.amount)}</td><td>${item.description || ''}</td>`;
+                    headers = ['Waktu', 'Tipe', 'Jumlah', 'Deskripsi', 'Oleh Admin'];
+                    dataBuilder = (item) => `<td>${item.created_at}</td><td>${item.type}</td><td>${formatCurrency(item.amount)}</td><td>${item.description || ''}</td><td>${item.admin_name ? `${item.admin_name} (${item.admin_telegram_id})` : 'N/A'}</td>`;
                     break;
                 case 'sales':
                     apiUrl = `/api/admin/balance/sales?telegram_id=${telegramId}`;
