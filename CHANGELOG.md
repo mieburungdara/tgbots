@@ -1,11 +1,11 @@
 # Changelog
 
-## [5.1.22] - 2025-09-01
+## [5.1.23] - 2025-09-01
 
 ### Diperbaiki
-- **Fatal Error `Class not found` untuk `TelegramAPI`**: Memperbaiki error fatal `Class "TGBot\TelegramAPI" not found` atau `Class "TGBot\Controllers\TelegramAPI" not found`.
-  - **Penyebab**: Autoloader di `core/autoloader.php` salah dikonfigurasi dan hanya mencari class di dalam direktori `src/`, padahal class `TGBot\TelegramAPI` berada di `core/`.
-  - **Solusi**: Memperbaiki logika autoloader untuk secara eksplisit memeriksa dan memuat class-class inti (seperti `TelegramAPI`, `Router`, `App`) dari direktori `core/` sebelum mencoba mencari di `src/`. Ini memastikan semua class inti dimuat dengan benar.
+- **Fatal Error `Class not found` (Autoloader)**: Merombak total `core/autoloader.php` untuk memperbaiki serangkaian error fatal `Class not found` yang terjadi di seluruh aplikasi, termasuk untuk `TGBot\TelegramAPI` dan `TGBot\Database\BotRepository`.
+  - **Penyebab**: Logika autoloader sebelumnya tidak benar-benar mengikuti standar PSR-4. Autoloader gagal menerjemahkan namespace yang mengandung sub-direktori (seperti `TGBot\Database`) ke path file yang benar (`core/database/`) dan salah mengasumsikan semua class berada di direktori `src/` atau `core/` tingkat atas.
+  - **Solusi**: Autoloader baru sekarang secara cerdas memetakan namespace ke struktur direktori. Logika baru membedakan antara *Controllers* (di `src/`) dan semua class *Core* lainnya (di `core/`), dan dengan benar mengubah `\` dari namespace ke `/` di path file. Ini memastikan bahwa class seperti `TGBot\Database\BotRepository` sekarang dapat ditemukan di `core/database/BotRepository.php`, menyelesaikan semua masalah autoloading.
 
 ## [5.1.21] - 2025-08-31
 
@@ -32,7 +32,7 @@
   - **Solusi**:
     1.  Membuat `core/autoloader.php` baru yang secara cerdas memuat kelas dari direktori `src` dan `core` berdasarkan namespace `TGBot`.
     2.  Menghapus semua `require_once` yang berlebihan dari seluruh file controller dan file inti.
-    3.  Memperbaiki semua pemanggilan fungsi helper global (seperti `get_db_connection`, `app_log`) dengan menambahkan prefix `\\` untuk memanggilnya dari namespace global, menyelesaikan semua error `undefined function`.
+    3.  Memperbaiki semua pemanggilan fungsi helper global (seperti `get_db_connection`, `app_log`) dengan menambahkan prefix `\` untuk memanggilnya dari namespace global, menyelesaikan semua error `undefined function`.
 
 ## [5.1.17] - 2025-08-31
 
@@ -104,17 +104,17 @@
 ## [5.1.4] - 2025-08-30
 
 ### Peningkatan
-- **Konsistensi Kode View**: Melakukan refactoring pada `debug_feed/index.php` untuk memastikan konsistensi dengan view lain. Variabel paginasi sekarang diakses langsung dari array `$data[\'pagination\']` daripada mendefinisikan variabel lokal, sejalan dengan praktik terbaik di seluruh aplikasi.
+- **Konsistensi Kode View**: Melakukan refactoring pada `debug_feed/index.php` untuk memastikan konsistensi dengan view lain. Variabel paginasi sekarang diakses langsung dari array `$data['pagination']` daripada mendefinisikan variabel lokal, sejalan dengan praktik terbaik di seluruh aplikasi.
 
 ## [5.1.3] - 2025-08-30
 
 ### Peningkatan
-- **Konsistensi Tipe Exception**: Mengubah tipe `Exception` menjadi `\\RuntimeException` di `StorageChannelController` saat terjadi kegagalan penambahan bot ke channel. Perubahan ini membuat penanganan error lebih konsisten dengan bagian lain dari file yang sudah menggunakan `\\RuntimeException` untuk error saat runtime.
+- **Konsistensi Tipe Exception**: Mengubah tipe `Exception` menjadi `\RuntimeException` di `StorageChannelController` saat terjadi kegagalan penambahan bot ke channel. Perubahan ini membuat penanganan error lebih konsisten dengan bagian lain dari file yang sudah menggunakan `\RuntimeException` untuk error saat runtime.
 
 ## [5.1.2] - 2025-08-30
 
 ### Diubah (Keamanan)
-- **Refactoring View**: Menghapus penggunaan fungsi `extract()` yang berisiko dari `AppController`. Semua variabel sekarang secara eksplisit diakses melalui array `$data` di dalam view (misalnya, `$data[\'nama_variabel\']`). Perubahan ini meningkatkan keamanan dengan mencegah potensi *variable overwriting* dan membuat alur data ke dalam template lebih jelas dan mudah untuk di-debug.
+- **Refactoring View**: Menghapus penggunaan fungsi `extract()` yang berisiko dari `AppController`. Semua variabel sekarang secara eksplisit diakses melalui array `$data` di dalam view (misalnya, `$data['nama_variabel']`). Perubahan ini meningkatkan keamanan dengan mencegah potensi *variable overwriting* dan membuat alur data ke dalam template lebih jelas dan mudah untuk di-debug.
 
 ## [5.1.1] - 2025-08-29
 
@@ -145,7 +145,7 @@
 ## [5.0.6] - 2025-08-29
 
 ### Diperbaiki (Keamanan)
-- **Validasi Input**: Memperkuat keamanan di `RoleController` dengan mengganti pemeriksaan `empty()` yang tidak aman dengan `filter_input(INPUT_POST, \'role_id\', FILTER_VALIDATE_INT)`. Ini memastikan bahwa hanya nilai integer yang valid yang diproses saat menghapus peran, mencegah potensi manipulasi input.
+- **Validasi Input**: Memperkuat keamanan di `RoleController` dengan mengganti pemeriksaan `empty()` yang tidak aman dengan `filter_input(INPUT_POST, 'role_id', FILTER_VALIDATE_INT)`. Ini memastikan bahwa hanya nilai integer yang valid yang diproses saat menghapus peran, mencegah potensi manipulasi input.
 
 ## [5.0.5] - 2025-08-29
 
@@ -187,11 +187,11 @@
 - **Halaman Chat Admin**: Memigrasikan halaman chat admin (`admin/chat.php`) dan fungsionalitas hapus pesan ke `ChatController`, membuat alur kerja inti ini sesuai dengan arsitektur MVCR.
 - **Halaman Chat Channel**: Melengkapi refactoring fitur chat dengan memigrasikan halaman chat channel (`admin/channel_chat.php`) ke metode baru di dalam `ChatController`.
 - **Penyelesaian Area Member**: Menyelesaikan semua halaman di area member (`channels.php`, `purchased.php`, `sold.php`, `view_package.php`) dengan memigrasikannya ke dalam controller dan view yang sesuai.
-- **Lanjutan Refactor Admin**: Melanjutkan migrasi area admin dengan merefaktor halaman \'Manajemen Konten\' (`admin/packages.php`).
+- **Lanjutan Refactor Admin**: Melanjutkan migrasi area admin dengan merefaktor halaman 'Manajemen Konten' (`admin/packages.php`).
 - **Halaman Log Admin**: Memigrasikan semua halaman penampil log (`logs.php`, `media_logs.php`, `telegram_logs.php`) ke dalam `LogController` baru untuk konsistensi.
 - **Migrasi AJAX ke API Controller**: Memigrasikan semua endpoint AJAX lama (misalnya, `api/update_user_roles.php`, `webhook_manager.php`, `package_manager.php`) ke dalam metode API yang sesuai di dalam controller yang ada, membuat semua interaksi backend konsisten dengan pola MVCR.
-- **Lanjutan Refactor Admin**: Melanjutkan migrasi dengan merefaktor halaman \'Analitik\' (`admin/analytics.php`) dan \'Manajemen Saldo\' (`admin/balance.php`) beserta endpoint-endpoint API terkaitnya.
-- **Penyelesaian Refactor Admin**: Menyelesaikan migrasi penuh area admin dengan merefaktor halaman \'Channel Penyimpanan\' (`admin/channels.php`) dan \'Manajemen Peran\' (`admin/roles.php`), membuat semua fungsionalitas admin kini berjalan di bawah arsitektur MVCR yang baru.
+- **Lanjutan Refactor Admin**: Melanjutkan migrasi dengan merefaktor halaman 'Analitik' (`admin/analytics.php`) dan 'Manajemen Saldo' (`admin/balance.php`) beserta endpoint-endpoint API terkaitnya.
+- **Penyelesaian Refactor Admin**: Menyelesaikan migrasi penuh area admin dengan merefaktor halaman 'Channel Penyimpanan' (`admin/channels.php`) dan 'Manajemen Peran' (`admin/roles.php`), membuat semua fungsionalitas admin kini berjalan di bawah arsitektur MVCR yang baru.
 - **Penyelesaian Refactoring Total**: Menyelesaikan migrasi semua sisa halaman legacy, termasuk halaman admin (`database`, `sales_channels`, `api_test`, `debug_feed`), halaman root (`login_choice`, `xoradmin`), dan yang paling penting, titik masuk utama `webhook.php`. Seluruh fungsionalitas web dan bot sekarang berjalan sepenuhnya di bawah arsitektur MVCR yang baru. Direktori `admin/` dan `partials/` yang usang telah dihapus.
 
 ## [4.7.0] - 2025-08-28
@@ -213,7 +213,7 @@
 ## [4.6.1] - 2025-08-27
 
 ### Diperbaiki
-- **Fatal Error di Halaman Channel Jualan**: Memperbaiki error `Undefined array key \"bot_id\"` dan `TypeError` di halaman `admin/sales_channels.php`.
+- **Fatal Error di Halaman Channel Jualan**: Memperbaiki error `Undefined array key "bot_id"` dan `TypeError` di halaman `admin/sales_channels.php`.
   - **Penyebab**: Kueri database tidak menyertakan `bot_id` dalam hasil, yang menyebabkan error saat mencoba mengambil token bot untuk panggilan API.
   - **Solusi**: Menambahkan `ssc.bot_id` ke dalam `SELECT` pada kueri SQL untuk memastikan data yang diperlukan tersedia.
 
@@ -228,14 +228,14 @@
 ## [4.5.2] - 2025-08-27
 
 ### Diperbaiki
-- **Fatal Error di Halaman Paket Admin**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'u.telegram_id\' in \'ON\'` yang terjadi saat mengakses halaman manajemen paket di panel admin.
+- **Fatal Error di Halaman Paket Admin**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.telegram_id' in 'ON'` yang terjadi saat mengakses halaman manajemen paket di panel admin.
   - **Penyebab**: Kueri `findAll` di `PackageRepository.php` salah melakukan JOIN pada `users` menggunakan `u.telegram_id` yang tidak ada.
   - **Solusi**: Mengubah kondisi JOIN menjadi `u.id` agar sesuai dengan skema database.
 
 ## [4.5.1] - 2025-08-27
 
 ### Diperbaiki
-- **Inkonsistensi Kolom ID Pengguna (`id` vs `telegram_id`)**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'u.telegram_id\'` dan masalah terkait di seluruh aplikasi.
+- **Inkonsistensi Kolom ID Pengguna (`id` vs `telegram_id`)**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'u.telegram_id'` dan masalah terkait di seluruh aplikasi.
   - **Penyebab**: Sebagian besar kode masih menggunakan `telegram_id` untuk merujuk pada ID pengguna, padahal skema database final (`updated_schema.sql`) menggunakan `id` sebagai primary key untuk tabel `users`.
   - **Solusi**: Melakukan refactoring global untuk mengganti semua referensi ke kolom `telegram_id` pengguna dengan `id`. Ini termasuk perbaikan pada query SQL, nama variabel, dan parameter fungsi di direktori `admin`, `core`, dan `member`.
   - **Perbaikan Tambahan**: Menonaktifkan atau memperbaiki file migrasi lama (`002_...`, `018_...`) dan `setup.sql` untuk memastikan konsistensi skema bagi instalasi baru.
@@ -250,7 +250,7 @@
 ## [4.4.2] - 2025-08-27
 
 ### Diperbaiki
-- **Fatal Error di Dasbor Percakapan**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'telegram_bot_id\'` di halaman utama admin (`admin/index.php`).
+- **Fatal Error di Dasbor Percakapan**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'telegram_bot_id'` di halaman utama admin (`admin/index.php`).
   - **Penyebab**: Kode di `admin/index.php` mencoba mengambil kolom `telegram_bot_id` dari tabel `bots`, padahal skema database yang benar (`updated_schema.sql`) menamai kolom tersebut `id`.
   - **Solusi**: Mengubah semua referensi ke `telegram_bot_id` menjadi `id` di `admin/index.php`, termasuk query SQL dan variabel terkait, agar sesuai dengan struktur database.
 
@@ -350,7 +350,7 @@
 - **Error Migrasi `balance_transactions`**: Memperbaiki error `errno: 150 "Foreign key constraint is incorrectly formed"` saat menjalankan migrasi untuk membuat tabel `balance_transactions`.
   - **Penyebab**: Tipe data kolom `user_id` di tabel baru (`BIGINT`) tidak cocok dengan tipe data kolom `id` di tabel `users` (`INT(11)`).
   - **Solusi**: Menyamakan tipe data `user_id` di file migrasi menjadi `INT(11)` agar sesuai dengan kolom yang direferensikan.
-- **Fatal Error di Halaman Saldo**: Memperbaiki error `SQLSTATE[42S22]: Unknown column \'seller_id\'` yang terjadi saat memuat halaman `admin/balance.php`.
+- **Fatal Error di Halaman Saldo**: Memperbaiki error `SQLSTATE[42S22]: Unknown column 'seller_id'` yang terjadi saat memuat halaman `admin/balance.php`.
   - **Penyebab**: Subquery untuk menghitung total pemasukan dan pengeluaran menggunakan nama kolom yang salah (`seller_id`, `buyer_id`).
   - **Solusi**: Mengubah nama kolom di dalam query menjadi `seller_user_id` dan `buyer_user_id` agar cocok dengan skema tabel `sales`.
 - **Fatal Error `format_currency()`**: Memperbaiki error `Call to undefined function format_currency()` di halaman `admin/balance.php`.
@@ -390,7 +390,7 @@
   - **Fitur Pagination**: Mengimplementasikan pagination sisi server untuk menangani riwayat percakapan yang panjang secara efisien. Pesan ditampilkan per 50 item, dengan kontrol navigasi "Sebelumnya" dan "Berikutnya".
 
 ### Diperbaiki
-- **Fatal Error di Halaman Detail Chat**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'mf.bot_id\'` yang terjadi saat melihat riwayat chat.
+- **Fatal Error di Halaman Detail Chat**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mf.bot_id'` yang terjadi saat melihat riwayat chat.
   - **Penyebab**: Kondisi `JOIN` pada query SQL salah, mencoba menghubungkan tabel `messages` dan `media_files` menggunakan `bot_id` yang tidak ada di tabel media.
   - **Solusi**: Mengubah kondisi `JOIN` untuk menggunakan `m.chat_id = mf.chat_id`, yang secara akurat menautkan pesan ke media yang sesuai berdasarkan ID chat yang sama.
 
@@ -488,14 +488,14 @@
 ## [4.2.4] - 2025-08-15
 
 ### Diperbaiki
-- **Fatal Error di Halaman "Konten Dibeli"**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'mf.file_id\'` yang terjadi saat member membuka halaman "Konten Dibeli".
+- **Fatal Error di Halaman "Konten Dibeli"**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mf.file_id'` yang terjadi saat member membuka halaman "Konten Dibeli".
   - **Penyebab**: Query database untuk mengambil daftar konten yang dibeli (`findPackagesByBuyerId`) masih mencoba memilih kolom `file_id` yang sudah dihapus.
   - **Solusi**: Menghapus referensi ke kolom `mf.file_id` dari query di `SaleRepository.php`.
 
 ## [4.2.3] - 2025-08-15
 
 ### Diperbaiki
-- **Fatal Error di Halaman "Konten Dijual"**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'mf.file_id\'` yang terjadi saat member membuka halaman "Konten Dijual".
+- **Fatal Error di Halaman "Konten Dijual"**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column 'mf.file_id'` yang terjadi saat member membuka halaman "Konten Dijual".
   - **Penyebab**: Query database untuk mengambil daftar konten yang dijual (`findAllBySellerId`) masih mencoba memilih kolom `file_id` yang sudah dihapus.
   - **Solusi**: Menghapus referensi ke kolom `mf.file_id` dari query di `PackageRepository.php`.
 
@@ -549,7 +549,7 @@
   - **403 (Forbidden)**: Secara spesifik mendeteksi saat bot diblokir oleh pengguna.
   - **429 (Too Many Requests)**: Mendeteksi permintaan rate-limit dan mencatatnya dengan status `pending_retry` untuk potensi pemrosesan ulang di masa depan.
 - **Navigasi Panel Admin**: Menambahkan tautan "Log Error Telegram" ke menu navigasi di semua halaman panel admin untuk akses yang cepat dan konsisten.
-- **Status Pengguna Diblokir**: Saat bot mendeteksi bahwa ia diblokir oleh pengguna, sistem sekarang secara otomatis akan memperbarui status pengguna tersebut menjadi \'blocked\' di database, bukan hanya mencatatnya di log.
+- **Status Pengguna Diblokir**: Saat bot mendeteksi bahwa ia diblokir oleh pengguna, sistem sekarang secara otomatis akan memperbarui status pengguna tersebut menjadi 'blocked' di database, bukan hanya mencatatnya di log.
 
 ## [3.12.4] - 2025-08-14
 
@@ -561,21 +561,21 @@
 ## [3.12.3] - 2025-08-14
 
 ### Diperbaiki
-- **Fatal Error di Perintah /konten**: Memperbaiki error fatal `Column not found: 1054 Unknown column \'file_id\'` yang terjadi saat menggunakan perintah `/konten`.
+- **Fatal Error di Perintah /konten**: Memperbaiki error fatal `Column not found: 1054 Unknown column 'file_id'` yang terjadi saat menggunakan perintah `/konten`.
   - **Penyebab**: Serupa dengan error sebelumnya, query untuk mengambil data thumbnail di dalam `handleKontenCommand` masih mencoba memilih kolom `file_id` yang sudah dihapus.
   - **Solusi**: Menghapus referensi ke `file_id` dari query SQL di `MessageHandler.php`.
 
 ## [3.12.2] - 2025-08-14
 
 ### Diperbaiki
-- **Fatal Error di Halaman Log Media**: Memperbaiki error fatal `Column not found: 1054 Unknown column \'mf.file_id\'` pada halaman `admin/media_logs.php`.
+- **Fatal Error di Halaman Log Media**: Memperbaiki error fatal `Column not found: 1054 Unknown column 'mf.file_id'` pada halaman `admin/media_logs.php`.
   - **Penyebab**: Halaman log media masih mencoba memilih kolom `file_id` dari database, padahal kolom tersebut sudah dihapus pada optimisasi skema sebelumnya (v3.10.0).
   - **Solusi**: Menghapus referensi ke `mf.file_id` dari query SQL di halaman log media.
 
 ## [3.12.1] - 2025-08-14
 
 ### Diperbaiki
-- **Error di Panel Admin**: Memperbaiki `Warning: Undefined array key \"first_name\"` dan error `htmlspecialchars()` terkait yang muncul di dropdown pemilihan bot pada halaman utama panel admin.
+- **Error di Panel Admin**: Memperbaiki `Warning: Undefined array key "first_name"` dan error `htmlspecialchars()` terkait yang muncul di dropdown pemilihan bot pada halaman utama panel admin.
   - **Penyebab**: Query database di `admin/index.php` masih memilih kolom `name` yang lama, padahal seharusnya `first_name` sesuai dengan skema database terbaru.
   - **Solusi**: Mengubah query SQL untuk memilih `first_name` dan menambahkan null coalescing operator (`??`) pada `htmlspecialchars()` untuk mencegah error jika nama bot kosong.
 
