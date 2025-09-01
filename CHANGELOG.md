@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.29] - 2025-09-01
+
+### Fitur
+- **Deskripsi Preset di Modal Saldo**: Menambahkan dropdown dengan deskripsi preset di modal "Ubah Saldo" pada halaman Manajemen Saldo.
+  - **Penyebab**: Untuk mempercepat dan menstandarisasi input deskripsi saat admin melakukan penyesuaian saldo.
+  - **Solusi**: Menambahkan elemen `<select>` dengan opsi-opsi umum (misalnya "Hadiah topup", "Bonus referral", "Koreksi salah input") dan fungsi JavaScript `updateDescription()` untuk secara otomatis mengisi textarea deskripsi saat sebuah opsi dipilih.
+
 ## [5.1.28] - 2025-09-01
 
 ### Diperbaiki
