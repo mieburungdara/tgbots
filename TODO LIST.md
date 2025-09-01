@@ -20,3 +20,6 @@ buat agar yg tak punya hak akses diarahkan ke halaman tertenut yg mengatakan jik
 
 
 tambahkan kolom user last interaction pada table users, untuk mengetahui kapan terakhir kali user aktif dan berinteraksi dengan bot
+
+pada dor admin, tambahkan fitur manajemen hak akses setiap role
+
