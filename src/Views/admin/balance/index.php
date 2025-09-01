@@ -109,28 +109,36 @@
                 <select id="preset-description" onchange="updateDescription()" style="margin-bottom: 8px; width: 100%; padding: 8px;">
                     <option value="">-- Pilih deskripsi cepat --</option>
                     <optgroup label="Bonus & Hadiah">
-                        <option value="Bonus Pendaftaran">Bonus Pendaftaran</option>
                         <option value="Hadiah topup">Hadiah topup</option>
                         <option value="Bonus referral">Bonus referral</option>
+                        <option value="Bonus Pendaftaran">Bonus Pendaftaran</option>
                         <option value="Bonus Kinerja">Bonus Kinerja</option>
+                        <option value="Bonus Loyalitas">Bonus Loyalitas</option>
                         <option value="Cashback">Cashback</option>
                         <option value="Saldo event">Saldo event</option>
+                        <option value="Hadiah Giveaway">Hadiah Giveaway</option>
                     </optgroup>
                     <optgroup label="Pembayaran & Komisi">
                         <option value="Gaji">Gaji</option>
                         <option value="Pencairan Komisi">Pencairan Komisi</option>
+                        <option value="Pencairan Afiliasi">Pencairan Afiliasi</option>
                     </optgroup>
                     <optgroup label="Kompensasi & Pengembalian">
                         <option value="Pengembalian Dana (Refund)">Pengembalian Dana (Refund)</option>
+                        <option value="Refund Transaksi Gagal">Refund Transaksi Gagal</option>
                         <option value="Kompensasi Gangguan Layanan">Kompensasi Gangguan Layanan</option>
+                        <option value="Kompensasi Kesalahan Sistem">Kompensasi Kesalahan Sistem</option>
                         <option value="Pembalikan Transaksi">Pembalikan Transaksi</option>
                     </optgroup>
                     <optgroup label="Penyesuaian & Koreksi">
                         <option value="Koreksi salah input">Koreksi salah input</option>
                         <option value="Penyesuaian manual">Penyesuaian manual</option>
+                        <option value="Penyesuaian Saldo Awal">Penyesuaian Saldo Awal</option>
                     </optgroup>
                     <optgroup label="Potongan & Biaya">
                         <option value="Biaya Administrasi">Biaya Administrasi</option>
+                        <option value="Biaya Layanan">Biaya Layanan</option>
+                        <option value="Biaya Penarikan">Biaya Penarikan</option>
                         <option value="Denda Pelanggaran">Denda Pelanggaran</option>
                     </optgroup>
                 </select>
