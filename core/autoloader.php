@@ -14,7 +14,7 @@ spl_autoload_register(function ($class) {
     $base_dir = realpath(__DIR__ . '/../');
 
     // Controllers are in src/, other core classes are in core/
-    if (strpos($relative_class, 'Controllers\') === 0) {
+    if (strpos($relative_class, 'Controllers\\') === 0) {
         $file = $base_dir . '/src/' . str_replace('\\', '/', $relative_class) . '.php';
     } else {
         $file = $base_dir . '/core/' . str_replace('\\', '/', $relative_class) . '.php';
