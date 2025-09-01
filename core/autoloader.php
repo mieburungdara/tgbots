@@ -22,7 +22,7 @@ spl_autoload_register(function ($class) {
     } else {
         // Handle special cases for `database` and `handlers` directories
         if (strpos(strtolower($relative_path), 'database/') === 0 || strpos(strtolower($relative_path), 'handlers/') === 0) {
-            $file = $base_dir . '/core/' . strtolower($relative_path) . '.php';
+            $file = $base_dir . '/core/' . $relative_path . '.php';
         } else {
             $file = $base_dir . '/core/' . $relative_path . '.php';
         }
