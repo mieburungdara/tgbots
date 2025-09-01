@@ -227,7 +227,8 @@ class BalanceController extends BaseController
             $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $this->jsonResponse($logs);
         } catch (PDOException $e) {
-            $this->jsonResponse(['error' => 'Gagal mengambil data penjualan.'], 500);
+            \app_log('Error in BalanceController/getSalesLog: ' . $e->getMessage(), 'error');
+            $this->jsonResponse(['error' => 'Gagal mengambil data penjualan. Terjadi kesalahan pada sistem.'], 500);
         }
     }
 
@@ -253,7 +254,8 @@ class BalanceController extends BaseController
             $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
             $this->jsonResponse($logs);
         } catch (PDOException $e) {
-            $this->jsonResponse(['error' => 'Gagal mengambil data pembelian.'], 500);
+            \app_log('Error in BalanceController/getPurchasesLog: ' . $e->getMessage(), 'error');
+            $this->jsonResponse(['error' => 'Gagal mengambil data pembelian. Terjadi kesalahan pada sistem.'], 500);
         }
     }
 }
