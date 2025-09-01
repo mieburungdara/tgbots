@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.26] - 2025-09-01
+
+### Diperbaiki
+- **Fatal Error `Class not found` (UpdateDispatcher)**: Memperbaiki fatal error `Class "TGBot\UpdateHandler" not found` di `core/UpdateDispatcher.php`.
+  - **Penyebab**: File `core/UpdateDispatcher.php` tidak mengimpor kelas `UpdateHandler` dengan benar menggunakan pernyataan `use`.
+  - **Solusi**: Menambahkan `use TGBot\Handlers\UpdateHandler;` ke bagian atas file `core/UpdateDispatcher.php` untuk memastikan kelas tersebut dapat ditemukan oleh autoloader.
+
 ## [5.1.25] - 2025-09-01
 
 ### Peningkatan

@@ -21,6 +21,7 @@ use TGBot\Handlers\EditedMessageHandler;
 use TGBot\Handlers\InlineQueryHandler;
 use TGBot\Handlers\ChannelPostHandler;
 use TGBot\Handlers\MediaHandler;
+use TGBot\Handlers\UpdateHandler;
 use TGBot\Database\UserRepository;
 use TGBot\Database\BotRepository;
 
