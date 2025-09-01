@@ -14,10 +14,18 @@ spl_autoload_register(function ($class) {
     $base_dir = realpath(__DIR__ . '/../');
 
     // Controllers are in src/, other core classes are in core/
+    // IMPORTANT: Convert to lowercase for case-sensitive filesystems (Linux)
+    $relative_path = str_replace('\\', '/', $relative_class);
+
     if (strpos($relative_class, 'Controllers\\') === 0) {
-        $file = $base_dir . '/src/' . str_replace('\\', '/', $relative_class) . '.php';
+        $file = $base_dir . '/src/' . $relative_path . '.php';
     } else {
-        $file = $base_dir . '/core/' . str_replace('\\', '/', $relative_class) . '.php';
+        // Handle special cases for `database` and `handlers` directories
+        if (strpos(strtolower($relative_path), 'database/') === 0 || strpos(strtolower($relative_path), 'handlers/') === 0) {
+            $file = $base_dir . '/core/' . strtolower($relative_path) . '.php';
+        } else {
+            $file = $base_dir . '/core/' . $relative_path . '.php';
+        }
     }
 
     if (file_exists($file)) {

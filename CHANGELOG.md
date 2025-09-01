@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.1.24] - 2025-09-01
+
+### Diperbaiki
+- **Fatal Error `Class not found` (Autoloader)**: Memperbaiki autoloader di `core/autoloader.php` yang gagal menemukan kelas di subdirektori karena masalah case-sensitivity pada sistem file Linux.
+  - **Penyebab**: Autoloader tidak mengubah namespace menjadi huruf kecil saat membuat path file, sehingga `TGBot\Database\BotRepository` dicari di `core/Database/` padahal direktori sebenarnya adalah `core/database/`.
+  - **Solusi**: Menambahkan `strtolower()` pada path relatif untuk memastikan path yang dihasilkan selalu huruf kecil, sesuai dengan struktur direktori.
+
 ## [5.1.23] - 2025-09-01
 
 ### Diperbaiki
@@ -441,7 +448,7 @@
 - **Mengembalikan ke Mode `Markdown` Legacy**: Sesuai permintaan pengguna, semua penggunaan `parse_mode` diubah kembali dari `MarkdownV2` ke mode `Markdown` legacy.
   - **Penyebab**: Pengguna meminta untuk menggunakan mode parsing Markdown yang biasa, bukan `MarkdownV2`.
   - **Solusi**:
-    1.  Mengganti nama fungsi `escapeMarkdownV2` menjadi `escapeMarkdown` di `TelegramAPI.php` dan menyesuaikan logikanya untuk hanya melakukan escape pada karakter `_`, `*`, `\``, dan `[`.
+    1.  Mengganti nama fungsi `escapeMarkdownV2` menjadi `escapeMarkdown` di `TelegramAPI.php` dan menyesuaikan logikanya untuk hanya melakukan escape pada karakter `_`, `*`, `\``, dan `[`. 
     2.  Mengubah semua `parse_mode` dari `\'MarkdownV2\'` menjadi `\'Markdown\'` di semua file handler (`MessageHandler`, `CallbackQueryHandler`, `ChannelPostHandler`) dan `webhook.php`.
     3.  Menghapus escaping manual untuk karakter yang tidak relevan dengan mode `Markdown` legacy (seperti `.`, `!`, `(`, `)`).
 
