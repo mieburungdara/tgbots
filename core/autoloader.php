@@ -22,7 +22,11 @@ spl_autoload_register(function ($class) {
     } else {
         // Handle special cases for `database` and `handlers` directories
         if (strpos(strtolower($relative_path), 'database/') === 0 || strpos(strtolower($relative_path), 'handlers/') === 0) {
-            $file = $base_dir . '/core/' . $relative_path . '.php';
+            // Lowercase the directory part of the path, but preserve the class name's case.
+            $last_slash = strrpos($relative_path, '/');
+            $directory = substr($relative_path, 0, $last_slash);
+            $class_file = substr($relative_path, $last_slash + 1);
+            $file = $base_dir . '/core/' . strtolower($directory) . '/' . $class_file . '.php';
         } else {
             $file = $base_dir . '/core/' . $relative_path . '.php';
         }
