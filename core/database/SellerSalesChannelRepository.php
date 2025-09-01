@@ -1,5 +1,9 @@
 <?php
 
+namespace TGBot\Database;
+
+use PDO;
+
 /**
  * Repositori untuk mengelola channel jualan yang didaftarkan oleh penjual.
  * Setiap penjual dapat mendaftarkan satu channel untuk mem-posting pratinjau konten.

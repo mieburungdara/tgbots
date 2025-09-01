@@ -1,5 +1,10 @@
 <?php
 
+namespace TGBot\Database;
+
+use PDO;
+use PDOException;
+
 /**
  * Repositori untuk mengelola hubungan antara channel pribadi dan bot.
  * Mengelola tabel pivot `private_channel_bots`.
