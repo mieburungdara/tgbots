@@ -322,10 +322,12 @@ class PostPackageRepository
      * @param int $bot_id
      * @param string $description
      * @param int $thumbnail_media_id
+     * @param string $post_type
+     * @param string|null $category
      * @return int
      * @throws Exception
      */
-    public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id): int
+    public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id, string $post_type = 'sell', ?string $category = null): int
     {
         try {
             // 1. Ambil dan kunci baris pengguna untuk mendapatkan urutan & ID publik
@@ -348,9 +350,9 @@ class PostPackageRepository
 
             // 4. Masukkan paket baru
             $stmt_package = $this->pdo->prepare(
-                "INSERT INTO post_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id)\n                 VALUES (?, ?, ?, ?, 'pending', ?)"
+                "INSERT INTO post_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id, post_type, category)\n                 VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)"
             );
-            $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $public_id]);
+            $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $public_id, $post_type, $category]);
             $package_id = $this->pdo->lastInsertId();
 
             return (int)$package_id;

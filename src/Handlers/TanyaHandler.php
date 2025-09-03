@@ -4,6 +4,7 @@ namespace TGBot\Handlers;
 
 use TGBot\App;
 use TGBot\Database\UserRepository;
+use TGBot\Database\PostPackageRepository;
 
 class TanyaHandler
 {
@@ -59,7 +60,40 @@ class TanyaHandler
 
     private function handleConfirmation(App $app, array $callback_query)
     {
-        // TODO: Implement this
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
+        $post_repo = new PostPackageRepository($app->pdo);
+        $state_context = json_decode($app->user['state_context'] ?? '{}', true);
+
+        $category = $state_context['category'];
+        $message_id = $state_context['message_id'];
+        $chat_id = $state_context['chat_id'];
+        $text = $state_context['text'];
+
+        // 1. Create a new post package
+        $package_id = $post_repo->createPackageWithPublicId(
+            $app->user['id'],
+            $app->bot['id'],
+            $text,
+            0, // No thumbnail for text-based posts
+            'tanya',
+            $category
+        );
+
+        // 2. Forward the message to the admin channel for moderation
+        $admin_channel_id = $app->bot_settings['admin_channel_tanya_' . $category] ?? null;
+        if ($admin_channel_id) {
+            $app->telegram_api->forwardMessage($admin_channel_id, $chat_id, $message_id);
+        }
+
+        // 3. Send a confirmation message to the user
+        $app->telegram_api->editMessageText(
+            $app->chat_id,
+            $callback_query['message']['message_id'],
+            "✅ Terima kasih! Pertanyaan Anda telah diteruskan ke moderator dan akan segera diproses."
+        );
+
+        // 4. Clear the user state
+        $user_repo->setUserState($app->user['id'], null, null);
     }
 
     private function handleCancellation(App $app, array $callback_query)

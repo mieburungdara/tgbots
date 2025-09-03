@@ -193,6 +193,7 @@ CREATE TABLE `post_packages`  (
   `price` decimal(15, 2) NOT NULL DEFAULT 0.00,
   `status` enum('pending','available','sold','rejected','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pending',
   `post_type` enum('sell','rate','tanya') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'sell',
+  `category` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp,
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `protect_content` tinyint(1) NOT NULL DEFAULT 0,
