@@ -7,13 +7,23 @@ namespace TGBot\Controllers\Admin;
 use Exception;
 use PDO;
 use Throwable;
-use TGBot\Controllers\BaseController;
+use TGBot\Controllers\AppController;
 
-class DatabaseController extends BaseController
+class DatabaseController extends AppController
 {
     /**
      * Menampilkan halaman manajemen database.
      */
+    public function __construct()
+    {
+        if (!is_any_admin_logged_in()) {
+            http_response_code(403);
+            // In a real app, you might want a more sophisticated access denied view
+            // that perhaps suggests logging into one of the available panels.
+            die('Access Denied. You must be logged in as an admin or XOR admin.');
+        }
+    }
+
     public function index()
     {
         try {

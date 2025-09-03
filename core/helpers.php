@@ -232,3 +232,16 @@ function get_initials(?string $name): string
 
     return strtoupper($initials);
 }
+
+/**
+ * Checks if either the main admin or XOR admin is logged in.
+ *
+ * @return bool
+ */
+function is_any_admin_logged_in(): bool
+{
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+    }
+    return (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true) || (isset($_SESSION['xor_is_authenticated']) && $_SESSION['xor_is_authenticated'] === true);
+}
