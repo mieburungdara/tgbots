@@ -32,6 +32,9 @@
 - **Error Transaksi pada Runner Migrasi**: Memperbaiki error fatal `There is no active transaction` yang terjadi setelah skrip migrasi DDL berhasil dijalankan.
   - **Penyebab**: Runner migrasi di `DatabaseController` membungkus eksekusi file migrasi dalam sebuah transaksi (`beginTransaction`/`commit`). Namun, perintah DDL (`ALTER TABLE`) di dalam skrip menyebabkan *implicit commit*, yang mengakhiri transaksi lebih awal. Akibatnya, `commit()` di controller gagal karena tidak ada lagi transaksi yang aktif.
   - **Solusi**: Menghapus semua logika transaksi (`beginTransaction`, `commit`, `rollBack`) dari runner migrasi, karena migrasi DDL bersifat atomik dan mengelola transaksinya sendiri secara implisit.
+- **PHP Warning di Halaman Edit Bot**: Memperbaiki `Warning: Undefined array key "assigned_feature"` di `src/Views/admin/bots/edit.php`.
+  - **Penyebab**: Kode mencoba mengakses nilai `assigned_feature` tanpa memeriksa apakah kunci tersebut ada, yang menyebabkan warning untuk bot yang belum memiliki fitur.
+  - **Solusi**: Menggunakan `empty()` dan null coalescing operator (`??`) untuk memastikan akses ke array aman dan tidak menimbulkan warning.
 
 ## [5.1.31] - 2025-09-03
 
