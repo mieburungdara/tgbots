@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.1.31] - 2025-09-03
+
+### Fitur
+- **Pemeriksa Skema Database Komprehensif**: Menambahkan fitur canggih di `Admin > Database > Periksa Skema` untuk membandingkan skema database live dengan file `updated_schema.sql`.
+  - **Deteksi Perbedaan Total**: Alat ini sekarang tidak hanya mendeteksi tabel atau kolom yang hilang, tetapi juga mendeteksi:
+    - Tabel tambahan di database live yang tidak ada di skema.
+    - Kolom tambahan di tabel live yang tidak ada di skema.
+    - Kolom yang definisinya (tipe data, nullability, default, dll.) tidak cocok antara database live dan skema.
+  - **Generasi Query Otomatis**: Untuk setiap perbedaan yang ditemukan, sistem secara otomatis menghasilkan query SQL (`CREATE TABLE`, `DROP TABLE`, `ALTER TABLE ADD/DROP/MODIFY`) yang dapat disalin oleh admin untuk menyinkronkan database secara manual.
+  - **Tampilan Laporan yang Jelas**: Halaman hasil telah didesain ulang total untuk menyajikan semua perbedaan dalam format yang terstruktur dan mudah dibaca, dipisahkan berdasarkan jenisnya.
+
 ## [5.1.30] - 2025-09-01
 
 ### Diperbaiki

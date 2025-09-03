@@ -192,14 +192,11 @@ class DatabaseController extends AppController
     private function parseSchemaFromFile(string $sql_content): array
     {
         $schema = [];
-        // This regex is more robust for capturing the table creation block until the closing parenthesis and ENGINE keyword.
         preg_match_all('/CREATE TABLE(?: IF NOT EXISTS)?\s*`?(\w+)`?\s*\((.*?)\)\s*ENGINE=/s', $sql_content, $matches, PREG_SET_ORDER);
 
         foreach ($matches as $match) {
             $table_name = $match[1];
             $full_query = '';
-            
-            // This regex captures the entire CREATE TABLE statement more reliably.
             if (preg_match('/(CREATE TABLE(?: IF NOT EXISTS)?\s*`?'.$table_name.'`?.*?);/s', $sql_content, $full_match)) {
                 $full_query = $full_match[1];
             }
@@ -209,20 +206,16 @@ class DatabaseController extends AppController
                 'full_query' => $full_query
             ];
             
-            $lines = explode("\n", $match[2]);
+            $lines = explode("\n", trim($match[2]));
             foreach ($lines as $line) {
-                $line = trim($line);
-                
-                // Skip empty lines and lines that define keys, constraints, or indexes. This is more robust.
-                if (empty($line) || preg_match('/^(PRIMARY KEY|UNIQUE KEY|UNIQUE INDEX|KEY|INDEX|CONSTRAINT|FOREIGN KEY)/i', $line)) {
+                $line = trim($line, " ,\r\n");
+                if (empty($line) || preg_match('/^(PRIMARY|UNIQUE|KEY|INDEX|CONSTRAINT|FOREIGN)/i', $line)) {
                     continue;
                 }
-                
-                // This regex is also more robust for capturing the column name, which is the first word, possibly in backticks.
-                if (preg_match('/^`?(\w+)`?/', $line, $column_match)) {
-                    $column_name = $column_match[1];
-                    // Store the full line definition for generating ALTER queries, removing a potential trailing comma.
-                    $schema[$table_name]['columns'][$column_name] = rtrim($line, ',');
+
+                if (preg_match('/^`?(\w+)`?\s+(.*)/', $line, $col_match)) {
+                    $column_name = $col_match[1];
+                    $schema[$table_name]['columns'][$column_name] = $col_match[2];
                 }
             }
         }
@@ -235,8 +228,29 @@ class DatabaseController extends AppController
         $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
         foreach ($tables as $table) {
             $schema[$table] = ['columns' => []];
-            $columns = $pdo->query("DESCRIBE `{$table}`")->fetchAll(PDO::FETCH_COLUMN);
-            $schema[$table]['columns'] = array_fill_keys($columns, true);
+            $stmt = $pdo->query("SHOW CREATE TABLE `{$table}`");
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
+            $schema[$table]['full_query'] = $row['Create Table'] ?? '';
+
+            $columns_result = $pdo->query("SHOW FULL COLUMNS FROM `{$table}`")->fetchAll(PDO::FETCH_ASSOC);
+            foreach ($columns_result as $col) {
+                $definition = $col['Type'];
+                if (isset($col['Collation']) && $col['Collation'] !== 'NULL') {
+                    $definition .= ' CHARACTER SET ' . explode('_', $col['Collation'])[0] . ' COLLATE ' . $col['Collation'];
+                }
+                if ($col['Null'] === 'NO') {
+                    $definition .= ' NOT NULL';
+                }
+                if ($col['Default'] !== null) {
+                    $definition .= " DEFAULT '" . $col['Default'] . "'";
+                } else if ($col['Null'] === 'YES') {
+                    $definition .= ' DEFAULT NULL';
+                }
+                if (!empty($col['Comment'])) {
+                    $definition .= " COMMENT '" . addslashes($col['Comment']) . "'";
+                }
+                $schema[$table]['columns'][$col['Field']] = $definition;
+            }
         }
         return $schema;
     }
@@ -245,9 +259,11 @@ class DatabaseController extends AppController
     {
         $report = [
             'missing_tables' => [],
-            'missing_columns' => [],
+            'extra_tables' => [],
+            'column_differences' => [],
         ];
 
+        // Check for missing and modified tables/columns
         foreach ($file_schema as $table_name => $table_data) {
             if (!isset($live_schema[$table_name])) {
                 $report['missing_tables'][] = [
@@ -255,16 +271,57 @@ class DatabaseController extends AppController
                     'query' => $table_data['full_query']
                 ];
             } else {
-                foreach ($table_data['columns'] as $column_name => $column_definition) {
-                    if (!isset($live_schema[$table_name]['columns'][$column_name])) {
-                        $report['missing_columns'][$table_name][] = [
+                $diffs = ['missing' => [], 'extra' => [], 'modified' => []];
+                $live_columns = $live_schema[$table_name]['columns'];
+
+                // Check for missing and modified columns
+                foreach ($table_data['columns'] as $column_name => $file_definition) {
+                    if (!isset($live_columns[$column_name])) {
+                        $diffs['missing'][] = [
                             'name' => $column_name,
-                            'query' => "ALTER TABLE `{$table_name}` ADD COLUMN {$column_definition};"
+                            'query' => "ALTER TABLE `{$table_name}` ADD COLUMN `{$column_name}` {$file_definition};"
+                        ];
+                    } else {
+                        // Normalize definitions for comparison
+                        $norm_file_def = str_replace([' ', '`'], '', strtolower($file_definition));
+                        $norm_live_def = str_replace([' ', '`'], '', strtolower($live_columns[$column_name]));
+                        if ($norm_file_def !== $norm_live_def) {
+                             $diffs['modified'][] = [
+                                'name' => $column_name,
+                                'file_def' => $file_definition,
+                                'live_def' => $live_columns[$column_name],
+                                'query' => "ALTER TABLE `{$table_name}` MODIFY COLUMN `{$column_name}` {$file_definition};"
+                            ];
+                        }
+                    }
+                }
+
+                // Check for extra columns
+                foreach ($live_columns as $column_name => $live_definition) {
+                    if (!isset($table_data['columns'][$column_name])) {
+                        $diffs['extra'][] = [
+                            'name' => $column_name,
+                            'query' => "ALTER TABLE `{$table_name}` DROP COLUMN `{$column_name}`;"
                         ];
                     }
                 }
+
+                if (!empty($diffs['missing']) || !empty($diffs['extra']) || !empty($diffs['modified'])) {
+                    $report['column_differences'][$table_name] = $diffs;
+                }
             }
         }
+
+        // Check for extra tables
+        foreach ($live_schema as $table_name => $table_data) {
+            if (!isset($file_schema[$table_name])) {
+                $report['extra_tables'][] = [
+                    'name' => $table_name,
+                    'query' => "DROP TABLE `{$table_name}`;"
+                ];
+            }
+        }
+
         return $report;
     }
 }
