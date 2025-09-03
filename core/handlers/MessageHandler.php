@@ -19,6 +19,7 @@ use TGBot\Database\SaleRepository;
 use TGBot\Database\MediaFileRepository;
 use TGBot\Database\BotChannelUsageRepository;
 use TGBot\Database\AnalyticsRepository;
+use TGBot\Database\BotRepository;
 use TGBot\Database\SellerSalesChannelRepository;
 use TGBot\Database\ChannelPostPackageRepository;
 use TGBot\Database\UserRepository;
@@ -394,6 +395,14 @@ EOT;
      */
     private function handleSellCommand(App $app, array $message): void
     {
+        if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'sell') {
+            $bot_repo = new BotRepository($app->pdo);
+            $correct_bot = $bot_repo->findBotByFeature('sell');
+            $suggestion = $correct_bot ? " Silakan gunakan @{$correct_bot['username']}." : "";
+            $app->telegram_api->sendMessage($app->chat_id, "Perintah `/sell` tidak tersedia di bot ini." . $suggestion);
+            return;
+        }
+
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
 
         if (!isset($message['reply_to_message'])) {
@@ -572,6 +581,14 @@ EOT;
 
     private function handleRateCommand(App $app, array $message): void
     {
+        if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'rate') {
+            $bot_repo = new BotRepository($app->pdo);
+            $correct_bot = $bot_repo->findBotByFeature('rate');
+            $suggestion = $correct_bot ? " Silakan gunakan @{$correct_bot['username']}." : "";
+            $app->telegram_api->sendMessage($app->chat_id, "Perintah `/rate` tidak tersedia di bot ini." . $suggestion);
+            return;
+        }
+
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
         $post_repo = new PostPackageRepository($app->pdo);
 
@@ -627,6 +644,14 @@ EOT;
 
     private function handleTanyaCommand(App $app, array $message): void
     {
+        if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'tanya') {
+            $bot_repo = new BotRepository($app->pdo);
+            $correct_bot = $bot_repo->findBotByFeature('tanya');
+            $suggestion = $correct_bot ? " Silakan gunakan @{$correct_bot['username']}." : "";
+            $app->telegram_api->sendMessage($app->chat_id, "Perintah `/tanya` tidak tersedia di bot ini." . $suggestion);
+            return;
+        }
+
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
         $post_repo = new PostPackageRepository($app->pdo);
 

@@ -67,6 +67,21 @@
                 Simpan Pesan yang Diedit
             </label>
         </div>
+
+        <hr style="margin: 20px 0;">
+
+        <h3>Fitur Khusus Bot</h3>
+        <p>Pilih satu fitur utama untuk bot ini. Bot hanya akan merespons perintah yang sesuai dengan fiturnya.</p>
+        <div class="setting-item" style="margin-bottom: 10px;">
+            <label for="assigned_feature">Fitur yang Ditugaskan:</label>
+            <select name="assigned_feature" id="assigned_feature" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
+                <option value="" <?= !$data['bot']['assigned_feature'] ? 'selected' : '' ?>>-- Tidak ada --</option>
+                <option value="sell" <?= ($data['bot']['assigned_feature'] === 'sell') ? 'selected' : '' ?>>Jual (/sell)</option>
+                <option value="rate" <?= ($data['bot']['assigned_feature'] === 'rate') ? 'selected' : '' ?>>Rating (/rate)</option>
+                <option value="tanya" <?= ($data['bot']['assigned_feature'] === 'tanya') ? 'selected' : '' ?>>Tanya (/tanya)</option>
+            </select>
+        </div>
+
         <br>
         <button type="submit">Simpan Pengaturan</button>
     </form>

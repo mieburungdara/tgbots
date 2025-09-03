@@ -208,6 +208,7 @@ class BotController extends BaseController
 
         $bot_id = (int)$_POST['bot_id'];
         $submitted_settings = $_POST['settings'] ?? [];
+        $assigned_feature = $_POST['assigned_feature'] ?? null;
         $pdo = \get_db_connection();
 
         // Define all possible settings to ensure we process all of them
@@ -221,14 +222,24 @@ class BotController extends BaseController
         try {
             $pdo->beginTransaction();
 
+            // Handle bot_settings
             foreach ($all_setting_keys as $key) {
-                // If a checkbox is checked, its value is '1'. If not, it's not sent.
                 $value = isset($submitted_settings[$key]) ? '1' : '0';
-
                 $stmt = $pdo->prepare(
-                    "INSERT INTO bot_settings (bot_id, setting_key, setting_value)\n                     VALUES (?, ?, ?)\n                     ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)"
+                    "INSERT INTO bot_settings (bot_id, setting_key, setting_value) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)"
                 );
                 $stmt->execute([$bot_id, $key, $value]);
+            }
+
+            // Handle assigned_feature
+            $valid_features = ['sell', 'rate', 'tanya'];
+            if (in_array($assigned_feature, $valid_features)) {
+                $stmt_feature = $pdo->prepare("UPDATE bots SET assigned_feature = ? WHERE id = ?");
+                $stmt_feature->execute([$assigned_feature, $bot_id]);
+            } else {
+                // If the value is empty or invalid, set it to NULL
+                $stmt_feature = $pdo->prepare("UPDATE bots SET assigned_feature = NULL WHERE id = ?");
+                $stmt_feature->execute([$bot_id]);
             }
 
             $pdo->commit();
