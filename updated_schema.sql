@@ -154,7 +154,7 @@ CREATE TABLE `media_files`  (
   `user_id` bigint NULL DEFAULT NULL COMMENT 'ID pengirim media.',
   `chat_id` bigint NULL DEFAULT NULL COMMENT 'ID chat sumber media.',
   `message_id` bigint NULL DEFAULT NULL COMMENT 'ID pesan terkait media.',
-  `package_id` bigint NULL DEFAULT NULL COMMENT 'Referensi ke media_packages',
+  `package_id` bigint NULL DEFAULT NULL COMMENT 'Referensi ke post_packages',
   `media_group_id` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ID untuk mengelompokkan media yang dikirim bersamaan',
   `performer` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Nama artis/pembuat (audio).',
   `title` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Judul (audio/video).',
@@ -176,25 +176,27 @@ CREATE TABLE `media_files`  (
   INDEX `chat_id`(`chat_id` ASC) USING BTREE,
   INDEX `type`(`type` ASC) USING BTREE,
   INDEX `package_id`(`package_id` ASC) USING BTREE,
-  CONSTRAINT `fk_media_package` FOREIGN KEY (`package_id`) REFERENCES `media_packages` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
+  CONSTRAINT `fk_media_package` FOREIGN KEY (`package_id`) REFERENCES `post_packages` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'Menyimpan detail file media yang diterima dari pengguna.' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Table structure for media_packages
+-- Table structure for post_packages
 -- ----------------------------
-DROP TABLE IF EXISTS `media_packages`;
-CREATE TABLE `media_packages`  (
+DROP TABLE IF EXISTS `post_packages`;
+CREATE TABLE `post_packages`  (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `public_id` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'ID publik untuk paket media',
-  `seller_user_id` bigint NOT NULL COMMENT 'Referensi ke tabel users (penjual)',
-  `bot_id` bigint NOT NULL COMMENT 'Referensi ke tabel bots',
-  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL COMMENT 'Deskripsi paket media',
-  `thumbnail_media_id` bigint NULL DEFAULT NULL COMMENT 'ID media yang dijadikan thumbnail',
-  `price` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT 'Harga paket media',
-  `status` enum('pending','available','sold','rejected','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pending' COMMENT 'Status paket media',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp COMMENT 'Waktu pembuatan paket',
-  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT 'Waktu terakhir update',
-  `protect_content` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Apakah konten dilindungi dari penyalinan',
+  `public_id` varchar(15) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `seller_user_id` bigint NOT NULL,
+  `bot_id` bigint NOT NULL,
+  `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL,
+  `thumbnail_media_id` bigint NULL DEFAULT NULL,
+  `price` decimal(15, 2) NOT NULL DEFAULT 0.00,
+  `status` enum('pending','available','sold','rejected','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pending',
+  `post_type` enum('sell','rate','tanya') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'sell',
+  `category` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp,
+  `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `protect_content` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `public_id`(`public_id` ASC) USING BTREE,
   INDEX `seller_user_id`(`seller_user_id` ASC) USING BTREE,
@@ -203,7 +205,7 @@ CREATE TABLE `media_packages`  (
   CONSTRAINT `fk_package_bot` FOREIGN KEY (`bot_id`) REFERENCES `bots` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_package_seller` FOREIGN KEY (`seller_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_package_thumbnail` FOREIGN KEY (`thumbnail_media_id`) REFERENCES `media_files` (`id`) ON DELETE SET NULL ON UPDATE RESTRICT
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'Menyimpan informasi paket media yang dijual.' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci;
 
 -- ----------------------------
 -- Table structure for channel_post_packages
@@ -218,7 +220,7 @@ CREATE TABLE `channel_post_packages`  (
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `channel_message_idx`(`channel_id` ASC, `message_id` ASC) USING BTREE,
   INDEX `package_id_fk_idx`(`package_id` ASC) USING BTREE,
-  CONSTRAINT `channel_post_packages_package_id_fk` FOREIGN KEY (`package_id`) REFERENCES `media_packages` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+  CONSTRAINT `channel_post_packages_package_id_fk` FOREIGN KEY (`package_id`) REFERENCES `post_packages` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Menghubungkan postingan di channel dengan paket media.' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -318,7 +320,7 @@ CREATE TABLE `roles`  (
 DROP TABLE IF EXISTS `sales`;
 CREATE TABLE `sales`  (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `package_id` bigint NOT NULL COMMENT 'Referensi ke media_packages.id',
+  `package_id` bigint NOT NULL COMMENT 'Referensi ke post_packages.id',
   `seller_user_id` bigint NOT NULL COMMENT 'Referensi ke users.id (penjual)',
   `buyer_user_id` bigint NOT NULL COMMENT 'Referensi ke users.id (pembeli)',
   `price` decimal(15, 2) NOT NULL COMMENT 'Harga saat penjualan terjadi',
@@ -328,7 +330,7 @@ CREATE TABLE `sales`  (
   INDEX `seller_user_id`(`seller_user_id` ASC) USING BTREE,
   INDEX `buyer_user_id`(`buyer_user_id` ASC) USING BTREE,
   CONSTRAINT `fk_sales_buyer` FOREIGN KEY (`buyer_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
-  CONSTRAINT `fk_sales_package` FOREIGN KEY (`package_id`) REFERENCES `media_packages` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
+  CONSTRAINT `fk_sales_package` FOREIGN KEY (`package_id`) REFERENCES `post_packages` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT,
   CONSTRAINT `fk_sales_seller` FOREIGN KEY (`seller_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE RESTRICT
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'Mencatat transaksi penjualan yang berhasil.' ROW_FORMAT = Dynamic;
 

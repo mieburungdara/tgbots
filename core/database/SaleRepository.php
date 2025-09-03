@@ -85,7 +85,7 @@ class SaleRepository
         $stmt = $this->pdo->prepare(
             "SELECT s.purchased_at, mp.*
              FROM sales s
-             JOIN media_packages mp ON s.package_id = mp.id
+             JOIN post_packages mp ON s.package_id = mp.id
              WHERE s.buyer_user_id = ?
              ORDER BY s.purchased_at DESC"
         );

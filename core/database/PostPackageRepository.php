@@ -15,10 +15,10 @@ use Exception;
 use PDO;
 
 /**
- * Class PackageRepository
+ * Class PostPackageRepository
  * @package TGBot\Database
  */
-class PackageRepository
+class PostPackageRepository
 {
     /**
      * @var PDO
@@ -26,7 +26,7 @@ class PackageRepository
     private PDO $pdo;
 
     /**
-     * PackageRepository constructor.
+     * PostPackageRepository constructor.
      *
      * @param PDO $pdo
      */
@@ -43,7 +43,7 @@ class PackageRepository
      */
     public function find(int $id)
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM media_packages WHERE id = ?");
+        $stmt = $this->pdo->prepare("SELECT * FROM post_packages WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -118,7 +118,7 @@ class PackageRepository
      */
     public function findForPurchase(int $package_id)
     {
-        $stmt = $this->pdo->prepare("SELECT price, seller_user_id FROM media_packages WHERE id = ? AND status = 'available'");
+        $stmt = $this->pdo->prepare("SELECT price, seller_user_id FROM post_packages WHERE id = ? AND status = 'available'");
         $stmt->execute([$package_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -131,7 +131,7 @@ class PackageRepository
      */
     public function markAsSold(int $package_id): void
     {
-        $stmt = $this->pdo->prepare("UPDATE media_packages SET status = 'sold' WHERE id = ?");
+        $stmt = $this->pdo->prepare("UPDATE post_packages SET status = 'sold' WHERE id = ?");
         $stmt->execute([$package_id]);
     }
 
@@ -144,7 +144,7 @@ class PackageRepository
     public function findAllBySellerId(int $seller_user_id): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT mp.*\n             FROM media_packages mp\n             WHERE mp.seller_user_id = ? AND mp.status != 'deleted'\n             ORDER BY mp.created_at DESC"
+            "SELECT mp.*\n             FROM post_packages mp\n             WHERE mp.seller_user_id = ? AND mp.status != 'deleted'\n             ORDER BY mp.created_at DESC"
         );
         $stmt->execute([$seller_user_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -178,7 +178,7 @@ class PackageRepository
             return true; // Anggap berhasil jika sudah dihapus
         }
 
-        $stmt = $this->pdo->prepare("UPDATE media_packages SET status = 'deleted' WHERE id = ?");
+        $stmt = $this->pdo->prepare("UPDATE post_packages SET status = 'deleted' WHERE id = ?");
         return $stmt->execute([$packageId]);
     }
 
@@ -210,7 +210,7 @@ class PackageRepository
             $stmt_delete_files = $this->pdo->prepare("DELETE FROM media_files WHERE package_id = ?");
             $stmt_delete_files->execute([$packageId]);
 
-            $stmt_delete_package = $this->pdo->prepare("DELETE FROM media_packages WHERE id = ?");
+            $stmt_delete_package = $this->pdo->prepare("DELETE FROM post_packages WHERE id = ?");
             $stmt_delete_package->execute([$packageId]);
 
         } catch (Exception $e) {
@@ -232,7 +232,7 @@ class PackageRepository
     {
         $sql = "
             SELECT mp.*, u.username as seller_username
-            FROM media_packages mp
+            FROM post_packages mp
             JOIN users u ON mp.seller_user_id = u.id
             ORDER BY mp.created_at DESC
             LIMIT :limit OFFSET :offset
@@ -252,7 +252,7 @@ class PackageRepository
      */
     public function findByPublicId(string $publicId)
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM media_packages WHERE public_id = ?");
+        $stmt = $this->pdo->prepare("SELECT * FROM post_packages WHERE public_id = ?");
         $stmt->execute([$publicId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -281,7 +281,7 @@ class PackageRepository
         $current_status = $package['protect_content'] ?? false;
         $new_status = !$current_status;
 
-        $stmt = $this->pdo->prepare("UPDATE media_packages SET protect_content = ? WHERE id = ?");
+        $stmt = $this->pdo->prepare("UPDATE post_packages SET protect_content = ? WHERE id = ?");
         $stmt->execute([$new_status, $packageId]);
 
         return $new_status;
@@ -310,7 +310,7 @@ class PackageRepository
         }
 
         $stmt = $this->pdo->prepare(
-            "UPDATE media_packages SET description = ?, price = ? WHERE id = ?"
+            "UPDATE post_packages SET description = ?, price = ? WHERE id = ?"
         );
         return $stmt->execute([$description, $price, $packageId]);
     }
@@ -322,10 +322,12 @@ class PackageRepository
      * @param int $bot_id
      * @param string $description
      * @param int $thumbnail_media_id
+     * @param string $post_type
+     * @param string|null $category
      * @return int
      * @throws Exception
      */
-    public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id): int
+    public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id, string $post_type = 'sell', ?string $category = null): int
     {
         try {
             // 1. Ambil dan kunci baris pengguna untuk mendapatkan urutan & ID publik
@@ -348,9 +350,9 @@ class PackageRepository
 
             // 4. Masukkan paket baru
             $stmt_package = $this->pdo->prepare(
-                "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id)\n                 VALUES (?, ?, ?, ?, 'pending', ?)"
+                "INSERT INTO post_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id, post_type, category)\n                 VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)"
             );
-            $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $public_id]);
+            $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $public_id, $post_type, $category]);
             $package_id = $this->pdo->lastInsertId();
 
             return (int)$package_id;

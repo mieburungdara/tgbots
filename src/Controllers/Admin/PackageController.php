@@ -6,7 +6,7 @@ namespace TGBot\Controllers\Admin;
 
 use Exception;
 use TGBot\Controllers\BaseController;
-use TGBot\Database\PackageRepository;
+use TGBot\Database\PostPackageRepository;
 use TGBot\TelegramAPI;
 
 class PackageController extends BaseController {
@@ -14,7 +14,7 @@ class PackageController extends BaseController {
     public function index() {
         try {
             $pdo = \get_db_connection();
-            $packageRepo = new PackageRepository($pdo);
+            $packageRepo = new PostPackageRepository($pdo);
 
             $message = $_SESSION['flash_message'] ?? null;
             unset($_SESSION['flash_message']);
@@ -42,7 +42,7 @@ class PackageController extends BaseController {
         }
 
         $pdo = \get_db_connection();
-        $packageRepo = new PackageRepository($pdo);
+        $packageRepo = new PostPackageRepository($pdo);
         $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
 
         if ($package_id_to_delete) {
