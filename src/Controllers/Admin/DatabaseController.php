@@ -16,6 +16,10 @@ class DatabaseController extends AppController
      */
     public function __construct()
     {
+        if (!defined('BASE_PATH')) {
+            define('BASE_PATH', realpath(__DIR__ . '/../../../'));
+        }
+
         if (!is_any_admin_logged_in()) {
             http_response_code(403);
             // In a real app, you might want a more sophisticated access denied view
