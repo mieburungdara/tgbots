@@ -53,6 +53,10 @@ class CallbackQueryHandler implements HandlerInterface
             $this->handlePostToChannel($app, $callback_query, substr($callback_data, strlen('post_channel_')));
         } elseif (strpos($callback_data, 'retract_post_') === 0) {
             $this->handleRetractPost($app, $callback_query, substr($callback_data, strlen('retract_post_')));
+        } elseif (strpos($callback_data, 'admin_reject_') === 0) {
+            $this->handleAdminRejection($app, $callback_query, substr($callback_data, strlen('admin_reject_')));
+        } elseif (strpos($callback_data, 'admin_ban_') === 0) {
+            $this->handleAdminBan($app, $callback_query, substr($callback_data, strlen('admin_ban_')));
         } elseif ($callback_data === 'noop') {
             $app->telegram_api->answerCallbackQuery($callback_query['id']);
         }
@@ -302,6 +306,121 @@ class CallbackQueryHandler implements HandlerInterface
                 $app->pdo->rollBack();
             }
             $app->telegram_api->answerCallbackQuery($callback_query['id'], "⚠️ Gagal menarik post: " . $e->getMessage(), true);
+        }
+    }
+
+    /**
+     * Handle an admin's request to reject a post.
+     *
+     * @param App $app
+     * @param array $callback_query
+     * @param string $params
+     * @return void
+     */
+    private function handleAdminRejection(App $app, array $callback_query, string $params): void
+    {
+        $parts = explode('_', $params);
+        $public_id = $parts[0];
+        $reason = $parts[1] ?? 'Tidak ada alasan spesifik';
+
+        $post_repo = new PostPackageRepository($app->pdo);
+
+        try {
+            $app->pdo->beginTransaction();
+
+            $post = $post_repo->findByPublicId($public_id);
+            if (!$post) {
+                throw new Exception("Post tidak ditemukan.");
+            }
+
+            if ($post['status'] !== 'pending') {
+                throw new Exception("Post ini tidak lagi dalam status pending.");
+            }
+
+            $post_repo->updateStatus($post['id'], 'rejected');
+
+            // Notify the user
+            $user_id = $post['seller_user_id'];
+            $notification_text = "Maaf, kiriman Anda dengan ID `{$public_id}` telah ditolak.\n\nAlasan: *{$reason}*";
+            $app->telegram_api->sendMessage($user_id, $notification_text, 'Markdown');
+
+            // Update the message in the admin channel
+            $admin_username = $callback_query['from']['username'] ?? $callback_query['from']['first_name'];
+            $new_admin_text = $callback_query['message']['text'] . "\n\n---\n*Ditolak oleh @{$admin_username}*\nAlasan: {$reason}";
+
+            $app->telegram_api->editMessageText(
+                $callback_query['message']['chat']['id'],
+                $callback_query['message']['message_id'],
+                $new_admin_text,
+                'Markdown'
+            );
+
+            $app->pdo->commit();
+            $app->telegram_api->answerCallbackQuery($callback_query['id'], "Post {$public_id} ditolak.");
+
+        } catch (Exception $e) {
+            if ($app->pdo->inTransaction()) {
+                $app->pdo->rollBack();
+            }
+            $app->telegram_api->answerCallbackQuery($callback_query['id'], "⚠️ Gagal: " . $e->getMessage(), true);
+        }
+    }
+
+    /**
+     * Handle an admin's request to ban a user.
+     *
+     * @param App $app
+     * @param array $callback_query
+     * @param string $params
+     * @return void
+     */
+    private function handleAdminBan(App $app, array $callback_query, string $params): void
+    {
+        $parts = explode('_', $params);
+        $user_to_ban_id = (int)$parts[0];
+        $public_id = $parts[1] ?? null;
+        $reason = $parts[2] ?? 'Pelanggaran berat terhadap aturan.';
+
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
+        $post_repo = new PostPackageRepository($app->pdo);
+
+        try {
+            $app->pdo->beginTransaction();
+
+            // Ban the user
+            $user_repo->updateUserStatusByTelegramId($user_to_ban_id, 'blocked');
+
+            // Reject the associated post if there is one
+            if ($public_id) {
+                $post = $post_repo->findByPublicId($public_id);
+                if ($post && $post['status'] === 'pending') {
+                    $post_repo->updateStatus($post['id'], 'rejected');
+                }
+            }
+
+            // Notify the user
+            $notification_text = "Anda telah diblokir dari bot.\n\nAlasan: *{$reason}*";
+            $app->telegram_api->sendMessage($user_to_ban_id, $notification_text, 'Markdown');
+
+            // Update the message in the admin channel
+            $admin_username = $callback_query['from']['username'] ?? $callback_query['from']['first_name'];
+            $new_admin_text = $callback_query['message']['text'] . "\n\n---\n*Pengguna diblokir oleh @{$admin_username}*\nAlasan: {$reason}";
+
+            $app->telegram_api->editMessageText(
+                $callback_query['message']['chat']['id'],
+                $callback_query['message']['message_id'],
+                $new_admin_text,
+                'Markdown'
+            );
+
+            $app->pdo->commit();
+            $app->telegram_api->answerCallbackQuery($callback_query['id'], "Pengguna {$user_to_ban_id} telah diblokir.");
+
+        } catch (Exception $e) {
+            if ($app->pdo->inTransaction()) {
+                $app->pdo->rollBack();
+            }
+            $app->telegram_api->answerCallbackQuery($callback_query['id'], "⚠️ Gagal: " . $e->getMessage(), true);
         }
     }
 }
