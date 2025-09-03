@@ -101,7 +101,7 @@ function clean_transactional_data(PDO $pdo): void {
     $tables_to_truncate = [
         'sales',
         'media_files',
-        'post_packages',
+        'media_packages',
         'messages',
         'rel_user_bot',
         'bot_settings',

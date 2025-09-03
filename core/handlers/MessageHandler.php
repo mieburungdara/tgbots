@@ -14,7 +14,7 @@ namespace TGBot\Handlers;
 use PDO;
 use TGBot\App;
 use TGBot\Handlers\HandlerInterface;
-use TGBot\Database\PostPackageRepository;
+use TGBot\Database\MediaPackageRepository;
 use TGBot\Database\SaleRepository;
 use TGBot\Database\MediaFileRepository;
 use TGBot\Database\BotChannelUsageRepository;
@@ -132,7 +132,7 @@ class MessageHandler implements HandlerInterface
                 return;
             }
 
-            $post_repo = new PostPackageRepository($app->pdo);
+            $post_repo = new MediaPackageRepository($app->pdo);
 
             $media_message = $state_context['media_messages'][0];
             $message_id = $media_message['message_id'];
@@ -321,7 +321,7 @@ EOT;
      */
     private function handleStartCommand(App $app, array $message, array $parts): void
     {
-        $package_repo = new PostPackageRepository($app->pdo);
+        $package_repo = new MediaPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
         $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
 
@@ -467,7 +467,7 @@ EOT;
      */
     private function handleKontenCommand(App $app, array $message, array $parts): void
     {
-        $package_repo = new PostPackageRepository($app->pdo);
+        $package_repo = new MediaPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
         $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
 
@@ -590,7 +590,7 @@ EOT;
         }
 
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
-        $post_repo = new PostPackageRepository($app->pdo);
+        $post_repo = new MediaPackageRepository($app->pdo);
 
         if ($post_repo->hasPendingPost($app->user['id'])) {
             $app->telegram_api->sendMessage($app->chat_id, "Anda masih memiliki kiriman yang sedang dalam proses moderasi. Harap tunggu hingga selesai sebelum mengirim yang baru.");
@@ -653,7 +653,7 @@ EOT;
         }
 
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
-        $post_repo = new PostPackageRepository($app->pdo);
+        $post_repo = new MediaPackageRepository($app->pdo);
 
         if ($post_repo->hasPendingPost($app->user['id'])) {
             $app->telegram_api->sendMessage($app->chat_id, "Anda masih memiliki kiriman yang sedang dalam proses moderasi. Harap tunggu hingga selesai sebelum mengirim yang baru.");
@@ -752,7 +752,7 @@ EOT;
      */
     private function addMediaToExistingPackage(App $app, array $message, string $public_package_id): void
     {
-        $package_repo = new PostPackageRepository($app->pdo);
+        $package_repo = new MediaPackageRepository($app->pdo);
 
         if (!isset($message['reply_to_message'])) {
             $app->telegram_api->sendMessage($app->chat_id, "Untuk menambah media, silakan reply media yang ingin Anda tambahkan.");

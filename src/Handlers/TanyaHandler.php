@@ -4,7 +4,7 @@ namespace TGBot\Handlers;
 
 use TGBot\App;
 use TGBot\Database\UserRepository;
-use TGBot\Database\PostPackageRepository;
+use TGBot\Database\MediaPackageRepository;
 
 class TanyaHandler
 {
@@ -61,7 +61,7 @@ class TanyaHandler
     private function handleConfirmation(App $app, array $callback_query)
     {
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
-        $post_repo = new PostPackageRepository($app->pdo);
+        $post_repo = new MediaPackageRepository($app->pdo);
         $state_context = json_decode($app->user['state_context'] ?? '{}', true);
 
         $category = $state_context['category'];
