@@ -13,7 +13,7 @@ namespace TGBot\Handlers;
 
 use TGBot\App;
 use TGBot\Handlers\HandlerInterface;
-use TGBot\Database\PackageRepository;
+use TGBot\Database\PostPackageRepository;
 
 /**
  * Class InlineQueryHandler
@@ -30,7 +30,7 @@ class InlineQueryHandler implements HandlerInterface
      */
     public function handle(App $app, array $inline_query): void
     {
-        $package_repo = new PackageRepository($app->pdo);
+        $package_repo = new PostPackageRepository($app->pdo);
 
         $query_id = $inline_query['id'];
         $query_text = $inline_query['query'];

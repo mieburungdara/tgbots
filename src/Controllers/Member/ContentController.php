@@ -13,7 +13,7 @@ namespace TGBot\Controllers\Member;
 
 use Exception;
 use TGBot\Controllers\Member\MemberBaseController;
-use TGBot\Database\PackageRepository;
+use TGBot\Database\PostPackageRepository;
 use TGBot\Database\AnalyticsRepository;
 
 /**
@@ -37,7 +37,7 @@ class ContentController extends MemberBaseController
     {
         try {
             $pdo = \get_db_connection();
-            $packageRepo = new PackageRepository($pdo);
+            $packageRepo = new PostPackageRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
             $my_packages = $packageRepo->findAllBySellerId($user_id);
@@ -72,7 +72,7 @@ class ContentController extends MemberBaseController
         }
 
         $pdo = \get_db_connection();
-        $packageRepo = new PackageRepository($pdo);
+        $packageRepo = new PostPackageRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
 
         try {
@@ -112,7 +112,7 @@ class ContentController extends MemberBaseController
         }
 
         $pdo = \get_db_connection();
-        $packageRepo = new PackageRepository($pdo);
+        $packageRepo = new PostPackageRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
 
         // Verify ownership again before updating
@@ -167,7 +167,7 @@ class ContentController extends MemberBaseController
         }
 
         $pdo = \get_db_connection();
-        $packageRepo = new PackageRepository($pdo);
+        $packageRepo = new PostPackageRepository($pdo);
         $analyticsRepo = new AnalyticsRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
 
@@ -237,7 +237,7 @@ class ContentController extends MemberBaseController
 
         try {
             $pdo = \get_db_connection();
-            $packageRepo = new PackageRepository($pdo);
+            $packageRepo = new PostPackageRepository($pdo);
             $new_status = $packageRepo->toggleProtection($package_id, $user_id);
             $this->jsonResponse([
                 'status' => 'success',

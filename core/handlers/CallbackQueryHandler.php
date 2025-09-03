@@ -14,11 +14,13 @@ namespace TGBot\Handlers;
 use Exception;
 use TGBot\App;
 use TGBot\Handlers\HandlerInterface;
-use TGBot\Database\PackageRepository;
+use TGBot\Database\PostPackageRepository;
 use TGBot\Database\SaleRepository;
 use TGBot\Database\UserRepository;
 use TGBot\Database\SellerSalesChannelRepository;
 use TGBot\Database\ChannelPostPackageRepository;
+use TGBot\Handlers\RateHandler;
+use TGBot\Handlers\TanyaHandler;
 
 /**
  * Class CallbackQueryHandler
@@ -37,7 +39,11 @@ class CallbackQueryHandler implements HandlerInterface
     {
         $callback_data = $callback_query['data'];
 
-        if (strpos($callback_data, 'view_page_') === 0) {
+        if (strpos($callback_data, 'rate_') === 0) {
+            (new RateHandler())->handle($app, $callback_query);
+        } elseif (strpos($callback_data, 'tanya_') === 0) {
+            (new TanyaHandler())->handle($app, $callback_query);
+        } elseif (strpos($callback_data, 'view_page_') === 0) {
             $this->handleViewPage($app, $callback_query, substr($callback_data, strlen('view_page_')));
         } elseif (strpos($callback_data, 'buy_') === 0) {
             $this->handleBuy($app, $callback_query, substr($callback_data, strlen('buy_')));
@@ -60,7 +66,7 @@ class CallbackQueryHandler implements HandlerInterface
      */
     private function handlePostToChannel(App $app, array $callback_query, string $public_id): void
     {
-        $package_repo = new PackageRepository($app->pdo);
+        $package_repo = new PostPackageRepository($app->pdo);
         $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
         $post_package_repo = new ChannelPostPackageRepository($app->pdo);
 
@@ -123,7 +129,7 @@ class CallbackQueryHandler implements HandlerInterface
      */
     private function handleViewPage(App $app, array $callback_query, string $params): void
     {
-        $package_repo = new PackageRepository($app->pdo);
+        $package_repo = new PostPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
 
         $parts = explode('_', $params);
@@ -218,7 +224,7 @@ class CallbackQueryHandler implements HandlerInterface
      */
     private function handleBuy(App $app, array $callback_query, string $public_id): void
     {
-        $package_repo = new PackageRepository($app->pdo);
+        $package_repo = new PostPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
 
         $app->telegram_api->answerCallbackQuery($callback_query['id'], 'Memproses pembelian...');
