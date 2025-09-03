@@ -46,6 +46,7 @@ CREATE TABLE `bots`  (
   `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'Token API dari BotFather',
   `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Username bot (@namabot)',
   `first_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Nama depan bot',
+  `assigned_feature` enum('sell','rate','tanya') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Fitur spesifik yang ditugaskan untuk bot ini',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp COMMENT 'Waktu pembuatan record',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `token`(`token` ASC) USING BTREE
