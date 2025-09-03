@@ -192,32 +192,56 @@ class DatabaseController extends AppController
     private function parseSchemaFromFile(string $sql_content): array
     {
         $schema = [];
-        // Reverted to a more stable regex that relies on the ENGINE keyword, but is case-insensitive.
-        // This avoids the parsing errors caused by the previous, more greedy regex.
-        preg_match_all('/CREATE TABLE(?: IF NOT EXISTS)?\s*`?(\w+)`?\s*\((.*?)\)\s*ENGINE=/si', $sql_content, $matches, PREG_SET_ORDER);
+        $lines = explode("\n", $sql_content);
 
-        foreach ($matches as $match) {
-            $table_name = $match[1];
-            $full_query = '';
-            if (preg_match('/(CREATE TABLE(?: IF NOT EXISTS)?\s*`?'.$table_name.'`?.*?);/s', $sql_content, $full_match)) {
-                $full_query = $full_match[1];
+        $in_create_table = false;
+        $current_table_name = null;
+        $current_table_lines = [];
+
+        foreach ($lines as $line) {
+            // Start of a CREATE TABLE block
+            if (preg_match('/^CREATE TABLE(?: IF NOT EXISTS)?\s*`?(\w+)`?/i', $line, $matches)) {
+                $in_create_table = true;
+                $current_table_name = $matches[1];
+                $current_table_lines = [$line];
+                continue;
             }
 
-            $schema[$table_name] = [
-                'columns' => [],
-                'full_query' => $full_query
-            ];
-            
-            $lines = explode("\n", trim($match[2]));
-            foreach ($lines as $line) {
-                $line = trim($line, " ,\r\n");
-                if (empty($line) || preg_match('/^(PRIMARY|UNIQUE|KEY|INDEX|CONSTRAINT|FOREIGN)/i', $line)) {
-                    continue;
-                }
+            if ($in_create_table) {
+                $current_table_lines[] = $line;
+                // End of a CREATE TABLE block
+                if (str_contains($line, ');')) {
+                    $in_create_table = false;
 
-                if (preg_match('/^`?(\w+)`?\s+(.*)/', $line, $col_match)) {
-                    $column_name = $col_match[1];
-                    $schema[$table_name]['columns'][$column_name] = $col_match[2];
+                    $full_query = implode("\n", $current_table_lines);
+                    $schema[$current_table_name] = [
+                        'columns' => [],
+                        'full_query' => rtrim($full_query, "\n, ") . ';',
+                    ];
+
+                    // Extract content within the first level of parentheses
+                    $first_paren = strpos($full_query, '(');
+                    $last_paren = strrpos($full_query, ')');
+                    if ($first_paren !== false && $last_paren !== false) {
+                        $content = substr($full_query, $first_paren + 1, $last_paren - $first_paren - 1);
+                        $column_lines = explode("\n", $content);
+
+                        foreach ($column_lines as $col_line) {
+                            $col_line = trim($col_line, " ,\r\n");
+                            // Skip empty lines and lines that define keys, constraints, or indexes
+                            if (empty($col_line) || preg_match('/^(PRIMARY|UNIQUE|KEY|INDEX|CONSTRAINT|FOREIGN)/i', $col_line)) {
+                                continue;
+                            }
+                            // Extract column name and its definition
+                            if (preg_match('/^`?(\w+)`?\s+(.*)/', $col_line, $col_match)) {
+                                $column_name = $col_match[1];
+                                $schema[$current_table_name]['columns'][$column_name] = $col_match[2];
+                            }
+                        }
+                    }
+
+                    $current_table_name = null;
+                    $current_table_lines = [];
                 }
             }
         }
