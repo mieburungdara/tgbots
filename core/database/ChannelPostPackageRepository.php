@@ -75,4 +75,20 @@ class ChannelPostPackageRepository
 
         return $result ?: null;
     }
+
+    /**
+     * Find a channel post by package ID.
+     *
+     * @param int $package_id
+     * @return array|null
+     */
+    public function findByPackageId(int $package_id): ?array
+    {
+        $sql = "SELECT * FROM channel_post_packages WHERE package_id = ? ORDER BY id DESC LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$package_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        return $result ?: null;
+    }
 }
