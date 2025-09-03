@@ -128,7 +128,6 @@ class DatabaseController extends AppController
                     $file_path = $migration_files_path . $migration_file;
                     $extension = pathinfo($file_path, PATHINFO_EXTENSION);
 
-                    $pdo->beginTransaction();
                     try {
                         if ($extension === 'sql') {
                             $sql = file_get_contents($file_path);
@@ -138,15 +137,15 @@ class DatabaseController extends AppController
                             require $file_path; // Output dari skrip ini akan langsung di-echo
                         }
 
+                        // Record the migration as successful.
+                        // The DDL statements in the migration commit implicitly, so we don't wrap this in a transaction.
                         $stmt = $pdo->prepare("INSERT INTO migrations (migration_file) VALUES (?)");
                         $stmt->execute([$migration_file]);
-                        $pdo->commit();
                         echo "\nStatus: SUKSES\n\n";
 
                     } catch (Throwable $e) {
-                        if ($pdo->inTransaction()) {
-                            $pdo->rollBack();
-                        }
+                        // We don't roll back because DDL statements cause implicit commits.
+                        // We just re-throw the exception to be logged.
                         throw new Exception("Gagal pada migrasi: {$migration_file}. Pesan Error: " . $e->getMessage(), 0, $e);
                     }
                 }

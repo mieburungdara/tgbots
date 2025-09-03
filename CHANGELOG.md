@@ -29,6 +29,9 @@
 - **Bug pada Skrip Migrasi**: Memperbaiki bug fatal pada skrip migrasi yang baru ditambahkan.
   - **Penyebab**: Logika untuk memeriksa keberadaan kolom menggunakan placeholder `?` pada `SHOW COLUMNS ... LIKE ?`, yang tidak didukung oleh SQL dan menyebabkan syntax error.
   - **Solusi**: Mengganti logika tersebut dengan metode yang lebih andal, yaitu mengambil semua nama kolom dan menggunakan `in_array()` di PHP untuk melakukan pemeriksaan, sehingga migrasi dapat berjalan dengan aman.
+- **Error Transaksi pada Runner Migrasi**: Memperbaiki error fatal `There is no active transaction` yang terjadi setelah skrip migrasi DDL berhasil dijalankan.
+  - **Penyebab**: Runner migrasi di `DatabaseController` membungkus eksekusi file migrasi dalam sebuah transaksi (`beginTransaction`/`commit`). Namun, perintah DDL (`ALTER TABLE`) di dalam skrip menyebabkan *implicit commit*, yang mengakhiri transaksi lebih awal. Akibatnya, `commit()` di controller gagal karena tidak ada lagi transaksi yang aktif.
+  - **Solusi**: Menghapus semua logika transaksi (`beginTransaction`, `commit`, `rollBack`) dari runner migrasi, karena migrasi DDL bersifat atomik dan mengelola transaksinya sendiri secara implisit.
 
 ## [5.1.31] - 2025-09-03
 
