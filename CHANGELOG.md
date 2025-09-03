@@ -1,5 +1,16 @@
 # Changelog
 
+## [5.2.0] - 2025-09-03
+
+### Diubah (Refactoring)
+- **Konsistensi Nama Tabel `media_packages`**: Melakukan refactoring besar di seluruh basis kode untuk menyelaraskan penggunaan nama tabel paket konten. Semua referensi ke tabel `post_packages` yang lama telah diubah menjadi `media_packages` agar sesuai dengan skema database terbaru.
+  - **Perubahan Utama**:
+    - Mengganti nama `core/database/PostPackageRepository.php` menjadi `core/database/MediaPackageRepository.php`.
+    - Mengganti nama kelas `PostPackageRepository` menjadi `MediaPackageRepository`.
+    - Memperbarui semua query SQL di semua file repository, controller, dan handler untuk menggunakan `media_packages`.
+    - Memperbarui semua `use` statement dan instansiasi kelas di seluruh aplikasi.
+  - **Tujuan**: Menghilangkan inkonsistensi antara kode dan skema database, memperbaiki bug, dan meningkatkan keterbacaan serta pemeliharaan kode.
+
 ## [5.1.31] - 2025-09-03
 
 ### Fitur

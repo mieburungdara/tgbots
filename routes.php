@@ -41,8 +41,8 @@ $router->get('member/logout', 'Auth/LoginController@logout');
 $router->get('admin/users', 'Admin/UserController@index');
 
 // Package management
-$router->get('admin/packages', 'Admin/PackageController@index');
-$router->post('admin/packages/delete', 'Admin/PackageController@hardDelete');
+$router->get('admin/packages', 'Admin/MediaPackageController@index');
+$router->post('admin/packages/delete', 'Admin/MediaPackageController@hardDelete');
 
 // Chat management
 $router->get('admin/chat', 'Admin/ChatController@index');

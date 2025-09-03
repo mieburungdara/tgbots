@@ -2,19 +2,17 @@
 
 namespace TGBot\Controllers\Admin;
 
-
-
 use Exception;
 use TGBot\Controllers\BaseController;
-use TGBot\Database\PostPackageRepository;
+use TGBot\Database\MediaPackageRepository;
 use TGBot\TelegramAPI;
 
-class PackageController extends BaseController {
+class MediaPackageController extends BaseController {
 
     public function index() {
         try {
             $pdo = \get_db_connection();
-            $packageRepo = new PostPackageRepository($pdo);
+            $packageRepo = new MediaPackageRepository($pdo);
 
             $message = $_SESSION['flash_message'] ?? null;
             unset($_SESSION['flash_message']);
@@ -27,7 +25,7 @@ class PackageController extends BaseController {
                 'message' => $message
             ], 'admin_layout');
         } catch (Exception $e) {
-            \app_log('Error in PackageController/index: ' . $e->getMessage(), 'error');
+            \app_log('Error in MediaPackageController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the package management page.'
@@ -42,7 +40,7 @@ class PackageController extends BaseController {
         }
 
         $pdo = \get_db_connection();
-        $packageRepo = new PostPackageRepository($pdo);
+        $packageRepo = new MediaPackageRepository($pdo);
         $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
 
         if ($package_id_to_delete) {

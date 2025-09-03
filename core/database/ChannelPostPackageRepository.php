@@ -65,7 +65,7 @@ class ChannelPostPackageRepository
      */
     public function findByChannelAndMessage(int $channel_id, int $message_id): ?array
     {
-        $sql = "SELECT p.* FROM post_packages p
+        $sql = "SELECT p.* FROM media_packages p
                 JOIN channel_post_packages cpp ON p.id = cpp.package_id
                 WHERE cpp.channel_id = ? AND cpp.message_id = ?";
 

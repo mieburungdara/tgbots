@@ -4,7 +4,7 @@ require_once __DIR__ . '/../core/autoloader.php';
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
 
-use TGBot\Database\PostPackageRepository;
+use TGBot\Database\MediaPackageRepository;
 use TGBot\TelegramAPI;
 
 $pdo = get_db_connection();
@@ -13,11 +13,11 @@ if (!$pdo) {
     exit;
 }
 
-$post_repo = new PostPackageRepository($pdo);
+$post_repo = new MediaPackageRepository($pdo);
 
 $five_minutes_ago = date('Y-m-d H:i:s', strtotime('-5 minutes'));
 
-$stmt = $pdo->prepare("SELECT * FROM post_packages WHERE status = 'pending' AND created_at < ?");
+$stmt = $pdo->prepare("SELECT * FROM media_packages WHERE status = 'pending' AND created_at < ?");
 $stmt->execute([$five_minutes_ago]);
 $pending_posts = $stmt->fetchAll();
 
@@ -26,7 +26,7 @@ foreach ($pending_posts as $post) {
         $pdo->beginTransaction();
 
         // 1. Approve the post
-        $stmt_approve = $pdo->prepare("UPDATE post_packages SET status = 'available' WHERE id = ?");
+        $stmt_approve = $pdo->prepare("UPDATE media_packages SET status = 'available' WHERE id = ?");
         $stmt_approve->execute([$post['id']]);
 
         // 2. Get bot info

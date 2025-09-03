@@ -14,7 +14,7 @@ namespace TGBot\Controllers\Member;
 use Exception;
 use TGBot\Controllers\Member\MemberBaseController;
 use TGBot\Database\SaleRepository;
-use TGBot\Database\PostPackageRepository;
+use TGBot\Database\MediaPackageRepository;
 
 /**
  * Class TransactionController
@@ -58,7 +58,7 @@ class TransactionController extends MemberBaseController
     {
         try {
             $pdo = \get_db_connection();
-            $packageRepo = new PostPackageRepository($pdo);
+            $packageRepo = new MediaPackageRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
             $message = $_SESSION['flash_message'] ?? null;
@@ -93,7 +93,7 @@ class TransactionController extends MemberBaseController
         }
 
         $pdo = \get_db_connection();
-        $packageRepo = new PostPackageRepository($pdo);
+        $packageRepo = new MediaPackageRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
         $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
 

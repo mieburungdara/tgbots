@@ -14,7 +14,7 @@ namespace TGBot\Handlers;
 use Exception;
 use TGBot\App;
 use TGBot\Handlers\HandlerInterface;
-use TGBot\Database\PostPackageRepository;
+use TGBot\Database\MediaPackageRepository;
 use TGBot\Database\SaleRepository;
 use TGBot\Database\UserRepository;
 use TGBot\Database\SellerSalesChannelRepository;
@@ -74,7 +74,7 @@ class CallbackQueryHandler implements HandlerInterface
      */
     private function handlePostToChannel(App $app, array $callback_query, string $public_id): void
     {
-        $package_repo = new PostPackageRepository($app->pdo);
+        $package_repo = new MediaPackageRepository($app->pdo);
         $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
         $post_package_repo = new ChannelPostPackageRepository($app->pdo);
 
@@ -137,7 +137,7 @@ class CallbackQueryHandler implements HandlerInterface
      */
     private function handleViewPage(App $app, array $callback_query, string $params): void
     {
-        $package_repo = new PostPackageRepository($app->pdo);
+        $package_repo = new MediaPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
 
         $parts = explode('_', $params);
@@ -232,7 +232,7 @@ class CallbackQueryHandler implements HandlerInterface
      */
     private function handleBuy(App $app, array $callback_query, string $public_id): void
     {
-        $package_repo = new PostPackageRepository($app->pdo);
+        $package_repo = new MediaPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
 
         $app->telegram_api->answerCallbackQuery($callback_query['id'], 'Memproses pembelian...');
@@ -270,7 +270,7 @@ class CallbackQueryHandler implements HandlerInterface
      */
     private function handleRetractPost(App $app, array $callback_query, string $public_id): void
     {
-        $post_repo = new PostPackageRepository($app->pdo);
+        $post_repo = new MediaPackageRepository($app->pdo);
         $channel_post_repo = new ChannelPostPackageRepository($app->pdo);
 
         try {
@@ -325,7 +325,7 @@ class CallbackQueryHandler implements HandlerInterface
         $public_id = $parts[0];
         $reason = $parts[1] ?? 'Tidak ada alasan spesifik';
 
-        $post_repo = new PostPackageRepository($app->pdo);
+        $post_repo = new MediaPackageRepository($app->pdo);
 
         try {
             $app->pdo->beginTransaction();
@@ -384,7 +384,7 @@ class CallbackQueryHandler implements HandlerInterface
         $reason = $parts[2] ?? 'Pelanggaran berat terhadap aturan.';
 
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
-        $post_repo = new PostPackageRepository($app->pdo);
+        $post_repo = new MediaPackageRepository($app->pdo);
 
         try {
             $app->pdo->beginTransaction();
@@ -436,7 +436,7 @@ class CallbackQueryHandler implements HandlerInterface
      */
     private function handleAdminApproval(App $app, array $callback_query, string $public_id): void
     {
-        $post_repo = new PostPackageRepository($app->pdo);
+        $post_repo = new MediaPackageRepository($app->pdo);
         $channel_post_repo = new ChannelPostPackageRepository($app->pdo);
 
         try {

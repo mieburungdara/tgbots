@@ -221,7 +221,7 @@ class BalanceController extends BaseController
         $pdo = \get_db_connection();
         try {
             $stmt = $pdo->prepare(
-                "SELECT s.price, s.purchased_at, mp.description as package_title, u_buyer.first_name as buyer_name\n                 FROM sales s\n                 JOIN post_packages mp ON s.package_id = mp.id\n                 JOIN users u_buyer ON s.buyer_user_id = u_buyer.id\n                 WHERE s.seller_user_id = ? ORDER BY s.purchased_at DESC"
+                "SELECT s.price, s.purchased_at, mp.description as package_title, u_buyer.first_name as buyer_name\n                 FROM sales s\n                 JOIN media_packages mp ON s.package_id = mp.id\n                 JOIN users u_buyer ON s.buyer_user_id = u_buyer.id\n                 WHERE s.seller_user_id = ? ORDER BY s.purchased_at DESC"
             );
             $stmt->execute([$user_id]);
             $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -248,7 +248,7 @@ class BalanceController extends BaseController
         $pdo = \get_db_connection();
         try {
             $stmt = $pdo->prepare(
-                "SELECT s.price, s.purchased_at, mp.description as package_title\n                 FROM sales s\n                 JOIN post_packages mp ON s.package_id = mp.id\n                 WHERE s.buyer_user_id = ? ORDER BY s.purchased_at DESC"
+                "SELECT s.price, s.purchased_at, mp.description as package_title\n                 FROM sales s\n                 JOIN media_packages mp ON s.package_id = mp.id\n                 WHERE s.buyer_user_id = ? ORDER BY s.purchased_at DESC"
             );
             $stmt->execute([$user_id]);
             $logs = $stmt->fetchAll(PDO::FETCH_ASSOC);

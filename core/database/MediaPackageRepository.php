@@ -15,10 +15,10 @@ use Exception;
 use PDO;
 
 /**
- * Class PostPackageRepository
+ * Class MediaPackageRepository
  * @package TGBot\Database
  */
-class PostPackageRepository
+class MediaPackageRepository
 {
     /**
      * @var PDO
@@ -26,7 +26,7 @@ class PostPackageRepository
     private PDO $pdo;
 
     /**
-     * PostPackageRepository constructor.
+     * MediaPackageRepository constructor.
      *
      * @param PDO $pdo
      */
@@ -43,7 +43,7 @@ class PostPackageRepository
      */
     public function find(int $id)
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM post_packages WHERE id = ?");
+        $stmt = $this->pdo->prepare("SELECT * FROM media_packages WHERE id = ?");
         $stmt->execute([$id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -118,7 +118,7 @@ class PostPackageRepository
      */
     public function findForPurchase(int $package_id)
     {
-        $stmt = $this->pdo->prepare("SELECT price, seller_user_id FROM post_packages WHERE id = ? AND status = 'available'");
+        $stmt = $this->pdo->prepare("SELECT price, seller_user_id FROM media_packages WHERE id = ? AND status = 'available'");
         $stmt->execute([$package_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -131,7 +131,7 @@ class PostPackageRepository
      */
     public function markAsSold(int $package_id): void
     {
-        $stmt = $this->pdo->prepare("UPDATE post_packages SET status = 'sold' WHERE id = ?");
+        $stmt = $this->pdo->prepare("UPDATE media_packages SET status = 'sold' WHERE id = ?");
         $stmt->execute([$package_id]);
     }
 
@@ -144,7 +144,7 @@ class PostPackageRepository
     public function findAllBySellerId(int $seller_user_id): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT mp.*\n             FROM post_packages mp\n             WHERE mp.seller_user_id = ? AND mp.status != 'deleted'\n             ORDER BY mp.created_at DESC"
+            "SELECT mp.*\n             FROM media_packages mp\n             WHERE mp.seller_user_id = ? AND mp.status != 'deleted'\n             ORDER BY mp.created_at DESC"
         );
         $stmt->execute([$seller_user_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -178,7 +178,7 @@ class PostPackageRepository
             return true; // Anggap berhasil jika sudah dihapus
         }
 
-        $stmt = $this->pdo->prepare("UPDATE post_packages SET status = 'deleted' WHERE id = ?");
+        $stmt = $this->pdo->prepare("UPDATE media_packages SET status = 'deleted' WHERE id = ?");
         return $stmt->execute([$packageId]);
     }
 
@@ -210,7 +210,7 @@ class PostPackageRepository
             $stmt_delete_files = $this->pdo->prepare("DELETE FROM media_files WHERE package_id = ?");
             $stmt_delete_files->execute([$packageId]);
 
-            $stmt_delete_package = $this->pdo->prepare("DELETE FROM post_packages WHERE id = ?");
+            $stmt_delete_package = $this->pdo->prepare("DELETE FROM media_packages WHERE id = ?");
             $stmt_delete_package->execute([$packageId]);
 
         } catch (Exception $e) {
@@ -232,7 +232,7 @@ class PostPackageRepository
     {
         $sql = "
             SELECT mp.*, u.username as seller_username
-            FROM post_packages mp
+            FROM media_packages mp
             JOIN users u ON mp.seller_user_id = u.id
             ORDER BY mp.created_at DESC
             LIMIT :limit OFFSET :offset
@@ -252,7 +252,7 @@ class PostPackageRepository
      */
     public function findByPublicId(string $publicId)
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM post_packages WHERE public_id = ?");
+        $stmt = $this->pdo->prepare("SELECT * FROM media_packages WHERE public_id = ?");
         $stmt->execute([$publicId]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -281,7 +281,7 @@ class PostPackageRepository
         $current_status = $package['protect_content'] ?? false;
         $new_status = !$current_status;
 
-        $stmt = $this->pdo->prepare("UPDATE post_packages SET protect_content = ? WHERE id = ?");
+        $stmt = $this->pdo->prepare("UPDATE media_packages SET protect_content = ? WHERE id = ?");
         $stmt->execute([$new_status, $packageId]);
 
         return $new_status;
@@ -310,7 +310,7 @@ class PostPackageRepository
         }
 
         $stmt = $this->pdo->prepare(
-            "UPDATE post_packages SET description = ?, price = ? WHERE id = ?"
+            "UPDATE media_packages SET description = ?, price = ? WHERE id = ?"
         );
         return $stmt->execute([$description, $price, $packageId]);
     }
@@ -350,7 +350,7 @@ class PostPackageRepository
 
             // 4. Masukkan paket baru
             $stmt_package = $this->pdo->prepare(
-                "INSERT INTO post_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id, post_type, category)\n                 VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)"
+                "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id, post_type, category)\n                 VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)"
             );
             $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $public_id, $post_type, $category]);
             $package_id = $this->pdo->lastInsertId();
@@ -399,7 +399,7 @@ class PostPackageRepository
      */
     public function updateStatus(int $package_id, string $status): bool
     {
-        $stmt = $this->pdo->prepare("UPDATE post_packages SET status = ? WHERE id = ?");
+        $stmt = $this->pdo->prepare("UPDATE media_packages SET status = ? WHERE id = ?");
         return $stmt->execute([$status, $package_id]);
     }
 
@@ -411,7 +411,7 @@ class PostPackageRepository
      */
     public function hasPendingPost(int $user_id): bool
     {
-        $stmt = $this->pdo->prepare("SELECT 1 FROM post_packages WHERE seller_user_id = ? AND status = 'pending' LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT 1 FROM media_packages WHERE seller_user_id = ? AND status = 'pending' LIMIT 1");
         $stmt->execute([$user_id]);
         return $stmt->fetchColumn() !== false;
     }
@@ -425,7 +425,7 @@ class PostPackageRepository
      */
     public function updatePrice(int $package_id, int $price): bool
     {
-        $stmt = $this->pdo->prepare("UPDATE post_packages SET price = ? WHERE id = ?");
+        $stmt = $this->pdo->prepare("UPDATE media_packages SET price = ? WHERE id = ?");
         return $stmt->execute([$price, $package_id]);
     }
 }
