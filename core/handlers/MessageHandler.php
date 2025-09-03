@@ -14,11 +14,12 @@ namespace TGBot\Handlers;
 use PDO;
 use TGBot\App;
 use TGBot\Handlers\HandlerInterface;
-use TGBot\Database\PackageRepository;
+use TGBot\Database\PostPackageRepository;
 use TGBot\Database\SaleRepository;
 use TGBot\Database\MediaFileRepository;
 use TGBot\Database\BotChannelUsageRepository;
 use TGBot\Database\AnalyticsRepository;
+use TGBot\Database\BotRepository;
 use TGBot\Database\SellerSalesChannelRepository;
 use TGBot\Database\ChannelPostPackageRepository;
 use TGBot\Database\UserRepository;
@@ -70,6 +71,12 @@ class MessageHandler implements HandlerInterface
             case '/sell':
                 $this->handleSellCommand($app, $message);
                 break;
+            case '/rate':
+                $this->handleRateCommand($app, $message);
+                break;
+            case '/tanya':
+                $this->handleTanyaCommand($app, $message);
+                break;
             case '/addmedia':
                 $this->handleAddMediaCommand($app, $message);
                 break;
@@ -119,8 +126,50 @@ class MessageHandler implements HandlerInterface
 
         // Contoh: Logika untuk state 'awaiting_price'
         if ($app->user['state'] === 'awaiting_price') {
-            // ... (logika yang relevan dipindahkan ke sini jika diperlukan)
-            // Untuk saat ini, biarkan kosong karena logika utama ada di command
+            $price = filter_var($text, FILTER_VALIDATE_INT);
+            if ($price === false || $price <= 0) {
+                $app->telegram_api->sendMessage($app->chat_id, "Harga tidak valid. Harap masukkan angka bulat positif.");
+                return;
+            }
+
+            $post_repo = new PostPackageRepository($app->pdo);
+
+            $media_message = $state_context['media_messages'][0];
+            $message_id = $media_message['message_id'];
+            $chat_id = $media_message['chat_id'];
+
+            $stmt = $app->pdo->prepare("SELECT * FROM media_files WHERE message_id = ? AND chat_id = ?");
+            $stmt->execute([$message_id, $chat_id]);
+            $media_file = $stmt->fetch();
+
+            $package_id = $post_repo->createPackageWithPublicId(
+                $app->user['id'],
+                $app->bot['id'],
+                $media_file['caption'] ?? '',
+                $media_file['id'],
+                'sell'
+            );
+
+            $post_repo->updatePrice($package_id, $price);
+
+            if ($media_file['media_group_id']) {
+                $stmt = $app->pdo->prepare("UPDATE media_files SET package_id = ? WHERE media_group_id = ?");
+                $stmt->execute([$package_id, $media_file['media_group_id']]);
+            } else {
+                $stmt = $app->pdo->prepare("UPDATE media_files SET package_id = ? WHERE id = ?");
+                $stmt->execute([$package_id, $media_file['id']]);
+            }
+
+            $post = $post_repo->find($package_id);
+            $public_id = $post['public_id'];
+
+            $user_repo->setUserState($app->user['id'], null, null);
+
+            $message_text = "✅ Paket berhasil dibuat dengan ID: `{$public_id}`\n";
+            $message_text .= "Harga: *Rp " . number_format($price, 0, ',', '.') . "*\n\n";
+            $message_text .= "Anda dapat melihat konten Anda dengan perintah `/konten {$public_id}`.";
+
+            $app->telegram_api->sendMessage($app->chat_id, $message_text, 'Markdown');
         }
     }
 
@@ -272,7 +321,7 @@ EOT;
      */
     private function handleStartCommand(App $app, array $message, array $parts): void
     {
-        $package_repo = new PackageRepository($app->pdo);
+        $package_repo = new PostPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
         $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
 
@@ -346,6 +395,14 @@ EOT;
      */
     private function handleSellCommand(App $app, array $message): void
     {
+        if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'sell') {
+            $bot_repo = new BotRepository($app->pdo);
+            $correct_bot = $bot_repo->findBotByFeature('sell');
+            $suggestion = $correct_bot ? " Silakan gunakan @{$correct_bot['username']}." : "";
+            $app->telegram_api->sendMessage($app->chat_id, "Perintah `/sell` tidak tersedia di bot ini." . $suggestion);
+            return;
+        }
+
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
 
         if (!isset($message['reply_to_message'])) {
@@ -410,7 +467,7 @@ EOT;
      */
     private function handleKontenCommand(App $app, array $message, array $parts): void
     {
-        $package_repo = new PackageRepository($app->pdo);
+        $package_repo = new PostPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
         $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
 
@@ -522,6 +579,128 @@ EOT;
         // Logika untuk perintah admin
     }
 
+    private function handleRateCommand(App $app, array $message): void
+    {
+        if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'rate') {
+            $bot_repo = new BotRepository($app->pdo);
+            $correct_bot = $bot_repo->findBotByFeature('rate');
+            $suggestion = $correct_bot ? " Silakan gunakan @{$correct_bot['username']}." : "";
+            $app->telegram_api->sendMessage($app->chat_id, "Perintah `/rate` tidak tersedia di bot ini." . $suggestion);
+            return;
+        }
+
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
+        $post_repo = new PostPackageRepository($app->pdo);
+
+        if ($post_repo->hasPendingPost($app->user['id'])) {
+            $app->telegram_api->sendMessage($app->chat_id, "Anda masih memiliki kiriman yang sedang dalam proses moderasi. Harap tunggu hingga selesai sebelum mengirim yang baru.");
+            return;
+        }
+
+        if (!isset($message['reply_to_message'])) {
+            $app->telegram_api->sendMessage($app->chat_id, "Untuk memberi rate, silakan reply media yang ingin Anda beri rate dengan perintah /rate.");
+            return;
+        }
+
+        $replied_message = $message['reply_to_message'];
+
+        // For now, let's just check if it's a media message
+        if (!isset($replied_message['photo']) && !isset($replied_message['video'])) {
+            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video).");
+            return;
+        }
+
+        $state_context = [
+            'message_id' => $replied_message['message_id'],
+            'chat_id' => $replied_message['chat']['id'],
+            'from_id' => $replied_message['from']['id'],
+        ];
+
+        // Check if user is replying to their own message
+        if ($message['from']['id'] !== $replied_message['from']['id']) {
+            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal. Anda hanya bisa memberi rate pada media milik Anda sendiri.");
+            return;
+        }
+
+        $user_repo->setUserState($app->user['id'], 'awaiting_rate_category', $state_context);
+
+        $keyboard = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Cewek', 'callback_data' => 'rate_category_cewek'],
+                    ['text' => 'Cowok', 'callback_data' => 'rate_category_cowok'],
+                ]
+            ]
+        ];
+
+        $app->telegram_api->sendMessage(
+            $app->chat_id,
+            "Silakan pilih kategori:",
+            null,
+            json_encode($keyboard),
+            $replied_message['message_id']
+        );
+    }
+
+    private function handleTanyaCommand(App $app, array $message): void
+    {
+        if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'tanya') {
+            $bot_repo = new BotRepository($app->pdo);
+            $correct_bot = $bot_repo->findBotByFeature('tanya');
+            $suggestion = $correct_bot ? " Silakan gunakan @{$correct_bot['username']}." : "";
+            $app->telegram_api->sendMessage($app->chat_id, "Perintah `/tanya` tidak tersedia di bot ini." . $suggestion);
+            return;
+        }
+
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
+        $post_repo = new PostPackageRepository($app->pdo);
+
+        if ($post_repo->hasPendingPost($app->user['id'])) {
+            $app->telegram_api->sendMessage($app->chat_id, "Anda masih memiliki kiriman yang sedang dalam proses moderasi. Harap tunggu hingga selesai sebelum mengirim yang baru.");
+            return;
+        }
+
+        if (!isset($message['reply_to_message'])) {
+            $app->telegram_api->sendMessage($app->chat_id, "Untuk bertanya, silakan reply pesan yang ingin Anda tanyakan dengan perintah /tanya.");
+            return;
+        }
+
+        $replied_message = $message['reply_to_message'];
+
+        $state_context = [
+            'message_id' => $replied_message['message_id'],
+            'chat_id' => $replied_message['chat']['id'],
+            'from_id' => $replied_message['from']['id'],
+            'text' => $replied_message['text'] ?? $replied_message['caption'] ?? ''
+        ];
+
+        // Check if user is replying to their own message
+        if ($message['from']['id'] !== $replied_message['from']['id']) {
+            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal. Anda hanya bisa bertanya pada pesan milik Anda sendiri.");
+            return;
+        }
+
+        $user_repo->setUserState($app->user['id'], 'awaiting_tanya_category', $state_context);
+
+        $keyboard = [
+            'inline_keyboard' => [
+                [
+                    ['text' => 'Mutualan', 'callback_data' => 'tanya_category_mutualan'],
+                    ['text' => 'Tanya', 'callback_data' => 'tanya_category_tanya'],
+                    ['text' => 'Dll', 'callback_data' => 'tanya_category_dll'],
+                ]
+            ]
+        ];
+
+        $app->telegram_api->sendMessage(
+            $app->chat_id,
+            "Silakan pilih kategori:",
+            null,
+            json_encode($keyboard),
+            $replied_message['message_id']
+        );
+    }
+
     /**
      * Handle the /addmedia command.
      *
@@ -573,7 +752,7 @@ EOT;
      */
     private function addMediaToExistingPackage(App $app, array $message, string $public_package_id): void
     {
-        $package_repo = new PackageRepository($app->pdo);
+        $package_repo = new PostPackageRepository($app->pdo);
 
         if (!isset($message['reply_to_message'])) {
             $app->telegram_api->sendMessage($app->chat_id, "Untuk menambah media, silakan reply media yang ingin Anda tambahkan.");

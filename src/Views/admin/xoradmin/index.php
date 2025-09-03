@@ -147,7 +147,8 @@
 
             <?php elseif ($data['active_tab'] === 'db_reset'): ?>
                 <div id="db_reset" class="tab-content danger-zone active">
-                    <h2>Reset Database</h2>
+                    <h2>Reset Database & Skema</h2>
+                    <a href="/admin/database/check" style="display: inline-block; margin-bottom: 20px; padding: 10px 15px; background-color: #5bc0de; color: white; text-decoration: none; border-radius: 4px;">Periksa Skema Database</a>
                     <div class="warning"><strong>PERINGATAN:</strong> Semua data akan hilang secara permanen.</div>
                     <?php if (!empty($_SESSION['db_error'])): ?><div class="error"><?= htmlspecialchars($_SESSION['db_error']); unset($_SESSION['db_error']); ?></div><?php endif; ?>
                     <?php if (!empty($_SESSION['db_message'])): ?><div class="message"><?= htmlspecialchars($_SESSION['db_message']); unset($_SESSION['db_message']); ?></div><?php endif; ?>
