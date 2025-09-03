@@ -75,10 +75,10 @@
         <div class="setting-item" style="margin-bottom: 10px;">
             <label for="assigned_feature">Fitur yang Ditugaskan:</label>
             <select name="assigned_feature" id="assigned_feature" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
-                <option value="" <?= !$data['bot']['assigned_feature'] ? 'selected' : '' ?>>-- Tidak ada --</option>
-                <option value="sell" <?= ($data['bot']['assigned_feature'] === 'sell') ? 'selected' : '' ?>>Jual (/sell)</option>
-                <option value="rate" <?= ($data['bot']['assigned_feature'] === 'rate') ? 'selected' : '' ?>>Rating (/rate)</option>
-                <option value="tanya" <?= ($data['bot']['assigned_feature'] === 'tanya') ? 'selected' : '' ?>>Tanya (/tanya)</option>
+                <option value="" <?= empty($data['bot']['assigned_feature']) ? 'selected' : '' ?>>-- Tidak ada --</option>
+                <option value="sell" <?= (($data['bot']['assigned_feature'] ?? null) === 'sell') ? 'selected' : '' ?>>Jual (/sell)</option>
+                <option value="rate" <?= (($data['bot']['assigned_feature'] ?? null) === 'rate') ? 'selected' : '' ?>>Rating (/rate)</option>
+                <option value="tanya" <?= (($data['bot']['assigned_feature'] ?? null) === 'tanya') ? 'selected' : '' ?>>Tanya (/tanya)</option>
             </select>
         </div>
 
