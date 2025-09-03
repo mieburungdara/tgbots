@@ -98,6 +98,7 @@ $router->post('admin/roles/delete', 'Admin/RoleController@destroy');
 
 // Admin - Database
 $router->get('admin/database', 'Admin/DatabaseController@index');
+$router->get('admin/database/check', 'Admin/DatabaseController@checkSchema');
 $router->post('admin/database/reset', 'Admin/DatabaseController@reset');
 $router->post('api/admin/database/migrate', 'Admin/DatabaseController@migrate');
 
