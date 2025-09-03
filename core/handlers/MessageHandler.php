@@ -531,6 +531,12 @@ EOT;
     private function handleRateCommand(App $app, array $message): void
     {
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
+        $post_repo = new PostPackageRepository($app->pdo);
+
+        if ($post_repo->hasPendingPost($app->user['id'])) {
+            $app->telegram_api->sendMessage($app->chat_id, "Anda masih memiliki kiriman yang sedang dalam proses moderasi. Harap tunggu hingga selesai sebelum mengirim yang baru.");
+            return;
+        }
 
         if (!isset($message['reply_to_message'])) {
             $app->telegram_api->sendMessage($app->chat_id, "Untuk memberi rate, silakan reply media yang ingin Anda beri rate dengan perintah /rate.");
@@ -580,6 +586,12 @@ EOT;
     private function handleTanyaCommand(App $app, array $message): void
     {
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
+        $post_repo = new PostPackageRepository($app->pdo);
+
+        if ($post_repo->hasPendingPost($app->user['id'])) {
+            $app->telegram_api->sendMessage($app->chat_id, "Anda masih memiliki kiriman yang sedang dalam proses moderasi. Harap tunggu hingga selesai sebelum mengirim yang baru.");
+            return;
+        }
 
         if (!isset($message['reply_to_message'])) {
             $app->telegram_api->sendMessage($app->chat_id, "Untuk bertanya, silakan reply pesan yang ingin Anda tanyakan dengan perintah /tanya.");

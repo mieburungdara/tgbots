@@ -402,4 +402,17 @@ class PostPackageRepository
         $stmt = $this->pdo->prepare("UPDATE post_packages SET status = ? WHERE id = ?");
         return $stmt->execute([$status, $package_id]);
     }
+
+    /**
+     * Check if a user has a pending post.
+     *
+     * @param int $user_id
+     * @return bool
+     */
+    public function hasPendingPost(int $user_id): bool
+    {
+        $stmt = $this->pdo->prepare("SELECT 1 FROM post_packages WHERE seller_user_id = ? AND status = 'pending' LIMIT 1");
+        $stmt->execute([$user_id]);
+        return $stmt->fetchColumn() !== false;
+    }
 }
