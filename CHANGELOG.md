@@ -11,6 +11,14 @@
     - Memperbarui semua `use` statement dan instansiasi kelas di seluruh aplikasi.
   - **Tujuan**: Menghilangkan inkonsistensi antara kode dan skema database, memperbaiki bug, dan meningkatkan keterbacaan serta pemeliharaan kode.
 
+### Diperbaiki
+- **Skema Database Tidak Lengkap**: Memperbaiki file `updated_schema.sql` yang tidak lengkap dengan menambahkan kolom-kolom yang hilang.
+  - **Kolom yang Ditambahkan**:
+    - `assigned_feature` ke tabel `bots`.
+    - `post_type` dan `category` ke tabel `media_packages`.
+  - **Penyebab**: Dump skema yang diberikan oleh pengguna sebelumnya tidak mencakup kolom-kolom ini, meskipun kolom-kolom tersebut digunakan secara aktif oleh kode aplikasi.
+  - **Solusi**: Menambahkan definisi kolom yang hilang ke `updated_schema.sql` untuk memastikan file tersebut sepenuhnya sinkron dengan kode.
+
 ## [5.1.31] - 2025-09-03
 
 ### Fitur
