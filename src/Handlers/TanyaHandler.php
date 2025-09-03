@@ -79,10 +79,40 @@ class TanyaHandler
             $category
         );
 
-        // 2. Forward the message to the admin channel for moderation
+        // 2. Send to admin channel for moderation
         $admin_channel_id = $app->bot_settings['admin_channel_tanya_' . $category] ?? null;
         if ($admin_channel_id) {
-            $app->telegram_api->forwardMessage($admin_channel_id, $chat_id, $message_id);
+            $post = $post_repo->find($package_id);
+            $public_id = $post['public_id'];
+            $user_id = $app->user['id'];
+
+            $caption = "<b>Pertanyaan Baru untuk Moderasi</b>\n\n";
+            $caption .= "<b>ID Post:</b> <code>{$public_id}</code>\n";
+            $caption .= "<b>User:</b> <code>{$user_id}</code>\n";
+            $caption .= "<b>Kategori:</b> " . ucfirst($category) . "\n\n";
+            $caption .= "<b>Pertanyaan:</b>\n<i>" . htmlspecialchars($text) . "</i>";
+
+            $keyboard = [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '✅ Setujui', 'callback_data' => 'admin_approve_' . $public_id],
+                    ],
+                    [
+                        ['text' => '❌ Tolak (Iklan)', 'callback_data' => 'admin_reject_' . $public_id . '_Iklan'],
+                        ['text' => '❌ Tolak (Judi)', 'callback_data' => 'admin_reject_' . $public_id . '_Judi'],
+                    ],
+                    [
+                        ['text' => '🚫 Blokir (Spam)', 'callback_data' => 'admin_ban_' . $user_id . '_' . $public_id . '_Spam'],
+                    ]
+                ]
+            ];
+
+            $app->telegram_api->sendMessage(
+                $admin_channel_id,
+                $caption,
+                'HTML',
+                json_encode($keyboard)
+            );
         }
 
         // 3. Send a confirmation message to the user

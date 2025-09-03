@@ -109,10 +109,59 @@ class RateHandler
             $stmt->execute([$package_id, $media_file['id']]);
         }
 
-        // 4. Forward the media to the admin channel for moderation
+        // 4. Send to admin channel for moderation
         $admin_channel_id = $app->bot_settings['admin_channel_rate_' . $category] ?? null;
         if ($admin_channel_id) {
-            $app->telegram_api->forwardMessage($admin_channel_id, $chat_id, $message_id);
+            $post = $post_repo->find($package_id);
+            $public_id = $post['public_id'];
+            $user_id = $app->user['id'];
+
+            $media_type = $media_file['file_type'];
+            $media_count = 1;
+            if ($media_file['media_group_id']) {
+                $stmt = $app->pdo->prepare("SELECT COUNT(*) FROM media_files WHERE media_group_id = ?");
+                $stmt->execute([$media_file['media_group_id']]);
+                $media_count = $stmt->fetchColumn();
+            }
+            $media_info = "{$media_count}" . ($media_type === 'photo' ? 'P' : 'V');
+
+            $caption = "<b>Kiriman Baru untuk Moderasi</b>\n\n";
+            $caption .= "<b>ID Post:</b> <code>{$public_id}</code>\n";
+            $caption .= "<b>User:</b> <code>{$user_id}</code>\n";
+            $caption .= "<b>Info:</b> <code>{$media_info}</code>\n";
+            $caption .= "<b>Kategori:</b> " . ucfirst($category) . "\n\n";
+            if (!empty($media_file['caption'])) {
+                $caption .= "<b>Caption Asli:</b>\n<i>" . htmlspecialchars($media_file['caption']) . "</i>";
+            }
+
+            $keyboard = [
+                'inline_keyboard' => [
+                    [
+                        ['text' => '✅ Setujui', 'callback_data' => 'admin_approve_' . $public_id],
+                    ],
+                    [
+                        ['text' => '❌ Tolak (Iklan)', 'callback_data' => 'admin_reject_' . $public_id . '_Iklan'],
+                        ['text' => '❌ Tolak (Judi)', 'callback_data' => 'admin_reject_' . $public_id . '_Judi'],
+                    ],
+                    [
+                        ['text' => '❌ Tolak (Kekerasan)', 'callback_data' => 'admin_reject_' . $public_id . '_Kekerasan'],
+                        ['text' => '❌ Tolak (Duplikat)', 'callback_data' => 'admin_reject_' . $public_id . '_Duplikat'],
+                    ],
+                    [
+                        ['text' => '🚫 Blokir (Spam)', 'callback_data' => 'admin_ban_' . $user_id . '_' . $public_id . '_Spam'],
+                        ['text' => '🚫 Blokir (Judi)', 'callback_data' => 'admin_ban_' . $user_id . '_' . $public_id . '_Judi_Online'],
+                    ]
+                ]
+            ];
+
+            $app->telegram_api->copyMessage(
+                $admin_channel_id,
+                $chat_id,
+                $message_id,
+                $caption,
+                'HTML',
+                json_encode($keyboard)
+            );
         }
 
         // 5. Send a confirmation message to the user
