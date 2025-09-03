@@ -1,276 +1,96 @@
-```sql
--- Tabel MESSAGES (super lengkap, single table)
-CREATE TABLE messages (
-    -- Identitas & dasar
-    bot_id BIGINT NOT NULL,
-    chat_id BIGINT NOT NULL,
-    message_id BIGINT NOT NULL,
-    message_thread_id BIGINT NULL,          -- ID topik forum (supergroup)
-    date TIMESTAMP NOT NULL,
-    edit_date TIMESTAMP NULL,
+## Alur Fitur `/rate`
 
-    -- Pengirim: bisa user ATAU sender_chat (anon admin/channel post)
-    from_user_id BIGINT NULL,
-    sender_chat_id BIGINT NULL,             -- jika dikirim atas nama chat/channel
-    author_signature VARCHAR(255) NULL,     -- signature pada channel post
-    sender_signature VARCHAR(255) NULL,     -- signature saat forward tertentu
-    via_bot_user_id BIGINT NULL,            -- bot yang digunakan via inline
-    business_connection_id VARCHAR(128) NULL,
+1. **User Mengirim Media**
 
-    -- Penanda
-    is_topic_message BOOLEAN DEFAULT 0,
-    is_automatic_forward BOOLEAN DEFAULT 0,
-    has_protected_content BOOLEAN DEFAULT 0,
-    has_media_spoiler BOOLEAN DEFAULT 0,
-    media_group_id VARCHAR(255) NULL,       -- album
-    effect_id BIGINT NULL,                   -- pesan dengan efek premium (jika ada)
+   * User harus **reply ke media** (photo/video/media group) miliknya sendiri.
+   * User hanya bisa kirim **1 postingan dalam satu waktu** (nda boleh bikin posting baru sebelum yang lama selesai).
 
-    -- Forward/Reply/Quote
-    forward_origin JSON NULL,               -- MessageOrigin (user/chat/channel/hidden_user)
-    forward_date TIMESTAMP NULL,
-    reply_to_message_id BIGINT NULL,
-    external_reply JSON NULL,               -- reply ke pesan eksternal (story/chat lain)
-    quote JSON NULL,                        -- kutipan sebagian teks/media
+2. **Pemilihan Kategori Awal**
 
-    -- Tipe & konten umum
-    type ENUM(
-        'text','photo','video','audio','voice','document','sticker',
-        'animation','video_note','location','venue','contact','poll',
-        'dice','game','invoice','successful_payment','refunded_payment',
-        'story','web_app_data','service','paid_media','other'
-    ) NOT NULL DEFAULT 'text',
-    text LONGTEXT NULL,
-    entities JSON NULL,                     -- entities pada text
-    link_preview_options JSON NULL,         -- kontrol preview link
-    caption LONGTEXT NULL,
-    caption_entities JSON NULL,
+   * Setelah user reply dengan perintah `/rate`, bot membalas postingan user dengan tombol kategori:
 
-    -- Media generik (banyak jenis berbagi atribut)
-    file_id VARCHAR(255) NULL,
-    file_unique_id VARCHAR(255) NULL,
-    file_name VARCHAR(255) NULL,
-    mime_type VARCHAR(100) NULL,
-    file_size BIGINT NULL,
-    duration INT NULL,
-    width INT NULL,
-    height INT NULL,
-    thumbnail JSON NULL,                    -- PhotoSize/thumbnail
+     * `Cewek`
+     * `Cowok`
+   * User **wajib pilih kategori**.
 
-    -- Photo (punya banyak ukuran)
-    photo JSON NULL,                        -- array PhotoSize
+3. **Konfirmasi Post**
 
-    -- Audio/Voice/Video tambahan
-    performer VARCHAR(255) NULL,
-    title VARCHAR(255) NULL,
+   * Setelah kategori dipilih, bot mengirim **preview postingan** kembali ke user:
 
-    -- Sticker
-    sticker_type ENUM('regular','mask','custom_emoji') NULL,
-    sticker_emoji VARCHAR(50) NULL,
-    sticker_set_name VARCHAR(255) NULL,
-    sticker_custom_emoji_id VARCHAR(255) NULL,
-    sticker_is_animated BOOLEAN NULL,
-    sticker_is_video BOOLEAN NULL,
+     * Quote berisi info tambahan: `id user`, jenis & jumlah media (`1P`, `3V`, `1P2V`).
+     * Caption asli tetap ditampilkan (tanpa quote).
+   * Inline keyboard:
 
-    -- Story
-    story_sender_chat_id BIGINT NULL,
-    story_id BIGINT NULL,
+     * `✅ Konfirmasi`
+     * `❌ Batal`
 
-    -- Lokasi
-    latitude DECIMAL(10,6) NULL,
-    longitude DECIMAL(10,6) NULL,
-    horizontal_accuracy FLOAT NULL,
-    live_period INT NULL,
-    heading INT NULL,
-    proximity_alert_radius INT NULL,
+4. **Jika User Membatalkan**
 
-    -- Venue
-    venue_title VARCHAR(255) NULL,
-    venue_address VARCHAR(255) NULL,
-    venue_foursquare_id VARCHAR(100) NULL,
-    venue_foursquare_type VARCHAR(100) NULL,
-    venue_google_place_id VARCHAR(100) NULL,
-    venue_google_place_type VARCHAR(100) NULL,
+   * Post batal diproses, **tidak diteruskan ke admin**.
+   * Auto aprove **tidak berlaku** karena posting belum masuk ke moderasi.
+   * User bebas kirim ulang post baru.
 
-    -- Kontak
-    contact_phone_number VARCHAR(50) NULL,
-    contact_first_name VARCHAR(255) NULL,
-    contact_last_name VARCHAR(255) NULL,
-    contact_user_id BIGINT NULL,
-    contact_vcard TEXT NULL,
+5. **Jika User Mengonfirmasi**
 
-    -- Poll / Game / Dice
-    poll JSON NULL,                         -- simpan full Poll
-    game JSON NULL,                         -- Game object
-    dice_emoji VARCHAR(50) NULL,
-    dice_value INT NULL,
+   * Post diteruskan ke **channel private admin (moderasi)** sesuai kategori (`cewek` / `cowok`).
+   * Format di channel admin: caption asli + info tambahan (id user, jenis & jumlah media).
+   * Inline keyboard untuk admin:
 
-    -- Invoice & Payment (termasuk order info)
-    invoice_title VARCHAR(255) NULL,
-    invoice_description TEXT NULL,
-    invoice_start_parameter VARCHAR(255) NULL,
-    invoice_currency VARCHAR(10) NULL,
-    invoice_total_amount BIGINT NULL,
-    invoice_payload TEXT NULL,
-    invoice_provider_token TEXT NULL,
-    invoice_provider_data TEXT NULL,
-    shipping_option_id VARCHAR(100) NULL,
+     * `Reject` → alasan cepat: `Iklan`, `Judi`, `Kekerasan`, `Tidak Sesuai Kategori`, `Duplikat`.
+     * `Ban User` → alasan cepat: `Iklan`, `Judi Online`, `Spam`, `Kekerasan`.
 
-    successful_payment_currency VARCHAR(10) NULL,
-    successful_payment_total_amount BIGINT NULL,
-    successful_payment_invoice_payload TEXT NULL,
-    successful_payment_telegram_charge_id VARCHAR(255) NULL,
-    successful_payment_provider_charge_id VARCHAR(255) NULL,
-    order_info_name VARCHAR(255) NULL,
-    order_info_phone_number VARCHAR(50) NULL,
-    order_info_email VARCHAR(255) NULL,
-    order_info_shipping_address JSON NULL,
+6. **Auto Aprove (Cronjob)**
 
-    refunded_payment_currency VARCHAR(10) NULL,
-    refunded_payment_total_amount BIGINT NULL,
-    refunded_payment_invoice_payload TEXT NULL,
-    refunded_payment_telegram_charge_id VARCHAR(255) NULL,
-    refunded_payment_provider_charge_id VARCHAR(255) NULL,
+   * Cronjob hanya berlaku pada post yg **sudah dikirim ke channel private admin**.
+   * Jika dalam **5 menit admin tidak merespon**, post otomatis **approved**.
+   * Post diteruskan ke channel publik sesuai kategori.
 
-    -- Keyboard Request (share user/chat)
-    users_shared_request_id BIGINT NULL,
-    users_shared_user_ids JSON NULL,        -- array user_id
-    chat_shared_request_id BIGINT NULL,
-    chat_shared_chat_id BIGINT NULL,
+7. **Reject oleh Admin**
 
-    -- Web App / Passport / Website / Write access
-    web_app_data_button_text VARCHAR(255) NULL,
-    web_app_data TEXT NULL,
-    passport_data JSON NULL,
-    connected_website VARCHAR(255) NULL,
-    write_access_allowed BOOLEAN NULL,
+   * Post tetap tersimpan di channel private admin (arsip), tapi **tidak dikirim ke publik**.
+   * User menerima notifikasi alasan reject.
 
-    -- Service messages: forum topic & umum
-    forum_topic_created JSON NULL,
-    forum_topic_edited JSON NULL,
-    forum_topic_closed BOOLEAN NULL,
-    forum_topic_reopened BOOLEAN NULL,
-    general_forum_topic_hidden BOOLEAN NULL,
-    general_forum_topic_unhidden BOOLEAN NULL,
+8. **Ban oleh Admin**
 
-    new_chat_members JSON NULL,             -- array User
-    left_chat_member_id BIGINT NULL,
-    new_chat_title VARCHAR(255) NULL,
-    new_chat_photo JSON NULL,               -- array PhotoSize
-    delete_chat_photo BOOLEAN NULL,
-    message_auto_delete_timer_changed INT NULL,
+   * User langsung diblokir dari bot.
+   * User menerima notifikasi alasan ban.
 
-    group_chat_created BOOLEAN NULL,
-    supergroup_chat_created BOOLEAN NULL,
-    channel_chat_created BOOLEAN NULL,
-    migrate_to_chat_id BIGINT NULL,
-    migrate_from_chat_id BIGINT NULL,
-    pinned_message_id BIGINT NULL,
+9. **Jika Post Diapprove (manual atau auto)**
 
-    -- Giveaway / Boost / Paid media / Reactions cache (opsional)
-    giveaway JSON NULL,                     -- detail giveaway
-    giveaway_winners JSON NULL,
-    boost_added_count INT NULL,
-    paid_media JSON NULL,                   -- daftar media berbayar
-    reactions JSON NULL,                    -- cache reaksi (jika disimpan)
+   * Post dikirim ke channel publik sesuai kategori.
+   * Bot mengirim **notifikasi pribadi ke user**:
 
-    -- Index & relasi
-    PRIMARY KEY (bot_id, chat_id, message_id),
-    KEY idx_messages_chat_date (bot_id, chat_id, date),
-    KEY idx_messages_from (from_user_id),
-    KEY idx_messages_via_bot (via_bot_user_id),
-    KEY idx_messages_reply (reply_to_message_id),
-    CONSTRAINT fk_messages_bot FOREIGN KEY (bot_id)
-        REFERENCES bots(id) ON DELETE CASCADE,
-    CONSTRAINT fk_messages_chat FOREIGN KEY (chat_id)
-        REFERENCES chats(id) ON DELETE CASCADE,
-    CONSTRAINT fk_messages_from FOREIGN KEY (from_user_id)
-        REFERENCES users(id) ON DELETE SET NULL,
-    CONSTRAINT fk_messages_sender_chat FOREIGN KEY (sender_chat_id)
-        REFERENCES chats(id) ON DELETE SET NULL,
-    CONSTRAINT fk_messages_via_bot FOREIGN KEY (via_bot_user_id)
-        REFERENCES users(id) ON DELETE SET NULL
-);
+     * Status posting diterima.
+     * Link ke postingan publik.
+     * Inline keyboard untuk user: `Tarik Post`.
 
-CREATE TABLE users (
-    id BIGINT PRIMARY KEY,                  -- user_id dari Telegram
-    is_bot BOOLEAN NOT NULL DEFAULT 0,      -- apakah ini bot
-    first_name VARCHAR(255) NOT NULL,
-    last_name VARCHAR(255) NULL,
-    username VARCHAR(255) NULL,
-    language_code VARCHAR(10) NULL,
+       * Jika ditekan, post akan dihapus dari channel publik, **tapi arsip tetap ada di channel admin**.
 
-    -- Status Premium
-    is_premium BOOLEAN NULL,
-    added_to_attachment_menu BOOLEAN NULL,
-    can_join_groups BOOLEAN NULL,           -- jika user adalah bot
-    can_read_all_group_messages BOOLEAN NULL,
-    supports_inline_queries BOOLEAN NULL,
+---
 
-    -- Business Account (baru di Telegram API)
-    business_intro JSON NULL,
-    business_location JSON NULL,
-    business_opening_hours JSON NULL,
+## Alur Fitur `/tanya`
 
-    -- Metadata lokal
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+1. User reply ke teks/media miliknya dengan perintah `/tanya`.
+2. Bot menampilkan pilihan kategori (misalnya: `Mutualan`, `Tanya`, `Dll`).
+3. Setelah kategori dipilih, bot mengirim **preview + aturan singkat** (dilarang iklan, judi, kekerasan).
+4. User diberikan tombol `✅ Konfirmasi` & `❌ Batal`.
+5. Jika konfirmasi:
 
-CREATE TABLE chats (
-    id BIGINT PRIMARY KEY,                      -- chat_id dari Telegram
-    bot_id BIGINT NOT NULL,                     -- chat ini terkait dengan bot mana
-    type ENUM('private','group','supergroup','channel') NOT NULL,
+   * Post masuk ke channel private admin khusus `/tanya`.
+   * Flow sama seperti `/rate`: bisa `Reject`, `Ban User`, atau auto aprove lewat cronjob 5 menit.
+6. Jika approve:
 
-    -- Basic info
-    title VARCHAR(255) NULL,
-    username VARCHAR(255) NULL,
-    first_name VARCHAR(255) NULL,               -- hanya untuk private chat
-    last_name VARCHAR(255) NULL,                -- hanya untuk private chat
-    is_forum BOOLEAN NULL,                      -- apakah supergroup dengan forum
+   * Post diteruskan ke channel publik khusus `/tanya`.
+   * Bot kirim **notifikasi ke user** berisi link postingan + tombol `Tarik Post`.
 
-    -- Permissions & fitur
-    accent_color_id INT NULL,
-    max_reaction_count INT NULL,
-    photo JSON NULL,                            -- ChatPhoto
-    active_usernames JSON NULL,                 -- daftar username aktif
-    birthdate JSON NULL,                        -- untuk user private
-    business_intro JSON NULL,
-    business_location JSON NULL,
-    business_opening_hours JSON NULL,
-    personal_chat_id BIGINT NULL,
-    available_reactions JSON NULL,
-    background_custom_emoji_id VARCHAR(255) NULL,
-    profile_accent_color_id INT NULL,
-    profile_background_custom_emoji_id VARCHAR(255) NULL,
-    emoji_status_custom_emoji_id VARCHAR(255) NULL,
-    emoji_status_expiration_date TIMESTAMP NULL,
-    bio TEXT NULL,
-    has_private_forwards BOOLEAN NULL,
-    has_restricted_voice_and_video_messages BOOLEAN NULL,
-    join_to_send_messages BOOLEAN NULL,
-    join_by_request BOOLEAN NULL,
-    description TEXT NULL,
-    invite_link TEXT NULL,
-    pinned_message_id BIGINT NULL,
-    permissions JSON NULL,                      -- ChatPermissions
-    slow_mode_delay INT NULL,
-    unrestrict_boost_count INT NULL,
-    message_auto_delete_time INT NULL,
-    has_aggressive_anti_spam_enabled BOOLEAN NULL,
-    has_hidden_members BOOLEAN NULL,
-    has_protected_content BOOLEAN NULL,
-    has_visible_history BOOLEAN NULL,
-    sticker_set_name VARCHAR(255) NULL,
-    can_set_sticker_set BOOLEAN NULL,
-    custom_emoji_sticker_set_name VARCHAR(255) NULL,
-    linked_chat_id BIGINT NULL,
-    location JSON NULL,                         -- ChatLocation
+---
 
-    -- Meta
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+## Ringkasan Penting
 
-    -- Relasi
-    FOREIGN KEY (bot_id) REFERENCES bots(id) ON DELETE CASCADE
-);
-```
+* Cronjob **hanya berlaku** untuk post yg sudah masuk channel private admin, bukan sebelum user konfirmasi.
+* User dapat **membatalkan sebelum konfirmasi** (post tidak masuk ke admin).
+* Setelah approve (manual/auto), **notifikasi pribadi ke user** selalu menyertakan tombol `Tarik Post`.
+* Tombol `Tarik Post` **tidak muncul di channel publik**, hanya ada di pesan pribadi user.
+* Post yg ditarik dihapus dari publik, tapi **tetap tersimpan di channel admin** sebagai arsip.
+
+---
