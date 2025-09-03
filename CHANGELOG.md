@@ -20,7 +20,7 @@
   - **Solusi**: Menambahkan definisi kolom yang hilang ke `updated_schema.sql` untuk memastikan file tersebut sepenuhnya sinkron dengan kode.
 - **Parser Skema Kritis Rusak (Final Fix)**: Memperbaiki bug kritis pada alat pemeriksa skema yang menyebabkan kesalahan fatal dalam parsing.
   - **Penyebab**: Pendekatan berbasis Regex terbukti tidak andal dan menyebabkan kegagalan total dalam membaca file skema, yang mengakibatkan alat secara keliru menyarankan untuk menghapus *semua* tabel.
-  - **Solusi**: Menulis ulang total fungsi parser (`parseSchemaFromFile`) untuk tidak lagi menggunakan regex. Parser baru sekarang membaca file skema baris per baris dan menggunakan state machine sederhana untuk mengidentifikasi blok `CREATE TABLE` dan mengekstrak kolom. Pendekatan ini jauh lebih kuat, lebih aman, dan secara definitif menyelesaikan masalah parsing.
+  - **Solusi**: Menulis ulang total fungsi parser (`parseSchemaFromFile`) untuk tidak lagi menggunakan regex. Parser baru sekarang membaca file skema baris per baris dan menggunakan state machine sederhana untuk mengidentifikasi blok `CREATE TABLE` dan mengekstrak kolom. Pendekatan ini jauh lebih kuat, lebih aman, dan secara definitif menyelesaikan masalah parsing. Berdasarkan masukan pengguna, logika parser disempurnakan lebih lanjut untuk menangani berbagai format SQL dengan andal, termasuk deteksi akhir pernyataan dan ekstraksi definisi kolom yang aman.
 
 ## [5.1.31] - 2025-09-03
 
