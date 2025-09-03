@@ -51,6 +51,8 @@ class CallbackQueryHandler implements HandlerInterface
             $this->handleRegisterSeller($app, $callback_query);
         } elseif (strpos($callback_data, 'post_channel_') === 0) {
             $this->handlePostToChannel($app, $callback_query, substr($callback_data, strlen('post_channel_')));
+        } elseif (strpos($callback_data, 'retract_post_') === 0) {
+            $this->handleRetractPost($app, $callback_query, substr($callback_data, strlen('retract_post_')));
         } elseif ($callback_data === 'noop') {
             $app->telegram_api->answerCallbackQuery($callback_query['id']);
         }
@@ -249,6 +251,57 @@ class CallbackQueryHandler implements HandlerInterface
             $error_message = "⚠️ Gagal: " . $e->getMessage();
             $app->telegram_api->sendMessage($app->chat_id, $error_message);
             app_log("Gagal menangani pembelian untuk public_id {$public_id}: " . $e->getMessage(), 'error');
+        }
+    }
+
+    /**
+     * Handle a request to retract a post.
+     *
+     * @param App $app
+     * @param array $callback_query
+     * @param string $public_id
+     * @return void
+     */
+    private function handleRetractPost(App $app, array $callback_query, string $public_id): void
+    {
+        $post_repo = new PostPackageRepository($app->pdo);
+        $channel_post_repo = new ChannelPostPackageRepository($app->pdo);
+
+        try {
+            $app->pdo->beginTransaction();
+
+            $post = $post_repo->findByPublicId($public_id);
+
+            if (!$post) {
+                throw new Exception("Post tidak ditemukan.");
+            }
+
+            if ($post['seller_user_id'] != $app->user['id']) {
+                throw new Exception("Anda tidak memiliki izin untuk menarik post ini.");
+            }
+
+            $channel_post = $channel_post_repo->findByPackageId($post['id']);
+
+            if ($channel_post) {
+                $app->telegram_api->deleteMessage($channel_post['channel_id'], $channel_post['message_id']);
+            }
+
+            $post_repo->updateStatus($post['id'], 'deleted');
+
+            $app->telegram_api->editMessageText(
+                $app->chat_id,
+                $callback_query['message']['message_id'],
+                "✅ Post berhasil ditarik dari channel publik."
+            );
+
+            $app->pdo->commit();
+            $app->telegram_api->answerCallbackQuery($callback_query['id'], "Post ditarik.");
+
+        } catch (Exception $e) {
+            if ($app->pdo->inTransaction()) {
+                $app->pdo->rollBack();
+            }
+            $app->telegram_api->answerCallbackQuery($callback_query['id'], "⚠️ Gagal menarik post: " . $e->getMessage(), true);
         }
     }
 }

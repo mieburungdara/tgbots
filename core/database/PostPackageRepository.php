@@ -389,4 +389,17 @@ class PostPackageRepository
         $stmt->execute([$package_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Update the status of a package.
+     *
+     * @param int $package_id
+     * @param string $status
+     * @return bool
+     */
+    public function updateStatus(int $package_id, string $status): bool
+    {
+        $stmt = $this->pdo->prepare("UPDATE post_packages SET status = ? WHERE id = ?");
+        return $stmt->execute([$status, $package_id]);
+    }
 }
