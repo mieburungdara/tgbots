@@ -100,6 +100,7 @@ CREATE TABLE `bots`  (
   `token` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT 'Token API dari BotFather',
   `username` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Username bot (@namabot)',
   `first_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Nama depan bot',
+  `assigned_feature` enum('sell','rate','tanya') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Fitur spesifik yang ditugaskan untuk bot ini (jika ada).',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp COMMENT 'Waktu pembuatan record',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `token`(`token` ASC) USING BTREE
@@ -177,6 +178,8 @@ CREATE TABLE `media_packages`  (
   `thumbnail_media_id` bigint NULL DEFAULT NULL COMMENT 'ID media yang dijadikan thumbnail untuk paket ini.',
   `price` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT 'Harga paket media.',
   `status` enum('pending','available','sold','rejected','deleted') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'pending' COMMENT 'Status paket media.',
+  `post_type` enum('sell','rate','tanya') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'sell' COMMENT 'Jenis postingan untuk fitur yang berbeda.',
+  `category` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'Kategori spesifik untuk fitur rate/tanya.',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp COMMENT 'Waktu pembuatan paket.',
   `updated_at` timestamp NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT 'Waktu terakhir paket diubah.',
   `protect_content` tinyint(1) NOT NULL DEFAULT 0 COMMENT '0: tidak diproteksi, 1: diproteksi dari penyalinan.',
