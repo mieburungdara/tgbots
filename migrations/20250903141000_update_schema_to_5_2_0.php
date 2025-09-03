@@ -31,9 +31,14 @@ function tableExists(PDO $pdo, $tableName) {
 // Helper function to check if a column exists in a table
 function columnExists(PDO $pdo, $tableName, $columnName) {
     if (!tableExists($pdo, $tableName)) return false;
-    $stmt = $pdo->prepare("SHOW COLUMNS FROM {$tableName} LIKE ?");
-    $stmt->execute([$columnName]);
-    return $stmt->fetch() !== false;
+    try {
+        $stmt = $pdo->query("SHOW COLUMNS FROM `{$tableName}`");
+        $columns = $stmt->fetchAll(PDO::FETCH_COLUMN);
+        return in_array(strtolower($columnName), array_map('strtolower', $columns), true);
+    } catch (Exception $e) {
+        // If SHOW COLUMNS fails, assume column doesn't exist to be safe
+        return false;
+    }
 }
 
 

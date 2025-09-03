@@ -25,6 +25,11 @@
 ### Ditambahkan
 - **Skrip Migrasi Skema**: Menambahkan file migrasi berbasis PHP (`migrations/20250903141000_update_schema_to_5_2_0.php`) untuk menyelaraskan database versi lama dengan perubahan terbaru. Migrasi ini secara aman mengganti nama tabel `post_packages` menjadi `media_packages` dan menambahkan kolom `assigned_feature`, `post_type`, serta `category` jika belum ada.
 
+### Diperbaiki
+- **Bug pada Skrip Migrasi**: Memperbaiki bug fatal pada skrip migrasi yang baru ditambahkan.
+  - **Penyebab**: Logika untuk memeriksa keberadaan kolom menggunakan placeholder `?` pada `SHOW COLUMNS ... LIKE ?`, yang tidak didukung oleh SQL dan menyebabkan syntax error.
+  - **Solusi**: Mengganti logika tersebut dengan metode yang lebih andal, yaitu mengambil semua nama kolom dan menggunakan `in_array()` di PHP untuk melakukan pemeriksaan, sehingga migrasi dapat berjalan dengan aman.
+
 ## [5.1.31] - 2025-09-03
 
 ### Fitur
