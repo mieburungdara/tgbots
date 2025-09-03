@@ -19,7 +19,7 @@ class DatabaseController extends AppController
         if (!defined('BASE_PATH')) {
             define('BASE_PATH', realpath(__DIR__ . '/../../../'));
         }
-
+        
         if (!is_any_admin_logged_in()) {
             http_response_code(403);
             // In a real app, you might want a more sophisticated access denied view
@@ -192,13 +192,15 @@ class DatabaseController extends AppController
     private function parseSchemaFromFile(string $sql_content): array
     {
         $schema = [];
-        preg_match_all('/CREATE TABLE(?: IF NOT EXISTS)? `?(\w+)`?.*?\((.*?)\)\s*ENGINE=/s', $sql_content, $matches, PREG_SET_ORDER);
+        // This regex is more robust for capturing the table creation block until the closing parenthesis and ENGINE keyword.
+        preg_match_all('/CREATE TABLE(?: IF NOT EXISTS)?\s*`?(\w+)`?\s*\((.*?)\)\s*ENGINE=/s', $sql_content, $matches, PREG_SET_ORDER);
 
         foreach ($matches as $match) {
             $table_name = $match[1];
             $full_query = '';
-            // Find the full CREATE TABLE statement for this table
-            if (preg_match('/(CREATE TABLE(?: IF NOT EXISTS)? `?'.$table_name.'`?.*?);/s', $sql_content, $full_match)) {
+            
+            // This regex captures the entire CREATE TABLE statement more reliably.
+            if (preg_match('/(CREATE TABLE(?: IF NOT EXISTS)?\s*`?'.$table_name.'`?.*?);/s', $sql_content, $full_match)) {
                 $full_query = $full_match[1];
             }
 
@@ -206,13 +208,20 @@ class DatabaseController extends AppController
                 'columns' => [],
                 'full_query' => $full_query
             ];
-
+            
             $lines = explode("\n", $match[2]);
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (preg_match('/^`?(\w+)`? /', $line, $column_match)) {
+                
+                // Skip empty lines and lines that define keys, constraints, or indexes. This is more robust.
+                if (empty($line) || preg_match('/^(PRIMARY KEY|UNIQUE KEY|UNIQUE INDEX|KEY|INDEX|CONSTRAINT|FOREIGN KEY)/i', $line)) {
+                    continue;
+                }
+                
+                // This regex is also more robust for capturing the column name, which is the first word, possibly in backticks.
+                if (preg_match('/^`?(\w+)`?/', $line, $column_match)) {
                     $column_name = $column_match[1];
-                    // Store the full line definition for generating ALTER queries
+                    // Store the full line definition for generating ALTER queries, removing a potential trailing comma.
                     $schema[$table_name]['columns'][$column_name] = rtrim($line, ',');
                 }
             }
