@@ -415,4 +415,17 @@ class PostPackageRepository
         $stmt->execute([$user_id]);
         return $stmt->fetchColumn() !== false;
     }
+
+    /**
+     * Update the price of a package.
+     *
+     * @param int $package_id
+     * @param int $price
+     * @return bool
+     */
+    public function updatePrice(int $package_id, int $price): bool
+    {
+        $stmt = $this->pdo->prepare("UPDATE post_packages SET price = ? WHERE id = ?");
+        return $stmt->execute([$price, $package_id]);
+    }
 }
