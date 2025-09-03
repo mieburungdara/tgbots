@@ -125,8 +125,50 @@ class MessageHandler implements HandlerInterface
 
         // Contoh: Logika untuk state 'awaiting_price'
         if ($app->user['state'] === 'awaiting_price') {
-            // ... (logika yang relevan dipindahkan ke sini jika diperlukan)
-            // Untuk saat ini, biarkan kosong karena logika utama ada di command
+            $price = filter_var($text, FILTER_VALIDATE_INT);
+            if ($price === false || $price <= 0) {
+                $app->telegram_api->sendMessage($app->chat_id, "Harga tidak valid. Harap masukkan angka bulat positif.");
+                return;
+            }
+
+            $post_repo = new PostPackageRepository($app->pdo);
+
+            $media_message = $state_context['media_messages'][0];
+            $message_id = $media_message['message_id'];
+            $chat_id = $media_message['chat_id'];
+
+            $stmt = $app->pdo->prepare("SELECT * FROM media_files WHERE message_id = ? AND chat_id = ?");
+            $stmt->execute([$message_id, $chat_id]);
+            $media_file = $stmt->fetch();
+
+            $package_id = $post_repo->createPackageWithPublicId(
+                $app->user['id'],
+                $app->bot['id'],
+                $media_file['caption'] ?? '',
+                $media_file['id'],
+                'sell'
+            );
+
+            $post_repo->updatePrice($package_id, $price);
+
+            if ($media_file['media_group_id']) {
+                $stmt = $app->pdo->prepare("UPDATE media_files SET package_id = ? WHERE media_group_id = ?");
+                $stmt->execute([$package_id, $media_file['media_group_id']]);
+            } else {
+                $stmt = $app->pdo->prepare("UPDATE media_files SET package_id = ? WHERE id = ?");
+                $stmt->execute([$package_id, $media_file['id']]);
+            }
+
+            $post = $post_repo->find($package_id);
+            $public_id = $post['public_id'];
+
+            $user_repo->setUserState($app->user['id'], null, null);
+
+            $message_text = "✅ Paket berhasil dibuat dengan ID: `{$public_id}`\n";
+            $message_text .= "Harga: *Rp " . number_format($price, 0, ',', '.') . "*\n\n";
+            $message_text .= "Anda dapat melihat konten Anda dengan perintah `/konten {$public_id}`.";
+
+            $app->telegram_api->sendMessage($app->chat_id, $message_text, 'Markdown');
         }
     }
 
