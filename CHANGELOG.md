@@ -18,6 +18,9 @@
     - `post_type` dan `category` ke tabel `media_packages`.
   - **Penyebab**: Dump skema yang diberikan oleh pengguna sebelumnya tidak mencakup kolom-kolom ini, meskipun kolom-kolom tersebut digunakan secara aktif oleh kode aplikasi.
   - **Solusi**: Menambahkan definisi kolom yang hilang ke `updated_schema.sql` untuk memastikan file tersebut sepenuhnya sinkron dengan kode.
+- **Parser Skema Kritis Rusak**: Memperbaiki bug kritis pada alat pemeriksa skema yang menyebabkan kesalahan fatal dalam parsing.
+  - **Penyebab**: Regex yang terlalu agresif di `DatabaseController` menyebabkan kesalahan pembacaan definisi tabel, yang mengakibatkan alat secara keliru menyarankan untuk menghapus kolom-kolom yang valid.
+  - **Solusi**: Mengganti regex yang rusak dengan versi yang lebih stabil dan case-insensitive, memastikan semua tabel dan kolom dari file `updated_schema.sql` dibaca dengan benar.
 
 ## [5.1.31] - 2025-09-03
 

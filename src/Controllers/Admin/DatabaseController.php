@@ -192,9 +192,9 @@ class DatabaseController extends AppController
     private function parseSchemaFromFile(string $sql_content): array
     {
         $schema = [];
-        // This new regex is more robust as it doesn't rely on the ENGINE keyword
-        // and instead looks for the closing semicolon of the CREATE TABLE statement.
-        preg_match_all('/CREATE TABLE(?: IF NOT EXISTS)?\s*`?(\w+)`?\s*\((.*?)\)[^;]+;/s', $sql_content, $matches, PREG_SET_ORDER);
+        // Reverted to a more stable regex that relies on the ENGINE keyword, but is case-insensitive.
+        // This avoids the parsing errors caused by the previous, more greedy regex.
+        preg_match_all('/CREATE TABLE(?: IF NOT EXISTS)?\s*`?(\w+)`?\s*\((.*?)\)\s*ENGINE=/si', $sql_content, $matches, PREG_SET_ORDER);
 
         foreach ($matches as $match) {
             $table_name = $match[1];
