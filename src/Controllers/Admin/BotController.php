@@ -430,8 +430,9 @@ class BotController extends BaseController
     {
         $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
         $domain = $_SERVER['HTTP_HOST'];
-        // Construct the path to webhook.php from the web root.
-        $webhook_path = rtrim(str_replace(['/xoradmin', '/api/bots'], '', dirname($_SERVER['PHP_SELF'])), '/') . '/webhook.php';
-        return $protocol . $domain . $webhook_path . '?id=' . $bot_id;
+        // Using dirname($_SERVER['SCRIPT_NAME']) is more reliable for finding the application's base path
+        // and avoids the brittle str_replace.
+        $base_path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+        return $protocol . $domain . $base_path . '/webhook.php?id=' . $bot_id;
     }
 }
