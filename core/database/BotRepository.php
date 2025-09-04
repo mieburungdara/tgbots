@@ -92,4 +92,17 @@ class BotRepository
         $stmt->execute([$feature]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Find all bots by their assigned feature.
+     *
+     * @param string $feature
+     * @return array
+     */
+    public function findAllBotsByFeature(string $feature): array
+    {
+        $stmt = $this->pdo->prepare("SELECT username FROM bots WHERE assigned_feature = ?");
+        $stmt->execute([$feature]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
 }

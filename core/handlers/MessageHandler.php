@@ -406,8 +406,14 @@ class MessageHandler implements HandlerInterface
     {
         if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'sell') {
             $bot_repo = new BotRepository($app->pdo);
-            $correct_bot = $bot_repo->findBotByFeature('sell');
-            $suggestion = $correct_bot ? " Silakan gunakan @{$correct_bot['username']}." : "";
+            $correct_bots = $bot_repo->findAllBotsByFeature('sell');
+            $suggestion = "";
+            if (!empty($correct_bots)) {
+                $suggestion = "\n\nFitur ini tersedia di bot berikut:\n";
+                foreach ($correct_bots as $bot) {
+                    $suggestion .= "- @" . $bot['username'] . "\n";
+                }
+            }
             $app->telegram_api->sendMessage($app->chat_id, "Perintah `/sell` tidak tersedia di bot ini." . $suggestion);
             return;
         }
@@ -592,8 +598,14 @@ class MessageHandler implements HandlerInterface
     {
         if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'rate') {
             $bot_repo = new BotRepository($app->pdo);
-            $correct_bot = $bot_repo->findBotByFeature('rate');
-            $suggestion = $correct_bot ? " Silakan gunakan @{$correct_bot['username']}." : "";
+            $correct_bots = $bot_repo->findAllBotsByFeature('rate');
+            $suggestion = "";
+            if (!empty($correct_bots)) {
+                $suggestion = "\n\nFitur ini tersedia di bot berikut:\n";
+                foreach ($correct_bots as $bot) {
+                    $suggestion .= "- @" . $bot['username'] . "\n";
+                }
+            }
             $app->telegram_api->sendMessage($app->chat_id, "Perintah `/rate` tidak tersedia di bot ini." . $suggestion);
             return;
         }
@@ -655,8 +667,14 @@ class MessageHandler implements HandlerInterface
     {
         if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'tanya') {
             $bot_repo = new BotRepository($app->pdo);
-            $correct_bot = $bot_repo->findBotByFeature('tanya');
-            $suggestion = $correct_bot ? " Silakan gunakan @{$correct_bot['username']}." : "";
+            $correct_bots = $bot_repo->findAllBotsByFeature('tanya');
+            $suggestion = "";
+            if (!empty($correct_bots)) {
+                $suggestion = "\n\nFitur ini tersedia di bot berikut:\n";
+                foreach ($correct_bots as $bot) {
+                    $suggestion .= "- @" . $bot['username'] . "\n";
+                }
+            }
             $app->telegram_api->sendMessage($app->chat_id, "Perintah `/tanya` tidak tersedia di bot ini." . $suggestion);
             return;
         }

@@ -23,6 +23,7 @@
   - **Solusi**: Menulis ulang total fungsi parser (`parseSchemaFromFile`) untuk tidak lagi menggunakan regex. Parser baru sekarang membaca file skema baris per baris dan menggunakan state machine sederhana untuk mengidentifikasi blok `CREATE TABLE` dan mengekstrak kolom. Pendekatan ini jauh lebih kuat, lebih aman, dan secara definitif menyelesaikan masalah parsing. Berdasarkan masukan pengguna, logika parser disempurnakan lebih lanjut untuk menangani berbagai format SQL dengan andal, termasuk deteksi akhir pernyataan dan ekstraksi definisi kolom yang aman.
 
 ### Peningkatan
+- **Saran Bot Cerdas**: Ketika pengguna salah menggunakan perintah (misal: `/sell` di bot rating), bot sekarang akan memberikan daftar *semua* bot yang tersedia yang mendukung fitur tersebut, bukan hanya satu. Ini membantu pengguna menemukan bot yang tepat dengan lebih mudah.
 - **Bantuan Kontekstual untuk Perintah /help**: Perintah `/help` sekarang menjadi lebih cerdas. Pesan bantuan yang ditampilkan akan secara otomatis menyesuaikan dengan fitur yang ditugaskan pada bot (`sell`, `rate`, `tanya`, atau umum), sehingga pengguna hanya melihat perintah yang relevan bagi mereka.
 - **Tampilan Daftar Bot**: Menambahkan kolom baru "Fitur Khusus" pada tabel di halaman "Kelola Bot" (`/admin/bots`). Ini memungkinkan admin untuk melihat fitur yang ditugaskan ke setiap bot secara langsung tanpa perlu masuk ke halaman edit, meningkatkan efisiensi dan visibilitas.
 
