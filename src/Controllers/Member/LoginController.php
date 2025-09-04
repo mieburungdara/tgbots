@@ -112,15 +112,12 @@ class LoginController extends AppController
 
             $pdo = \get_db_connection();
 
-            // Check if token is valid, not used, and belongs to a Member
+            // Check if token is valid and not used
             $stmt = $pdo->prepare(
-                "SELECT u.id, u.first_name
-                 FROM users u
-                 LEFT JOIN user_roles ur ON u.id = ur.user_id
-                 LEFT JOIN roles r ON ur.role_id = r.id
-                 WHERE u.login_token = ?
-                   AND u.token_used = 0
-                   AND (r.name = 'Member' OR r.name IS NULL)"
+                "SELECT id, first_name
+                 FROM users
+                 WHERE login_token = ?
+                   AND token_used = 0"
             );
             $stmt->execute([$token]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
