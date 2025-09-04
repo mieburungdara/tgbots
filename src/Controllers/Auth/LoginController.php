@@ -64,9 +64,9 @@ class LoginController extends AppController
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['user_first_name'] = $user['first_name'];
 
-                    // Show the choice page instead of redirecting
-                    $this->view('auth/login_choice', ['page_title' => 'Pilih Panel']);
-                    return;
+                    // Redirect directly to the unified admin panel
+                    header('Location: /xoradmin');
+                    exit();
                 }
             }
 

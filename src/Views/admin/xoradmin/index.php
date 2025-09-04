@@ -43,18 +43,100 @@
     <div class="container">
         <h1>XOR Admin Panel</h1>
 
-        <form action="/xoradmin/logout" method="post" class="logout-form">
-            <input type="submit" value="Logout">
-        </form>
+        <div class="logout-form">
+            <a href="/logout" style="display: inline-block; padding: 8px 15px; background-color: #5bc0de; color: white; text-decoration: none; border-radius: 4px; font-size: 14px;">Logout</a>
+        </div>
 
         <div class="tabs">
+            <a href="?action=dashboard" class="tab-link <?= $data['active_tab'] === 'dashboard' ? 'active' : '' ?>">Dashboard</a>
             <a href="?action=bots" class="tab-link <?= $data['active_tab'] === 'bots' || $data['active_tab'] === 'edit_bot' ? 'active' : '' ?>">Manajemen Bot</a>
             <a href="?action=roles" class="tab-link <?= $data['active_tab'] === 'roles' ? 'active' : '' ?>">Manajemen Peran</a>
             <a href="?action=db_reset" class="tab-link <?= $data['active_tab'] === 'db_reset' ? 'active' : '' ?>">Reset Database</a>
         </div>
 
         <div class="main-content">
-            <?php if ($data['active_tab'] === 'bots'): ?>
+            <?php if ($data['active_tab'] === 'dashboard'): ?>
+            <div id="dashboard" class="tab-content active">
+                <h2>Dashboard Percakapan</h2>
+                <p>Pilih bot untuk melihat percakapan. Tautan percakapan akan merujuk ke panel admin lama untuk sementara waktu.</p>
+
+                <div class="bot-selector" style="margin-bottom: 20px;">
+                    <strong>Pilih Bot:</strong>
+                    <?php foreach ($data['bots'] as $bot): ?>
+                        <a href="?action=dashboard&bot_id=<?= $bot['id'] ?>" style="margin: 0 5px; padding: 5px 10px; border-radius: 4px; text-decoration: none; background-color: <?= ($data['selected_bot_id'] == $bot['id']) ? '#337ab7' : '#eee' ?>; color: <?= ($data['selected_bot_id'] == $bot['id']) ? 'white' : 'black' ?>;">
+                            <?= htmlspecialchars($bot['first_name']) ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+
+                <?php if ($data['selected_bot_id']): ?>
+                    <div class="search-form">
+                        <form action="?action=dashboard" method="get">
+                            <input type="hidden" name="action" value="dashboard">
+                            <input type="hidden" name="bot_id" value="<?= htmlspecialchars($data['selected_bot_id']) ?>">
+                            <input type="text" name="search_user" placeholder="Cari percakapan pengguna..." value="<?= htmlspecialchars($data['search_user']) ?>" style="width: 300px; display: inline-block;">
+                            <button type="submit" style="width: auto; display: inline-block;">Cari</button>
+                            <?php if(!empty($data['search_user'])): ?>
+                                <a href="?action=dashboard&bot_id=<?= $data['selected_bot_id'] ?>" style="width: auto; display: inline-block;">Hapus Filter</a>
+                            <?php endif; ?>
+                        </form>
+                    </div>
+
+                    <h3>Percakapan Pengguna</h3>
+                    <?php if (empty($data['conversations'])): ?>
+                        <p>Tidak ada percakapan yang cocok dengan kriteria.</p>
+                    <?php else: ?>
+                        <table>
+                            <thead><tr><th>Nama</th><th>Pesan Terakhir</th><th>Waktu</th><th>Aksi</th></tr></thead>
+                            <tbody>
+                            <?php foreach ($data['conversations'] as $conv): ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($conv['first_name'] ?? 'Tanpa Nama') ?></td>
+                                    <td><?= htmlspecialchars($conv['last_message'] ?? '...') ?></td>
+                                    <td><?= htmlspecialchars(date('Y-m-d H:i', strtotime($conv['last_message_time'] ?? 'now'))) ?></td>
+                                    <td><a href="/admin/chat?telegram_id=<?= $conv['telegram_id'] ?>&bot_id=<?= $data['selected_bot_id'] ?>">Lihat</a></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+
+                    <?php if(empty($data['search_user'])): ?>
+                    <h3 style="margin-top: 40px;">Percakapan Channel & Grup</h3>
+                     <?php if (empty($data['channel_chats'])): ?>
+                        <p>Belum ada pesan dari channel atau grup untuk bot ini.</p>
+                    <?php else: ?>
+                        <table>
+                            <thead><tr><th>Nama Grup/Channel</th><th>Pesan Terakhir</th><th>Waktu</th><th>Aksi</th></tr></thead>
+                            <tbody>
+                            <?php foreach ($data['channel_chats'] as $chat): ?>
+                                <?php
+                                    $chat_title = 'Grup/Channel Tanpa Nama';
+                                    if (!empty($chat['last_message_raw'])) {
+                                        $raw = json_decode($chat['last_message_raw'], true);
+                                        $chat_title = $raw['channel_post']['chat']['title'] ?? $raw['message']['chat']['title'] ?? $chat_title;
+                                    }
+                                ?>
+                                <tr>
+                                    <td><?= htmlspecialchars($chat_title) ?></td>
+                                    <td><?= htmlspecialchars($chat['last_message'] ?? '...') ?></td>
+                                    <td><?= htmlspecialchars(date('Y-m-d H:i', strtotime($chat['last_message_time'] ?? 'now'))) ?></td>
+                                    <td><a href="/admin/channel_chat?chat_id=<?= htmlspecialchars($chat['chat_id']) ?>&bot_id=<?= htmlspecialchars($data['selected_bot_id']) ?>">Lihat</a></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                    <?php endif; ?>
+
+                <?php else: ?>
+                    <div style="text-align: center; padding-top: 50px; color: #6c757d;">
+                        <p>Silakan pilih bot dari daftar di atas untuk melihat percakapannya.</p>
+                    </div>
+                <?php endif; ?>
+            </div>
+
+            <?php elseif ($data['active_tab'] === 'bots'): ?>
                 <div id="bots" class="tab-content active">
                     <h2>Manajemen Bot</h2>
                     <?php if (!empty($_SESSION['bot_error'])): ?><div class="error"><?= htmlspecialchars($_SESSION['bot_error']); unset($_SESSION['bot_error']); ?></div><?php endif; ?>
@@ -88,7 +170,7 @@
 
             <?php elseif ($data['active_tab'] === 'edit_bot' && isset($data['bot'])): ?>
                 <div id="edit-bot" class="tab-content active">
-                    <h2>Edit Bot: <?= htmlspecialchars($data['bot']['first_name']) ?> <a href="/xoradmin?action=bots" style="font-size: 0.7em; float: right;">&laquo; Kembali ke Daftar</a></h2>
+                    <h2>Edit Bot: <?= htmlspecialchars($data['bot']['first_name']) ?> <a href="?action=bots" style="font-size: 0.7em; float: right;">&laquo; Kembali ke Daftar</a></h2>
                     <?php if ($data['status_message']): ?><div class="alert-success"><?= htmlspecialchars($data['status_message']) ?></div><?php endif; ?>
                     <div class="bot-info">
                         <h3>Informasi Bot</h3>
@@ -145,13 +227,63 @@
                     </table>
                 </div>
 
+            <?php elseif ($data['active_tab'] === 'check_schema'): ?>
+                <div id="check_schema" class="tab-content active">
+                    <h2>Hasil Pemeriksaan Skema</h2>
+                    <?php
+                        $report = $data['report'] ?? [];
+                        $error = $data['error'] ?? null;
+                        $has_differences = !empty($report['missing_tables']) || !empty($report['extra_tables']) || !empty($report['column_differences']);
+                    ?>
+                    <?php if ($error): ?>
+                        <div class="error"><?= htmlspecialchars($error) ?></div>
+                    <?php elseif (!$has_differences): ?>
+                        <div class="message">✅ Skema database Anda sudah sinkron dengan file `updated_schema.sql`. Tidak ada aksi yang diperlukan.</div>
+                    <?php else: ?>
+                        <div class="warning">
+                            <h4>Perbedaan Ditemukan</h4>
+                            <p>Ditemukan perbedaan antara skema database Anda dan file `updated_schema.sql`. Harap tinjau dan jalankan query di bawah ini secara manual untuk melakukan sinkronisasi.</p>
+                        </div>
+
+                        <?php if (!empty($report['missing_tables'])): ?>
+                            <h3>Tabel yang Hilang</h3>
+                            <textarea readonly rows="5" style="width: 100%;"><?php
+                                foreach ($report['missing_tables'] as $table) { echo htmlspecialchars($table['query'] . ";\n\n"); }
+                            ?></textarea>
+                        <?php endif; ?>
+                        <?php if (!empty($report['extra_tables'])): ?>
+                            <h3>Tabel Tambahan</h3>
+                            <textarea readonly rows="3" style="width: 100%;"><?php
+                                foreach ($report['extra_tables'] as $table) { echo htmlspecialchars($table['query'] . "\n"); }
+                            ?></textarea>
+                        <?php endif; ?>
+                        <?php if (!empty($report['column_differences'])): ?>
+                            <h3>Perbedaan Kolom</h3>
+                            <?php foreach ($report['column_differences'] as $table_name => $diffs): ?>
+                                <h4>Tabel: <?= htmlspecialchars($table_name) ?></h4>
+                                <?php if (!empty($diffs['missing'])): ?>
+                                    <h5>Kolom Hilang (ADD):</h5>
+                                    <textarea readonly rows="3" style="width: 100%;"><?php foreach ($diffs['missing'] as $col) { echo htmlspecialchars($col['query'] . "\n"); } ?></textarea>
+                                <?php endif; ?>
+                                <?php if (!empty($diffs['extra'])): ?>
+                                    <h5>Kolom Tambahan (DROP):</h5>
+                                    <textarea readonly rows="3" style="width: 100%;"><?php foreach ($diffs['extra'] as $col) { echo htmlspecialchars($col['query'] . "\n"); } ?></textarea>
+                                <?php endif; ?>
+                                <?php if (!empty($diffs['modified'])): ?>
+                                    <h5>Kolom Berubah (MODIFY):</h5>
+                                     <textarea readonly rows="3" style="width: 100%;"><?php foreach ($diffs['modified'] as $col) { echo htmlspecialchars($col['query'] . "\n"); } ?></textarea>
+                                <?php endif; ?>
+                            <?php endforeach; ?>
+                        <?php endif; ?>
+                    <?php endif; ?>
+                </div>
             <?php elseif ($data['active_tab'] === 'db_reset'): ?>
                 <div id="db_reset" class="tab-content danger-zone active">
                     <h2>Reset Database & Skema</h2>
-                    <a href="/admin/database/check" style="display: inline-block; margin-bottom: 20px; padding: 10px 15px; background-color: #5bc0de; color: white; text-decoration: none; border-radius: 4px;">Periksa Skema Database</a>
+                    <a href="?action=check_schema" style="display: inline-block; margin-bottom: 20px; padding: 10px 15px; background-color: #5bc0de; color: white; text-decoration: none; border-radius: 4px;">Periksa Skema Database</a>
                     <div class="warning"><strong>PERINGATAN:</strong> Semua data akan hilang secara permanen.</div>
-                    <?php if (!empty($_SESSION['db_error'])): ?><div class="error"><?= htmlspecialchars($_SESSION['db_error']); unset($_SESSION['db_error']); ?></div><?php endif; ?>
-                    <?php if (!empty($_SESSION['db_message'])): ?><div class="message"><?= htmlspecialchars($_SESSION['db_message']); unset($_SESSION['db_message']); ?></div><?php endif; ?>
+                    <?php if (!empty($data['db_error'])): ?><div class="error"><?= htmlspecialchars($data['db_error']); ?></div><?php endif; ?>
+                    <?php if (!empty($data['db_message'])): ?><div class="message"><?= htmlspecialchars($data['db_message']); ?></div><?php endif; ?>
                     <form action="/xoradmin/reset_db" method="post" onsubmit="return confirm('APAKAH ANDA YAKIN INGIN MERESET DATABASE?');">
                         <input type="submit" value="HAPUS DAN RESET DATABASE SEKARANG">
                     </form>

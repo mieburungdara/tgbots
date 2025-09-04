@@ -2,6 +2,15 @@
 
 ## [5.2.0] - 2025-09-03
 
+### Diubah (Refactoring Besar)
+- **Konsolidasi Panel Admin**: Melakukan refactoring besar untuk menggabungkan semua fungsionalitas admin ke dalam satu panel terpusat, `/xoradmin`. Panel `/admin` yang lama telah dinonaktifkan.
+  - **Tujuan**: Menyederhanakan alur kerja admin, menghilangkan kode yang berlebihan, dan menciptakan satu titik manajemen tunggal yang aman.
+  - **Perubahan Utama**:
+    - Alur login admin sekarang mengarahkan langsung ke `/xoradmin`.
+    - Otentikasi `xoradmin` yang sebelumnya berbasis kata sandi telah diganti dengan sistem login token admin utama.
+    - Fungsionalitas dari `DashboardController`, `BotController`, `RoleController`, dan `DatabaseController` telah dimigrasikan ke dalam `XorAdminController`.
+    - Semua rute `/admin` yang terkait telah dinonaktifkan.
+
 ### Diperbaiki
 - **Login Member Gagal**: Memperbaiki masalah kritis yang menghalangi member untuk login.
   - **Penyebab**: Logika validasi token di `Member/LoginController.php` menggunakan perbandingan waktu berbasis PHP yang rentan terhadap perbedaan zona waktu antara server web dan database. Selain itu, tidak ada pemeriksaan peran (role) untuk memastikan hanya pengguna dengan peran 'Member' yang bisa login.
