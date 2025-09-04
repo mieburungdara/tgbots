@@ -64,8 +64,8 @@ class LoginController extends AppController
                     $_SESSION['user_id'] = $user['id'];
                     $_SESSION['user_first_name'] = $user['first_name'];
 
-                    // Redirect directly to the unified admin panel
-                    header('Location: /xoradmin');
+                    // Redirect to the main admin dashboard
+                    header('Location: /admin/dashboard');
                     exit();
                 }
             }
