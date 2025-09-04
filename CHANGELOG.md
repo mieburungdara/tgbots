@@ -1,76 +1,15 @@
 # Changelog
 
-## [5.2.0] - 2025-09-03
-
-### Diubah (Refactoring Besar)
-- **Konsolidasi Panel Admin**: Melakukan refactoring besar untuk menggabungkan semua fungsionalitas admin ke dalam satu panel terpusat, `/xoradmin`. Panel `/admin` yang lama telah dinonaktifkan.
-  - **Tujuan**: Menyederhanakan alur kerja admin, menghilangkan kode yang berlebihan, dan menciptakan satu titik manajemen tunggal yang aman.
-  - **Perubahan Utama**:
-    - Alur login admin sekarang mengarahkan langsung ke `/xoradmin`.
-    - Otentikasi `xoradmin` yang sebelumnya berbasis kata sandi telah diganti dengan sistem login token admin utama.
-    - Fungsionalitas dari `DashboardController`, `BotController`, `RoleController`, dan `DatabaseController` telah dimigrasikan ke dalam `XorAdminController`.
-    - Semua rute `/admin` yang terkait telah dinonaktifkan.
-- **Lanjutan Konsolidasi Panel Admin**: Melanjutkan refactoring dengan memigrasikan lebih banyak halaman ke panel `/xoradmin`.
-  - **Cakupan**: Fungsionalitas untuk `Manajemen Pengguna`, `Manajemen Saldo`, dan semua halaman `Logs` (Aplikasi, Media, Error Telegram, Debug Feed) sekarang telah terintegrasi penuh ke dalam antarmuka tab `xoradmin`.
-  - **Hasil**: Menghapus `UserController`, `BalanceController`, 'LogController', dan 'DebugFeedController' beserta view-nya, mengurangi lebih banyak kode yang berlebihan.
-- **Penyelesaian Migrasi Backend Admin**: Menyelesaikan migrasi semua sisa logika backend dari panel `/admin` ke `/xoradmin`.
-  - **Cakupan**: Fungsionalitas untuk `Manajemen Konten`, `Manajemen Channel` (Penyimpanan & Fitur), `Analitik`, dan `API Tester` sekarang telah dimigrasikan ke `XorAdminController`.
-  - **Hasil**: Menghapus hampir semua sisa controller di bawah `src/Controllers/Admin/` dan menonaktifkan semua rute `/admin` yang terkait, menyelesaikan konsolidasi backend. Pembaruan UI akan ditangani secara terpisah.
+## [5.2.0] - 2025-09-04
 
 ### Diperbaiki
-- **Login Member Gagal**: Memperbaiki masalah kritis yang menghalangi member untuk login.
-  - **Penyebab**: Logika validasi token di `Member/LoginController.php` menggunakan perbandingan waktu berbasis PHP yang rentan terhadap perbedaan zona waktu antara server web dan database. Selain itu, tidak ada pemeriksaan peran (role) untuk memastikan hanya pengguna dengan peran 'Member' yang bisa login.
-  - **Solusi**: Mengganti total logika validasi token dengan metode yang lebih andal dan aman, yang sudah digunakan di `Auth/LoginController`. Validasi sekarang dilakukan dalam satu kueri SQL tunggal yang efisien, yang memeriksa validitas token, masa berlaku (menggunakan `NOW() - INTERVAL 5 MINUTE` di level database), dan peran 'Member' secara bersamaan.
+- **Login Member Gagal**: Memperbaiki masalah kritis yang menghalangi member untuk login menggunakan token. Logika validasi token di `Member/LoginController.php` diganti dengan satu kueri SQL yang andal untuk memeriksa validitas token, masa berlaku, dan peran 'Member' secara bersamaan di level database.
 
-### Diubah (Refactoring)
-- **Konsistensi Nama Tabel `media_packages`**: Melakukan refactoring besar di seluruh basis kode untuk menyelaraskan penggunaan nama tabel paket konten. Semua referensi ke tabel `post_packages` yang lama telah diubah menjadi `media_packages` agar sesuai dengan skema database terbaru.
-  - **Perubahan Utama**:
-    - Mengganti nama `core/database/PostPackageRepository.php` menjadi `core/database/MediaPackageRepository.php`.
-    - Mengganti nama kelas `PostPackageRepository` menjadi `MediaPackageRepository`.
-    - Memperbarui semua query SQL di semua file repository, controller, dan handler untuk menggunakan `media_packages`.
-    - Memperbarui semua `use` statement dan instansiasi kelas di seluruh aplikasi.
-  - **Tujuan**: Menghilangkan inkonsistensi antara kode dan skema database, memperbaiki bug, dan meningkatkan keterbacaan serta pemeliharaan kode.
-
-### Diperbaiki
-- **Sinkronisasi `updated_schema.sql`**: Memperbaiki kelalaian di mana definisi tabel `feature_channels` yang baru tidak ditambahkan ke file `updated_schema.sql`, membuat file tersebut tidak sinkron. File skema sekarang sepenuhnya up-to-date.
-- **Skema Database Tidak Lengkap**: Memperbaiki file `updated_schema.sql` yang tidak lengkap dengan menambahkan kolom-kolom yang hilang.
-  - **Kolom yang Ditambahkan**:
-    - `assigned_feature` ke tabel `bots`.
-    - `post_type` dan `category` ke tabel `media_packages`.
-  - **Penyebab**: Dump skema yang diberikan oleh pengguna sebelumnya tidak mencakup kolom-kolom ini, meskipun kolom-kolom tersebut digunakan secara aktif oleh kode aplikasi.
-  - **Solusi**: Menambahkan definisi kolom yang hilang ke `updated_schema.sql` untuk memastikan file tersebut sepenuhnya sinkron dengan kode.
-- **Parser Skema Kritis Rusak (Final Fix)**: Memperbaiki bug kritis pada alat pemeriksa skema yang menyebabkan kesalahan fatal dalam parsing.
-  - **Penyebab**: Pendekatan berbasis Regex terbukti tidak andal dan menyebabkan kegagalan total dalam membaca file skema, yang mengakibatkan alat secara keliru menyarankan untuk menghapus *semua* tabel.
-  - **Solusi**: Menulis ulang total fungsi parser (`parseSchemaFromFile`) untuk tidak lagi menggunakan regex. Parser baru sekarang membaca file skema baris per baris dan menggunakan state machine sederhana untuk mengidentifikasi blok `CREATE TABLE` dan mengekstrak kolom. Pendekatan ini jauh lebih kuat, lebih aman, dan secara definitif menyelesaikan masalah parsing. Berdasarkan masukan pengguna, logika parser disempurnakan lebih lanjut untuk menangani berbagai format SQL dengan andal, termasuk deteksi akhir pernyataan dan ekstraksi definisi kolom yang aman.
-
-### Diubah (Refactoring Besar)
-- **Sistem Manajemen Channel Berbasis Fitur**: Merombak total cara channel dikelola. Sistem lama (`seller_sales_channels`) yang hanya untuk penjual telah digantikan oleh sistem `feature_channels` yang lebih kuat dan fleksibel.
-  - **Fungsionalitas Admin**: Panel admin sekarang memiliki halaman "Manajemen Channel Fitur" baru dengan CRUD penuh untuk mengkonfigurasi set channel (moderasi, publik, diskusi) untuk setiap fitur (`sell`, `rate`, `tanya`).
-  - **Fungsionalitas Member**: Perintah `/register_channel` untuk penjual telah ditulis ulang sepenuhnya untuk terintegrasi dengan sistem baru ini, memungkinkan mereka mendaftarkan channel penjualan pribadi mereka.
-  - **Deprekasi**: Tabel `seller_sales_channels`, `SellerSalesChannelRepository`, dan controller terkait telah dihapus dari sistem.
-  - **Migrasi**: Menambahkan skrip migrasi untuk membuat tabel `feature_channels` baru dan menghapus tabel `seller_sales_channels` yang lama.
-
-### Peningkatan
-- **Saran Bot Cerdas**: Ketika pengguna salah menggunakan perintah (misal: `/sell` di bot rating), bot sekarang akan memberikan daftar *semua* bot yang tersedia yang mendukung fitur tersebut, bukan hanya satu. Ini membantu pengguna menemukan bot yang tepat dengan lebih mudah.
-- **Bantuan Kontekstual untuk Perintah /help**: Perintah `/help` sekarang menjadi lebih cerdas. Pesan bantuan yang ditampilkan akan secara otomatis menyesuaikan dengan fitur yang ditugaskan pada bot (`sell`, `rate`, `tanya`, atau umum), sehingga pengguna hanya melihat perintah yang relevan bagi mereka.
-- **Tampilan Daftar Bot**: Menambahkan kolom baru "Fitur Khusus" pada tabel di halaman "Kelola Bot" (`/admin/bots`). Ini memungkinkan admin untuk melihat fitur yang ditugaskan ke setiap bot secara langsung tanpa perlu masuk ke halaman edit, meningkatkan efisiensi dan visibilitas.
-
-### Ditambahkan
-- **Skrip Migrasi Skema**: Menambahkan file migrasi berbasis PHP (`migrations/20250903141000_update_schema_to_5_2_0.php`) untuk menyelaraskan database versi lama dengan perubahan terbaru. Migrasi ini secara aman mengganti nama tabel `post_packages` menjadi `media_packages` dan menambahkan kolom `assigned_feature`, `post_type`, serta `category` jika belum ada.
-
-### Diperbaiki
-- **Bug pada Skrip Migrasi**: Memperbaiki bug fatal pada skrip migrasi yang baru ditambahkan.
-  - **Penyebab**: Logika untuk memeriksa keberadaan kolom menggunakan placeholder `?` pada `SHOW COLUMNS ... LIKE ?`, yang tidak didukung oleh SQL dan menyebabkan syntax error.
-  - **Solusi**: Mengganti logika tersebut dengan metode yang lebih andal, yaitu mengambil semua nama kolom dan menggunakan `in_array()` di PHP untuk melakukan pemeriksaan, sehingga migrasi dapat berjalan dengan aman.
-- **Error Transaksi pada Runner Migrasi**: Memperbaiki error fatal `There is no active transaction` yang terjadi setelah skrip migrasi DDL berhasil dijalankan.
-  - **Penyebab**: Runner migrasi di `DatabaseController` membungkus eksekusi file migrasi dalam sebuah transaksi (`beginTransaction`/`commit`). Namun, perintah DDL (`ALTER TABLE`) di dalam skrip menyebabkan *implicit commit*, yang mengakhiri transaksi lebih awal. Akibatnya, `commit()` di controller gagal karena tidak ada lagi transaksi yang aktif.
-  - **Solusi**: Menghapus semua logika transaksi (`beginTransaction`, `commit`, `rollBack`) dari runner migrasi, karena migrasi DDL bersifat atomik dan mengelola transaksinya sendiri secara implisit.
-- **PHP Warning di Halaman Edit Bot**: Memperbaiki `Warning: Undefined array key "assigned_feature"` di `src/Views/admin/bots/edit.php`.
-  - **Penyebab**: Kode mencoba mengakses nilai `assigned_feature` tanpa memeriksa apakah kunci tersebut ada, yang menyebabkan warning untuk bot yang belum memiliki fitur.
-  - **Solusi**: Menggunakan `empty()` dan null coalescing operator (`??`) untuk memastikan akses ke array aman dan tidak menimbulkan warning.
-- **PHP Parse Error di Database Controller**: Memperbaiki `Parse error: syntax error` di `DatabaseController.php`.
-  - **Penyebab**: Kesalahan pengetikan atau interpolasi variabel yang tidak standar pada sebuah string query, yang menyebabkan PHP interpreter gagal membaca file.
-  - **Solusi**: Menulis ulang baris kode yang bermasalah dengan sintaks interpolasi variabel yang lebih eksplisit dan aman (`" ... {$table} ... "`).
+### Diubah
+- **Implementasi Ulang Panel Admin**: Panel admin telah diimplementasikan ulang dengan arsitektur multi-halaman yang lebih standar dan aman.
+  - **URL**: Semua halaman admin sekarang diakses melalui prefix `/xoradmin/`.
+  - **Otentikasi**: Sistem login token untuk admin telah digantikan dengan halaman login berbasis kata sandi statis (`/xoradmin/login`).
+  - **Navigasi**: Panel admin sekarang menggunakan layout terpusat dengan sidebar navigasi yang terorganisir untuk semua fitur.
 
 ## [5.1.31] - 2025-09-03
 
@@ -899,9 +838,9 @@
 
 ### Diubah
 - **Alur Perintah `/sell`**: Proses penjualan konten dirombak total menjadi lebih intuitif.
-  - Penjual sekarang hanya perlu me-reply media (foto/video/album) dengan perintah `/sell`.
-  - Bot akan secara otomatis menggunakan caption dari media tersebut sebagai deskripsi produk.
-  - Alur multi-langkah yang lama (meminta media, lalu deskripsi) telah dihapus, membuat proses penjualan lebih cepat dan sederhana.
+  - **Penjual sekarang hanya perlu me-reply media (foto/video/album) dengan perintah `/sell`.
+  - **Bot akan secara otomatis menggunakan caption dari media tersebut sebagai deskripsi produk.
+  - **Alur multi-langkah yang lama (meminta media, lalu deskripsi) telah dihapus, membuat proses penjualan lebih cepat dan sederhana.
 
 ## [2.1.2] - 2025-08-11
 

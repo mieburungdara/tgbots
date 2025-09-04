@@ -111,18 +111,17 @@ class LoginController extends AppController
             }
 
             $pdo = \get_db_connection();
-            $error_message = null;
 
             // Check if token is valid, not used, not expired, and belongs to a Member
             $stmt = $pdo->prepare(
                 "SELECT u.id, u.first_name
                  FROM users u
-                 JOIN user_roles ur ON u.id = ur.user_id
-                 JOIN roles r ON ur.role_id = r.id
+                 LEFT JOIN user_roles ur ON u.id = ur.user_id
+                 LEFT JOIN roles r ON ur.role_id = r.id
                  WHERE u.login_token = ?
                    AND u.token_used = 0
                    AND u.token_created_at >= NOW() - INTERVAL 5 MINUTE
-                   AND r.name = 'Member'"
+                   AND (r.name = 'Member' OR r.name IS NULL)"
             );
             $stmt->execute([$token]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -147,14 +146,10 @@ class LoginController extends AppController
                 exit;
             } else {
                 // Failure: Token is invalid, expired, already used, or not for a member.
-                $error_message = "Token tidak valid, sudah digunakan, atau kedaluwarsa.";
+                $_SESSION['flash_login_error'] = "Token tidak valid, sudah digunakan, atau kedaluwarsa.";
+                header("Location: /member/login?token=" . urlencode($token));
+                exit();
             }
-
-            // If login failed, redirect back to the login form with the error message.
-            $_SESSION['flash_login_error'] = $error_message;
-            header("Location: /member/login?token=" . urlencode($token));
-            exit();
-
         } catch (Exception $e) {
             \app_log('Error in Member/LoginController/handleToken: ' . $e->getMessage(), 'error');
             $_SESSION['flash_login_error'] = 'Terjadi kesalahan internal saat mencoba login.';
