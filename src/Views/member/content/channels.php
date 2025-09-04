@@ -40,6 +40,9 @@
                                 </tr>
                             </tbody>
                         </table>
+                        <button class="btn btn-primary mt-3" type="button" data-toggle="collapse" data-target="#channelForm" aria-expanded="false" aria-controls="channelForm">
+                            <i class="fas fa-edit"></i> Ubah Konfigurasi
+                        </button>
                     <?php else : ?>
                         <div class="alert alert-info">
                             <h5><i class="icon fas fa-info"></i> Belum Ada Channel Terdaftar</h5>
@@ -49,11 +52,12 @@
                 </div>
             </div>
 
-            <div class="card card-primary">
-                <div class="card-header">
-                    <h3 class="card-title"><?= $data['channel'] ? 'Perbarui' : 'Daftarkan' ?> Channel Jualan</h3>
-                </div>
-                <form action="/member/channels/register" method="POST">
+            <div class="collapse <?= !$data['channel'] ? 'show' : '' ?>" id="channelForm">
+                <div class="card card-primary">
+                    <div class="card-header">
+                        <h3 class="card-title"><?= $data['channel'] ? 'Perbarui' : 'Daftarkan' ?> Channel Jualan</h3>
+                    </div>
+                    <form action="/member/channels/register" method="POST">
                     <div class="card-body">
                         <?php if (isset($_SESSION['flash_error'])) : ?>
                             <div class="alert alert-danger"><?= htmlspecialchars($_SESSION['flash_error']) ?></div>
@@ -91,7 +95,8 @@
                     <div class="card-footer">
                         <button type="submit" class="btn btn-primary">Simpan Konfigurasi</button>
                     </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
