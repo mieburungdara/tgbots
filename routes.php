@@ -36,12 +36,12 @@ $router->post('member/transactions/delete_package', 'Member/TransactionControlle
 $router->get('member/content/show', 'Member/ContentController@show');
 $router->get('member/logout', 'Auth/LoginController@logout');
 
-// User management
-$router->get('admin/users', 'Admin/UserController@index');
+// DEPRECATED: User management is now in /xoradmin
+// $router->get('admin/users', 'Admin/UserController@index');
 
-// Package management
-$router->get('admin/packages', 'Admin/MediaPackageController@index');
-$router->post('admin/packages/delete', 'Admin/MediaPackageController@hardDelete');
+// DEPRECATED: Package management is now in /xoradmin
+// $router->get('admin/packages', 'Admin/MediaPackageController@index');
+// $router->post('admin/packages/delete', 'Admin/MediaPackageController@hardDelete');
 
 // Chat management
 $router->get('admin/chat', 'Admin/ChatController@index');
@@ -49,11 +49,11 @@ $router->get('admin/channel_chat', 'Admin/ChatController@channel');
 $router->post('admin/chat/reply', 'Admin/ChatController@reply');
 $router->post('admin/chat/delete', 'Admin/ChatController@delete');
 
-// Log viewers
-$router->get('admin/logs', 'Admin/LogController@app');
-$router->post('admin/logs/clear', 'Admin/LogController@clearAppLogs');
-$router->get('admin/media_logs', 'Admin/LogController@media');
-$router->get('admin/telegram_logs', 'Admin/LogController@telegram');
+// DEPRECATED: Log viewers are now in /xoradmin
+// $router->get('admin/logs', 'Admin/LogController@app');
+// $router->post('admin/logs/clear', 'Admin/LogController@clearAppLogs');
+// $router->get('admin/media_logs', 'Admin/LogController@media');
+// $router->get('admin/telegram_logs', 'Admin/LogController@telegram');
 
 // API routes
 // DEPRECATED: Role management is now in /xoradmin
@@ -68,28 +68,28 @@ $router->post('api/member/content/toggle-protection', 'Member/ContentController@
 // $router->post('api/admin/bots/get-me', 'Admin/BotController@getMe');
 // $router->post('api/admin/bots/test-webhook', 'Admin/BotController@testWebhook');
 
-// Balance Page
-$router->get('admin/balance', 'Admin/BalanceController@index');
-$router->post('admin/balance/adjust', 'Admin/BalanceController@adjust');
-$router->get('api/admin/balance/log', 'Admin/BalanceController@getBalanceLog');
-$router->get('api/admin/balance/sales', 'Admin/BalanceController@getSalesLog');
-$router->get('api/admin/balance/purchases', 'Admin/BalanceController@getPurchasesLog');
+// DEPRECATED: Balance Page is now in /xoradmin
+// $router->get('admin/balance', 'Admin/BalanceController@index');
+// $router->post('admin/balance/adjust', 'Admin/BalanceController@adjust');
+// $router->get('api/admin/balance/log', 'Admin/BalanceController@getBalanceLog');
+// $router->get('api/admin/balance/sales', 'Admin/BalanceController@getSalesLog');
+// $router->get('api/admin/balance/purchases', 'Admin/BalanceController@getPurchasesLog');
 
-// Analytics
-$router->get('admin/analytics', 'Admin/AnalyticsController@index');
+// DEPRECATED: Analytics is now in /xoradmin
+// $router->get('admin/analytics', 'Admin/AnalyticsController@index');
 
-// Admin - Storage Channels
-$router->get('admin/storage_channels', 'Admin/StorageChannelController@index');
-$router->post('admin/storage_channels/store', 'Admin/StorageChannelController@store');
-$router->post('admin/storage_channels/update', 'Admin/StorageChannelController@update');
-$router->post('admin/storage_channels/delete', 'Admin/StorageChannelController@destroy');
-$router->post('admin/storage_channels/set_default', 'Admin/StorageChannelController@setDefault');
+// DEPRECATED: Storage Channels are now in /xoradmin
+// $router->get('admin/storage_channels', 'Admin/StorageChannelController@index');
+// $router->post('admin/storage_channels/store', 'Admin/StorageChannelController@store');
+// $router->post('admin/storage_channels/update', 'Admin/StorageChannelController@update');
+// $router->post('admin/storage_channels/delete', 'Admin/StorageChannelController@destroy');
+// $router->post('admin/storage_channels/set_default', 'Admin/StorageChannelController@setDefault');
 
-// API for Storage Channels
-$router->get('api/admin/storage_channels/bots', 'Admin/StorageChannelController@getBots');
-$router->post('api/admin/storage_channels/bots/add', 'Admin/StorageChannelController@addBot');
-$router->post('api/admin/storage_channels/bots/remove', 'Admin/StorageChannelController@removeBot');
-$router->post('api/admin/storage_channels/bots/verify', 'Admin/StorageChannelController@verifyBot');
+// DEPRECATED: API for Storage Channels is now in /xoradmin
+// $router->get('api/admin/storage_channels/bots', 'Admin/StorageChannelController@getBots');
+// $router->post('api/admin/storage_channels/bots/add', 'Admin/StorageChannelController@addBot');
+// $router->post('api/admin/storage_channels/bots/remove', 'Admin/StorageChannelController@removeBot');
+// $router->post('api/admin/storage_channels/bots/verify', 'Admin/StorageChannelController@verifyBot');
 
 // DEPRECATED: Role management is now in /xoradmin
 // $router->get('admin/roles', 'Admin/RoleController@index');
@@ -102,33 +102,42 @@ $router->post('api/admin/storage_channels/bots/verify', 'Admin/StorageChannelCon
 // $router->post('admin/database/reset', 'Admin/DatabaseController@reset');
 // $router->post('api/admin/database/migrate', 'Admin/DatabaseController@migrate');
 
-// Admin - Feature Channels
-$router->get('admin/feature-channels', 'Admin/FeatureChannelController@index');
-$router->get('admin/feature-channels/create', 'Admin/FeatureChannelController@create');
-$router->post('admin/feature-channels/store', 'Admin/FeatureChannelController@store');
-$router->get('admin/feature-channels/edit', 'Admin/FeatureChannelController@edit');
-$router->post('admin/feature-channels/update', 'Admin/FeatureChannelController@update');
-$router->post('admin/feature-channels/destroy', 'Admin/FeatureChannelController@destroy');
+// DEPRECATED: Feature Channels are now in /xoradmin
+// $router->get('admin/feature-channels', 'Admin/FeatureChannelController@index');
+// $router->get('admin/feature-channels/create', 'Admin/FeatureChannelController@create');
+// $router->post('admin/feature-channels/store', 'Admin/FeatureChannelController@store');
+// $router->get('admin/feature-channels/edit', 'Admin/FeatureChannelController@edit');
+// $router->post('admin/feature-channels/update', 'Admin/FeatureChannelController@update');
+// $router->post('admin/feature-channels/destroy', 'Admin/FeatureChannelController@destroy');
 
 // Admin - Sales Channels (DEPRECATED - now managed by Feature Channels)
 // $router->get('admin/sales_channels', 'Admin/SalesChannelController@index');
 
 // Admin - API Tester
-$router->get('admin/api_test', 'Admin/ApiTestController@index');
-$router->get('api/admin/api_test', 'Admin/ApiTestController@handle');
-$router->post('api/admin/api_test', 'Admin/ApiTestController@handle');
+$router->get('xoradmin/api_test_page', 'Admin/ApiTestController@index');
+$router->get('api/xoradmin/api_test', 'Admin/ApiTestController@handle');
+$router->post('api/xoradmin/api_test', 'Admin/ApiTestController@handle');
 
-// Admin - Debug Feed
-$router->get('admin/debug_feed', 'Admin/DebugFeedController@index');
+// DEPRECATED: Debug Feed is now in /xoradmin
+// $router->get('admin/debug_feed', 'Admin/DebugFeedController@index');
 
-// Admin - Forward Manager
-$router->post('api/admin/media/forward', 'Admin/ForwardManagerController@forward');
+// DEPRECATED: Forward Manager is now in /xoradmin
+// $router->post('api/admin/media/forward', 'Admin/ForwardManagerController@forward');
 
 // XOR Admin Panel
 $router->get('xoradmin', 'Admin/XorAdminController@index');
 $router->post('xoradmin/add_bot', 'Admin/XorAdminController@addBot');
 $router->post('xoradmin/save_bot_settings', 'Admin/XorAdminController@saveBotSettings');
 $router->post('xoradmin/reset_db', 'Admin/XorAdminController@resetDb');
+$router->post('xoradmin/hardDeletePackage', 'Admin/XorAdminController@hardDeletePackage');
+$router->post('xoradmin/storeStorageChannel', 'Admin/XorAdminController@storeStorageChannel');
+$router->post('xoradmin/updateStorageChannel', 'Admin/XorAdminController@updateStorageChannel');
+$router->post('xoradmin/destroyStorageChannel', 'Admin/XorAdminController@destroyStorageChannel');
+$router->post('xoradmin/storeFeatureChannel', 'Admin/XorAdminController@storeFeatureChannel');
+$router->post('xoradmin/updateFeatureChannel', 'Admin/XorAdminController@updateFeatureChannel');
+$router->post('xoradmin/destroyFeatureChannel', 'Admin/XorAdminController@destroyFeatureChannel');
+$router->get('xoradmin/createFeatureChannel', 'Admin/XorAdminController@createFeatureChannel');
+$router->get('xoradmin/editFeatureChannel', 'Admin/XorAdminController@editFeatureChannel');
 $router->post('api/xoradmin', 'Admin/XorAdminController@api');
 $router->post('api/xoradmin/migrate', 'Admin/XorAdminController@migrate');
 

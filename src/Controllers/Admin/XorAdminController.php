@@ -151,6 +151,31 @@ class XorAdminController extends AppController
                     $data = array_merge($data, $debug_data);
                     break;
 
+                case 'content':
+                    $content_data = $this->getContentManagementData();
+                    $data = array_merge($data, $content_data);
+                    break;
+
+                case 'storage_channels':
+                    $storage_channel_data = $this->getStorageChannelData();
+                    $data = array_merge($data, $storage_channel_data);
+                    unset($_SESSION['flash_message']);
+                    break;
+
+                case 'feature_channels':
+                    $feature_channel_data = $this->getFeatureChannelData();
+                    $data = array_merge($data, $feature_channel_data);
+                    break;
+
+                case 'analytics':
+                    $analytics_data = $this->getAnalyticsData();
+                    $data = array_merge($data, $analytics_data);
+                    break;
+
+                case 'api_test':
+                    header('Location: /xoradmin/api_test_page'); // Temporary new route
+                    exit();
+
                 case 'db_reset':
                     // No data to fetch, just shows the view
                     break;
@@ -381,7 +406,65 @@ class XorAdminController extends AppController
 
         try {
             $user_id = isset($_POST['telegram_id']) ? (int)$_POST['telegram_id'] : (isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0);
+            $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
+            $bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
 
+            if ($action === 'get_storage_channel_bots' && $channel_id) {
+                $repo = new \TGBot\Database\PrivateChannelBotRepository($this->pdo);
+                $channelRepo = new \TGBot\Database\PrivateChannelRepository($this->pdo);
+                $channel = $channelRepo->findByTelegramId($channel_id);
+                if (!$channel) throw new Exception("Channel tidak ditemukan.");
+                $bots = $repo->getBotsForChannel($channel['id']);
+                $response = ['status' => 'success', 'bots' => $bots];
+            }
+            elseif ($action === 'add_bot_to_storage_channel' && $channel_id && $bot_id) {
+                $repo = new \TGBot\Database\PrivateChannelBotRepository($this->pdo);
+                $channelRepo = new \TGBot\Database\PrivateChannelRepository($this->pdo);
+                $channel = $channelRepo->findByTelegramId($channel_id);
+                if (!$channel) throw new Exception("Channel tidak ditemukan.");
+                if ($repo->addBotToChannel($channel['id'], $bot_id)) {
+                     $response = ['status' => 'success', 'message' => 'Bot berhasil ditambahkan.'];
+                } else {
+                    throw new Exception("Gagal menambahkan bot. Mungkin sudah ada.");
+                }
+            }
+            elseif ($action === 'remove_bot_from_storage_channel' && $channel_id && $bot_id) {
+                 $repo = new \TGBot\Database\PrivateChannelBotRepository($this->pdo);
+                 $channelRepo = new \TGBot\Database\PrivateChannelRepository($this->pdo);
+                 $channel = $channelRepo->findByTelegramId($channel_id);
+                 if (!$channel) throw new Exception("Channel tidak ditemukan.");
+                 if ($repo->removeBotFromChannel($channel['id'], $bot_id)) {
+                     $response = ['status' => 'success', 'message' => 'Bot berhasil dihapus.'];
+                 } else {
+                     throw new Exception("Gagal menghapus bot.");
+                 }
+            }
+            elseif ($action === 'verify_bot_in_storage_channel' && $channel_id && $bot_id) {
+                $botRepo = new \TGBot\Database\BotRepository($this->pdo);
+                $channelRepo = new \TGBot\Database\PrivateChannelRepository($this->pdo);
+                $pcBotRepo = new \TGBot\Database\PrivateChannelBotRepository($this->pdo);
+
+                $bot = $botRepo->findBotByTelegramId($bot_id);
+                if (!$bot) throw new Exception("Bot tidak ditemukan.");
+                $channel = $channelRepo->findByTelegramId($channel_id);
+                if (!$channel) throw new Exception("Channel tidak ditemukan.");
+
+                $telegram_api = new \TGBot\TelegramAPI($bot['token']);
+                $member_info = $telegram_api->getChatMember($channel_id, $bot_id);
+
+                if (!($member_info['ok'] ?? false)) throw new Exception("Gagal memeriksa status bot: " . ($member_info['description'] ?? ''));
+
+                $status = $member_info['result']['status'];
+                if (in_array($status, ['creator', 'administrator'])) {
+                    if (!$pcBotRepo->isBotInChannel($channel['id'], $bot_id)) {
+                        $pcBotRepo->addBotToChannel($channel['id'], $bot_id);
+                    }
+                    $pcBotRepo->verifyBotInChannel($channel['id'], $bot_id);
+                    $response = ['status' => 'success', 'message' => "Verifikasi berhasil! Bot adalah '{$status}'."];
+                } else {
+                    $response = ['status' => 'error', 'message' => "Verifikasi Gagal. Bot bukan admin (status: {$status})."];
+                }
+            }
             if ($action === 'get_balance_log' && $user_id) {
                 $stmt = $this->pdo->prepare("
                     SELECT bt.amount, bt.type, bt.description, bt.created_at, bt.admin_telegram_id, a.first_name AS admin_name
@@ -958,6 +1041,234 @@ class XorAdminController extends AppController
                 'current_page' => $current_page,
                 'total_pages' => $total_pages
             ]
+        ];
+    }
+    public function hardDeletePackage()
+    {
+        $this->requireAuth();
+        $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);
+
+        if ($package_id_to_delete) {
+            try {
+                $packageRepo = new \TGBot\Database\MediaPackageRepository($this->pdo);
+                $package_info = $packageRepo->find($package_id_to_delete);
+                if ($package_info && isset($package_info['bot_id'])) {
+                    $stmt_bot = $this->pdo->prepare("SELECT token FROM bots WHERE id = ?");
+                    $stmt_bot->execute([$package_info['bot_id']]);
+                    $bot_token = $stmt_bot->fetchColumn();
+                    if ($bot_token) {
+                        $telegram_api = new \TGBot\TelegramAPI($bot_token);
+                        $files_to_delete = $packageRepo->hardDeletePackage($package_id_to_delete);
+                        foreach ($files_to_delete as $file) {
+                            if ($file['storage_channel_id'] && $file['storage_message_id']) {
+                                $telegram_api->deleteMessage($file['storage_channel_id'], $file['storage_message_id']);
+                            }
+                        }
+                    }
+                } else {
+                     $packageRepo->hardDeletePackage($package_id_to_delete);
+                }
+                $_SESSION['flash_message'] = "Paket #{$package_id_to_delete} berhasil dihapus permanen.";
+            } catch (Exception $e) {
+                $_SESSION['flash_message'] = "Error: " . $e->getMessage();
+            }
+        }
+        header("Location: /xoradmin?action=content");
+        exit;
+    }
+
+    public function storeStorageChannel()
+    {
+        $this->requireAuth();
+        try {
+            $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
+            $name = filter_input(INPUT_POST, 'name', FILTER_SANITIZE_STRING);
+            if ($channel_id && $name) {
+                $repo = new \TGBot\Database\PrivateChannelRepository($this->pdo);
+                if ($repo->addChannel($channel_id, $name)) {
+                    $_SESSION['flash_message'] = "Channel '{$name}' berhasil ditambahkan.";
+                } else {
+                    $_SESSION['flash_message'] = "Gagal menambahkan channel. Mungkin ID sudah ada.";
+                }
+            } else {
+                $_SESSION['flash_message'] = "Data channel tidak valid.";
+            }
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = "Error: " . $e->getMessage();
+        }
+        header("Location: /xoradmin?action=storage_channels");
+        exit;
+    }
+
+    public function createFeatureChannel()
+    {
+        $this->requireAuth();
+        $botRepo = new \TGBot\Database\BotRepository($this->pdo);
+        $bots = $botRepo->getAllBots();
+        // This is a view action, it needs to be handled differently in xoradmin
+        // For now, I'll just prepare the data. The view logic will be complex.
+        $this->view('admin/feature_channels/form', [
+            'page_title' => 'Tambah Konfigurasi Channel',
+            'bots' => $bots,
+            'config' => [],
+            'action' => '/xoradmin/feature-channels/store'
+        ]);
+    }
+
+    public function storeFeatureChannel()
+    {
+        $this->requireAuth();
+        try {
+            $repo = new \TGBot\Database\FeatureChannelRepository($this->pdo);
+            $repo->create($_POST);
+            $_SESSION['flash_message'] = 'Konfigurasi channel berhasil dibuat.';
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = 'Gagal membuat konfigurasi: ' . $e->getMessage();
+        }
+        header('Location: /xoradmin?action=feature_channels');
+        exit();
+    }
+
+    public function editFeatureChannel()
+    {
+        $this->requireAuth();
+        try {
+            $id = (int)($_GET['id'] ?? 0);
+            $repo = new \TGBot\Database\FeatureChannelRepository($this->pdo);
+            $config = $repo->find($id);
+            if (!$config) throw new Exception("Konfigurasi tidak ditemukan.");
+            $botRepo = new \TGBot\Database\BotRepository($this->pdo);
+            $bots = $botRepo->getAllBots();
+            // This is a view action, needs to be handled differently in xoradmin
+            $this->view('admin/feature_channels/form', [
+                'page_title' => 'Edit Konfigurasi Channel',
+                'bots' => $bots,
+                'config' => $config,
+                'action' => '/xoradmin/feature-channels/update?id=' . $id
+            ]);
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = $e->getMessage();
+            header('Location: /xoradmin?action=feature_channels');
+            exit();
+        }
+    }
+
+    public function updateFeatureChannel()
+    {
+        $this->requireAuth();
+        try {
+            $id = (int)($_GET['id'] ?? 0);
+            $repo = new \TGBot\Database\FeatureChannelRepository($this->pdo);
+            $repo->update($id, $_POST);
+            $_SESSION['flash_message'] = 'Konfigurasi channel berhasil diperbarui.';
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = 'Gagal memperbarui konfigurasi: ' . $e->getMessage();
+        }
+        header('Location: /xoradmin?action=feature_channels');
+        exit();
+    }
+
+    public function destroyFeatureChannel()
+    {
+        $this->requireAuth();
+        try {
+            $id = (int)($_POST['id'] ?? 0);
+            $repo = new \TGBot\Database\FeatureChannelRepository($this->pdo);
+            $repo->delete($id);
+            $_SESSION['flash_message'] = 'Konfigurasi channel berhasil dihapus.';
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = 'Gagal menghapus konfigurasi: ' . $e->getMessage();
+        }
+        header('Location: /xoradmin?action=feature_channels');
+        exit();
+    }
+
+    public function updateStorageChannel()
+    {
+        $this->requireAuth();
+        try {
+            $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
+            $new_name = filter_input(INPUT_POST, 'new_name', FILTER_SANITIZE_STRING);
+            $new_channel_id = filter_input(INPUT_POST, 'new_channel_id', FILTER_VALIDATE_INT);
+            if ($channel_id && $new_name && $new_channel_id) {
+                $repo = new \TGBot\Database\PrivateChannelRepository($this->pdo);
+                if ($repo->updateChannel($channel_id, $new_name, $new_channel_id)) {
+                    $_SESSION['flash_message'] = "Channel berhasil diperbarui.";
+                } else {
+                    $_SESSION['flash_message'] = "Gagal memperbarui channel.";
+                }
+            } else {
+                $_SESSION['flash_message'] = "Data untuk pembaruan channel tidak valid.";
+            }
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = "Error: " . $e->getMessage();
+        }
+        header("Location: /xoradmin?action=storage_channels");
+        exit;
+    }
+
+    public function destroyStorageChannel()
+    {
+        $this->requireAuth();
+        try {
+            $channel_id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+            if ($channel_id) {
+                $repo = new \TGBot\Database\PrivateChannelRepository($this->pdo);
+                if ($repo->deleteChannel($channel_id)) {
+                    $_SESSION['flash_message'] = "Channel berhasil dihapus.";
+                } else {
+                    $_SESSION['flash_message'] = "Gagal menghapus channel.";
+                }
+            } else {
+                $_SESSION['flash_message'] = "ID Channel tidak valid untuk penghapusan.";
+            }
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = "Error: " . $e->getMessage();
+        }
+        header("Location: /xoradmin?action=storage_channels");
+        exit;
+    }
+
+    private function getContentManagementData()
+    {
+        $packageRepo = new \TGBot\Database\MediaPackageRepository($this->pdo);
+        $packages = $packageRepo->findAll();
+        return ['packages' => $packages];
+    }
+    private function getStorageChannelData()
+    {
+        $channelRepo = new \TGBot\Database\PrivateChannelRepository($this->pdo);
+        $botRepo = new \TGBot\Database\BotRepository($this->pdo);
+        return [
+            'private_channels' => $channelRepo->getAllChannels(),
+            'all_bots' => $botRepo->getAllBots(),
+            'message' => $_SESSION['flash_message'] ?? null
+        ];
+    }
+    private function getFeatureChannelData()
+    {
+        $repo = new \TGBot\Database\FeatureChannelRepository($this->pdo);
+        return ['configs' => $repo->findAll()];
+    }
+    private function getAnalyticsData()
+    {
+        $analyticsRepo = new \TGBot\Database\AnalyticsRepository($this->pdo);
+        $summary = $analyticsRepo->getGlobalSummary();
+        $sales_by_day = $analyticsRepo->getSalesByDay(null, 30);
+        $top_packages = $analyticsRepo->getTopSellingPackages(5);
+
+        $chart_labels = [];
+        $chart_data = [];
+        foreach ($sales_by_day as $day) {
+            $chart_labels[] = date("d M", strtotime($day['sales_date']));
+            $chart_data[] = $day['daily_revenue'];
+        }
+
+        return [
+            'summary' => $summary,
+            'chart_labels' => $chart_labels,
+            'chart_data' => $chart_data,
+            'top_packages' => $top_packages
         ];
     }
 }
