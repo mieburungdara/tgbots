@@ -295,6 +295,14 @@ class ContentController extends MemberBaseController
             \redirect('/member/channels');
         }
 
+        // Rate limiting: 1 attempt per 60 seconds
+        $last_attempt = $_SESSION['last_channel_reg_attempt'] ?? 0;
+        if (time() - $last_attempt < 60) {
+            $_SESSION['flash_error'] = 'Anda terlalu sering mencoba. Silakan tunggu 1 menit sebelum mencoba lagi.';
+            \redirect('/member/channels');
+        }
+        $_SESSION['last_channel_reg_attempt'] = time();
+
         $channel_id = $_POST['channel_id'] ?? null;
         $group_id = $_POST['group_id'] ?? null;
         $managing_bot_id = filter_input(INPUT_POST, 'managing_bot_id', FILTER_VALIDATE_INT);
