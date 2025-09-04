@@ -48,6 +48,9 @@
 - **PHP Warning di Halaman Edit Bot**: Memperbaiki `Warning: Undefined array key "assigned_feature"` di `src/Views/admin/bots/edit.php`.
   - **Penyebab**: Kode mencoba mengakses nilai `assigned_feature` tanpa memeriksa apakah kunci tersebut ada, yang menyebabkan warning untuk bot yang belum memiliki fitur.
   - **Solusi**: Menggunakan `empty()` dan null coalescing operator (`??`) untuk memastikan akses ke array aman dan tidak menimbulkan warning.
+- **PHP Parse Error di Database Controller**: Memperbaiki `Parse error: syntax error` di `DatabaseController.php`.
+  - **Penyebab**: Kesalahan pengetikan atau interpolasi variabel yang tidak standar pada sebuah string query, yang menyebabkan PHP interpreter gagal membaca file.
+  - **Solusi**: Menulis ulang baris kode yang bermasalah dengan sintaks interpolasi variabel yang lebih eksplisit dan aman (`" ... {$table} ... "`).
 
 ## [5.1.31] - 2025-09-03
 
