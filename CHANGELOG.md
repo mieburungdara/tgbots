@@ -2,6 +2,11 @@
 
 ## [5.2.0] - 2025-09-03
 
+### Diperbaiki
+- **Login Member Gagal**: Memperbaiki masalah kritis yang menghalangi member untuk login.
+  - **Penyebab**: Logika validasi token di `Member/LoginController.php` menggunakan perbandingan waktu berbasis PHP yang rentan terhadap perbedaan zona waktu antara server web dan database. Selain itu, tidak ada pemeriksaan peran (role) untuk memastikan hanya pengguna dengan peran 'Member' yang bisa login.
+  - **Solusi**: Mengganti total logika validasi token dengan metode yang lebih andal dan aman, yang sudah digunakan di `Auth/LoginController`. Validasi sekarang dilakukan dalam satu kueri SQL tunggal yang efisien, yang memeriksa validitas token, masa berlaku (menggunakan `NOW() - INTERVAL 5 MINUTE` di level database), dan peran 'Member' secara bersamaan.
+
 ### Diubah (Refactoring)
 - **Konsistensi Nama Tabel `media_packages`**: Melakukan refactoring besar di seluruh basis kode untuk menyelaraskan penggunaan nama tabel paket konten. Semua referensi ke tabel `post_packages` yang lama telah diubah menjadi `media_packages` agar sesuai dengan skema database terbaru.
   - **Perubahan Utama**:

@@ -113,32 +113,51 @@ class LoginController extends AppController
             $pdo = \get_db_connection();
             $error_message = null;
 
-            $stmt = $pdo->prepare("SELECT * FROM users WHERE login_token = ? AND token_used = 0");
+            // Check if token is valid, not used, not expired, and belongs to a Member
+            $stmt = $pdo->prepare(
+                "SELECT u.id, u.first_name
+                 FROM users u
+                 JOIN user_roles ur ON u.id = ur.user_id
+                 JOIN roles r ON ur.role_id = r.id
+                 WHERE u.login_token = ?
+                   AND u.token_used = 0
+                   AND u.token_created_at >= NOW() - INTERVAL 5 MINUTE
+                   AND r.name = 'Member'"
+            );
             $stmt->execute([$token]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($user && isset($user['token_created_at']) && strtotime($user['token_created_at']) < time() - (5 * 60)) {
-                $error_message = "Token yang Anda gunakan sudah kedaluwarsa. Silakan minta yang baru dari bot.";
-            } elseif ($user) {
-                // Success!
+            if ($user) {
+                // Success! Token is valid. Create the session.
                 $user_id = $user['id'];
+
+                // Mark token as used
                 $update_stmt = $pdo->prepare("UPDATE users SET token_used = 1, login_token = NULL WHERE id = ?");
                 $update_stmt->execute([$user_id]);
+
+                // Regenerate session ID for security
+                session_regenerate_id(true);
+
+                // Set session variables
                 $_SESSION['member_user_id'] = $user_id;
+                $_SESSION['user_first_name'] = $user['first_name'];
+
+                // Redirect to the member dashboard
                 header("Location: /member/dashboard");
                 exit;
             } else {
-                // Failure
+                // Failure: Token is invalid, expired, already used, or not for a member.
                 $error_message = "Token tidak valid, sudah digunakan, atau kedaluwarsa.";
             }
 
-            // If login failed, redirect back to the login form with an error.
+            // If login failed, redirect back to the login form with the error message.
             $_SESSION['flash_login_error'] = $error_message;
             header("Location: /member/login?token=" . urlencode($token));
             exit();
+
         } catch (Exception $e) {
             \app_log('Error in Member/LoginController/handleToken: ' . $e->getMessage(), 'error');
-            $_SESSION['flash_login_error'] = 'An internal error occurred.';
+            $_SESSION['flash_login_error'] = 'Terjadi kesalahan internal saat mencoba login.';
             header("Location: /member/login");
             exit();
         }
