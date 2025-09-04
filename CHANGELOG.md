@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.2.3] - 2025-09-04
+
+### Fitur
+- **Pendaftaran Channel via Web**: Menambahkan formulir dan logika backend pada halaman `/member/channels` agar member dapat mendaftarkan atau memperbarui channel jualan mereka langsung dari panel member di website.
+
 ## [5.2.2] - 2025-09-04
 
 ### Fitur
