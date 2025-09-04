@@ -161,25 +161,18 @@ class UserRepository
      */
     public function setPublicId(int $telegram_user_id): string
     {
-        $max_retries = 5;
-        for ($i = 0; $i < $max_retries; $i++) {
-            $public_id = generate_seller_id();
+        // Panggil helper yang sudah diupdate untuk mendapatkan ID unik
+        $public_id = generate_seller_id($this->pdo);
 
-            // Cek apakah ID sudah ada
-            $stmt_check = $this->pdo->prepare("SELECT 1 FROM users WHERE public_seller_id = ?");
-            $stmt_check->execute([$public_id]);
-            if ($stmt_check->fetch()) {
-                continue; // Coba lagi jika sudah ada
-            }
+        // Simpan ID yang unik ke database
+        $stmt_update = $this->pdo->prepare("UPDATE users SET public_seller_id = ? WHERE id = ?");
 
-            // Simpan ID yang unik
-            $stmt_update = $this->pdo->prepare("UPDATE users SET public_seller_id = ? WHERE id = ?");
-            if ($stmt_update->execute([$public_id, $telegram_user_id])) {
-                return $public_id;
-            }
+        if ($stmt_update->execute([$public_id, $telegram_user_id])) {
+            return $public_id;
         }
 
-        throw new Exception("Gagal menghasilkan ID penjual yang unik.");
+        // Jika eksekusi gagal, lemparkan exception
+        throw new Exception("Gagal menyimpan ID penjual yang unik ke database.");
     }
 
     /**

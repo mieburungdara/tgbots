@@ -313,8 +313,17 @@ class ContentController extends MemberBaseController
 
             $user = $userRepo->findUserByTelegramId($user_id);
             if (empty($user['public_seller_id'])) {
-                $_SESSION['flash_error'] = "Pendaftaran channel hanya untuk penjual terdaftar. Silakan daftar sebagai penjual melalui bot.";
-                \redirect('/member/channels');
+                // User is not a seller yet, let's register them automatically.
+                $new_seller_id = $userRepo->setPublicId($user_id);
+                $_SESSION['flash_message'] = "Selamat! Akun Anda telah terdaftar sebagai penjual dengan ID: " . $new_seller_id;
+
+                // Reload user data to get the new seller ID
+                $user = $userRepo->findUserByTelegramId($user_id);
+                if (empty($user['public_seller_id'])) {
+                    // This should not happen, but as a safeguard:
+                    $_SESSION['flash_error'] = "Gagal membuat ID penjual secara otomatis. Silakan coba lagi.";
+                    \redirect('/member/channels');
+                }
             }
 
             // Find the selected bot and verify it's a 'sell' bot
