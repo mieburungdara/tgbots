@@ -6,7 +6,8 @@
 - **Login Token Tanpa Batas Waktu**: Menghapus validasi masa berlaku token (5 menit) pada alur login member. Token sekarang tidak akan kedaluwarsa, memperbaiki masalah login yang gagal karena token dianggap hangus.
 
 ### Diubah
-- **Login Token Lebih Fleksibel**: Menghapus pengecekan peran (role) dari alur login. Sekarang, semua pengguna yang memiliki token valid dapat login, tidak terbatas hanya pada 'Member'.
+- **Login Token Lebih Fleksibel**: Menghapus pengecekan peran (role) dari alur validasi token di halaman web. Sekarang, semua pengguna yang memiliki token valid dapat login, tidak terbatas hanya pada 'Member'.
+- **Alur Perintah /login Disatukan**: Menyatukan respon perintah `/login` di sisi bot. Semua pengguna, terlepas dari perannya, sekarang menerima satu jenis pesan dan tautan login yang konsisten.
 
 ## [5.2.0] - 2025-09-04
 

@@ -608,17 +608,10 @@ class MessageHandler implements HandlerInterface
         $app->pdo->prepare("UPDATE users SET login_token = ?, token_created_at = NOW(), token_used = 0 WHERE id = ?")
              ->execute([$login_token, $app->user['id']]);
 
-        if ($app->user['role'] === 'Admin') {
-            $login_link = rtrim(BASE_URL, '/') . '/login?token=' . $login_token;
-            $response = "Anda adalah seorang Admin. Silakan pilih panel yang ingin Anda masuki melalui tautan di bawah ini.";
-            $keyboard = ['inline_keyboard' => [[['text' => 'Pilih Panel Login', 'url' => $login_link]]]];
-            $app->telegram_api->sendMessage($app->chat_id, $response, null, json_encode($keyboard));
-        } else {
-            $login_link = rtrim(BASE_URL, '/') . '/member/token-login?token=' . $login_token;
-            $response = "Klik tombol di bawah ini untuk masuk ke Panel Member Anda. Tombol ini hanya dapat digunakan satu kali.";
-            $keyboard = ['inline_keyboard' => [[['text' => 'Login ke Panel Member', 'url' => $login_link]]]];
-            $app->telegram_api->sendMessage($app->chat_id, $response, null, json_encode($keyboard));
-        }
+        $login_link = rtrim(BASE_URL, '/') . '/member/token-login?token=' . $login_token;
+        $response = "Klik tombol di bawah ini untuk masuk ke Panel Anda. Tombol ini hanya dapat digunakan satu kali.";
+        $keyboard = ['inline_keyboard' => [[['text' => 'Login ke Panel', 'url' => $login_link]]]];
+        $app->telegram_api->sendMessage($app->chat_id, $response, null, json_encode($keyboard));
     }
 
     /**
