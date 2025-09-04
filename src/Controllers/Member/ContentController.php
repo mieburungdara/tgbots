@@ -263,14 +263,17 @@ class ContentController extends MemberBaseController
     {
         try {
             $pdo = \get_db_connection();
-            $channelRepo = new \TGBot\Database\FeatureChannelRepository($pdo);
+            $channelRepo = new FeatureChannelRepository($pdo);
+            $botRepo = new BotRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
             $sell_channel = $channelRepo->findByOwnerAndFeature($user_id, 'sell');
+            $sell_bots = $botRepo->findAllBotsByFeature('sell');
 
             $this->view('member/content/channels', [
                 'page_title' => 'Channel Saya',
-                'channel' => $sell_channel
+                'channel' => $sell_channel,
+                'sell_bots' => $sell_bots
             ], 'member_layout');
         } catch (Exception $e) {
             \app_log('Error in ContentController/channels: ' . $e->getMessage(), 'error');
@@ -294,10 +297,11 @@ class ContentController extends MemberBaseController
 
         $channel_id = $_POST['channel_id'] ?? null;
         $group_id = $_POST['group_id'] ?? null;
+        $managing_bot_id = filter_input(INPUT_POST, 'managing_bot_id', FILTER_VALIDATE_INT);
         $user_id = $_SESSION['member_user_id'];
 
-        if (!is_numeric($channel_id) || !is_numeric($group_id)) {
-            $_SESSION['flash_error'] = "ID Channel dan Grup harus berupa angka.";
+        if (!is_numeric($channel_id) || !is_numeric($group_id) || !$managing_bot_id) {
+            $_SESSION['flash_error'] = "Semua field harus diisi dengan benar.";
             redirect('/member/channels');
         }
 
@@ -313,21 +317,13 @@ class ContentController extends MemberBaseController
                  redirect('/member/channels');
             }
 
-            $sell_bots = $botRepo->findAllBotsByFeature('sell');
-            if (empty($sell_bots)) {
-                $_SESSION['flash_error'] = "Pendaftaran gagal: Saat ini tidak ada bot penjualan yang aktif di sistem.";
+            // Find the selected bot and verify it's a 'sell' bot
+            $managing_bot = $botRepo->findBotByTelegramId($managing_bot_id);
+            if (!$managing_bot || $managing_bot['assigned_feature'] !== 'sell') {
+                $_SESSION['flash_error'] = "Bot yang dipilih tidak valid atau bukan bot penjual.";
                 redirect('/member/channels');
             }
 
-            $managing_bot_username = $sell_bots[0]['username'];
-            $managing_bot = $botRepo->findByUsername($managing_bot_username);
-
-            if (!$managing_bot) {
-                $_SESSION['flash_error'] = "Pendaftaran gagal: Terjadi kesalahan saat mengambil data bot pengelola.";
-                redirect('/member/channels');
-            }
-
-            $managing_bot_id = $managing_bot['id'];
             $managing_bot_api = new \TGBot\TelegramAPI($managing_bot['token']);
 
             $bot_member_channel = $managing_bot_api->getChatMember($channel_id, $managing_bot_id);

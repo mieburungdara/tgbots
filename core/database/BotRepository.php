@@ -54,7 +54,7 @@ class BotRepository
     public function findBotByTelegramId(int $bot_id)
     {
         // Bot sekarang dicari berdasarkan ID Telegram-nya, yang merupakan Primary Key.
-        $stmt = $this->pdo->prepare("SELECT id, token, assigned_feature FROM bots WHERE id = ?");
+        $stmt = $this->pdo->prepare("SELECT id, token, username, assigned_feature FROM bots WHERE id = ?");
         $stmt->execute([$bot_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     }
@@ -101,7 +101,7 @@ class BotRepository
      */
     public function findAllBotsByFeature(string $feature): array
     {
-        $stmt = $this->pdo->prepare("SELECT username FROM bots WHERE assigned_feature = ?");
+        $stmt = $this->pdo->prepare("SELECT id, username FROM bots WHERE assigned_feature = ? ORDER BY username ASC");
         $stmt->execute([$feature]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

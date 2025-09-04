@@ -26,25 +26,24 @@
                                     <th>Bot Pengelola</th>
                                     <td>
                                         <?php
-                                        // Simple logic to get bot username, assuming you might pass it in the future
-                                        echo "Bot ID: " . htmlspecialchars($data['channel']['managing_bot_id']);
+                                        $managing_bot_username = 'Tidak diketahui';
+                                        foreach ($data['sell_bots'] as $bot) {
+                                            if ($bot['id'] == $data['channel']['managing_bot_id']) {
+                                                $managing_bot_username = '@' . $bot['username'];
+                                                break;
+                                            }
+                                        }
+                                        echo htmlspecialchars($managing_bot_username);
                                         ?>
+                                        (ID: <code><?= htmlspecialchars($data['channel']['managing_bot_id']) ?></code>)
                                     </td>
                                 </tr>
                             </tbody>
                         </table>
-                        <div class="mt-3">
-                            <p class="text-muted">Untuk mengubah atau mendaftarkan channel baru, gunakan perintah di bot Telegram:</p>
-                            <p><code>/register_channel &lt;ID_CHANNEL&gt; &lt;ID_GRUP&gt;</code></p>
-                        </div>
                     <?php else : ?>
                         <div class="alert alert-info">
                             <h5><i class="icon fas fa-info"></i> Belum Ada Channel Terdaftar</h5>
-                            Anda belum mendaftarkan channel jualan. Untuk mendaftarkan, silakan kirim perintah berikut ke bot Telegram Anda:
-                            <hr>
-                            <code>/register_channel &lt;ID_CHANNEL&gt; &lt;ID_GRUP&gt;</code>
-                            <br><br>
-                            <small><strong>Contoh:</strong> <code>/register_channel -100123456789 -100987654321</code></small>
+                            <p>Anda belum mendaftarkan channel jualan. Silakan gunakan formulir di bawah untuk mendaftar.</p>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -68,15 +67,25 @@
                         <div class="form-group">
                             <label for="channel_id">ID Channel Publik</label>
                             <input type="text" class="form-control" id="channel_id" name="channel_id" value="<?= htmlspecialchars($data['channel']['public_channel_id'] ?? '') ?>" placeholder="-1001234567890" required>
-                            <small class="form-text text-muted">Pastikan bot pengelola telah ditambahkan sebagai admin di channel ini.</small>
                         </div>
                         <div class="form-group">
                             <label for="group_id">ID Grup Diskusi</label>
                             <input type="text" class="form-control" id="group_id" name="group_id" value="<?= htmlspecialchars($data['channel']['discussion_group_id'] ?? '') ?>" placeholder="-1009876543210" required>
-                            <small class="form-text text-muted">Grup ini harus terhubung dengan channel publik Anda. Bot pengelola juga harus menjadi admin di grup ini.</small>
                         </div>
-                        <p class="text-muted">
-                            <i class="fas fa-info-circle"></i> Untuk mendapatkan ID, Anda dapat menggunakan bot seperti <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a>. Forward pesan dari channel/grup Anda ke bot tersebut untuk melihat ID-nya.
+                        <div class="form-group">
+                            <label for="managing_bot_id">Pilih Bot Pengelola</label>
+                            <select class="form-control" id="managing_bot_id" name="managing_bot_id" required>
+                                <option value="">-- Pilih Bot --</option>
+                                <?php foreach ($data['sell_bots'] as $bot) : ?>
+                                    <option value="<?= $bot['id'] ?>" <?= isset($data['channel']['managing_bot_id']) && $data['channel']['managing_bot_id'] == $bot['id'] ? 'selected' : '' ?>>
+                                        @<?= htmlspecialchars($bot['username']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                            <small class="form-text text-muted">Pastikan bot yang Anda pilih telah dijadikan admin di Channel dan Grup Diskusi.</small>
+                        </div>
+                        <p class="text-muted mt-3">
+                            <i class="fas fa-info-circle"></i> Untuk mendapatkan ID Channel/Grup, Anda dapat menggunakan bot seperti <a href="https://t.me/userinfobot" target="_blank">@userinfobot</a>. Forward pesan dari channel/grup Anda ke bot tersebut untuk melihat ID-nya.
                         </p>
                     </div>
                     <div class="card-footer">
