@@ -118,6 +118,16 @@ class XorAdminController extends AppController
                     }
                     break;
 
+                case 'users':
+                    $users_data = $this->getUsersManagementData();
+                    $data = array_merge($data, $users_data);
+                    break;
+
+                case 'balance':
+                    $balance_data = $this->getBalanceManagementData();
+                    $data = array_merge($data, $balance_data);
+                    break;
+
                 case 'roles':
                     $sql = "
                         SELECT u.id, u.first_name, u.last_name, u.username, GROUP_CONCAT(r.name SEPARATOR ', ') as roles
@@ -128,6 +138,17 @@ class XorAdminController extends AppController
                         ORDER BY u.first_name, u.last_name
                     ";
                     $data['users_with_roles'] = $this->pdo->query($sql)->fetchAll();
+                    break;
+
+                case 'logs':
+                    $log_type = $_GET['type'] ?? 'app';
+                    $log_data = $this->getLogsData($log_type);
+                    $data = array_merge($data, $log_data);
+                    break;
+
+                case 'debug_feed':
+                    $debug_data = $this->getDebugFeedData();
+                    $data = array_merge($data, $debug_data);
                     break;
 
                 case 'db_reset':
@@ -238,6 +259,51 @@ class XorAdminController extends AppController
         exit;
     }
 
+    public function adjustBalance()
+    {
+        $this->requireAuth();
+
+        $user_id = (int)($_POST['user_id'] ?? 0);
+        $amount = filter_var($_POST['amount'] ?? 0, FILTER_VALIDATE_FLOAT);
+        $description = trim($_POST['description'] ?? '');
+        $action = $_POST['action'];
+
+        $admin_id = $_SESSION['user_id'] ?? null;
+        if (!$admin_id) {
+            $_SESSION['flash_message'] = "Sesi admin tidak valid atau telah berakhir. Silakan login kembali.";
+            $_SESSION['flash_message_type'] = 'danger';
+            header("Location: /xoradmin?action=balance");
+            exit;
+        }
+
+        if ($user_id && $amount > 0) {
+            $transaction_amount = ($action === 'add_balance') ? $amount : -$amount;
+            $this->pdo->beginTransaction();
+            try {
+                $stmt_update_user = $this->pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
+                $stmt_update_user->execute([$transaction_amount, $user_id]);
+
+                $stmt_insert_trans = $this->pdo->prepare("INSERT INTO balance_transactions (user_id, amount, type, description, admin_telegram_id) VALUES (?, ?, ?, ?, ?)");
+                $stmt_insert_trans->execute([$user_id, $transaction_amount, 'admin_adjustment', $description, $admin_id]);
+
+                $this->pdo->commit();
+                $_SESSION['flash_message'] = "Saldo pengguna berhasil diperbarui.";
+                $_SESSION['flash_message_type'] = 'success';
+            } catch (Exception $e) {
+                $this->pdo->rollBack();
+                $_SESSION['flash_message'] = "Terjadi kesalahan: " . $e->getMessage();
+                $_SESSION['flash_message_type'] = 'danger';
+            }
+        } else {
+            $_SESSION['flash_message'] = "Input tidak valid.";
+            $_SESSION['flash_message_type'] = 'danger';
+        }
+
+        $redirect_url = "/xoradmin?action=balance&" . http_build_query($_GET);
+        header("Location: " . $redirect_url);
+        exit;
+    }
+
     public function migrate()
     {
         $this->requireAuth(true); // Use API auth check
@@ -314,8 +380,37 @@ class XorAdminController extends AppController
         $action = $_POST['action'] ?? null;
 
         try {
-            if ($action === 'make_admin' && isset($_POST['user_id'])) {
-                $user_id = (int)$_POST['user_id'];
+            $user_id = isset($_POST['telegram_id']) ? (int)$_POST['telegram_id'] : (isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0);
+
+            if ($action === 'get_balance_log' && $user_id) {
+                $stmt = $this->pdo->prepare("
+                    SELECT bt.amount, bt.type, bt.description, bt.created_at, bt.admin_telegram_id, a.first_name AS admin_name
+                    FROM balance_transactions bt
+                    LEFT JOIN users a ON bt.admin_telegram_id = a.id
+                    WHERE bt.user_id = ? ORDER BY bt.created_at DESC
+                ");
+                $stmt->execute([$user_id]);
+                $response = ['status' => 'success', 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+            } elseif ($action === 'get_sales_log' && $user_id) {
+                $stmt = $this->pdo->prepare(
+                    "SELECT s.price, s.purchased_at, mp.description as package_title, u_buyer.first_name as buyer_name
+                     FROM sales s
+                     JOIN media_packages mp ON s.package_id = mp.id
+                     JOIN users u_buyer ON s.buyer_user_id = u_buyer.id
+                     WHERE s.seller_user_id = ? ORDER BY s.purchased_at DESC"
+                );
+                $stmt->execute([$user_id]);
+                $response = ['status' => 'success', 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+            } elseif ($action === 'get_purchases_log' && $user_id) {
+                $stmt = $this->pdo->prepare(
+                    "SELECT s.price, s.purchased_at, mp.description as package_title
+                     FROM sales s
+                     JOIN media_packages mp ON s.package_id = mp.id
+                     WHERE s.buyer_user_id = ? ORDER BY s.purchased_at DESC"
+                );
+                $stmt->execute([$user_id]);
+                $response = ['status' => 'success', 'data' => $stmt->fetchAll(PDO::FETCH_ASSOC)];
+            } elseif ($action === 'make_admin' && $user_id) {
                 $stmt_role = $this->pdo->prepare("SELECT id FROM roles WHERE name = 'Admin' LIMIT 1");
                 $stmt_role->execute();
                 $admin_role_id = $stmt_role->fetchColumn();
@@ -326,6 +421,46 @@ class XorAdminController extends AppController
                 $stmt_grant = $this->pdo->prepare("INSERT IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)");
                 $stmt_grant->execute([$user_id, $admin_role_id]);
                 $response = ['status' => 'success', 'message' => 'Pengguna berhasil dijadikan admin.'];
+            } elseif ($action === 'forward_media' && isset($_POST['group_id']) && isset($_POST['bot_id'])) {
+                $group_id = $_POST['group_id'];
+                $bot_id = filter_input(INPUT_POST, 'bot_id', FILTER_VALIDATE_INT);
+
+                $bot_stmt = $this->pdo->prepare("SELECT token FROM bots WHERE id = ?");
+                $bot_stmt->execute([$bot_id]);
+                $bot_token = $bot_stmt->fetchColumn();
+                if (!$bot_token) throw new Exception("Bot tidak ditemukan.");
+
+                $admins_stmt = $this->pdo->query("SELECT u.id FROM users u JOIN user_roles ur ON u.id = ur.user_id JOIN roles r ON ur.role_id = r.id WHERE r.name = 'Admin'");
+                $admin_ids = $admins_stmt->fetchAll(PDO::FETCH_COLUMN);
+                if (empty($admin_ids)) throw new Exception("Tidak ada admin yang ditemukan.");
+
+                $is_single = strpos($group_id, 'single_') === 0;
+                $db_id = $is_single ? (int)substr($group_id, 7) : $group_id;
+
+                $base_sql = "SELECT mf.chat_id, mf.message_id, mf.caption, mf.created_at, u.first_name, u.username, u.id as telegram_id FROM media_files mf LEFT JOIN users u ON mf.user_id = u.id";
+                $sql = $is_single ? $base_sql . " WHERE mf.id = ?" : $base_sql . " WHERE mf.media_group_id = ? ORDER BY mf.id ASC";
+
+                $media_stmt = $this->pdo->prepare($sql);
+                $media_stmt->execute([$db_id]);
+                $media_files = $media_stmt->fetchAll(PDO::FETCH_ASSOC);
+
+                if (empty($media_files)) throw new Exception("File media tidak ditemukan.");
+
+                $sender_info = $media_files[0];
+                $info_caption = "--- ℹ️ Info Media ---\nPengirim: {$sender_info['first_name']}\nWaktu Kirim: {$sender_info['created_at']}";
+
+                $api = new \TGBot\TelegramAPI($bot_token);
+                $success_count = 0;
+                $from_chat_id = $media_files[0]['chat_id'];
+
+                foreach ($admin_ids as $admin_chat_id) {
+                    $message_ids = array_column($media_files, 'message_id');
+                    $result = $api->copyMessages($admin_chat_id, $from_chat_id, json_encode($message_ids));
+                    if ($result && ($result['ok'] ?? false)) $success_count++;
+                }
+
+                $response = ['status' => 'success', 'message' => "Media berhasil diteruskan ke {$success_count} dari " . count($admin_ids) . " admin."];
+
             } elseif (isset($_POST['bot_id']) && in_array($action, ['get-me', 'set-webhook', 'check-webhook', 'delete-webhook'])) {
                 $bot_id = (int)$_POST['bot_id'];
                 $stmt_token = $this->pdo->prepare("SELECT token FROM bots WHERE id = ?");
@@ -604,5 +739,225 @@ class XorAdminController extends AppController
         }
 
         return $report;
+    }
+    private function getUsersManagementData()
+    {
+        // --- Logika Pencarian ---
+        $search_term = $_GET['search'] ?? '';
+        $where_clause = '';
+        $params = [];
+        if (!empty($search_term)) {
+            $where_clause = "WHERE u.id = :search_id OR u.first_name LIKE :like_fn OR u.last_name LIKE :like_ln OR u.username LIKE :like_un";
+            $params = [
+                ':search_id' => $search_term,
+                ':like_fn' => "%$search_term%",
+                ':like_ln' => "%$search_term%",
+                ':like_un' => "%$search_term%"
+            ];
+        }
+
+        // --- Logika Pengurutan ---
+        $sort_columns = ['id', 'first_name', 'username', 'status', 'roles'];
+        $sort_by = in_array($_GET['sort'] ?? '', $sort_columns) ? $_GET['sort'] : 'id';
+        $order = strtolower($_GET['order'] ?? '') === 'asc' ? 'ASC' : 'DESC';
+        $order_by_column = $sort_by === 'roles' ? 'roles' : "u.{$sort_by}";
+        $order_by_clause = "ORDER BY {$order_by_column} {$order}";
+
+        // --- Logika Pagination ---
+        $page = (int)($_GET['page'] ?? 1);
+        $limit = 50;
+        $offset = ($page - 1) * $limit;
+
+        // Query untuk menghitung total pengguna
+        $count_sql = "SELECT COUNT(*) FROM users u {$where_clause}";
+        $count_stmt = $this->pdo->prepare($count_sql);
+        $count_stmt->execute($params);
+        $total_users = $count_stmt->fetchColumn();
+        $total_pages = ceil($total_users / $limit);
+
+        // --- Ambil data pengguna ---
+        $sql = "
+            SELECT u.id, u.first_name, u.last_name, u.username, u.status, GROUP_CONCAT(r.name SEPARATOR ', ') as roles
+            FROM users u
+            LEFT JOIN user_roles ur ON u.id = ur.user_id
+            LEFT JOIN roles r ON ur.role_id = r.id
+            {$where_clause}
+            GROUP BY u.id
+            {$order_by_clause}
+            LIMIT :limit OFFSET :offset
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        $stmt->execute();
+        $users = $stmt->fetchAll();
+
+        return [
+            'users' => $users,
+            'total_users' => $total_users,
+            'total_pages' => $total_pages,
+            'page' => $page,
+            'search_term' => $search_term,
+            'sort_by' => $sort_by,
+            'order' => $order,
+        ];
+    }
+    private function getBalanceManagementData()
+    {
+        $search_term = $_GET['search'] ?? '';
+        $page = (int)($_GET['page'] ?? 1);
+        $sort_by = $_GET['sort'] ?? 'id';
+        $order = strtolower($_GET['order'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
+        $limit = 50;
+
+        $allowed_sort_columns = ['id', 'first_name', 'username', 'balance', 'total_income', 'total_spending'];
+        if (!in_array($sort_by, $allowed_sort_columns)) {
+            $sort_by = 'id';
+        }
+
+        $where_clause = '';
+        $params = [];
+        if (!empty($search_term)) {
+            $where_clause = "WHERE u.first_name LIKE :search1 OR u.last_name LIKE :search2 OR u.username LIKE :search3";
+            $params = [':search1' => "%$search_term%", ':search2' => "%$search_term%", ':search3' => "%$search_term%"];
+        }
+
+        $count_sql = "SELECT COUNT(*) FROM users u {$where_clause}";
+        $count_stmt = $this->pdo->prepare($count_sql);
+        $count_stmt->execute($params);
+        $total_users = $count_stmt->fetchColumn();
+        $total_pages = ceil($total_users / $limit);
+        $offset = ($page - 1) * $limit;
+
+        $sql = "
+            SELECT
+                u.id as telegram_id, u.first_name, u.last_name, u.username, u.balance,
+                (SELECT SUM(price) FROM sales WHERE seller_user_id = u.id) as total_income,
+                (SELECT SUM(price) FROM sales WHERE buyer_user_id = u.id) as total_spending
+            FROM users u
+            {$where_clause}
+            ORDER BY {$sort_by} {$order}
+            LIMIT :limit OFFSET :offset
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue($key, $value);
+        }
+        $stmt->execute();
+        $users_data = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        return [
+            'users_data' => $users_data,
+            'total_pages' => $total_pages,
+            'page' => $page,
+            'sort_by' => $sort_by,
+            'order' => $order,
+            'search_term' => $search_term,
+        ];
+    }
+    public function clearAppLogs()
+    {
+        $this->requireAuth();
+        try {
+            $this->pdo->query("TRUNCATE TABLE app_logs");
+            \app_log("Tabel app_logs dibersihkan oleh admin.", 'system');
+            $_SESSION['flash_message'] = "Semua log aplikasi berhasil dibersihkan.";
+        } catch (PDOException $e) {
+            $_SESSION['flash_message'] = "Gagal membersihkan log: " . $e->getMessage();
+        }
+        header("Location: /xoradmin?action=logs&type=app");
+        exit;
+    }
+
+    private function getLogsData($log_type = 'app')
+    {
+        $data = ['log_type' => $log_type];
+        switch ($log_type) {
+            case 'app':
+                $items_per_page = 50;
+                $stmt_levels = $this->pdo->query("SELECT DISTINCT level FROM app_logs ORDER BY level ASC");
+                $data['log_levels'] = $stmt_levels->fetchAll(PDO::FETCH_COLUMN);
+                $selected_level = isset($_GET['level']) && in_array($_GET['level'], $data['log_levels']) ? $_GET['level'] : 'all';
+                $count_sql = "SELECT COUNT(*) FROM app_logs" . ($selected_level !== 'all' ? " WHERE level = :level" : "");
+                $count_stmt = $this->pdo->prepare($count_sql);
+                if ($selected_level !== 'all') $count_stmt->bindParam(':level', $selected_level, PDO::PARAM_STR);
+                $count_stmt->execute();
+                $total_items = $count_stmt->fetchColumn();
+                $data['total_pages'] = ceil($total_items / $items_per_page);
+                $data['current_page'] = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                $offset = ($data['current_page'] - 1) * $items_per_page;
+                $sql = "SELECT * FROM app_logs" . ($selected_level !== 'all' ? " WHERE level = :level" : "") . " ORDER BY id DESC LIMIT :limit OFFSET :offset";
+                $stmt = $this->pdo->prepare($sql);
+                if ($selected_level !== 'all') $stmt->bindParam(':level', $selected_level, PDO::PARAM_STR);
+                $stmt->bindParam(':limit', $items_per_page, PDO::PARAM_INT);
+                $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+                $stmt->execute();
+                $data['logs'] = $stmt->fetchAll(PDO::FETCH_ASSOC);
+                $data['selected_level'] = $selected_level;
+                break;
+
+            case 'media':
+                // This logic needs TelegramErrorLogRepository
+                $sql = "
+                    SELECT mf.id, mf.type, mf.file_name, mf.caption, mf.file_size, mf.media_group_id, mf.created_at,
+                           u.first_name as user_first_name, u.username as user_username,
+                           b.first_name as bot_name, b.id as bot_id
+                    FROM media_files mf
+                    LEFT JOIN users u ON mf.user_id = u.id
+                    LEFT JOIN messages m ON mf.message_id = m.telegram_message_id
+                    LEFT JOIN bots b ON m.bot_id = b.id
+                    WHERE b.id IS NOT NULL
+                    ORDER BY mf.created_at DESC
+                    LIMIT 100;
+                ";
+                $media_logs_flat = $this->pdo->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+                $grouped_logs = [];
+                foreach ($media_logs_flat as $log) {
+                    $group_key = $log['media_group_id'] ?? 'single_' . $log['id'];
+                    if (!isset($grouped_logs[$group_key])) {
+                        $grouped_logs[$group_key] = ['items' => [], 'group_info' => [
+                            'user' => $log['user_first_name'] . ($log['user_username'] ? ' (@' . $log['user_username'] . ')' : ''),
+                            'bot' => $log['bot_name'], 'time' => $log['created_at']
+                        ]];
+                    }
+                    $grouped_logs[$group_key]['items'][] = $log;
+                }
+                $data['grouped_logs'] = $grouped_logs;
+                break;
+
+            case 'telegram':
+                $logRepo = new \TGBot\Database\TelegramErrorLogRepository($this->pdo);
+                $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                $limit = 25;
+                $total_records = $logRepo->countAll();
+                $data['total_pages'] = ceil($total_records / $limit);
+                $offset = ($page - 1) * $limit;
+                $data['logs'] = $logRepo->findAll($limit, $offset);
+                $data['page'] = $page;
+                break;
+        }
+        return $data;
+    }
+    private function getDebugFeedData()
+    {
+        $raw_update_repo = new \TGBot\Database\RawUpdateRepository($this->pdo);
+        $items_per_page = 25;
+        $total_items = $raw_update_repo->countAll();
+        $total_pages = ceil($total_items / $items_per_page);
+        $current_page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $offset = ($current_page - 1) * $items_per_page;
+        $updates = $raw_update_repo->findAll($items_per_page, $offset);
+        return [
+            'updates' => $updates,
+            'pagination' => [
+                'current_page' => $current_page,
+                'total_pages' => $total_pages
+            ]
+        ];
     }
 }

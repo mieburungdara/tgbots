@@ -10,6 +10,9 @@
     - Otentikasi `xoradmin` yang sebelumnya berbasis kata sandi telah diganti dengan sistem login token admin utama.
     - Fungsionalitas dari `DashboardController`, `BotController`, `RoleController`, dan `DatabaseController` telah dimigrasikan ke dalam `XorAdminController`.
     - Semua rute `/admin` yang terkait telah dinonaktifkan.
+- **Lanjutan Konsolidasi Panel Admin**: Melanjutkan refactoring dengan memigrasikan lebih banyak halaman ke panel `/xoradmin`.
+  - **Cakupan**: Fungsionalitas untuk `Manajemen Pengguna`, `Manajemen Saldo`, dan semua halaman `Logs` (Aplikasi, Media, Error Telegram, Debug Feed) sekarang telah terintegrasi penuh ke dalam antarmuka tab `xoradmin`.
+  - **Hasil**: Menghapus `UserController`, `BalanceController`, `LogController`, dan `DebugFeedController` beserta view-nya, mengurangi lebih banyak kode yang berlebihan.
 
 ### Diperbaiki
 - **Login Member Gagal**: Memperbaiki masalah kritis yang menghalangi member untuk login.
