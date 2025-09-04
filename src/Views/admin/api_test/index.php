@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let methodsData = {};
     let currentPage = 1;
 
-    const HANDLER_URL = '/api/admin/api_test'; // <<< UPDATED URL
+    const HANDLER_URL = '/api/xoradmin/api_test'; // <<< UPDATED URL
 
     async function fetchMethods() {
         methodSelector.innerHTML = '<option value="">-- Memuat metode... --</option>';

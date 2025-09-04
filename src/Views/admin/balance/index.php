@@ -12,11 +12,11 @@
     <h2>Daftar Saldo Pengguna</h2>
 
     <div class="search-form" style="margin-bottom: 20px;">
-        <form action="/admin/balance" method="get">
+        <form action="/xoradmin/balance" method="get">
             <input type="text" name="search" placeholder="Cari Nama/Username..." value="<?= htmlspecialchars($data['search_term']) ?>" style="width: 300px; display: inline-block;">
             <button type="submit" class="btn">Cari</button>
              <?php if(!empty($data['search_term'])): ?>
-                <a href="/admin/balance" class="btn btn-delete">Hapus Filter</a>
+                <a href="/xoradmin/balance" class="btn btn-delete">Hapus Filter</a>
             <?php endif; ?>
         </form>
     </div>
@@ -71,7 +71,7 @@
         if ($totalPages > 1):
             if ($currentPage > 1) {
                 $query_params['page'] = $currentPage - 1;
-                echo '<a href="/admin/balance?' . htmlspecialchars(http_build_query($query_params)) . '">&laquo; Sebelumnya</a>';
+                echo '<a href="/xoradmin/balance?' . htmlspecialchars(http_build_query($query_params)) . '">&laquo; Sebelumnya</a>';
             } else {
                 echo '<span class="disabled">&laquo; Sebelumnya</span>';
             }
@@ -80,7 +80,7 @@
 
             if ($currentPage < $totalPages) {
                 $query_params['page'] = $currentPage + 1;
-                echo '<a href="/admin/balance?' . htmlspecialchars(http_build_query($query_params)) . '">Berikutnya &raquo;</a>';
+                echo '<a href="/xoradmin/balance?' . htmlspecialchars(http_build_query($query_params)) . '">Berikutnya &raquo;</a>';
             } else {
                 echo '<span class="disabled">Berikutnya &raquo;</span>';
             }
@@ -96,7 +96,7 @@
             <h2 id="modal-title-adjust">Ubah Saldo untuk Pengguna</h2>
             <button class="modal-close-adjust">&times;</button>
         </div>
-        <form action="/admin/balance/adjust?<?= http_build_query($_GET) ?>" method="post" class="balance-adjustment-form" style="padding: 0; border: none; background: none; margin-top: 0;">
+        <form action="/xoradmin/balance/adjust?<?= http_build_query($_GET) ?>" method="post" class="balance-adjustment-form" style="padding: 0; border: none; background: none; margin-top: 0;">
             <input type="hidden" name="user_id" id="modal-user-id">
             <div class="form-group">
                 <label for="modal-amount">Jumlah:</label>
@@ -232,19 +232,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             switch (logType) {
                 case 'balance':
-                    apiUrl = `/api/admin/balance/log?telegram_id=${telegramId}`;
+                    apiUrl = `/api/xoradmin/balance/log?telegram_id=${telegramId}`;
                     title = `Riwayat Penyesuaian Saldo untuk ${userName}`;
                     headers = ['Waktu', 'Tipe', 'Jumlah', 'Deskripsi', 'Oleh Admin'];
                     dataBuilder = (item) => `<td>${item.created_at}</td><td>${item.type}</td><td>${formatCurrency(item.amount)}</td><td>${item.description || ''}</td><td>${item.admin_name ? `${item.admin_name} (${item.admin_telegram_id})` : 'N/A'}</td>`;
                     break;
                 case 'sales':
-                    apiUrl = `/api/admin/balance/sales?telegram_id=${telegramId}`;
+                    apiUrl = `/api/xoradmin/balance/sales?telegram_id=${telegramId}`;
                     title = `Riwayat Pemasukan (Penjualan) untuk ${userName}`;
                     headers = ['Waktu', 'Konten', 'Pembeli', 'Harga'];
                     dataBuilder = (item) => `<td>${item.purchased_at}</td><td>${item.package_title || 'N/A'}</td><td>${item.buyer_name || 'N/A'}</td><td>${formatCurrency(item.price)}</td>`;
                     break;
                 case 'purchases':
-                    apiUrl = `/api/admin/balance/purchases?telegram_id=${telegramId}`;
+                    apiUrl = `/api/xoradmin/balance/purchases?telegram_id=${telegramId}`;
                     title = `Riwayat Pengeluaran (Pembelian) untuk ${userName}`;
                     headers = ['Waktu', 'Konten', 'Harga'];
                     dataBuilder = (item) => `<td>${item.purchased_at}</td><td>${item.package_title || 'N/A'}</td><td>${formatCurrency(item.price)}</td>`;

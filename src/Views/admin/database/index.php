@@ -31,7 +31,7 @@
     <p class="description">
         <strong>PERINGATAN:</strong> Aksi di bawah ini bersifat destruktif dan akan menghapus semua tabel yang ada sebelum membuat ulang skema dari file yang dipilih.
     </p>
-    <form action="/admin/database/reset" method="post" onsubmit="return confirm('PERINGATAN KERAS!\n\nAnda akan MENGHAPUS SEMUA TABEL dan membuat ulang skema database dari file yang dipilih.\n\nAksi ini tidak dapat diurungkan.\n\nLanjutkan?');">
+    <form action="/xoradmin/database/reset" method="post" onsubmit="return confirm('PERINGATAN KERAS!\n\nAnda akan MENGHAPUS SEMUA TABEL dan membuat ulang skema database dari file yang dipilih.\n\nAksi ini tidak dapat diurungkan.\n\nLanjutkan?');">
         <input type="hidden" name="action" value="reset_with_file">
 
         <label for="sql_file">Pilih File Skema SQL:</label>
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
         resultsContainer.style.display = 'block';
         resultsPre.textContent = 'Memproses permintaan...';
 
-        fetch('/api/admin/database/migrate', {
+        fetch('/api/xoradmin/database/migrate', {
             method: 'POST'
         })
         .then(response => {

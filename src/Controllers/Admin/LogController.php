@@ -75,7 +75,7 @@ class LogController extends BaseController {
 
     public function clearAppLogs() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /admin/logs');
+            header('Location: /xoradmin/logs');
             exit();
         }
 
@@ -88,7 +88,7 @@ class LogController extends BaseController {
             $_SESSION['flash_message'] = "Gagal membersihkan log: " . $e->getMessage();
         }
 
-        header("Location: /admin/logs");
+        header("Location: /xoradmin/logs");
         exit;
     }
 

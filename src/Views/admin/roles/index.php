@@ -16,7 +16,7 @@
         <h2>Tambah Peran Baru</h2>
     </div>
     <div class="card-body">
-        <form action="/admin/roles/store" method="post">
+        <form action="/xoradmin/roles/store" method="post">
             <input type="text" name="role_name" placeholder="Nama peran (e.g., Reseller)" required>
             <button type="submit" name="add_role" class="btn">Tambah</button>
         </form>
@@ -47,7 +47,7 @@
                             <td><?= htmlspecialchars($role['id']) ?></td>
                             <td><?= htmlspecialchars($role['name']) ?></td>
                             <td>
-                                <form action="/admin/roles/delete" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menghapus peran ini? Ini akan menghapus peran ini dari SEMUA pengguna yang memilikinya.');">
+                                <form action="/xoradmin/roles/delete" method="post" onsubmit="return confirm('Apakah Anda yakin ingin menghapus peran ini? Ini akan menghapus peran ini dari SEMUA pengguna yang memilikinya.');">
                                     <input type="hidden" name="role_id" value="<?= htmlspecialchars($role['id']) ?>">
                                     <button type="submit" name="delete_role" class="btn btn-delete btn-sm">Hapus</button>
                                 </form>

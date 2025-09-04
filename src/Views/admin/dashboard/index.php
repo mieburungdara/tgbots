@@ -20,7 +20,7 @@
                             $link_params['search_user'] = $data['search_user'];
                         }
                         // Note: A url() helper function would be ideal here.
-                        $url = '/admin/dashboard?' . http_build_query($link_params);
+                        $url = '/xoradmin/dashboard?' . http_build_query($link_params);
                     ?>
                     <a href="<?= $url ?>" class="<?= ($data['selected_bot_id'] == $bot['id']) ? 'active' : '' ?>">
                         <?= htmlspecialchars($bot['first_name'] ?? 'Bot Tanpa Nama') ?>
@@ -32,14 +32,14 @@
 
     <main class="conv-main">
         <div class="search-form" style="margin-bottom: 20px;">
-            <form action="/admin/dashboard" method="get">
+            <form action="/xoradmin/dashboard" method="get">
                 <?php if ($data['selected_bot_id']): ?>
                     <input type="hidden" name="bot_id" value="<?= htmlspecialchars($data['selected_bot_id']) ?>">
                 <?php endif; ?>
                 <input type="text" name="search_user" placeholder="Cari percakapan pengguna..." value="<?= htmlspecialchars($data['search_user']) ?>" style="width: 300px; display: inline-block;">
                 <button type="submit" class="btn">Cari</button>
                 <?php if(!empty($data['search_user'])): ?>
-                    <a href="/admin/dashboard?bot_id=<?= $data['selected_bot_id'] ?>" class="btn btn-delete">Hapus Filter</a>
+                    <a href="/xoradmin/dashboard?bot_id=<?= $data['selected_bot_id'] ?>" class="btn btn-delete">Hapus Filter</a>
                 <?php endif; ?>
             </form>
         </div>
@@ -56,7 +56,7 @@
                     <?php else: ?>
                         <?php foreach ($data['conversations'] as $conv): ?>
                             <li class="conv-card">
-                                <a href="/admin/chat?telegram_id=<?= $conv['telegram_id'] ?>&bot_id=<?= $data['selected_bot_id'] ?>">
+                                <a href="/xoradmin/chat?telegram_id=<?= $conv['telegram_id'] ?>&bot_id=<?= $data['selected_bot_id'] ?>">
                                     <div class="conv-avatar"><?= get_initials($conv['first_name'] ?? '?') ?></div>
                                     <div class="conv-details">
                                         <div class="conv-header">
@@ -86,7 +86,7 @@
                                 }
                             ?>
                             <li class="conv-card">
-                                <a href="/admin/channel_chat?chat_id=<?= htmlspecialchars($chat['chat_id']) ?>&bot_id=<?= htmlspecialchars($data['selected_bot_id']) ?>">
+                                <a href="/xoradmin/channel_chat?chat_id=<?= htmlspecialchars($chat['chat_id']) ?>&bot_id=<?= htmlspecialchars($data['selected_bot_id']) ?>">
                                     <div class="conv-avatar" style="background-color: #6c757d;"><?= get_initials($chat_title) ?></div>
                                     <div class="conv-details">
                                         <div class="conv-header">

@@ -37,7 +37,7 @@ class ChatController extends BaseController
             $bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
 
             if (!$telegram_id || !$bot_id) {
-                header("Location: /admin/dashboard"); // Redirect to new dashboard
+                header("Location: /xoradmin/dashboard"); // Redirect to new dashboard
                 exit;
             }
 
@@ -99,7 +99,7 @@ class ChatController extends BaseController
     {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['reply_message'])) {
-                header('Location: /admin/dashboard');
+                header('Location: /xoradmin/dashboard');
                 exit();
             }
 
@@ -120,7 +120,7 @@ class ChatController extends BaseController
             }
 
             // Redirect back to the chat page
-            header("Location: /admin/chat?telegram_id=$user_id&bot_id=$bot_id");
+            header("Location: /xoradmin/chat?telegram_id=$user_id&bot_id=$bot_id");
             exit;
         } catch (Exception $e) {
             \app_log('Error in ChatController/reply: ' . $e->getMessage(), 'error');
@@ -128,7 +128,7 @@ class ChatController extends BaseController
             $user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
             $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
             $_SESSION['flash_error'] = 'Failed to send reply: ' . $e->getMessage();
-            header("Location: /admin/chat?telegram_id=$user_id&bot_id=$bot_id");
+            header("Location: /xoradmin/chat?telegram_id=$user_id&bot_id=$bot_id");
             exit;
         }
     }
@@ -146,7 +146,7 @@ class ChatController extends BaseController
             $bot_id = isset($_GET['bot_id']) ? (int)$_GET['bot_id'] : 0;
 
             if (!$chat_id || !$bot_id) {
-                header("Location: /admin/dashboard");
+                header("Location: /xoradmin/dashboard");
                 exit;
             }
 
@@ -210,7 +210,7 @@ class ChatController extends BaseController
     {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                header("Location: /admin/dashboard");
+                header("Location: /xoradmin/dashboard");
                 exit;
             }
 
@@ -222,16 +222,16 @@ class ChatController extends BaseController
             // Determine redirect URL based on whether user_id or chat_id is present
             $user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
             $chat_id = isset($_POST['chat_id']) ? (int)$_POST['chat_id'] : 0;
-            $redirect_url = '/admin/dashboard';
+            $redirect_url = '/xoradmin/dashboard';
 
             if ($user_id && $bot_id) {
-                $redirect_url = "/admin/chat?telegram_id=$user_id&bot_id=$bot_id";
+                $redirect_url = "/xoradmin/chat?telegram_id=$user_id&bot_id=$bot_id";
             } elseif ($chat_id && $bot_id) {
-                $redirect_url = "/admin/channel_chat?chat_id=$chat_id&bot_id=$bot_id";
+                $redirect_url = "/xoradmin/channel_chat?chat_id=$chat_id&bot_id=$bot_id";
             }
 
             if (empty($message_ids) || empty($action) || !$bot_id) {
-                header("Location: /admin/dashboard");
+                header("Location: /xoradmin/dashboard");
                 exit;
             }
 
@@ -268,11 +268,11 @@ class ChatController extends BaseController
             $user_id = isset($_POST['user_id']) ? (int)$_POST['user_id'] : 0;
             $bot_id = isset($_POST['bot_id']) ? (int)$_POST['bot_id'] : 0;
             $chat_id = isset($_POST['chat_id']) ? (int)$_POST['chat_id'] : 0;
-            $redirect_url = '/admin/dashboard';
+            $redirect_url = '/xoradmin/dashboard';
             if ($user_id && $bot_id) {
-                $redirect_url = "/admin/chat?telegram_id=$user_id&bot_id=$bot_id";
+                $redirect_url = "/xoradmin/chat?telegram_id=$user_id&bot_id=$bot_id";
             } elseif ($chat_id && $bot_id) {
-                $redirect_url = "/admin/channel_chat?chat_id=$chat_id&bot_id=$bot_id";
+                $redirect_url = "/xoradmin/channel_chat?chat_id=$chat_id&bot_id=$bot_id";
             }
             $_SESSION['flash_error'] = 'Failed to delete messages: ' . $e->getMessage();
             header("Location: " . $redirect_url);

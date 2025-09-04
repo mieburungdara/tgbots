@@ -40,7 +40,7 @@
                     </td>
                     <td><?= htmlspecialchars($package['created_at']) ?></td>
                     <td>
-                        <form action="/admin/packages/delete" method="post" onsubmit="return confirm('PERINGATAN: Aksi ini akan menghapus data dari database dan channel secara permanen. Anda yakin?');">
+                        <form action="/xoradmin/packages/delete" method="post" onsubmit="return confirm('PERINGATAN: Aksi ini akan menghapus data dari database dan channel secara permanen. Anda yakin?');">
                             <input type="hidden" name="package_id" value="<?= htmlspecialchars($package['id']) ?>">
                             <button type="submit" class="btn-delete" <?= $package['status'] === 'sold' ? 'disabled' : '' ?>>
                                 Hard Delete

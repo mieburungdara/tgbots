@@ -78,7 +78,7 @@ class BotController extends BaseController
         $success = null;
 
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /admin/bots');
+            header('Location: /xoradmin/bots');
             exit();
         }
 
@@ -133,7 +133,7 @@ class BotController extends BaseController
             $_SESSION['flash_success'] = $success;
         }
 
-        header('Location: /admin/bots');
+        header('Location: /xoradmin/bots');
         exit();
     }
 
@@ -148,7 +148,7 @@ class BotController extends BaseController
     {
         try {
             if (!isset($_GET['id']) || !filter_var($_GET['id'], FILTER_VALIDATE_INT)) {
-                header("Location: /admin/bots");
+                header("Location: /xoradmin/bots");
                 exit;
             }
             $bot_id = (int)$_GET['id'];
@@ -159,7 +159,7 @@ class BotController extends BaseController
             $bot = $stmt->fetch();
 
             if (!$bot) {
-                header("Location: /admin/bots");
+                header("Location: /xoradmin/bots");
                 exit;
             }
 
@@ -202,7 +202,7 @@ class BotController extends BaseController
     public function updateSettings(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['bot_id'])) {
-            header('Location: /admin/bots');
+            header('Location: /xoradmin/bots');
             exit();
         }
 
@@ -251,7 +251,7 @@ class BotController extends BaseController
 
         $_SESSION['flash_status'] = $status_message;
 
-        header("Location: /admin/bots/edit?id = " . $bot_id);
+        header("Location: /xoradmin/bots/edit?id = " . $bot_id);
         exit();
     }
 
