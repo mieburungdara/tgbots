@@ -82,7 +82,7 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 
     <aside class="sidebar">
         <div class="sidebar-header">
-            <a href="/admin">Admin Panel</a>
+            <a href="/xoradmin/dashboard">Admin Panel</a>
         </div>
         <nav class="sidebar-nav">
             <a href="/xoradmin/dashboard" class="<?= is_active_nav('xoradmin/dashboard', $current_path) ? 'active' : '' ?>">Dashboard</a>
@@ -110,12 +110,12 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
             <a href="/xoradmin/api_test" class="<?= is_active_nav('xoradmin/api_test', $current_path) ? 'active' : '' ?>">API Tester</a>
         </nav>
         <div class="sidebar-footer">
-            <?php if (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true): ?>
+            <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true): ?>
                 <div style="font-size: 14px; color: #6c757d; margin-bottom: 10px;">
                     Masuk sebagai:<br>
-                    <strong style="color: #333;"><?= htmlspecialchars($_SESSION['user_first_name'] ?? 'Admin') ?></strong>
+                    <strong style="color: #333;">Admin</strong>
                 </div>
-                <a href="/logout" style="display: block; text-align: center; background: #f8d7da; color: #721c24; padding: 8px; border-radius: 4px; text-decoration: none; font-weight: bold;">Logout</a>
+                <a href="/xoradmin/logout" style="display: block; text-align: center; background: #f8d7da; color: #721c24; padding: 8px; border-radius: 4px; text-decoration: none; font-weight: bold;">Logout</a>
             <?php endif; ?>
         </div>
     </aside>

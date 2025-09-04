@@ -32,8 +32,15 @@ class LoginController extends AppController
     public function processLogin()
     {
         if (isset($_POST['password']) && hash_equals($this->correct_password, $_POST['password'])) {
+            // Regenerate session ID to prevent session fixation attacks
+            session_regenerate_id(true);
+
             $_SESSION['admin_logged_in'] = true;
             $_SESSION['user_first_name'] = 'Admin'; // Generic name for password login
+            // Set a static user_id for the admin user, to be used in logging actions.
+            // It's recommended to set XOR_ADMIN_TELEGRAM_ID in the .env file.
+            $_SESSION['user_id'] = getenv('XOR_ADMIN_TELEGRAM_ID') ?: 1; // Fallback to 1 if not set
+
             header("Location: /xoradmin/dashboard");
             exit;
         } else {

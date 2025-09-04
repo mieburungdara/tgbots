@@ -295,7 +295,7 @@ class BotController extends BaseController
             $telegram = $this->getBotAndApi($bot_id);
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
             $domain = $_SERVER['HTTP_HOST'];
-            $webhook_path = str_replace(['/admin', '/api/bots'], '', dirname($_SERVER['PHP_SELF'])) . '/webhook.php';
+            $webhook_path = rtrim(str_replace(['/xoradmin', '/api/bots'], '', dirname($_SERVER['PHP_SELF'])), '/') . '/webhook.php';
             $webhook_url = $protocol . $domain . $webhook_path . '?id=' . $bot_id;
             $result = $telegram->setWebhook($webhook_url);
             $this->jsonResponse($result);
@@ -403,7 +403,7 @@ class BotController extends BaseController
             }
             $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
             $domain = $_SERVER['HTTP_HOST'];
-            $webhook_path = str_replace(['/admin', '/api/bots'], '', dirname($_SERVER['PHP_SELF'])) . '/webhook.php';
+            $webhook_path = rtrim(str_replace(['/xoradmin', '/api/bots'], '', dirname($_SERVER['PHP_SELF'])), '/') . '/webhook.php';
             $webhook_url = $protocol . $domain . $webhook_path . '?id=' . $bot_id;
 
             // Using cURL to make the request from the server to itself
