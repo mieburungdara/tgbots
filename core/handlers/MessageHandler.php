@@ -269,43 +269,52 @@ class MessageHandler implements HandlerInterface
      */
     private function handleHelpCommand(App $app, array $message): void
     {
-        $help_text = <<<EOT
-*🤖 Panduan Perintah Bot 🤖*
+        $feature = $app->bot['assigned_feature'] ?? 'general';
 
-Berikut adalah perintah utama yang bisa Anda gunakan:
+        $help_text = "*🤖 Panduan Perintah Bot 🤖*\n\n";
 
-*--- UNTUK PENJUAL ---
-➡️ `/sell`
-Balas (reply) sebuah media (foto/video/album) dengan perintah ini untuk mulai menjual.
-➡️ `/addmedia`
-Gunakan saat proses `/sell` untuk menambahkan lebih banyak media ke dalam satu paket.
-➡️ `/addmedia <ID_PAKET>`
-Gunakan sambil me-reply media baru untuk menambahkan media tersebut ke paket yang sudah ada.
-➡️ `/register_channel <ID_CHANNEL>`
-Daftarkan channel jualan Anda. Bot harus menjadi admin di channel tersebut.
+        switch ($feature) {
+            case 'sell':
+                $help_text .= "*--- FITUR JUAL BELI ---*\n";
+                $help_text .= "➡️ `/sell`\nBalas (reply) media untuk mulai menjual.\n";
+                $help_text .= "➡️ `/addmedia`\nTambah media saat proses `/sell`.\n";
+                $help_text .= "➡️ `/addmedia <ID_PAKET>`\nTambah media ke paket yang sudah ada.\n";
+                $help_text .= "➡️ `/register_channel <ID_CHANNEL>`\nDaftarkan channel jualan Anda.\n\n";
+                $help_text .= "*--- PERINTAH UMUM ---*\n";
+                $help_text .= "➡️ `/konten <ID_PAKET>`\nLihat detail atau beli konten.\n";
+                $help_text .= "➡️ `/me`\nLihat profil dan ringkasan penjualan.\n";
+                $help_text .= "➡️ `/balance`\nCek saldo Anda.\n";
+                $help_text .= "➡️ `/login`\nMasuk ke panel member web.\n";
+                break;
 
-*--- UNTUK SEMUA PENGGUNA ---
-➡️ `/konten <ID_PAKET>`
-Lihat detail atau beli sebuah konten.
-➡️ `/me`
-Lihat profil, ID penjual, dan ringkasan penjualan Anda.
-➡️ `/balance`
-Cek saldo Anda saat ini.
-➡️ `/login`
-Dapatkan tautan unik untuk masuk ke panel member di web.
-EOT;
+            case 'rate':
+                $help_text .= "*--- FITUR RATING ---*\n";
+                $help_text .= "➡️ `/rate`\nBalas (reply) media untuk memberi rating.\n\n";
+                $help_text .= "*--- PERINTAH UMUM ---*\n";
+                $help_text .= "➡️ `/me`\nLihat profil Anda.\n";
+                $help_text .= "➡️ `/login`\nMasuk ke panel member web.\n";
+                break;
+
+            case 'tanya':
+                $help_text .= "*--- FITUR TANYA ---*\n";
+                $help_text .= "➡️ `/tanya`\nBalas (reply) pesan untuk bertanya.\n\n";
+                $help_text .= "*--- PERINTAH UMUM ---*\n";
+                $help_text .= "➡️ `/me`\nLihat profil Anda.\n";
+                $help_text .= "➡️ `/login`\nMasuk ke panel member web.\n";
+                break;
+
+            default: // General or null feature
+                $help_text .= "Berikut adalah perintah utama yang bisa Anda gunakan:\n\n";
+                $help_text .= "➡️ `/me`\nLihat profil Anda.\n";
+                $help_text .= "➡️ `/balance`\nCek saldo Anda.\n";
+                $help_text .= "➡️ `/login`\nMasuk ke panel member web.\n";
+                break;
+        }
 
         if ($app->user['role'] === 'Admin') {
-            $admin_help_text = <<<EOT
-
-
-*--- KHUSUS ADMIN ---
-➡️ `/dev_addsaldo <user_id> <jumlah>`
-Menambah saldo ke pengguna.
-➡️ `/feature <package_id> <channel_id>`
-Mempromosikan paket ke channel.
-EOT;
-            $help_text .= $admin_help_text;
+            $help_text .= "\n*--- KHUSUS ADMIN ---*\n";
+            $help_text .= "➡️ `/dev_addsaldo <user_id> <jumlah>`\nMenambah saldo pengguna.\n";
+            $help_text .= "➡️ `/feature <package_id> <channel_id>`\nMempromosikan paket ke channel.\n";
         }
 
         $app->telegram_api->sendLongMessage($app->chat_id, $help_text, 'Markdown');
