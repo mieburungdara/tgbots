@@ -115,7 +115,7 @@ class ApiTestController extends BaseController
     private function getMethods(): void
     {
         try {
-            $reflection = new ReflectionClass('TelegramAPI');
+            $reflection = new ReflectionClass(TelegramAPI::class);
             $public_methods = $reflection->getMethods(ReflectionMethod::IS_PUBLIC);
 
             $excluded_methods = ['__construct', '__call', 'escapeMarkdown', 'getBotId', 'sendLongMessage'];
@@ -193,7 +193,7 @@ class ApiTestController extends BaseController
                 $clean_params['message_thread_id'] = (int)$clean_params['message_thread_id'];
             }
 
-            $reflection = new ReflectionMethod('TelegramAPI', $method);
+            $reflection = new ReflectionMethod(TelegramAPI::class, $method);
             $final_args = [];
             foreach ($reflection->getParameters() as $param) {
                 $paramName = $param->getName();
