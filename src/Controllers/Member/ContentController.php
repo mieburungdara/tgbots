@@ -292,7 +292,7 @@ class ContentController extends MemberBaseController
     public function registerChannel(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            redirect('/member/channels');
+            \redirect('/member/channels');
         }
 
         $channel_id = $_POST['channel_id'] ?? null;
@@ -302,7 +302,7 @@ class ContentController extends MemberBaseController
 
         if (!is_numeric($channel_id) || !is_numeric($group_id) || !$managing_bot_id) {
             $_SESSION['flash_error'] = "Semua field harus diisi dengan benar.";
-            redirect('/member/channels');
+            \redirect('/member/channels');
         }
 
         try {
@@ -314,14 +314,14 @@ class ContentController extends MemberBaseController
             $user = $userRepo->findUserByTelegramId($user_id);
             if (empty($user['public_seller_id'])) {
                 $_SESSION['flash_error'] = "Pendaftaran channel hanya untuk penjual terdaftar. Silakan daftar sebagai penjual melalui bot.";
-                redirect('/member/channels');
+                \redirect('/member/channels');
             }
 
             // Find the selected bot and verify it's a 'sell' bot
             $managing_bot = $botRepo->findBotByTelegramId($managing_bot_id);
             if (!$managing_bot || $managing_bot['assigned_feature'] !== 'sell') {
                 $_SESSION['flash_error'] = "Bot yang dipilih tidak valid atau bukan bot penjual.";
-                redirect('/member/channels');
+                \redirect('/member/channels');
             }
 
             $managing_bot_api = new \TGBot\TelegramAPI($managing_bot['token']);
@@ -329,13 +329,13 @@ class ContentController extends MemberBaseController
             $bot_member_channel = $managing_bot_api->getChatMember($channel_id, $managing_bot_id);
             if (!$bot_member_channel || !$bot_member_channel['ok'] || !in_array($bot_member_channel['result']['status'], ['administrator', 'creator'])) {
                 $_SESSION['flash_error'] = "Pendaftaran gagal: Pastikan bot @" . $managing_bot['username'] . " telah ditambahkan sebagai admin di channel ID " . $channel_id . ".";
-                redirect('/member/channels');
+                \redirect('/member/channels');
             }
 
             $bot_member_group = $managing_bot_api->getChatMember($group_id, $managing_bot_id);
             if (!$bot_member_group || !$bot_member_group['ok'] || !in_array($bot_member_group['result']['status'], ['administrator', 'creator'])) {
                 $_SESSION['flash_error'] = "Pendaftaran gagal: Pastikan bot @" . $managing_bot['username'] . " telah ditambahkan sebagai admin di grup diskusi ID " . $group_id . ".";
-                redirect('/member/channels');
+                \redirect('/member/channels');
             }
 
             $channel_info = $managing_bot_api->getChat($channel_id);
@@ -365,6 +365,6 @@ class ContentController extends MemberBaseController
             $_SESSION['flash_error'] = 'Terjadi kesalahan internal saat mencoba mendaftarkan channel.';
         }
 
-        redirect('/member/channels');
+        \redirect('/member/channels');
     }
 }
