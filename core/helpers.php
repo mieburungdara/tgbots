@@ -75,12 +75,22 @@ function generate_random_string(int $length, string $characters): string {
 }
 
 /**
- * Menghasilkan ID penjual unik 4 karakter.
+ * Menghasilkan ID penjual unik yang dijamin unik di dalam database.
  *
- * @return string ID penjual 4 karakter.
+ * @param PDO $pdo Objek koneksi PDO untuk memeriksa keunikan.
+ * @return string ID penjual 5 karakter yang unik.
  */
-function generate_seller_id(): string {
-    return generate_random_string(4, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+function generate_seller_id(PDO $pdo): string
+{
+    $stmt = $pdo->prepare("SELECT 1 FROM users WHERE public_seller_id = ?");
+
+    do {
+        $sellerId = generate_random_string(5, 'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+        $stmt->execute([$sellerId]);
+        $exists = $stmt->fetchColumn();
+    } while ($exists);
+
+    return $sellerId;
 }
 
 /**
