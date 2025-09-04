@@ -39,7 +39,7 @@ class LoginController extends AppController
             $_SESSION['user_first_name'] = 'Admin'; // Generic name for password login
             // Set a static user_id for the admin user, to be used in logging actions.
             // It's recommended to set XOR_ADMIN_TELEGRAM_ID in the .env file.
-            $_SESSION['user_id'] = getenv('XOR_ADMIN_TELEGRAM_ID') ?: 1; // Fallback to 1 if not set
+            $_SESSION['user_id'] = getenv('XOR_ADMIN_TELEGRAM_ID') ?: 0; // Fallback to 0 (a non-conflicting ID) if not set
 
             header("Location: /xoradmin/dashboard");
             exit;

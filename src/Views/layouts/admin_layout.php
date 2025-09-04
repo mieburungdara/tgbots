@@ -113,7 +113,7 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true): ?>
                 <div style="font-size: 14px; color: #6c757d; margin-bottom: 10px;">
                     Masuk sebagai:<br>
-                    <strong style="color: #333;">Admin</strong>
+                    <strong style="color: #333;"><?= htmlspecialchars($_SESSION['user_first_name'] ?? 'Admin') ?></strong>
                 </div>
                 <a href="/xoradmin/logout" style="display: block; text-align: center; background: #f8d7da; color: #721c24; padding: 8px; border-radius: 4px; text-decoration: none; font-weight: bold;">Logout</a>
             <?php endif; ?>

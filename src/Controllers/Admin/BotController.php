@@ -251,7 +251,7 @@ class BotController extends BaseController
 
         $_SESSION['flash_status'] = $status_message;
 
-        header("Location: /xoradmin/bots/edit?id = " . $bot_id);
+        header("Location: /xoradmin/bots/edit?id=" . $bot_id);
         exit();
     }
 
@@ -293,10 +293,7 @@ class BotController extends BaseController
         try {
             $bot_id = (int)($_POST['bot_id'] ?? 0);
             $telegram = $this->getBotAndApi($bot_id);
-            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-            $domain = $_SERVER['HTTP_HOST'];
-            $webhook_path = rtrim(str_replace(['/xoradmin', '/api/bots'], '', dirname($_SERVER['PHP_SELF'])), '/') . '/webhook.php';
-            $webhook_url = $protocol . $domain . $webhook_path . '?id=' . $bot_id;
+            $webhook_url = $this->generateWebhookUrl($bot_id);
             $result = $telegram->setWebhook($webhook_url);
             $this->jsonResponse($result);
         } catch (Exception $e) {
@@ -401,10 +398,7 @@ class BotController extends BaseController
                 $this->jsonResponse(['error' => 'ID Bot tidak valid.'], 400);
                 return;
             }
-            $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-            $domain = $_SERVER['HTTP_HOST'];
-            $webhook_path = rtrim(str_replace(['/xoradmin', '/api/bots'], '', dirname($_SERVER['PHP_SELF'])), '/') . '/webhook.php';
-            $webhook_url = $protocol . $domain . $webhook_path . '?id=' . $bot_id;
+            $webhook_url = $this->generateWebhookUrl($bot_id);
 
             // Using cURL to make the request from the server to itself
             $ch = curl_init($webhook_url);
@@ -424,5 +418,20 @@ class BotController extends BaseController
             \app_log('Error in BotController/testWebhook: ' . $e->getMessage(), 'error');
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
+    }
+
+    /**
+     * Generates the full webhook URL for a given bot.
+     *
+     * @param int $bot_id The ID of the bot.
+     * @return string The full webhook URL.
+     */
+    private function generateWebhookUrl(int $bot_id): string
+    {
+        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
+        $domain = $_SERVER['HTTP_HOST'];
+        // Construct the path to webhook.php from the web root.
+        $webhook_path = rtrim(str_replace(['/xoradmin', '/api/bots'], '', dirname($_SERVER['PHP_SELF'])), '/') . '/webhook.php';
+        return $protocol . $domain . $webhook_path . '?id=' . $bot_id;
     }
 }
