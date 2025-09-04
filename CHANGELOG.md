@@ -5,6 +5,9 @@
 ### Diperbaiki
 - **Login Token Tanpa Batas Waktu**: Menghapus validasi masa berlaku token (5 menit) pada alur login member. Token sekarang tidak akan kedaluwarsa, memperbaiki masalah login yang gagal karena token dianggap hangus.
 
+### Diubah
+- **Login Token Lebih Fleksibel**: Menghapus pengecekan peran (role) dari alur login. Sekarang, semua pengguna yang memiliki token valid dapat login, tidak terbatas hanya pada 'Member'.
+
 ## [5.2.0] - 2025-09-04
 
 ### Diperbaiki
