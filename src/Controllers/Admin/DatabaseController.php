@@ -64,7 +64,7 @@ class DatabaseController extends AppController
                 $pdo->exec('SET FOREIGN_KEY_CHECKS=0;');
                 $tables = $pdo->query("SHOW TABLES")->fetchAll(PDO::FETCH_COLUMN);
                 foreach ($tables as $table) {
-                    $pdo->exec("DROP TABLE IF EXISTS `$table`);
+                    $pdo->exec("DROP TABLE IF EXISTS `{$table}`");
                 }
 
                 $sql_script = file_get_contents(BASE_PATH . '/' . $selected_file);
