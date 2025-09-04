@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.2.2] - 2025-09-04
+
+### Fitur
+- **Halaman Channel Member**: Menambahkan halaman baru `/member/channels` yang memungkinkan member (penjual) untuk melihat detail channel jualan yang telah mereka daftarkan melalui bot.
+
 ## [5.2.1] - 2025-09-04
 
 ### Diperbaiki

@@ -248,4 +248,33 @@ class ContentController extends MemberBaseController
             $this->jsonResponse(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
+
+    /**
+     * Menampilkan halaman manajemen channel.
+     *
+     * @purpose Menampilkan channel jualan yang terdaftar oleh pengguna.
+     *
+     * @return void
+     */
+    public function channels(): void
+    {
+        try {
+            $pdo = \get_db_connection();
+            $channelRepo = new \TGBot\Database\FeatureChannelRepository($pdo);
+            $user_id = $_SESSION['member_user_id'];
+
+            $sell_channel = $channelRepo->findByOwnerAndFeature($user_id, 'sell');
+
+            $this->view('member/content/channels', [
+                'page_title' => 'Channel Saya',
+                'channel' => $sell_channel
+            ], 'member_layout');
+        } catch (Exception $e) {
+            \app_log('Error in ContentController/channels: ' . $e->getMessage(), 'error');
+            $this->view('member/error', [
+                'page_title' => 'Error',
+                'error_message' => 'Terjadi kesalahan saat memuat halaman channel.'
+            ], 'member_layout');
+        }
+    }
 }
