@@ -15,6 +15,9 @@ use Exception;
 use TGBot\Controllers\Member\MemberBaseController;
 use TGBot\Database\MediaPackageRepository;
 use TGBot\Database\AnalyticsRepository;
+use TGBot\Database\FeatureChannelRepository;
+use TGBot\Database\BotRepository;
+use TGBot\Database\UserRepository;
 
 /**
  * Class ContentController
@@ -276,5 +279,96 @@ class ContentController extends MemberBaseController
                 'error_message' => 'Terjadi kesalahan saat memuat halaman channel.'
             ], 'member_layout');
         }
+    }
+
+    /**
+     * Mendaftarkan atau memperbarui channel jualan dari web.
+     *
+     * @return void
+     */
+    public function registerChannel(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            redirect('/member/channels');
+        }
+
+        $channel_id = $_POST['channel_id'] ?? null;
+        $group_id = $_POST['group_id'] ?? null;
+        $user_id = $_SESSION['member_user_id'];
+
+        if (!is_numeric($channel_id) || !is_numeric($group_id)) {
+            $_SESSION['flash_error'] = "ID Channel dan Grup harus berupa angka.";
+            redirect('/member/channels');
+        }
+
+        try {
+            $pdo = \get_db_connection();
+            $botRepo = new BotRepository($pdo);
+            $featureChannelRepo = new FeatureChannelRepository($pdo);
+            $userRepo = new UserRepository($pdo);
+
+            $user = $userRepo->find($user_id);
+            if (empty($user['public_seller_id'])) {
+                 $_SESSION['flash_error'] = "Pendaftaran channel hanya untuk penjual terdaftar. Silakan daftar sebagai penjual melalui bot.";
+                 redirect('/member/channels');
+            }
+
+            $sell_bots = $botRepo->findAllBotsByFeature('sell');
+            if (empty($sell_bots)) {
+                $_SESSION['flash_error'] = "Pendaftaran gagal: Saat ini tidak ada bot penjualan yang aktif di sistem.";
+                redirect('/member/channels');
+            }
+
+            $managing_bot_username = $sell_bots[0]['username'];
+            $managing_bot = $botRepo->findByUsername($managing_bot_username);
+
+            if (!$managing_bot) {
+                $_SESSION['flash_error'] = "Pendaftaran gagal: Terjadi kesalahan saat mengambil data bot pengelola.";
+                redirect('/member/channels');
+            }
+
+            $managing_bot_id = $managing_bot['id'];
+            $managing_bot_api = new \TGBot\TelegramAPI($managing_bot['token']);
+
+            $bot_member_channel = $managing_bot_api->getChatMember($channel_id, $managing_bot_id);
+            if (!$bot_member_channel || !$bot_member_channel['ok'] || !in_array($bot_member_channel['result']['status'], ['administrator', 'creator'])) {
+                $_SESSION['flash_error'] = "Pendaftaran gagal: Pastikan bot @" . $managing_bot['username'] . " telah ditambahkan sebagai admin di channel ID " . $channel_id . ".";
+                redirect('/member/channels');
+            }
+
+            $bot_member_group = $managing_bot_api->getChatMember($group_id, $managing_bot_id);
+            if (!$bot_member_group || !$bot_member_group['ok'] || !in_array($bot_member_group['result']['status'], ['administrator', 'creator'])) {
+                $_SESSION['flash_error'] = "Pendaftaran gagal: Pastikan bot @" . $managing_bot['username'] . " telah ditambahkan sebagai admin di grup diskusi ID " . $group_id . ".";
+                redirect('/member/channels');
+            }
+
+            $channel_info = $managing_bot_api->getChat($channel_id);
+            $channel_title = $channel_info['ok'] ? $channel_info['result']['title'] : 'Channel Jualan';
+
+            $data = [
+                'name' => 'Channel Jualan ' . ($user['username'] ?? $user['id']),
+                'feature_type' => 'sell',
+                'moderation_channel_id' => $channel_id,
+                'public_channel_id' => $channel_id,
+                'discussion_group_id' => $group_id,
+                'managing_bot_id' => $managing_bot_id,
+                'owner_user_id' => $user_id,
+            ];
+
+            $existing = $featureChannelRepo->findByOwnerAndFeature($user_id, 'sell');
+
+            if ($existing) {
+                $featureChannelRepo->update($existing['id'], $data);
+                $_SESSION['flash_message'] = "Konfigurasi channel jualan Anda telah berhasil diperbarui.";
+            } else {
+                $featureChannelRepo->create($data);
+                $_SESSION['flash_message'] = "Selamat! Channel '" . htmlspecialchars($channel_title) . "' telah berhasil didaftarkan.";
+            }
+        } catch (Exception $e) {
+            \app_log('Error in ContentController/registerChannel: ' . $e->getMessage(), 'error');
+            $_SESSION['flash_error'] = 'Terjadi kesalahan internal saat mencoba mendaftarkan channel.';
+        }
+
+        redirect('/member/channels');
     }
 }
