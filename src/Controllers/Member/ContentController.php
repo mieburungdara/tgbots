@@ -343,15 +343,31 @@ class ContentController extends MemberBaseController
 
             $managing_bot_api = new \TGBot\TelegramAPI($managing_bot['token'], $pdo, $managing_bot['id']);
 
+            // 1. Verify BOT is an admin in the channel
             $bot_member_channel = $managing_bot_api->getChatMember($channel_id, $managing_bot_id);
             if (!$bot_member_channel || !$bot_member_channel['ok'] || !in_array($bot_member_channel['result']['status'], ['administrator', 'creator'])) {
-                $_SESSION['flash_error'] = "Pendaftaran gagal: Pastikan bot @" . $managing_bot['username'] . " telah ditambahkan sebagai admin di channel ID " . $channel_id . ".";
+                $_SESSION['flash_error'] = "Verifikasi Gagal: Pastikan bot @" . $managing_bot['username'] . " telah ditambahkan sebagai admin di Channel ID " . $channel_id . ".";
                 \redirect('/member/channels');
             }
 
+            // 2. Verify USER is an admin in the channel
+            $user_member_channel = $managing_bot_api->getChatMember($channel_id, $user_id);
+            if (!$user_member_channel || !$user_member_channel['ok'] || !in_array($user_member_channel['result']['status'], ['administrator', 'creator'])) {
+                $_SESSION['flash_error'] = "Verifikasi Gagal: Pastikan Anda adalah admin di Channel ID " . $channel_id . " untuk membuktikan kepemilikan.";
+                \redirect('/member/channels');
+            }
+
+            // 3. Verify BOT is an admin in the group
             $bot_member_group = $managing_bot_api->getChatMember($group_id, $managing_bot_id);
             if (!$bot_member_group || !$bot_member_group['ok'] || !in_array($bot_member_group['result']['status'], ['administrator', 'creator'])) {
-                $_SESSION['flash_error'] = "Pendaftaran gagal: Pastikan bot @" . $managing_bot['username'] . " telah ditambahkan sebagai admin di grup diskusi ID " . $group_id . ".";
+                $_SESSION['flash_error'] = "Verifikasi Gagal: Pastikan bot @" . $managing_bot['username'] . " telah ditambahkan sebagai admin di Grup Diskusi ID " . $group_id . ".";
+                \redirect('/member/channels');
+            }
+
+            // 4. Verify USER is an admin in the group
+            $user_member_group = $managing_bot_api->getChatMember($group_id, $user_id);
+            if (!$user_member_group || !$user_member_group['ok'] || !in_array($user_member_group['result']['status'], ['administrator', 'creator'])) {
+                $_SESSION['flash_error'] = "Verifikasi Gagal: Pastikan Anda adalah admin di Grup Diskusi ID " . $group_id . " untuk membuktikan kepemilikan.";
                 \redirect('/member/channels');
             }
 
@@ -359,7 +375,7 @@ class ContentController extends MemberBaseController
             $channel_title = $channel_info['ok'] ? $channel_info['result']['title'] : 'Channel Jualan';
 
             $data = [
-                'name' => 'Channel Jualan ' . ($user['username'] ?? $user['id']),
+                'name' => $channel_title, // Use the actual channel title
                 'feature_type' => 'sell',
                 'moderation_channel_id' => $channel_id,
                 'public_channel_id' => $channel_id,
