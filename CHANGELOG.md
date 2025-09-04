@@ -3,12 +3,13 @@
 ## [5.2.0] - 2025-09-04
 
 ### Diperbaiki
-- **Login Member Gagal**: Memperbaiki masalah kritis yang menghalangi member untuk login.
-  - **Penyebab**: Logika validasi token di `Member/LoginController.php` menggunakan perbandingan waktu berbasis PHP yang rentan terhadap perbedaan zona waktu antara server web dan database. Selain itu, tidak ada pemeriksaan peran (role) untuk memastikan hanya pengguna dengan peran 'Member' yang bisa login.
-  - **Solusi**: Mengganti total logika validasi token dengan metode yang lebih andal dan aman, yang sudah digunakan di `Auth/LoginController`. Validasi sekarang dilakukan dalam satu kueri SQL tunggal yang efisien, yang memeriksa validitas token, masa berlaku (menggunakan `NOW() - INTERVAL 5 MINUTE` di level database), dan peran 'Member' secara bersamaan.
+- **Login Member Gagal**: Memperbaiki masalah kritis yang menghalangi member untuk login menggunakan token. Logika validasi token di `Member/LoginController.php` diganti dengan satu kueri SQL yang andal untuk memeriksa validitas token, masa berlaku, dan peran 'Member' secara bersamaan di level database.
 
-### Peningkatan
-- **Navigasi Panel Admin**: Mendesain ulang dan mengorganisir sidebar navigasi di panel admin untuk meningkatkan kejelasan dan kemudahan penggunaan. Tautan sekarang dikelompokkan berdasarkan fungsionalitas (misalnya, Konten & Penjualan, Pengguna & Peran, dll.).
+### Diubah
+- **Implementasi Ulang Panel Admin**: Panel admin telah diimplementasikan ulang dengan arsitektur multi-halaman yang lebih standar dan aman.
+  - **URL**: Semua halaman admin sekarang diakses melalui prefix `/xoradmin/`.
+  - **Otentikasi**: Sistem login token untuk admin telah digantikan dengan halaman login berbasis kata sandi statis (`/xoradmin/login`).
+  - **Navigasi**: Panel admin sekarang menggunakan layout terpusat dengan sidebar navigasi yang terorganisir untuk semua fitur.
 
 ## [5.1.31] - 2025-09-03
 
@@ -838,8 +839,8 @@
 ### Diubah
 - **Alur Perintah `/sell`**: Proses penjualan konten dirombak total menjadi lebih intuitif.
   - **Penjual sekarang hanya perlu me-reply media (foto/video/album) dengan perintah `/sell`.
-  - Bot akan secara otomatis menggunakan caption dari media tersebut sebagai deskripsi produk.
-  - Alur multi-langkah yang lama (meminta media, lalu deskripsi) telah dihapus, membuat proses penjualan lebih cepat dan sederhana.
+  - **Bot akan secara otomatis menggunakan caption dari media tersebut sebagai deskripsi produk.
+  - **Alur multi-langkah yang lama (meminta media, lalu deskripsi) telah dihapus, membuat proses penjualan lebih cepat dan sederhana.
 
 ## [2.1.2] - 2025-08-11
 

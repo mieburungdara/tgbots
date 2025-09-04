@@ -85,29 +85,29 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
             <a href="/admin">Admin Panel</a>
         </div>
         <nav class="sidebar-nav">
-            <a href="/admin/dashboard" class="<?= is_active_nav('admin/dashboard', $current_path) ? 'active' : '' ?>">Dashboard</a>
+            <a href="/xoradmin/dashboard" class="<?= is_active_nav('xoradmin/dashboard', $current_path) ? 'active' : '' ?>">Dashboard</a>
             <hr>
             <p class="sidebar-heading">Content & Sales</p>
-            <a href="/admin/analytics" class="<?= is_active_nav('admin/analytics', $current_path) ? 'active' : '' ?>">Analytics</a>
-            <a href="/admin/packages" class="<?= is_active_nav('admin/packages', $current_path) ? 'active' : '' ?>">Content Management</a>
+            <a href="/xoradmin/analytics" class="<?= is_active_nav('xoradmin/analytics', $current_path) ? 'active' : '' ?>">Analytics</a>
+            <a href="/xoradmin/packages" class="<?= is_active_nav('xoradmin/packages', $current_path) ? 'active' : '' ?>">Content Management</a>
             <hr>
             <p class="sidebar-heading">Users & Roles</p>
-            <a href="/admin/users" class="<?= is_active_nav('admin/users', $current_path) ? 'active' : '' ?>">Users</a>
-            <a href="/admin/balance" class="<?= is_active_nav('admin/balance', $current_path) ? 'active' : '' ?>">Balance</a>
-            <a href="/admin/roles" class="<?= is_active_nav('admin/roles', $current_path) ? 'active' : '' ?>">Roles</a>
+            <a href="/xoradmin/users" class="<?= is_active_nav('xoradmin/users', $current_path) ? 'active' : '' ?>">Users</a>
+            <a href="/xoradmin/balance" class="<?= is_active_nav('xoradmin/balance', $current_path) ? 'active' : '' ?>">Balance</a>
+            <a href="/xoradmin/roles" class="<?= is_active_nav('xoradmin/roles', $current_path) ? 'active' : '' ?>">Roles</a>
             <hr>
             <p class="sidebar-heading">Bot & Channels</p>
-            <a href="/admin/bots" class="<?= is_active_nav('admin/bots', $current_path) ? 'active' : '' ?>">Bot Management</a>
-            <a href="/admin/storage_channels" class="<?= is_active_nav('admin/storage_channels', $current_path) ? 'active' : '' ?>">Storage Channels</a>
-            <a href="/admin/feature-channels" class="<?= is_active_nav('admin/feature-channels', $current_path) ? 'active' : '' ?>">Feature Channels</a>
+            <a href="/xoradmin/bots" class="<?= is_active_nav('xoradmin/bots', $current_path) ? 'active' : '' ?>">Bot Management</a>
+            <a href="/xoradmin/storage_channels" class="<?= is_active_nav('xoradmin/storage_channels', $current_path) ? 'active' : '' ?>">Storage Channels</a>
+            <a href="/xoradmin/feature-channels" class="<?= is_active_nav('xoradmin/feature-channels', $current_path) ? 'active' : '' ?>">Feature Channels</a>
             <hr>
             <p class="sidebar-heading">System & Debug</p>
-            <a href="/admin/logs" class="<?= is_active_nav('admin/logs', $current_path) ? 'active' : '' ?>">App Logs</a>
-            <a href="/admin/telegram_logs" class="<?= is_active_nav('admin/telegram_logs', $current_path) ? 'active' : '' ?>">Telegram Error Logs</a>
-            <a href="/admin/media_logs" class="<?= is_active_nav('admin/media_logs', $current_path) ? 'active' : '' ?>">Media Logs</a>
-            <a href="/admin/debug_feed" class="<?= is_active_nav('admin/debug_feed', $current_path) ? 'active' : '' ?>">Debug Feed</a>
-            <a href="/admin/database" class="<?= is_active_nav('admin/database', $current_path) ? 'active' : '' ?>">Database</a>
-            <a href="/admin/api_test" class="<?= is_active_nav('admin/api_test', $current_path) ? 'active' : '' ?>">API Tester</a>
+            <a href="/xoradmin/logs" class="<?= is_active_nav('xoradmin/logs', $current_path) ? 'active' : '' ?>">App Logs</a>
+            <a href="/xoradmin/telegram_logs" class="<?= is_active_nav('xoradmin/telegram_logs', $current_path) ? 'active' : '' ?>">Telegram Error Logs</a>
+            <a href="/xoradmin/media_logs" class="<?= is_active_nav('xoradmin/media_logs', $current_path) ? 'active' : '' ?>">Media Logs</a>
+            <a href="/xoradmin/debug_feed" class="<?= is_active_nav('xoradmin/debug_feed', $current_path) ? 'active' : '' ?>">Debug Feed</a>
+            <a href="/xoradmin/database" class="<?= is_active_nav('xoradmin/database', $current_path) ? 'active' : '' ?>">Database</a>
+            <a href="/xoradmin/api_test" class="<?= is_active_nav('xoradmin/api_test', $current_path) ? 'active' : '' ?>">API Tester</a>
         </nav>
         <div class="sidebar-footer">
             <?php if (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true): ?>
