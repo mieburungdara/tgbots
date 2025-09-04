@@ -71,7 +71,7 @@ class DatabaseController extends AppController
                 $pdo->exec($sql_script);
 
                 $pdo->exec('SET FOREIGN_KEY_CHECKS=1;');
-                $_SESSION['flash_message'] = "Database berhasil di-reset menggunakan file '{$selected_file}'.";
+                $_SESSION['flash_message'] = "Database berhasil di-reset menggunakan file {$selected_file}.";
             } catch (Exception $e) {
                 $_SESSION['flash_message'] = "Gagal me-reset database: " . $e->getMessage();
             }
