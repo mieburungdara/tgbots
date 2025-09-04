@@ -2,7 +2,6 @@
 
 ## ✅ Do
 
-0. Buat kode lebih bersih, lebih mudah dibaca, dan sesuai dengan prinsip readability.
 1. Gunakan **bahasa pemrograman PHP**.
 2. Tulis semua instruksi dan jawaban dalam **bahasa Indonesia**.
 3. Selalu **perbarui `CHANGELOG.md`** setiap ada pembaruan, perubahan, atau perbaikan.

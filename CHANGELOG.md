@@ -12,6 +12,9 @@
   - **Tujuan**: Menghilangkan inkonsistensi antara kode dan skema database, memperbaiki bug, dan meningkatkan keterbacaan serta pemeliharaan kode.
 
 ### Diperbaiki
+- **Login Member Gagal**: Memperbaiki bug kritis yang menyebabkan semua upaya login ke panel member gagal.
+  - **Penyebab**: Perintah `/login` di `MessageHandler.php` mencoba menyimpan token login ke kolom `user_id` di tabel `users`, padahal nama kolom yang benar sesuai skema adalah `id`. Query `UPDATE` ini gagal secara diam-diam, sehingga token tidak pernah tersimpan.
+  - **Solusi**: Mengubah nama kolom di dalam query SQL dari `user_id` menjadi `id` untuk menyelaraskannya dengan skema database dan `UserRepository`, memastikan token login berhasil disimpan.
 - **Sinkronisasi `updated_schema.sql`**: Memperbaiki kelalaian di mana definisi tabel `feature_channels` yang baru tidak ditambahkan ke file `updated_schema.sql`, membuat file tersebut tidak sinkron. File skema sekarang sepenuhnya up-to-date.
 - **Skema Database Tidak Lengkap**: Memperbaiki file `updated_schema.sql` yang tidak lengkap dengan menambahkan kolom-kolom yang hilang.
   - **Kolom yang Ditambahkan**:
