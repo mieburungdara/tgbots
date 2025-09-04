@@ -12,6 +12,7 @@
   - **Tujuan**: Menghilangkan inkonsistensi antara kode dan skema database, memperbaiki bug, dan meningkatkan keterbacaan serta pemeliharaan kode.
 
 ### Diperbaiki
+- **Sinkronisasi `updated_schema.sql`**: Memperbaiki kelalaian di mana definisi tabel `feature_channels` yang baru tidak ditambahkan ke file `updated_schema.sql`, membuat file tersebut tidak sinkron. File skema sekarang sepenuhnya up-to-date.
 - **Skema Database Tidak Lengkap**: Memperbaiki file `updated_schema.sql` yang tidak lengkap dengan menambahkan kolom-kolom yang hilang.
   - **Kolom yang Ditambahkan**:
     - `assigned_feature` ke tabel `bots`.
