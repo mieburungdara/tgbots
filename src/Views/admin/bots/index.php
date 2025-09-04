@@ -13,7 +13,7 @@
 <?php endif; ?>
 
 <h2>Tambah Bot Baru</h2>
-<form action="/admin/bots" method="post">
+<form action="/xoradmin/bots" method="post">
     <input type="text" name="token" placeholder="Token API dari BotFather" required style="width: 400px; display: inline-block;">
     <button type="submit" name="add_bot">Tambah Bot</button>
 </form>
@@ -42,7 +42,7 @@
                     <td>@<?= htmlspecialchars($bot['username'] ?? 'N/A') ?></td>
                     <td><?= htmlspecialchars(ucfirst($bot['assigned_feature'] ?? 'Tidak ada')) ?></td>
                     <td>
-                        <a href="/admin/bots/edit?id=<?= htmlspecialchars($bot['id']) ?>" class="btn btn-edit">Edit</a>
+                        <a href="/xoradmin/bots/edit?id=<?= htmlspecialchars($bot['id']) ?>" class="btn btn-edit">Edit</a>
                     </td>
                 </tr>
             <?php endforeach; ?>

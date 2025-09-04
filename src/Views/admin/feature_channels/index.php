@@ -10,7 +10,7 @@
 <?php endif; ?>
 
 <div class="actions">
-    <a href="/admin/feature-channels/create" class="btn btn-primary">Tambah Konfigurasi Baru</a>
+    <a href="/xoradmin/feature-channels/create" class="btn btn-primary">Tambah Konfigurasi Baru</a>
 </div>
 
 <table>
@@ -38,8 +38,8 @@
                     <td><?= htmlspecialchars($config['bot_name']) ?> (ID: <?= htmlspecialchars($config['managing_bot_id']) ?>)</td>
                     <td><?= htmlspecialchars($config['owner_username'] ?? 'Admin') ?></td>
                     <td>
-                        <a href="/admin/feature-channels/edit?id=<?= $config['id'] ?>" class="btn btn-edit">Edit</a>
-                        <form action="/admin/feature-channels/destroy" method="POST" style="display:inline;" onsubmit="return confirm('Anda yakin ingin menghapus konfigurasi ini?');">
+                        <a href="/xoradmin/feature-channels/edit?id=<?= $config['id'] ?>" class="btn btn-edit">Edit</a>
+                        <form action="/xoradmin/feature-channels/destroy" method="POST" style="display:inline;" onsubmit="return confirm('Anda yakin ingin menghapus konfigurasi ini?');">
                             <input type="hidden" name="id" value="<?= $config['id'] ?>">
                             <button type="submit" class="btn btn-danger">Hapus</button>
                         </form>

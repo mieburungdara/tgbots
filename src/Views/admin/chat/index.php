@@ -4,12 +4,12 @@
 
 <div class="chat-container">
     <div class="chat-header">
-        <a href="/admin/dashboard?bot_id=<?= $data['bot_info']['id'] ?>" class="btn">&larr; Kembali</a>
+        <a href="/xoradmin/dashboard?bot_id=<?= $data['bot_info']['id'] ?>" class="btn">&larr; Kembali</a>
         <h3>Riwayat Chat dengan <?= htmlspecialchars($data['user_info']['first_name'] ?? '') ?></h3>
         <p>Total Pesan: <?= $data['total_messages'] ?></p>
     </div>
 
-    <form id="bulk-action-form" action="/admin/chat/delete" method="post">
+    <form id="bulk-action-form" action="/xoradmin/chat/delete" method="post">
         <input type="hidden" name="user_id" value="<?= $data['user_info']['id'] ?>">
         <input type="hidden" name="bot_id" value="<?= $data['bot_info']['id'] ?>">
 
@@ -74,7 +74,7 @@
             $queryParams = ['telegram_id' => $data['user_info']['id'], 'bot_id' => $data['bot_info']['id']];
         ?>
             <?php if ($currentPage > 1): ?>
-                <a href="/admin/chat?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage - 1])) ?>">&laquo; Sebelumnya</a>
+                <a href="/xoradmin/chat?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage - 1])) ?>">&laquo; Sebelumnya</a>
             <?php else: ?>
                 <span class="disabled">&laquo; Sebelumnya</span>
             <?php endif; ?>
@@ -82,7 +82,7 @@
             <span class="current-page">Halaman <?= $currentPage ?> dari <?= $totalPages ?></span>
 
             <?php if ($currentPage < $totalPages): ?>
-                <a href="/admin/chat?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage + 1])) ?>">Berikutnya &raquo;</a>
+                <a href="/xoradmin/chat?<?= http_build_query(array_merge($queryParams, ['page' => $currentPage + 1])) ?>">Berikutnya &raquo;</a>
             <?php else: ?>
                 <span class="disabled">Berikutnya &raquo;</span>
             <?php endif; ?>
@@ -90,7 +90,7 @@
     </div>
 
     <div class="chat-reply-form" style="margin-top: 20px;">
-        <form action="/admin/chat/reply" method="post">
+        <form action="/xoradmin/chat/reply" method="post">
             <input type="hidden" name="user_id" value="<?= htmlspecialchars($data['user_info']['id']) ?>">
             <input type="hidden" name="bot_id" value="<?= htmlspecialchars($data['bot_info']['id']) ?>">
             <textarea name="reply_text" rows="3" placeholder="Ketik balasan Anda..." required style="width: 100%; box-sizing: border-box;"></textarea>

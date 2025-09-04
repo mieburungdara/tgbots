@@ -192,8 +192,13 @@ function is_active_nav(string $path, string $current_path, bool $exact = false):
     if ($exact) {
         return $current_path === $path;
     }
-    // Check if the current path starts with the given path, and also handles the base case e.g. /admin for /admin/dashboard
-    return strpos($current_path, $path) === 0 || ($path === 'admin/dashboard' && $current_path === 'admin');
+    // Handle the base case e.g. /xoradmin for /xoradmin/dashboard
+    if ($path === 'xoradmin/dashboard' && $current_path === 'xoradmin') {
+        return true;
+    }
+    // Ensure we match full path segments by checking for a trailing slash.
+    // This prevents `xoradmin/user` from matching `xoradmin/users`.
+    return strpos($current_path . '/', $path . '/') === 0;
 }
 
 /**
@@ -233,15 +238,3 @@ function get_initials(?string $name): string
     return strtoupper($initials);
 }
 
-/**
- * Checks if either the main admin or XOR admin is logged in.
- *
- * @return bool
- */
-function is_any_admin_logged_in(): bool
-{
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-    return (isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true) || (isset($_SESSION['xor_is_authenticated']) && $_SESSION['xor_is_authenticated'] === true);
-}

@@ -55,7 +55,7 @@ class StorageChannelController extends BaseController {
     public function store() {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                header('Location: /admin/storage_channels');
+                header('Location: /xoradmin/storage_channels');
                 exit();
             }
 
@@ -76,14 +76,14 @@ class StorageChannelController extends BaseController {
             $_SESSION['flash_message'] = "An error occurred while adding the storage channel.";
         }
 
-        header("Location: /admin/storage_channels");
+        header("Location: /xoradmin/storage_channels");
         exit;
     }
 
     public function update() {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                header('Location: /admin/storage_channels');
+                header('Location: /xoradmin/storage_channels');
                 exit();
             }
 
@@ -105,14 +105,14 @@ class StorageChannelController extends BaseController {
             $_SESSION['flash_message'] = "An error occurred while updating the storage channel.";
         }
 
-        header("Location: /admin/storage_channels");
+        header("Location: /xoradmin/storage_channels");
         exit;
     }
 
     public function setDefault() {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                header('Location: /admin/storage_channels');
+                header('Location: /xoradmin/storage_channels');
                 exit();
             }
 
@@ -132,14 +132,14 @@ class StorageChannelController extends BaseController {
             $_SESSION['flash_message'] = "An error occurred while setting the default channel.";
         }
 
-        header("Location: /admin/storage_channels");
+        header("Location: /xoradmin/storage_channels");
         exit;
     }
 
     public function destroy() {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                header('Location: /admin/storage_channels');
+                header('Location: /xoradmin/storage_channels');
                 exit();
             }
 
@@ -159,7 +159,7 @@ class StorageChannelController extends BaseController {
             $_SESSION['flash_message'] = "An error occurred while deleting the storage channel.";
         }
 
-        header("Location: /admin/storage_channels");
+        header("Location: /xoradmin/storage_channels");
         exit;
     }
 

@@ -609,11 +609,14 @@ class MessageHandler implements HandlerInterface
              ->execute([$login_token, $app->user['id']]);
 
         if ($app->user['role'] === 'Admin') {
-            $login_link = rtrim(BASE_URL, '/') . '/login?token=' . $login_token;
-            $response = "Anda adalah seorang Admin. Silakan pilih panel yang ingin Anda masuki melalui tautan di bawah ini.";
-            $keyboard = ['inline_keyboard' => [[['text' => 'Pilih Panel Login', 'url' => $login_link]]]];
+            // Admins now use a static password login, not a token-based one.
+            $admin_login_url = rtrim(BASE_URL, '/') . '/xoradmin/login';
+            $response = "Panel admin sekarang diakses menggunakan password.\n\n" .
+                        "Silakan buka " . $admin_login_url . " di browser Anda dan masukkan password admin.";
+            $keyboard = ['inline_keyboard' => [[['text' => 'Buka Panel Admin', 'url' => $admin_login_url]]]];
             $app->telegram_api->sendMessage($app->chat_id, $response, null, json_encode($keyboard));
         } else {
+            // Member login remains token-based.
             $login_link = rtrim(BASE_URL, '/') . '/member/token-login?token=' . $login_token;
             $response = "Klik tombol di bawah ini untuk masuk ke Panel Member Anda. Tombol ini hanya dapat digunakan satu kali.";
             $keyboard = ['inline_keyboard' => [[['text' => 'Login ke Panel Member', 'url' => $login_link]]]];

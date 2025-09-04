@@ -82,7 +82,7 @@
 <p class="description">Tambahkan channel pribadi yang akan digunakan bot untuk menyimpan file media. Anda dapat mengelola bot mana yang memiliki akses ke setiap channel.</p>
 
 <h2>Tambah Channel Baru</h2>
-<form action="/admin/storage_channels/store" method="post" class="mb-20">
+<form action="/xoradmin/storage_channels/store" method="post" class="mb-20">
 	<div class="form-group">
 		<label for="name">Nama Channel (untuk referensi)</label>
 		<input type="text" id="name" name="name" required>
@@ -96,7 +96,7 @@
 
 <h2>Daftar Channel Tersimpan</h2>
 <table id="channel-list-table"
-    data-update-info-url="/api/admin/storage_channels/update-info">
+    data-update-info-url="/api/xoradmin/storage_channels/update-info">
 	<thead>
 		<tr>
 			<th>Nama</th>
@@ -136,10 +136,10 @@
 
 <!-- Modal untuk Manajemen Bot -->
 <div id="manage-bots-modal" class="modal"
-    data-get-bots-url="/api/admin/storage_channels/bots"
-    data-add-bot-url="/api/admin/storage_channels/add-bot"
-    data-remove-bot-url="/api/admin/storage_channels/remove-bot"
-    data-verify-bot-url="/api/admin/storage_channels/verify-bot">
+    data-get-bots-url="/api/xoradmin/storage_channels/bots"
+    data-add-bot-url="/api/xoradmin/storage_channels/add-bot"
+    data-remove-bot-url="/api/xoradmin/storage_channels/remove-bot"
+    data-verify-bot-url="/api/xoradmin/storage_channels/verify-bot">
 	<div class="modal-content">
 		<span class="close-button">&times;</span>
 		<h2 id="modal-title">Kelola Bot untuk Channel: </h2>
@@ -186,7 +186,7 @@
 
 		<hr>
 
-		<form id="delete-channel-form" action="/admin/storage_channels/destroy" method="post" onsubmit="return confirm('Yakin ingin menghapus channel ini beserta semua hubungan bot-nya?');">
+		<form id="delete-channel-form" action="/xoradmin/storage_channels/destroy" method="post" onsubmit="return confirm('Yakin ingin menghapus channel ini beserta semua hubungan bot-nya?');">
 			<input type="hidden" id="delete-channel-id-input" name="id">
 			<button type="submit" class="btn btn-danger">Hapus Channel Ini</button>
 		</form>

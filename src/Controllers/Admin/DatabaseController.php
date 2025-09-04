@@ -5,24 +5,19 @@ namespace TGBot\Controllers\Admin;
 use Exception;
 use PDO;
 use Throwable;
-use TGBot\Controllers\AppController;
+use TGBot\Controllers\BaseController;
 
-class DatabaseController extends AppController
+class DatabaseController extends BaseController
 {
     /**
      * Menampilkan halaman manajemen database.
      */
     public function __construct()
     {
+        parent::__construct(); // Ensure parent's auth check is called.
+        // Defining BASE_PATH is necessary for the rest of the controller's methods.
         if (!defined('BASE_PATH')) {
             define('BASE_PATH', realpath(__DIR__ . '/../../../'));
-        }
-        
-        if (!is_any_admin_logged_in()) {
-            http_response_code(403);
-            // Dalam aplikasi nyata, Anda mungkin menginginkan tampilan akses ditolak yang lebih canggih
-            // yang mungkin menyarankan untuk masuk ke salah satu panel yang tersedia.
-            die('Access Denied. You must be logged in as an admin or XOR admin.');
         }
     }
 
@@ -51,7 +46,7 @@ class DatabaseController extends AppController
     public function reset()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['sql_file'])) {
-            header('Location: /admin/database');
+            header('Location: /xoradmin/database');
             exit();
         }
 
@@ -79,7 +74,7 @@ class DatabaseController extends AppController
             $_SESSION['flash_message'] = "Error: File SQL tidak valid atau tidak ditemukan.";
         }
 
-        header("Location: /admin/database");
+        header("Location: /xoradmin/database");
         exit;
     }
 

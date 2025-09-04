@@ -10,7 +10,7 @@
     <?php endif; ?>
 
     <div class="flex justify-between items-center mb-4">
-        <form action="/admin/logs" method="get" class="flex items-center space-x-2">
+        <form action="/xoradmin/logs" method="get" class="flex items-center space-x-2">
             <label for="level_select">Filter by Level:</label>
             <select name="level" id="level_select" onchange="this.form.submit()" class="p-2 border rounded-md">
                 <option value="all" <?= ($data['selected_level'] === 'all') ? 'selected' : '' ?>>All Levels</option>
@@ -22,8 +22,8 @@
             </select>
         </form>
         <div>
-            <a href="/admin/logs?level=<?= $data['selected_level'] ?>" class="btn">Refresh</a>
-            <form action="/admin/logs/clear" method="post" style="display:inline;" onsubmit="return confirm('Anda yakin ingin MENGHAPUS SEMUA log? Aksi ini tidak dapat diurungkan.');">
+            <a href="/xoradmin/logs?level=<?= $data['selected_level'] ?>" class="btn">Refresh</a>
+            <form action="/xoradmin/logs/clear" method="post" style="display:inline;" onsubmit="return confirm('Anda yakin ingin MENGHAPUS SEMUA log? Aksi ini tidak dapat diurungkan.');">
                 <button type="submit" class="btn btn-danger">Clear All Logs</button>
             </form>
         </div>
