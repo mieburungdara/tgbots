@@ -238,3 +238,14 @@ function get_initials(?string $name): string
     return strtoupper($initials);
 }
 
+/**
+ * Mengalihkan pengguna ke URL lain.
+ *
+ * @param string $path URL tujuan.
+ * @return void
+ */
+function redirect(string $path): void
+{
+    header("Location: " . $path);
+    exit();
+}
