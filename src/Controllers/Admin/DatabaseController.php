@@ -5,24 +5,18 @@ namespace TGBot\Controllers\Admin;
 use Exception;
 use PDO;
 use Throwable;
-use TGBot\Controllers\AppController;
+use TGBot\Controllers\BaseController;
 
-class DatabaseController extends AppController
+class DatabaseController extends BaseController
 {
     /**
      * Menampilkan halaman manajemen database.
      */
     public function __construct()
     {
+        parent::__construct(); // Ensure parent's auth check is called
         if (!defined('BASE_PATH')) {
             define('BASE_PATH', realpath(__DIR__ . '/../../../'));
-        }
-
-        if (!is_any_admin_logged_in()) {
-            http_response_code(403);
-            // Dalam aplikasi nyata, Anda mungkin menginginkan tampilan akses ditolak yang lebih canggih
-            // yang mungkin menyarankan untuk masuk ke salah satu panel yang tersedia.
-            die('Access Denied. You must be logged in as an admin or XOR admin.');
         }
     }
 
