@@ -309,12 +309,12 @@ class ContentController extends MemberBaseController
             $pdo = \get_db_connection();
             $botRepo = new BotRepository($pdo);
             $featureChannelRepo = new FeatureChannelRepository($pdo);
-            $userRepo = new UserRepository($pdo);
+            $userRepo = new UserRepository($pdo, $managing_bot_id);
 
-            $user = $userRepo->find($user_id);
+            $user = $userRepo->findUserByTelegramId($user_id);
             if (empty($user['public_seller_id'])) {
-                 $_SESSION['flash_error'] = "Pendaftaran channel hanya untuk penjual terdaftar. Silakan daftar sebagai penjual melalui bot.";
-                 redirect('/member/channels');
+                $_SESSION['flash_error'] = "Pendaftaran channel hanya untuk penjual terdaftar. Silakan daftar sebagai penjual melalui bot.";
+                redirect('/member/channels');
             }
 
             // Find the selected bot and verify it's a 'sell' bot
