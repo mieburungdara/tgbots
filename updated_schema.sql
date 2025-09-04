@@ -319,26 +319,6 @@ CREATE TABLE `sales`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'Mencatat transaksi penjualan yang berhasil.' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
--- Table structure for seller_sales_channels
--- ----------------------------
-DROP TABLE IF EXISTS `seller_sales_channels`;
-CREATE TABLE `seller_sales_channels`  (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `seller_user_id` bigint NOT NULL COMMENT 'ID penjual, merujuk ke tabel users.',
-  `bot_id` bigint NULL DEFAULT NULL COMMENT 'Referensi ke tabel bots',
-  `channel_id` bigint NOT NULL COMMENT 'ID channel penjualan.',
-  `discussion_group_id` bigint NOT NULL COMMENT 'ID grup diskusi yang terhubung.',
-  `is_active` tinyint(1) NOT NULL DEFAULT 1 COMMENT 'Apakah channel penjualan aktif.',
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp COMMENT 'Waktu pembuatan record.',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `unique_seller`(`seller_user_id` ASC) USING BTREE,
-  INDEX `idx_channel_id`(`channel_id` ASC) USING BTREE,
-  INDEX `fk_sales_channels_bot_id`(`bot_id` ASC) USING BTREE,
-  CONSTRAINT `fk_sales_channels_bot_id` FOREIGN KEY (`bot_id`) REFERENCES `bots` (`id`) ON DELETE SET NULL ON UPDATE CASCADE,
-  CONSTRAINT `fk_seller_sales_channels_user_id` FOREIGN KEY (`seller_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB AUTO_INCREMENT = 9 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Menyimpan channel penjualan untuk setiap penjual.' ROW_FORMAT = DYNAMIC;
-
--- ----------------------------
 -- Table structure for telegram_error_logs
 -- ----------------------------
 DROP TABLE IF EXISTS `telegram_error_logs`;

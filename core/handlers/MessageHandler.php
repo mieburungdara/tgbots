@@ -20,8 +20,8 @@ use TGBot\Database\MediaFileRepository;
 use TGBot\Database\BotChannelUsageRepository;
 use TGBot\Database\AnalyticsRepository;
 use TGBot\Database\BotRepository;
-use TGBot\Database\SellerSalesChannelRepository;
 use TGBot\Database\ChannelPostPackageRepository;
+use TGBot\Database\FeatureChannelRepository;
 use TGBot\Database\UserRepository;
 
 /**
@@ -183,46 +183,90 @@ class MessageHandler implements HandlerInterface
      */
     private function handleRegisterChannelCommand(App $app, array $message, array $parts): void
     {
-        $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
+        $feature_channel_repo = new FeatureChannelRepository($app->pdo);
+        $bot_repo = new BotRepository($app->pdo);
 
-        if (count($parts) < 2) {
-            $app->telegram_api->sendMessage($app->chat_id, "Format perintah salah. Gunakan: `/register_channel <ID atau @username channel>`");
+        if (count($parts) < 3) {
+            $app->telegram_api->sendMessage($app->chat_id, "Format perintah salah. Gunakan:\n`/register_channel <channel_id> <group_id>`\n\nContoh:\n`/register_channel -10012345678 -10087654321`");
             return;
         }
 
-        $channel_identifier = $parts[1];
+        $channel_id = $parts[1];
+        $group_id = $parts[2];
+
+        if (!is_numeric($channel_id) || !is_numeric($group_id)) {
+            $app->telegram_api->sendMessage($app->chat_id, "ID Channel dan Grup harus berupa angka. Anda bisa mendapatkan ID menggunakan bot seperti @userinfobot.");
+            return;
+        }
 
         if (empty($app->user['public_seller_id'])) {
             $app->telegram_api->sendMessage($app->chat_id, "⚠️ Perintah ini hanya untuk penjual terdaftar.");
             return;
         }
 
-        $bot_member = $app->telegram_api->getChatMember($channel_identifier, $app->telegram_api->getBotId());
-
-        if (!$bot_member || !$bot_member['ok'] || !in_array($bot_member['result']['status'], ['administrator', 'creator'])) {
-            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Pendaftaran gagal: Pastikan bot telah ditambahkan sebagai *admin* di channel `{$channel_identifier}`.", 'Markdown');
+        // Find an available 'sell' bot to manage this channel
+        $sell_bots = $bot_repo->findAllBotsByFeature('sell');
+        if (empty($sell_bots)) {
+            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Pendaftaran gagal: Saat ini tidak ada bot penjualan yang aktif di sistem.");
             return;
         }
 
-        if (!($bot_member['result']['can_post_messages'] ?? false)) {
-             $app->telegram_api->sendMessage($app->chat_id, "⚠️ Pendaftaran gagal: Bot memerlukan izin untuk *'Post Messages'* di channel tersebut.", 'Markdown');
+        $managing_bot_username = $sell_bots[0]['username'];
+        $managing_bot = $bot_repo->findByUsername($managing_bot_username);
+
+        if (!$managing_bot) {
+            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Pendaftaran gagal: Terjadi kesalahan saat mengambil data bot pengelola.");
             return;
         }
 
-        $channel_info = $app->telegram_api->getChat($channel_identifier);
-        if (!$channel_info || !$channel_info['ok']) {
-            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Pendaftaran gagal: Tidak dapat mengambil informasi untuk channel `{$channel_identifier}`. Pastikan ID atau username channel sudah benar.", 'Markdown');
+        $managing_bot_id = $managing_bot['id'];
+        $managing_bot_api = new \TGBot\TelegramAPI($managing_bot['token']);
+
+        // Verify bot is admin in the channel
+        $bot_member_channel = $managing_bot_api->getChatMember($channel_id, $managing_bot_id);
+        if (!$bot_member_channel || !$bot_member_channel['ok'] || !in_array($bot_member_channel['result']['status'], ['administrator', 'creator'])) {
+            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Pendaftaran gagal: Pastikan bot `@" . $managing_bot['username'] . "` telah ditambahkan sebagai admin di channel `{$channel_id}`.");
             return;
         }
-        $numeric_channel_id = $channel_info['result']['id'];
-        $channel_title = $channel_info['result']['title'];
 
-        $success = $sales_channel_repo->createOrUpdate($app->user['id'], $numeric_channel_id);
+        // Verify bot is admin in the group
+        $bot_member_group = $managing_bot_api->getChatMember($group_id, $managing_bot_id);
+        if (!$bot_member_group || !$bot_member_group['ok'] || !in_array($bot_member_group['result']['status'], ['administrator', 'creator'])) {
+            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Pendaftaran gagal: Pastikan bot `@" . $managing_bot['username'] . "` telah ditambahkan sebagai admin di grup diskusi `{$group_id}`.");
+            return;
+        }
 
-        if ($success) {
-            $escaped_title = $app->telegram_api->escapeMarkdown($channel_title);
-            $app->telegram_api->sendMessage($app->chat_id, "✅ Selamat! Channel *{$escaped_title}* (`{$numeric_channel_id}`) telah berhasil didaftarkan sebagai channel jualan Anda.", 'Markdown');
-        } else {
+        $channel_info = $managing_bot_api->getChat($channel_id);
+        $channel_title = $channel_info['ok'] ? $channel_info['result']['title'] : 'Channel Privat';
+
+        $data = [
+            'name' => 'Channel Jualan ' . ($app->user['username'] ?? $app->user['id']),
+            'feature_type' => 'sell',
+            'moderation_channel_id' => $channel_id, // For sellers, public channel is also the moderation channel
+            'public_channel_id' => $channel_id,
+            'discussion_group_id' => $group_id,
+            'managing_bot_id' => $managing_bot_id,
+            'owner_user_id' => $app->user['id'],
+        ];
+
+        try {
+            // Check if user already has a sell channel configuration
+            // This logic might need a dedicated method in the repository
+            $stmt = $app->pdo->prepare("SELECT id FROM feature_channels WHERE owner_user_id = ? AND feature_type = 'sell'");
+            $stmt->execute([$app->user['id']]);
+            $existing = $stmt->fetch();
+
+            if ($existing) {
+                $feature_channel_repo->update($existing['id'], $data);
+                $message = "✅ Selamat! Konfigurasi channel jualan Anda telah berhasil diperbarui.";
+            } else {
+                $feature_channel_repo->create($data);
+                $message = "✅ Selamat! Channel *{$app->telegram_api->escapeMarkdown($channel_title)}* (`{$channel_id}`) telah berhasil didaftarkan sebagai channel jualan Anda.";
+            }
+
+            $app->telegram_api->sendMessage($app->chat_id, $message, 'Markdown');
+        } catch (\Exception $e) {
+            \app_log('Error during seller channel registration: ' . $e->getMessage(), 'error');
             $app->telegram_api->sendMessage($app->chat_id, "⚠️ Terjadi kesalahan database saat mencoba mendaftarkan channel ini.");
         }
     }
@@ -332,7 +376,7 @@ class MessageHandler implements HandlerInterface
     {
         $package_repo = new MediaPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
-        $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
+        $feature_channel_repo = new FeatureChannelRepository($app->pdo);
 
         if (count($parts) > 1 && strpos($parts[1], 'package_') === 0) {
             $public_id = substr($parts[1], strlen('package_'));
@@ -352,8 +396,8 @@ class MessageHandler implements HandlerInterface
             if ($is_seller) {
                 $response = "Anda adalah pemilik konten ini. Anda dapat melihat atau mem-postingnya ke channel.";
                 $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$public_id}_0"]]];
-                $sales_channel = $sales_channel_repo->findBySellerId($telegram_user_id);
-                if ($sales_channel) {
+                $sales_channel_config = $feature_channel_repo->findByOwnerAndFeature($telegram_user_id, 'sell');
+                if ($sales_channel_config && !empty($sales_channel_config['public_channel_id'])) {
                     $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$public_id}"];
                 }
                 $keyboard = ['inline_keyboard' => $keyboard_buttons];
@@ -484,7 +528,7 @@ class MessageHandler implements HandlerInterface
     {
         $package_repo = new MediaPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
-        $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
+        $feature_channel_repo = new FeatureChannelRepository($app->pdo);
 
         if (count($parts) !== 2) {
             $app->telegram_api->sendMessage($app->chat_id, "Format perintah salah. Gunakan: /konten <ID Konten>");
@@ -516,8 +560,8 @@ class MessageHandler implements HandlerInterface
         if ($has_access) {
             $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
             if ($is_seller) {
-                $sales_channel = $sales_channel_repo->findBySellerId($app->user['id']);
-                if ($sales_channel) {
+                $sales_channel_config = $feature_channel_repo->findByOwnerAndFeature($app->user['id'], 'sell');
+                if ($sales_channel_config && !empty($sales_channel_config['public_channel_id'])) {
                     $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
                 }
             }

@@ -105,4 +105,17 @@ class BotRepository
         $stmt->execute([$feature]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Find a bot by its username.
+     *
+     * @param string $username
+     * @return array|false
+     */
+    public function findByUsername(string $username)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM bots WHERE username = ?");
+        $stmt->execute([$username]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }

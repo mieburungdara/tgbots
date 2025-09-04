@@ -83,4 +83,14 @@ class FeatureChannelRepository
         $stmt = $this->pdo->prepare("DELETE FROM feature_channels WHERE id = ?");
         return $stmt->execute([$id]);
     }
+
+    /**
+     * Find a feature channel configuration by owner and feature type.
+     */
+    public function findByOwnerAndFeature(int $owner_user_id, string $feature_type)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM feature_channels WHERE owner_user_id = ? AND feature_type = ? LIMIT 1");
+        $stmt->execute([$owner_user_id, $feature_type]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }

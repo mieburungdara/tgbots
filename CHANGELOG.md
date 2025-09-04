@@ -22,11 +22,12 @@
   - **Penyebab**: Pendekatan berbasis Regex terbukti tidak andal dan menyebabkan kegagalan total dalam membaca file skema, yang mengakibatkan alat secara keliru menyarankan untuk menghapus *semua* tabel.
   - **Solusi**: Menulis ulang total fungsi parser (`parseSchemaFromFile`) untuk tidak lagi menggunakan regex. Parser baru sekarang membaca file skema baris per baris dan menggunakan state machine sederhana untuk mengidentifikasi blok `CREATE TABLE` dan mengekstrak kolom. Pendekatan ini jauh lebih kuat, lebih aman, dan secara definitif menyelesaikan masalah parsing. Berdasarkan masukan pengguna, logika parser disempurnakan lebih lanjut untuk menangani berbagai format SQL dengan andal, termasuk deteksi akhir pernyataan dan ekstraksi definisi kolom yang aman.
 
-### Fitur
-- **Manajemen Channel Fitur (Tahap 1)**: Menambahkan sistem baru yang terpusat di panel admin untuk mengelola konfigurasi channel berdasarkan fitur (`sell`, `rate`, `tanya`).
-  - **Halaman Admin Baru**: Membuat halaman "Manajemen Channel Fitur" (`/admin/feature-channels`) dengan fungsionalitas CRUD penuh.
-  - **Struktur Fleksibel**: Admin sekarang dapat mendefinisikan satu set channel untuk setiap fitur, termasuk channel untuk moderasi/backup, channel publik, dan grup diskusi.
-  - **Database Baru**: Menambahkan tabel `feature_channels` baru untuk menyimpan semua konfigurasi ini, lengkap dengan skrip migrasi untuk instalasi.
+### Diubah (Refactoring Besar)
+- **Sistem Manajemen Channel Berbasis Fitur**: Merombak total cara channel dikelola. Sistem lama (`seller_sales_channels`) yang hanya untuk penjual telah digantikan oleh sistem `feature_channels` yang lebih kuat dan fleksibel.
+  - **Fungsionalitas Admin**: Panel admin sekarang memiliki halaman "Manajemen Channel Fitur" baru dengan CRUD penuh untuk mengkonfigurasi set channel (moderasi, publik, diskusi) untuk setiap fitur (`sell`, `rate`, `tanya`).
+  - **Fungsionalitas Member**: Perintah `/register_channel` untuk penjual telah ditulis ulang sepenuhnya untuk terintegrasi dengan sistem baru ini, memungkinkan mereka mendaftarkan channel penjualan pribadi mereka.
+  - **Deprekasi**: Tabel `seller_sales_channels`, `SellerSalesChannelRepository`, dan controller terkait telah dihapus dari sistem.
+  - **Migrasi**: Menambahkan skrip migrasi untuk membuat tabel `feature_channels` baru dan menghapus tabel `seller_sales_channels` yang lama.
 
 ### Peningkatan
 - **Saran Bot Cerdas**: Ketika pengguna salah menggunakan perintah (misal: `/sell` di bot rating), bot sekarang akan memberikan daftar *semua* bot yang tersedia yang mendukung fitur tersebut, bukan hanya satu. Ini membantu pengguna menemukan bot yang tepat dengan lebih mudah.

@@ -17,7 +17,6 @@ use TGBot\Handlers\HandlerInterface;
 use TGBot\Database\MediaPackageRepository;
 use TGBot\Database\SaleRepository;
 use TGBot\Database\UserRepository;
-use TGBot\Database\SellerSalesChannelRepository;
 use TGBot\Database\ChannelPostPackageRepository;
 use TGBot\Handlers\RateHandler;
 use TGBot\Handlers\TanyaHandler;
@@ -75,7 +74,6 @@ class CallbackQueryHandler implements HandlerInterface
     private function handlePostToChannel(App $app, array $callback_query, string $public_id): void
     {
         $package_repo = new MediaPackageRepository($app->pdo);
-        $sales_channel_repo = new SellerSalesChannelRepository($app->pdo);
         $post_package_repo = new ChannelPostPackageRepository($app->pdo);
 
         $callback_query_id = $callback_query['id'];
