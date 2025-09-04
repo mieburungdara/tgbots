@@ -10,16 +10,15 @@ $router->get('', 'HomeController@index');
 $router->get('login', 'Auth/LoginController@handleToken');
 $router->get('logout', 'Auth/LoginController@logout');
 
-// Route for the admin dashboard
-// This will handle requests for /admin and /admin/dashboard
-$router->get('admin', 'Admin/DashboardController@index');
-$router->get('admin/dashboard', 'Admin/DashboardController@index');
+// DEPRECATED: Admin routes are being merged into /xoradmin
+// $router->get('admin', 'Admin/DashboardController@index');
+// $router->get('admin/dashboard', 'Admin/DashboardController@index');
 
-// Bot management routes
-$router->get('admin/bots', 'Admin/BotController@index');
-$router->post('admin/bots', 'Admin/BotController@store');
-$router->get('admin/bots/edit', 'Admin/BotController@edit');
-$router->post('admin/bots/settings', 'Admin/BotController@updateSettings');
+// DEPRECATED: Bot management is now in /xoradmin
+// $router->get('admin/bots', 'Admin/BotController@index');
+// $router->post('admin/bots', 'Admin/BotController@store');
+// $router->get('admin/bots/edit', 'Admin/BotController@edit');
+// $router->post('admin/bots/settings', 'Admin/BotController@updateSettings');
 
 // Member area routes
 $router->get('member/login', 'Member/LoginController@showLoginForm');
@@ -57,16 +56,17 @@ $router->get('admin/media_logs', 'Admin/LogController@media');
 $router->get('admin/telegram_logs', 'Admin/LogController@telegram');
 
 // API routes
-$router->get('api/admin/user/roles', 'Admin/UserController@getRoles');
-$router->post('api/admin/user/roles', 'Admin/UserController@updateRoles');
+// DEPRECATED: Role management is now in /xoradmin
+// $router->get('api/admin/user/roles', 'Admin/UserController@getRoles');
+// $router->post('api/admin/user/roles', 'Admin/UserController@updateRoles');
 $router->post('api/member/content/toggle-protection', 'Member/ContentController@toggleProtection');
 
-// Bot Management API
-$router->post('api/admin/bots/set-webhook', 'Admin/BotController@setWebhook');
-$router->post('api/admin/bots/check-webhook', 'Admin/BotController@getWebhookInfo');
-$router->post('api/admin/bots/delete-webhook', 'Admin/BotController@deleteWebhook');
-$router->post('api/admin/bots/get-me', 'Admin/BotController@getMe');
-$router->post('api/admin/bots/test-webhook', 'Admin/BotController@testWebhook');
+// DEPRECATED: Bot Management API is now in /xoradmin
+// $router->post('api/admin/bots/set-webhook', 'Admin/BotController@setWebhook');
+// $router->post('api/admin/bots/check-webhook', 'Admin/BotController@getWebhookInfo');
+// $router->post('api/admin/bots/delete-webhook', 'Admin/BotController@deleteWebhook');
+// $router->post('api/admin/bots/get-me', 'Admin/BotController@getMe');
+// $router->post('api/admin/bots/test-webhook', 'Admin/BotController@testWebhook');
 
 // Balance Page
 $router->get('admin/balance', 'Admin/BalanceController@index');
@@ -91,16 +91,16 @@ $router->post('api/admin/storage_channels/bots/add', 'Admin/StorageChannelContro
 $router->post('api/admin/storage_channels/bots/remove', 'Admin/StorageChannelController@removeBot');
 $router->post('api/admin/storage_channels/bots/verify', 'Admin/StorageChannelController@verifyBot');
 
-// Admin - Roles
-$router->get('admin/roles', 'Admin/RoleController@index');
-$router->post('admin/roles/store', 'Admin/RoleController@store');
-$router->post('admin/roles/delete', 'Admin/RoleController@destroy');
+// DEPRECATED: Role management is now in /xoradmin
+// $router->get('admin/roles', 'Admin/RoleController@index');
+// $router->post('admin/roles/store', 'Admin/RoleController@store');
+// $router->post('admin/roles/delete', 'Admin/RoleController@destroy');
 
-// Admin - Database
-$router->get('admin/database', 'Admin/DatabaseController@index');
-$router->get('admin/database/check', 'Admin/DatabaseController@checkSchema');
-$router->post('admin/database/reset', 'Admin/DatabaseController@reset');
-$router->post('api/admin/database/migrate', 'Admin/DatabaseController@migrate');
+// DEPRECATED: Database management is now in /xoradmin
+// $router->get('admin/database', 'Admin/DatabaseController@index');
+// $router->get('admin/database/check', 'Admin/DatabaseController@checkSchema');
+// $router->post('admin/database/reset', 'Admin/DatabaseController@reset');
+// $router->post('api/admin/database/migrate', 'Admin/DatabaseController@migrate');
 
 // Admin - Feature Channels
 $router->get('admin/feature-channels', 'Admin/FeatureChannelController@index');
@@ -126,12 +126,11 @@ $router->post('api/admin/media/forward', 'Admin/ForwardManagerController@forward
 
 // XOR Admin Panel
 $router->get('xoradmin', 'Admin/XorAdminController@index');
-$router->post('xoradmin/login', 'Admin/XorAdminController@login');
-$router->post('xoradmin/logout', 'Admin/XorAdminController@logout');
 $router->post('xoradmin/add_bot', 'Admin/XorAdminController@addBot');
 $router->post('xoradmin/save_bot_settings', 'Admin/XorAdminController@saveBotSettings');
 $router->post('xoradmin/reset_db', 'Admin/XorAdminController@resetDb');
 $router->post('api/xoradmin', 'Admin/XorAdminController@api');
+$router->post('api/xoradmin/migrate', 'Admin/XorAdminController@migrate');
 
 // Webhook
 $router->post('webhook/{id}', 'WebhookController@handle');
