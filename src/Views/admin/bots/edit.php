@@ -40,7 +40,7 @@
 <div class="settings">
     <h2>Pengaturan Penyimpanan Pesan</h2>
     <p>Pilih jenis pembaruan (update) dari Telegram yang ingin Anda simpan ke database untuk bot ini.</p>
-    <form action="/admin/bots/settings" method="post">
+    <form action="/xoradmin/bots/settings" method="post">
         <input type="hidden" name="bot_id" value="<?= htmlspecialchars($data['bot']['id']) ?>">
 
         <div class="setting-item" style="margin-bottom: 10px;">
@@ -126,7 +126,7 @@
 
             showModal('Hasil ' + action, 'Sedang memproses permintaan...');
             try {
-                const response = await fetch(`/api/admin/bots/${action}`, {
+                const response = await fetch(`/api/xoradmin/bots/${action}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: `bot_id=${botId}`

@@ -4,12 +4,12 @@
 
 <div class="chat-container">
     <div class="chat-header">
-        <a href="/admin/dashboard?bot_id=<?= $data['bot_info']['id'] ?>" class="btn">&larr; Kembali</a>
+        <a href="/xoradmin/dashboard?bot_id=<?= $data['bot_info']['id'] ?>" class="btn">&larr; Kembali</a>
         <h3>Riwayat Chat: <?= htmlspecialchars($data['chat_title']) ?></h3>
         <p>Total Pesan: <?= $data['total_messages'] ?></p>
     </div>
 
-    <form id="bulk-action-form" action="/admin/chat/delete" method="post">
+    <form id="bulk-action-form" action="/xoradmin/chat/delete" method="post">
         <input type="hidden" name="chat_id" value="<?= $data['chat_id'] ?>">
         <input type="hidden" name="bot_id" value="<?= $data['bot_info']['id'] ?>">
 
@@ -80,7 +80,7 @@
             $queryParams = ['chat_id' => $data['chat_id'], 'bot_id' => $data['bot_info']['id']];
         ?>
             <?php if ($currentPage > 1): ?>
-                <a href="/admin/channel_chat?<?= htmlspecialchars(http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))) ?>">&laquo; Sebelumnya</a>
+                <a href="/xoradmin/channel_chat?<?= htmlspecialchars(http_build_query(array_merge($queryParams, ['page' => $currentPage - 1]))) ?>">&laquo; Sebelumnya</a>
             <?php else: ?>
                 <span class="disabled">&laquo; Sebelumnya</span>
             <?php endif; ?>
@@ -88,7 +88,7 @@
             <span class="current-page">Halaman <?= htmlspecialchars($currentPage) ?> dari <?= htmlspecialchars($totalPages) ?></span>
 
             <?php if ($currentPage < $totalPages): ?>
-                <a href="/admin/channel_chat?<?= htmlspecialchars(http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))) ?>">Berikutnya &raquo;</a>
+                <a href="/xoradmin/channel_chat?<?= htmlspecialchars(http_build_query(array_merge($queryParams, ['page' => $currentPage + 1]))) ?>">Berikutnya &raquo;</a>
             <?php else: ?>
                 <span class="disabled">Berikutnya &raquo;</span>
             <?php endif; ?>

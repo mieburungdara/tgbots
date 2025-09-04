@@ -110,7 +110,7 @@ class BalanceController extends BaseController
     public function adjust(): void
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
-            header('Location: /admin/balance');
+            header('Location: /xoradmin/balance');
             exit();
         }
 
@@ -125,7 +125,7 @@ class BalanceController extends BaseController
         if (!$admin_id) {
             $_SESSION['flash_message'] = "Sesi admin tidak valid atau telah berakhir. Silakan login kembali.";
             $_SESSION['flash_message_type'] = 'danger';
-            header("Location: /admin/balance");
+            header("Location: /xoradmin/balance");
             exit;
         }
 
@@ -158,7 +158,7 @@ class BalanceController extends BaseController
             $_SESSION['flash_message_type'] = 'danger';
         }
 
-        $redirect_url = "/admin/balance?" . http_build_query($_GET);
+        $redirect_url = "/xoradmin/balance?" . http_build_query($_GET);
         header("Location: " . $redirect_url);
         exit;
     }

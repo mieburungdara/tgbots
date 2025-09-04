@@ -35,7 +35,7 @@ class MediaPackageController extends BaseController {
 
     public function hardDelete() {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-            header('Location: /admin/packages');
+            header('Location: /xoradmin/packages');
             exit();
         }
 
@@ -72,7 +72,7 @@ class MediaPackageController extends BaseController {
             }
         }
 
-        header("Location: /admin/packages");
+        header("Location: /xoradmin/packages");
         exit;
     }
 }

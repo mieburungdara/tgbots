@@ -9,11 +9,11 @@
 <?php endif; ?>
 
 <div class="search-form" style="margin-bottom: 20px;">
-    <form action="/admin/users" method="get">
+    <form action="/xoradmin/users" method="get">
         <input type="text" name="search" placeholder="Cari ID, Nama, Username..." value="<?= htmlspecialchars($data['search_term']) ?>" style="width: 300px; display: inline-block;">
         <button type="submit" class="btn">Cari</button>
         <?php if(!empty($data['search_term'])): ?>
-            <a href="/admin/users" class="btn btn-delete">Hapus Filter</a>
+            <a href="/xoradmin/users" class="btn btn-delete">Hapus Filter</a>
         <?php endif; ?>
     </form>
 </div>
@@ -54,7 +54,7 @@
                         <?php endif; ?>
                     </td>
                     <td>
-                        <a href="/admin/dashboard?search_user=<?= htmlspecialchars($user['username'] ?? $user['first_name']) ?>" class="btn btn-sm">Lihat Chat</a>
+                        <a href="/xoradmin/dashboard?search_user=<?= htmlspecialchars($user['username'] ?? $user['first_name']) ?>" class="btn btn-sm">Lihat Chat</a>
                         <button class="btn btn-sm btn-manage-roles" data-user-id="<?= $user['id'] ?>" data-user-name="<?= htmlspecialchars(trim(($user['first_name'] ?? '') . ' ' . ($user['last_name'] ?? ''))) ?>">Kelola Peran</button>
                     </td>
                 </tr>
@@ -73,7 +73,7 @@
     if ($totalPages > 1):
         if ($currentPage > 1) {
             $query_params['page'] = $currentPage - 1;
-            echo '<a href="/admin/users?' . htmlspecialchars(http_build_query($query_params)) . '">&laquo; Sebelumnya</a>';
+            echo '<a href="/xoradmin/users?' . htmlspecialchars(http_build_query($query_params)) . '">&laquo; Sebelumnya</a>';
         } else {
             echo '<span class="disabled">&laquo; Sebelumnya</span>';
         }
@@ -82,7 +82,7 @@
 
         if ($currentPage < $totalPages) {
             $query_params['page'] = $currentPage + 1;
-            echo '<a href="/admin/users?' . htmlspecialchars(http_build_query($query_params)) . '">Berikutnya &raquo;</a>';
+            echo '<a href="/xoradmin/users?' . htmlspecialchars(http_build_query($query_params)) . '">Berikutnya &raquo;</a>';
         } else {
             echo '<span class="disabled">Berikutnya &raquo;</span>';
         }
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         checkboxContainer.innerHTML = 'Memuat peran...';
         modal.style.display = 'block';
 
-        fetch(`/api/admin/user/roles?telegram_id=${userId}`)
+        fetch(`/api/xoradmin/user/roles?telegram_id=${userId}`)
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
@@ -186,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function() {
         saveButton.textContent = 'Menyimpan...';
         saveButton.disabled = true;
 
-        fetch('/api/admin/user/roles', {
+        fetch('/api/xoradmin/user/roles', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({

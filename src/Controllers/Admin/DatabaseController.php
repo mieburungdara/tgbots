@@ -14,7 +14,8 @@ class DatabaseController extends BaseController
      */
     public function __construct()
     {
-        parent::__construct(); // Ensure parent's auth check is called
+        parent::__construct(); // Ensure parent's auth check is called.
+        // Defining BASE_PATH is necessary for the rest of the controller's methods.
         if (!defined('BASE_PATH')) {
             define('BASE_PATH', realpath(__DIR__ . '/../../../'));
         }
@@ -45,7 +46,7 @@ class DatabaseController extends BaseController
     public function reset()
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['sql_file'])) {
-            header('Location: /admin/database');
+            header('Location: /xoradmin/database');
             exit();
         }
 
@@ -73,7 +74,7 @@ class DatabaseController extends BaseController
             $_SESSION['flash_message'] = "Error: File SQL tidak valid atau tidak ditemukan.";
         }
 
-        header("Location: /admin/database");
+        header("Location: /xoradmin/database");
         exit;
     }
 

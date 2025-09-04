@@ -48,7 +48,7 @@ class FeatureChannelController extends BaseController
             'page_title' => 'Tambah Konfigurasi Channel',
             'bots' => $bots,
             'config' => [],
-            'action' => '/admin/feature-channels/store'
+            'action' => '/xoradmin/feature-channels/store'
         ], 'admin_layout');
     }
 
@@ -63,7 +63,7 @@ class FeatureChannelController extends BaseController
         } catch (Exception $e) {
             $_SESSION['flash_message'] = 'Gagal membuat konfigurasi: ' . $e->getMessage();
         }
-        header('Location: /admin/feature-channels');
+        header('Location: /xoradmin/feature-channels');
         exit();
     }
 
@@ -83,11 +83,11 @@ class FeatureChannelController extends BaseController
                 'page_title' => 'Edit Konfigurasi Channel',
                 'bots' => $bots,
                 'config' => $config,
-                'action' => '/admin/feature-channels/update?id=' . $id
+                'action' => '/xoradmin/feature-channels/update?id=' . $id
             ], 'admin_layout');
         } catch (Exception $e) {
             $_SESSION['flash_message'] = $e->getMessage();
-            header('Location: /admin/feature-channels');
+            header('Location: /xoradmin/feature-channels');
             exit();
         }
     }
@@ -104,7 +104,7 @@ class FeatureChannelController extends BaseController
         } catch (Exception $e) {
             $_SESSION['flash_message'] = 'Gagal memperbarui konfigurasi: ' . $e->getMessage();
         }
-        header('Location: /admin/feature-channels');
+        header('Location: /xoradmin/feature-channels');
         exit();
     }
 
@@ -120,7 +120,7 @@ class FeatureChannelController extends BaseController
         } catch (Exception $e) {
             $_SESSION['flash_message'] = 'Gagal menghapus konfigurasi: ' . $e->getMessage();
         }
-        header('Location: /admin/feature-channels');
+        header('Location: /xoradmin/feature-channels');
         exit();
     }
 }

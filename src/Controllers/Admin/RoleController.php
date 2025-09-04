@@ -45,7 +45,7 @@ class RoleController extends BaseController
     {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST' || empty($_POST['role_name'])) {
-                header('Location: /admin/roles');
+                header('Location: /xoradmin/roles');
                 exit();
             }
 
@@ -65,7 +65,7 @@ class RoleController extends BaseController
             $_SESSION['flash_message'] = "An error occurred while adding the role.";
         }
 
-        header("Location: /admin/roles");
+        header("Location: /xoradmin/roles");
         exit;
     }
 
@@ -73,14 +73,14 @@ class RoleController extends BaseController
     {
         try {
             if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-                header('Location: /admin/roles');
+                header('Location: /xoradmin/roles');
                 exit();
             }
 
             $role_id = filter_input(INPUT_POST, 'role_id', FILTER_VALIDATE_INT);
             // filter_input returns null if var not set, false if filter fails.
             if ($role_id === false || $role_id === null) {
-                header('Location: /admin/roles');
+                header('Location: /xoradmin/roles');
                 exit();
             }
 
@@ -98,7 +98,7 @@ class RoleController extends BaseController
             $_SESSION['flash_message'] = "An error occurred while deleting the role.";
         }
 
-        header("Location: /admin/roles");
+        header("Location: /xoradmin/roles");
         exit;
     }
 }

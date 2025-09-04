@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
             formData.append('bot_id', botId);
 
             try {
-                const response = await fetch('/api/admin/media/forward', {
+                const response = await fetch('/api/xoradmin/media/forward', {
                     method: 'POST',
                     body: formData
                 });
