@@ -102,6 +102,14 @@ $router->get('admin/database/check', 'Admin/DatabaseController@checkSchema');
 $router->post('admin/database/reset', 'Admin/DatabaseController@reset');
 $router->post('api/admin/database/migrate', 'Admin/DatabaseController@migrate');
 
+// Admin - Feature Channels
+$router->get('admin/feature-channels', 'Admin/FeatureChannelController@index');
+$router->get('admin/feature-channels/create', 'Admin/FeatureChannelController@create');
+$router->post('admin/feature-channels/store', 'Admin/FeatureChannelController@store');
+$router->get('admin/feature-channels/edit', 'Admin/FeatureChannelController@edit');
+$router->post('admin/feature-channels/update', 'Admin/FeatureChannelController@update');
+$router->post('admin/feature-channels/destroy', 'Admin/FeatureChannelController@destroy');
+
 // Admin - Sales Channels
 $router->get('admin/sales_channels', 'Admin/SalesChannelController@index');
 
