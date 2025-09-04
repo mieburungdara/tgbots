@@ -2,8 +2,6 @@
 
 namespace TGBot\Controllers\Admin;
 
-
-
 use Exception;
 use PDO;
 use Throwable;
@@ -22,8 +20,8 @@ class DatabaseController extends AppController
         
         if (!is_any_admin_logged_in()) {
             http_response_code(403);
-            // In a real app, you might want a more sophisticated access denied view
-            // that perhaps suggests logging into one of the available panels.
+            // Dalam aplikasi nyata, Anda mungkin menginginkan tampilan akses ditolak yang lebih canggih
+            // yang mungkin menyarankan untuk masuk ke salah satu panel yang tersedia.
             die('Access Denied. You must be logged in as an admin or XOR admin.');
         }
     }
@@ -42,7 +40,7 @@ class DatabaseController extends AppController
             \app_log('Error in DatabaseController/index: ' . $e->getMessage(), 'error');
             $this->view('admin/error', [
                 'page_title' => 'Error',
-                'error_message' => 'An error occurred while loading the database management page.'
+                'error_message' => 'Terjadi kesalahan saat memuat halaman manajemen database.'
             ], 'admin_layout');
         }
     }
@@ -73,7 +71,7 @@ class DatabaseController extends AppController
                 $pdo->exec($sql_script);
 
                 $pdo->exec('SET FOREIGN_KEY_CHECKS=1;');
-                $_SESSION['flash_message'] = "Database berhasil di-reset menggunakan file '{$selected_file}'.";
+                $_SESSION['flash_message'] = "Database berhasil di-reset menggunakan file {$selected_file}.";
             } catch (Exception $e) {
                 $_SESSION['flash_message'] = "Gagal me-reset database: " . $e->getMessage();
             }
@@ -137,15 +135,15 @@ class DatabaseController extends AppController
                             require $file_path; // Output dari skrip ini akan langsung di-echo
                         }
 
-                        // Record the migration as successful.
-                        // The DDL statements in the migration commit implicitly, so we don't wrap this in a transaction.
+                        // Mencatat migrasi sebagai berhasil.
+                        // Pernyataan DDL dalam migrasi melakukan commit secara implisit, jadi kita tidak membungkusnya dalam transaksi.
                         $stmt = $pdo->prepare("INSERT INTO migrations (migration_file) VALUES (?)");
                         $stmt->execute([$migration_file]);
                         echo "\nStatus: SUKSES\n\n";
 
                     } catch (Throwable $e) {
-                        // We don't roll back because DDL statements cause implicit commits.
-                        // We just re-throw the exception to be logged.
+                        // Kita tidak melakukan rollback karena pernyataan DDL menyebabkan commit implisit.
+                        // Kita hanya melempar ulang exception untuk dicatat.
                         throw new Exception("Gagal pada migrasi: {$migration_file}. Pesan Error: " . $e->getMessage(), 0, $e);
                     }
                 }
@@ -160,6 +158,9 @@ class DatabaseController extends AppController
         exit;
     }
 
+    /**
+     * Memeriksa skema database dan membandingkannya dengan skema yang diharapkan.
+     */
     public function checkSchema()
     {
         try {
@@ -188,6 +189,9 @@ class DatabaseController extends AppController
         }
     }
 
+    /**
+     * Mengurai skema database dari file SQL.
+     */
     private function parseSchemaFromFile(string $sql_content): array
     {
         $schema = [];
@@ -199,7 +203,7 @@ class DatabaseController extends AppController
 
         foreach ($lines as $line) {
             if (!$in_create_table) {
-                // Start of a new CREATE TABLE block
+                // Memulai blok CREATE TABLE baru
                 if (preg_match('/^CREATE TABLE(?: IF NOT EXISTS)?\s*`?(\w+)`?/i', $line, $matches)) {
                     $in_create_table = true;
                     $current_table_name = $matches[1];
@@ -207,17 +211,17 @@ class DatabaseController extends AppController
                 }
             } else {
                 $current_table_lines[] = $line;
-                // End of a CREATE TABLE block, identified by a line ending in a semicolon
+                // Akhir dari blok CREATE TABLE, diidentifikasi dengan baris yang diakhiri titik koma
                 if (str_ends_with(trim($line), ';')) {
                     $in_create_table = false;
                     $full_query = implode("\n", $current_table_lines);
 
                     $schema[$current_table_name] = [
                         'columns' => [],
-                        'full_query' => $full_query, // Use the captured block directly
+                        'full_query' => $full_query, // Menggunakan blok yang ditangkap secara langsung
                     ];
 
-                    // Use a robust regex to find content between the first parenthesis and the last parenthesis before ENGINE
+                    // Menggunakan regex yang kuat untuk menemukan konten antara tanda kurung pertama dan terakhir sebelum ENGINE
                     if (preg_match('/\((.*)\)\s*ENGINE=/si', $full_query, $content_match)) {
                         $content = $content_match[1];
                         $column_lines = explode("\n", $content);
@@ -242,6 +246,9 @@ class DatabaseController extends AppController
         return $schema;
     }
 
+    /**
+     * Mendapatkan skema database yang sedang berjalan.
+     */
     private function getLiveSchema(PDO $pdo): array
     {
         $schema = [];
@@ -275,6 +282,9 @@ class DatabaseController extends AppController
         return $schema;
     }
 
+    /**
+     * Membandingkan skema dari file dengan skema database yang sedang berjalan.
+     */
     private function compareSchemas(array $file_schema, array $live_schema): array
     {
         $report = [
@@ -283,7 +293,7 @@ class DatabaseController extends AppController
             'column_differences' => [],
         ];
 
-        // Check for missing and modified tables/columns
+        // Periksa tabel yang hilang dan kolom yang dimodifikasi
         foreach ($file_schema as $table_name => $table_data) {
             if (!isset($live_schema[$table_name])) {
                 $report['missing_tables'][] = [
@@ -294,7 +304,7 @@ class DatabaseController extends AppController
                 $diffs = ['missing' => [], 'extra' => [], 'modified' => []];
                 $live_columns = $live_schema[$table_name]['columns'];
 
-                // Check for missing and modified columns
+                // Periksa kolom yang hilang dan dimodifikasi
                 foreach ($table_data['columns'] as $column_name => $file_definition) {
                     if (!isset($live_columns[$column_name])) {
                         $diffs['missing'][] = [
@@ -302,7 +312,7 @@ class DatabaseController extends AppController
                             'query' => "ALTER TABLE `{$table_name}` ADD COLUMN `{$column_name}` {$file_definition};"
                         ];
                     } else {
-                        // Normalize definitions for comparison
+                        // Normalisasi definisi untuk perbandingan
                         $norm_file_def = str_replace([' ', '`'], '', strtolower($file_definition));
                         $norm_live_def = str_replace([' ', '`'], '', strtolower($live_columns[$column_name]));
                         if ($norm_file_def !== $norm_live_def) {
@@ -316,7 +326,7 @@ class DatabaseController extends AppController
                     }
                 }
 
-                // Check for extra columns
+                // Periksa kolom tambahan
                 foreach ($live_columns as $column_name => $live_definition) {
                     if (!isset($table_data['columns'][$column_name])) {
                         $diffs['extra'][] = [
@@ -332,7 +342,7 @@ class DatabaseController extends AppController
             }
         }
 
-        // Check for extra tables
+        // Periksa tabel tambahan
         foreach ($live_schema as $table_name => $table_data) {
             if (!isset($file_schema[$table_name])) {
                 $report['extra_tables'][] = [
