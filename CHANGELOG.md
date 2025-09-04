@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.2.1] - 2025-09-04
+
+### Diperbaiki
+- **Login Token Tanpa Batas Waktu**: Menghapus validasi masa berlaku token (5 menit) pada alur login member. Token sekarang tidak akan kedaluwarsa, memperbaiki masalah login yang gagal karena token dianggap hangus.
+
 ## [5.2.0] - 2025-09-04
 
 ### Diperbaiki

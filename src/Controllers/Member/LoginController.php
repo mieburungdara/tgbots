@@ -112,7 +112,7 @@ class LoginController extends AppController
 
             $pdo = \get_db_connection();
 
-            // Check if token is valid, not used, not expired, and belongs to a Member
+            // Check if token is valid, not used, and belongs to a Member
             $stmt = $pdo->prepare(
                 "SELECT u.id, u.first_name
                  FROM users u
@@ -120,7 +120,6 @@ class LoginController extends AppController
                  LEFT JOIN roles r ON ur.role_id = r.id
                  WHERE u.login_token = ?
                    AND u.token_used = 0
-                   AND u.token_created_at >= NOW() - INTERVAL 5 MINUTE
                    AND (r.name = 'Member' OR r.name IS NULL)"
             );
             $stmt->execute([$token]);
