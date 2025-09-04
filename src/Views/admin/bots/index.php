@@ -25,6 +25,7 @@
             <th>ID Bot</th>
             <th>Nama</th>
             <th>Username</th>
+            <th>Fitur Khusus</th>
             <th>Aksi</th>
         </tr>
     </thead>
@@ -39,6 +40,7 @@
                     <td><?= htmlspecialchars($bot['id']) ?></td>
                     <td><?= htmlspecialchars($bot['first_name']) ?></td>
                     <td>@<?= htmlspecialchars($bot['username'] ?? 'N/A') ?></td>
+                    <td><?= htmlspecialchars(ucfirst($bot['assigned_feature'] ?? 'Tidak ada')) ?></td>
                     <td>
                         <a href="/admin/bots/edit?id=<?= htmlspecialchars($bot['id']) ?>" class="btn btn-edit">Edit</a>
                     </td>

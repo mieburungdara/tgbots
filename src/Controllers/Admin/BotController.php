@@ -39,7 +39,7 @@ class BotController extends BaseController
     {
         try {
             $pdo = \get_db_connection();
-            $bots = $pdo->query("SELECT id, first_name, username, created_at FROM bots ORDER BY created_at DESC")->fetchAll();
+            $bots = $pdo->query("SELECT id, first_name, username, created_at, assigned_feature FROM bots ORDER BY created_at DESC")->fetchAll();
 
             $error = $_SESSION['flash_error'] ?? null;
             $success = $_SESSION['flash_success'] ?? null;

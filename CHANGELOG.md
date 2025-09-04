@@ -22,6 +22,9 @@
   - **Penyebab**: Pendekatan berbasis Regex terbukti tidak andal dan menyebabkan kegagalan total dalam membaca file skema, yang mengakibatkan alat secara keliru menyarankan untuk menghapus *semua* tabel.
   - **Solusi**: Menulis ulang total fungsi parser (`parseSchemaFromFile`) untuk tidak lagi menggunakan regex. Parser baru sekarang membaca file skema baris per baris dan menggunakan state machine sederhana untuk mengidentifikasi blok `CREATE TABLE` dan mengekstrak kolom. Pendekatan ini jauh lebih kuat, lebih aman, dan secara definitif menyelesaikan masalah parsing. Berdasarkan masukan pengguna, logika parser disempurnakan lebih lanjut untuk menangani berbagai format SQL dengan andal, termasuk deteksi akhir pernyataan dan ekstraksi definisi kolom yang aman.
 
+### Peningkatan
+- **Tampilan Daftar Bot**: Menambahkan kolom baru "Fitur Khusus" pada tabel di halaman "Kelola Bot" (`/admin/bots`). Ini memungkinkan admin untuk melihat fitur yang ditugaskan ke setiap bot secara langsung tanpa perlu masuk ke halaman edit, meningkatkan efisiensi dan visibilitas.
+
 ### Ditambahkan
 - **Skrip Migrasi Skema**: Menambahkan file migrasi berbasis PHP (`migrations/20250903141000_update_schema_to_5_2_0.php`) untuk menyelaraskan database versi lama dengan perubahan terbaru. Migrasi ini secara aman mengganti nama tabel `post_packages` menjadi `media_packages` dan menambahkan kolom `assigned_feature`, `post_type`, serta `category` jika belum ada.
 
