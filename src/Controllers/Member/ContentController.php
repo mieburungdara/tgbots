@@ -333,7 +333,7 @@ class ContentController extends MemberBaseController
                 \redirect('/member/channels');
             }
 
-            $managing_bot_api = new \TGBot\TelegramAPI($managing_bot['token']);
+            $managing_bot_api = new \TGBot\TelegramAPI($managing_bot['token'], $pdo, $managing_bot['id']);
 
             $bot_member_channel = $managing_bot_api->getChatMember($channel_id, $managing_bot_id);
             if (!$bot_member_channel || !$bot_member_channel['ok'] || !in_array($bot_member_channel['result']['status'], ['administrator', 'creator'])) {
