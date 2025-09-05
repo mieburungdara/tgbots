@@ -101,6 +101,7 @@ $router->post('member/login', 'Member/LoginController@processFormLogin');
 $router->get('member/dashboard', 'Member/DashboardController@index');
 $router->get('member/channels', 'Member/ContentController@channels');
 $router->post('member/channels/register', 'Member/ContentController@registerChannel');
+$router->post('member/channels/delete', 'Member/ContentController@deleteChannel');
 $router->get('member/my_content', 'Member/ContentController@index');
 $router->get('member/content/edit', 'Member/ContentController@edit');
 $router->post('member/content/update', 'Member/ContentController@update');
