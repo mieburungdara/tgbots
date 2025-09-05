@@ -539,8 +539,10 @@ class MessageHandler implements HandlerInterface
 
         $thumbnail = $package_repo->getThumbnailFile($package_id);
 
-        if (!$thumbnail) {
-            $app->telegram_api->sendMessage($app->chat_id, "Konten ini tidak memiliki media yang dapat ditampilkan.");
+        // Pastikan thumbnail dan detail penyimpanannya valid sebelum melanjutkan.
+        if (!$thumbnail || empty($thumbnail['storage_channel_id']) || empty($thumbnail['storage_message_id'])) {
+            $app->telegram_api->sendMessage($app->chat_id, "Konten ini tidak memiliki media yang dapat ditampilkan atau data media rusak. Silakan hubungi admin.");
+            \app_log("Gagal menampilkan konten: Thumbnail atau detail penyimpanan tidak valid untuk package_id: {$package_id}", 'warning', ['package' => $package, 'thumbnail' => $thumbnail]);
             return;
         }
 
