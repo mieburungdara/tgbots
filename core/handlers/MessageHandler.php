@@ -242,7 +242,7 @@ class MessageHandler implements HandlerInterface
         $data = [
             'name' => 'Channel Jualan ' . ($app->user['username'] ?? $app->user['id']),
             'feature_type' => 'sell',
-            'moderation_channel_id' => $channel_id, // For sellers, public channel is also the moderation channel
+            'moderation_channel_id' => null, // Not used for 'sell' feature
             'public_channel_id' => $channel_id,
             'discussion_group_id' => $group_id,
             'managing_bot_id' => $managing_bot_id,

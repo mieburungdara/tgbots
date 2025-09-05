@@ -4,6 +4,7 @@
 
 ### Diperbaiki
 - **Moderasi Otomatis untuk Fitur /sell**: Memperbaiki alur kerja fitur `/sell` yang sebelumnya secara keliru mengirimkan semua item untuk moderasi manual. Sekarang, item yang dijual melalui `/sell` akan secara otomatis ditandai sebagai `available` dan langsung dapat dibeli, sesuai dengan alur kerja yang diinginkan. Alur moderasi manual kini hanya berlaku untuk fitur `/rate` dan `/tanya`.
+- **Logika Channel Penjualan**: Memperbaiki logika saat mendaftarkan channel untuk fitur `/sell` (baik melalui bot maupun web). Kolom `moderation_channel_id` sekarang diatur ke `NULL` dengan benar untuk channel penjualan, karena moderasi tidak berlaku untuk fitur ini. Juga menyertakan migrasi database untuk membersihkan data lama.
 
 ## [5.2.4] - 2025-09-04
 
