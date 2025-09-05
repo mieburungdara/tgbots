@@ -43,11 +43,27 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
         .sidebar-header { padding: 20px; font-size: 1.5em; font-weight: bold; text-align: center; border-bottom: 1px solid #f0f0f0; }
         .sidebar-header a { text-decoration: none; color: inherit; }
         .sidebar-nav { flex-grow: 1; display: flex; flex-direction: column; padding: 15px; }
-        .sidebar-nav a { text-decoration: none; color: #333; padding: 12px 15px; border-radius: 5px; margin-bottom: 5px; }
+        .sidebar-nav a { text-decoration: none; color: #333; padding: 12px 15px; border-radius: 5px; margin-bottom: 5px; transition: all 0.2s ease; }
         .sidebar-nav a:hover { background-color: #f0f0f0; }
         .sidebar-nav a.active { font-weight: bold; background-color: #007bff; color: #fff; }
-        .sidebar-footer { padding: 15px; border-top: 1px solid #f0f0f0; margin-top: 15px; }
-        .admin-main-content { flex-grow: 1; }
+        .sidebar-footer { padding: 15px; border-top: 1px solid #f0f0f0; margin-top: 15px; transition: all 0.2s ease; }
+        .admin-main-content { flex-grow: 1; transition: margin-left 0.3s ease; }
+        .sidebar-toggle { position: fixed; top: 15px; left: 15px; z-index: 1001; background: #007bff; color: white; border: none; border-radius: 50%; width: 40px; height: 40px; font-size: 20px; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.2); display: none; align-items: center; justify-content: center; }
+        .sidebar-toggle:hover { background: #0056b3; }
+
+        /* Collapsed state */
+        .sidebar-collapsed .sidebar { width: 0; }
+        .sidebar-collapsed .sidebar-header, .sidebar-collapsed .sidebar-nav, .sidebar-collapsed .sidebar-footer { display: none; }
+        .sidebar-collapsed .admin-main-content { margin-left: 0; }
+
+        @media (max-width: 768px) {
+            .sidebar { position: fixed; z-index: 1000; left: -250px; transition: left 0.3s ease; height: 100%; overflow-y: auto; }
+            .sidebar.toggled { left: 0; }
+            .admin-main-content { margin-left: 0; }
+            .sidebar-toggle { display: flex; }
+            body.admin-body { display: block; }
+        }
+
         .conv-layout { display: flex; margin: -20px; height: calc(100vh - 85px); }
         .conv-sidebar { width: 280px; flex-shrink: 0; background-color: #fff; border-right: 1px solid #dee2e6; overflow-y: auto; }
         .conv-sidebar-header { padding: 15px; border-bottom: 1px solid #dee2e6; }
@@ -80,7 +96,9 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 </head>
 <body class="admin-body">
 
-    <aside class="sidebar">
+    <button class="sidebar-toggle" id="sidebar-toggle-btn">☰</button>
+
+    <aside class="sidebar" id="admin-sidebar">
         <div class="sidebar-header">
             <a href="/xoradmin/dashboard">Admin Panel</a>
         </div>
@@ -130,5 +148,49 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-core.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/autoloader/prism-autoloader.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.getElementById('admin-sidebar');
+            const toggleBtn = document.getElementById('sidebar-toggle-btn');
+            const body = document.body;
+
+            const isMobile = () => window.innerWidth <= 768;
+
+            const applySidebarState = () => {
+                const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+                if (isMobile()) {
+                    body.classList.remove('sidebar-collapsed');
+                    sidebar.classList.remove('toggled');
+                } else {
+                    if (isCollapsed) {
+                        body.classList.add('sidebar-collapsed');
+                    } else {
+                        body.classList.remove('sidebar-collapsed');
+                    }
+                }
+            };
+
+            toggleBtn.addEventListener('click', () => {
+                if (isMobile()) {
+                    sidebar.classList.toggle('toggled');
+                } else {
+                    const isCollapsed = body.classList.toggle('sidebar-collapsed');
+                    localStorage.setItem('sidebar_collapsed', isCollapsed);
+                }
+            });
+
+            // Close sidebar when clicking outside on mobile
+            document.addEventListener('click', function(event) {
+                if (isMobile() && sidebar.classList.contains('toggled')) {
+                    if (!sidebar.contains(event.target) && !toggleBtn.contains(event.target)) {
+                        sidebar.classList.remove('toggled');
+                    }
+                }
+            });
+
+            window.addEventListener('resize', applySidebarState);
+            applySidebarState(); // Initial state
+        });
+    </script>
 </body>
 </html>
