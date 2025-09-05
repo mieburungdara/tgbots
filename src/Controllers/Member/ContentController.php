@@ -377,7 +377,7 @@ class ContentController extends MemberBaseController
             $data = [
                 'name' => $channel_title, // Use the actual channel title
                 'feature_type' => 'sell',
-                'moderation_channel_id' => $channel_id,
+                'moderation_channel_id' => null, // Not used for 'sell' feature
                 'public_channel_id' => $channel_id,
                 'discussion_group_id' => $group_id,
                 'managing_bot_id' => $managing_bot_id,
