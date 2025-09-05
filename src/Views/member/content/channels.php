@@ -11,9 +11,8 @@
                         <table class="table table-bordered table-striped">
                             <thead>
                                 <tr>
-                                    <th>Nama Channel</th>
-                                    <th>ID Channel Publik</th>
-                                    <th>ID Grup Diskusi</th>
+                                    <th>Channel Publik</th>
+                                    <th>Grup Diskusi</th>
                                     <th>Bot Pengelola</th>
                                     <th style="width: 100px;">Aksi</th>
                                 </tr>
@@ -21,9 +20,14 @@
                             <tbody>
                                 <?php foreach ($data['channels'] as $channel) : ?>
                                     <tr>
-                                        <td><?= htmlspecialchars($channel['name']) ?></td>
-                                        <td><code><?= htmlspecialchars($channel['public_channel_id']) ?></code></td>
-                                        <td><code><?= htmlspecialchars($channel['discussion_group_id']) ?></code></td>
+                                        <td>
+                                            <strong><?= htmlspecialchars($channel['name']) ?></strong><br>
+                                            <code><?= htmlspecialchars($channel['public_channel_id']) ?></code>
+                                        </td>
+                                        <td>
+                                            <strong><?= htmlspecialchars($channel['discussion_group_name'] ?? 'N/A') ?></strong><br>
+                                            <code><?= htmlspecialchars($channel['discussion_group_id']) ?></code>
+                                        </td>
                                         <td>
                                             <?php
                                             $managing_bot_username = 'Tidak diketahui';

@@ -1,5 +1,12 @@
 # Changelog
 
+## [5.2.7] - 2025-09-04
+
+### Peningkatan
+- **Tampilan Nama Channel & Grup**: Pada halaman "Daftar Channel Jualan" di panel member, sekarang nama channel dan nama grup diskusi ditampilkan di samping ID mereka. Ini membuat identifikasi channel menjadi lebih mudah bagi pengguna.
+- **Penyimpanan Nama Otomatis**: Logika pendaftaran channel (baik melalui bot maupun web) telah diperbarui untuk secara otomatis mengambil dan menyimpan nama channel dan grup dari Telegram API.
+- **Migrasi Data**: Menambahkan skrip migrasi untuk secara otomatis mengisi nama untuk channel dan grup yang sudah terdaftar sebelumnya.
+
 ## [5.2.6] - 2025-09-04
 
 ### Fitur
