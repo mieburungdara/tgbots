@@ -66,6 +66,12 @@
                 <th>Terdaftar</th>
                 <td><?= htmlspecialchars(date('d F Y', strtotime($data['user_info']['created_at']))) ?></td>
             </tr>
+            <?php if (!empty($data['user_info']['public_seller_id'])): ?>
+            <tr>
+                <th>ID Penjual</th>
+                <td><strong><?= htmlspecialchars($data['user_info']['public_seller_id']) ?></strong></td>
+            </tr>
+            <?php endif; ?>
         </table>
     </div>
 
