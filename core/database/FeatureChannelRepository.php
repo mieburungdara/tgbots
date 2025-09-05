@@ -85,12 +85,12 @@ class FeatureChannelRepository
     }
 
     /**
-     * Find a feature channel configuration by owner and feature type.
+     * Find all feature channel configurations by owner and feature type.
      */
-    public function findByOwnerAndFeature(int $owner_user_id, string $feature_type)
+    public function findAllByOwnerAndFeature(int $owner_user_id, string $feature_type): array
     {
-        $stmt = $this->pdo->prepare("SELECT * FROM feature_channels WHERE owner_user_id = ? AND feature_type = ? LIMIT 1");
+        $stmt = $this->pdo->prepare("SELECT * FROM feature_channels WHERE owner_user_id = ? AND feature_type = ?");
         $stmt->execute([$owner_user_id, $feature_type]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
 }

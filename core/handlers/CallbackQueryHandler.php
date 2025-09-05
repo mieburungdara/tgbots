@@ -49,7 +49,9 @@ class CallbackQueryHandler implements HandlerInterface
         } elseif ($callback_data === 'register_seller') {
             $this->handleRegisterSeller($app, $callback_query);
         } elseif (strpos($callback_data, 'post_channel_') === 0) {
-            $this->handlePostToChannel($app, $callback_query, substr($callback_data, strlen('post_channel_')));
+            $this->showChannelSelectionForPosting($app, $callback_query, substr($callback_data, strlen('post_channel_')));
+        } elseif (strpos($callback_data, 'post_to_') === 0) {
+            $this->handlePostToSelectedChannel($app, $callback_query, substr($callback_data, strlen('post_to_')));
         } elseif (strpos($callback_data, 'retract_post_') === 0) {
             $this->handleRetractPost($app, $callback_query, substr($callback_data, strlen('retract_post_')));
         } elseif (strpos($callback_data, 'admin_approve_') === 0) {
@@ -63,18 +65,55 @@ class CallbackQueryHandler implements HandlerInterface
         }
     }
 
-    /**
-     * Handle a request to post a package preview to a sales channel.
-     *
-     * @param App $app
-     * @param array $callback_query
-     * @param string $public_id
-     * @return void
-     */
-    private function handlePostToChannel(App $app, array $callback_query, string $public_id): void
+    private function showChannelSelectionForPosting(App $app, array $callback_query, string $public_id): void
     {
+        $callback_query_id = $callback_query['id'];
+        $telegram_user_id = $app->user['id'];
+
+        $feature_channel_repo = new \TGBot\Database\FeatureChannelRepository($app->pdo);
+        $channels = $feature_channel_repo->findAllByOwnerAndFeature($telegram_user_id, 'sell');
+
+        if (empty($channels)) {
+            $app->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Anda belum mendaftarkan channel jualan.', true);
+            return;
+        }
+
+        if (count($channels) === 1) {
+            // If only one channel, post directly
+            $this->handlePostToSelectedChannel($app, $callback_query, $public_id . '_' . $channels[0]['id']);
+            return;
+        }
+
+        // If multiple channels, show selection keyboard
+        $keyboard_buttons = [];
+        foreach ($channels as $channel) {
+            $channel_name = $channel['name'] ?? ('Channel ID: ' . $channel['public_channel_id']);
+            $keyboard_buttons[] = [['text' => $channel_name, 'callback_data' => "post_to_{$public_id}_{$channel['id']}"]];
+        }
+
+        $keyboard = ['inline_keyboard' => $keyboard_buttons];
+        $app->telegram_api->sendMessage(
+            $app->chat_id,
+            "Pilih channel tujuan untuk mem-posting:",
+            null,
+            json_encode($keyboard)
+        );
+        $app->telegram_api->answerCallbackQuery($callback_query_id);
+    }
+
+    private function handlePostToSelectedChannel(App $app, array $callback_query, string $params): void
+    {
+        $parts = explode('_', $params);
+        if (count($parts) < 2) {
+            $app->telegram_api->answerCallbackQuery($callback_query['id'], '⚠️ Format callback tidak valid.', true);
+            return;
+        }
+        $feature_channel_id = (int)array_pop($parts);
+        $public_id = implode('_', $parts);
+
         $package_repo = new MediaPackageRepository($app->pdo);
         $post_package_repo = new ChannelPostPackageRepository($app->pdo);
+        $feature_channel_repo = new \TGBot\Database\FeatureChannelRepository($app->pdo);
 
         $callback_query_id = $callback_query['id'];
         $telegram_user_id = $app->user['id'];
@@ -85,12 +124,24 @@ class CallbackQueryHandler implements HandlerInterface
             return;
         }
 
-        $sales_channel = $sales_channel_repo->findBySellerId($telegram_user_id);
-        if (!$sales_channel) {
-            $app->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Anda belum mendaftarkan channel jualan.', true);
+        $sales_channel = $feature_channel_repo->find($feature_channel_id);
+        if (!$sales_channel || $sales_channel['owner_user_id'] != $telegram_user_id) {
+            $app->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Channel tidak valid atau Anda tidak memiliki izin.', true);
             return;
         }
-        $channel_id = $sales_channel['channel_id'];
+
+        $channel_id = $sales_channel['public_channel_id'];
+        $managing_bot_id = $sales_channel['managing_bot_id'];
+
+        // Get the correct bot API instance
+        $bot_repo = new \TGBot\Database\BotRepository($app->pdo);
+        $managing_bot = $bot_repo->find($managing_bot_id);
+        if (!$managing_bot) {
+             $app->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Gagal mendapatkan data bot pengelola.', true);
+             return;
+        }
+        $posting_api = new \TGBot\TelegramAPI($managing_bot['token']);
+
 
         $thumbnail = $package_repo->getThumbnailFile($package['id']);
         if (!$thumbnail) {
@@ -106,22 +157,30 @@ class CallbackQueryHandler implements HandlerInterface
         );
 
         try {
-            $result = $app->telegram_api->copyMessage($channel_id, $thumbnail['chat_id'], $thumbnail['message_id'], $caption, 'Markdown', null, (bool)$package['protect_content']);
+            $result = $posting_api->copyMessage($channel_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $caption, 'Markdown', null, (bool)$package['protect_content']);
             if (!$result || ($result['ok'] === false)) throw new Exception($result['description'] ?? 'Unknown error');
 
             $post_package_repo->create($channel_id, $result['result']['message_id'], $package['id']);
-            $app->telegram_api->answerCallbackQuery($callback_query_id, '✅ Berhasil di-posting!', false);
+
+            // Edit the selection message to show success
+            if (isset($callback_query['message']['message_id'])) {
+                $app->telegram_api->editMessageText($app->chat_id, $callback_query['message']['message_id'], '✅ Berhasil di-posting ke channel ' . htmlspecialchars($sales_channel['name']) . '!');
+            } else {
+                $app->telegram_api->answerCallbackQuery($callback_query_id, '✅ Berhasil di-posting!', false);
+            }
 
         } catch (Exception $e) {
+            $error_message = "❌ Gagal mem-posting. Pastikan bot adalah admin dengan izin yang benar.";
             if (stripos($e->getMessage(), 'bot was kicked') !== false || stripos($e->getMessage(), 'not a member') !== false) {
-                $sales_channel_repo->deactivate($telegram_user_id);
-                $error_message = "❌ Gagal: Bot bukan lagi admin di channel. Channel Anda telah di-unregister.";
-                app_log("Deactivating channel {$channel_id} for user {$telegram_user_id} due to being kicked.", 'bot_error');
-            } else {
-                $error_message = "❌ Gagal mem-posting. Pastikan bot adalah admin dengan izin yang benar.";
-                app_log("Gagal post ke channel {$channel_id} untuk user {$telegram_user_id}: " . $e->getMessage(), 'bot_error');
+                 $error_message = "❌ Gagal: Bot bukan lagi admin di channel.";
             }
-            $app->telegram_api->answerCallbackQuery($callback_query_id, $error_message, true);
+
+            if (isset($callback_query['message']['message_id'])) {
+                $app->telegram_api->editMessageText($app->chat_id, $callback_query['message']['message_id'], $error_message);
+            } else {
+                $app->telegram_api->answerCallbackQuery($callback_query_id, $error_message, true);
+            }
+            app_log("Gagal post ke channel {$channel_id} untuk user {$telegram_user_id}: " . $e->getMessage(), 'bot_error');
         }
     }
 

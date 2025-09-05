@@ -250,20 +250,9 @@ class MessageHandler implements HandlerInterface
         ];
 
         try {
-            // Check if user already has a sell channel configuration
-            // This logic might need a dedicated method in the repository
-            $stmt = $app->pdo->prepare("SELECT id FROM feature_channels WHERE owner_user_id = ? AND feature_type = 'sell'");
-            $stmt->execute([$app->user['id']]);
-            $existing = $stmt->fetch();
-
-            if ($existing) {
-                $feature_channel_repo->update($existing['id'], $data);
-                $message = "✅ Selamat! Konfigurasi channel jualan Anda telah berhasil diperbarui.";
-            } else {
-                $feature_channel_repo->create($data);
-                $message = "✅ Selamat! Channel *{$app->telegram_api->escapeMarkdown($channel_title)}* (`{$channel_id}`) telah berhasil didaftarkan sebagai channel jualan Anda.";
-            }
-
+            // With multi-channel support, we always create a new entry.
+            $feature_channel_repo->create($data);
+            $message = "✅ Selamat! Channel *{$app->telegram_api->escapeMarkdown($channel_title)}* (`{$channel_id}`) telah berhasil didaftarkan sebagai channel jualan Anda.";
             $app->telegram_api->sendMessage($app->chat_id, $message, 'Markdown');
         } catch (\Exception $e) {
             \app_log('Error during seller channel registration: ' . $e->getMessage(), 'error');
@@ -396,8 +385,8 @@ class MessageHandler implements HandlerInterface
             if ($is_seller) {
                 $response = "Anda adalah pemilik konten ini. Anda dapat melihat atau mem-postingnya ke channel.";
                 $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$public_id}_0"]]];
-                $sales_channel_config = $feature_channel_repo->findByOwnerAndFeature($telegram_user_id, 'sell');
-                if ($sales_channel_config && !empty($sales_channel_config['public_channel_id'])) {
+                $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($telegram_user_id, 'sell');
+                if (!empty($sales_channels)) {
                     $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$public_id}"];
                 }
                 $keyboard = ['inline_keyboard' => $keyboard_buttons];
@@ -560,8 +549,8 @@ class MessageHandler implements HandlerInterface
         if ($has_access) {
             $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
             if ($is_seller) {
-                $sales_channel_config = $feature_channel_repo->findByOwnerAndFeature($app->user['id'], 'sell');
-                if ($sales_channel_config && !empty($sales_channel_config['public_channel_id'])) {
+                $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($app->user['id'], 'sell');
+                if (!empty($sales_channels)) {
                     $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
                 }
             }

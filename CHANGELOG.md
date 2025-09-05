@@ -1,5 +1,13 @@
 # Changelog
 
+## [5.2.6] - 2025-09-04
+
+### Fitur
+- **Dukungan Multi-Channel untuk Penjual**: Member sekarang dapat mendaftarkan dan mengelola beberapa channel penjualan secara bersamaan.
+  - Tampilan panel member di `/member/channels` telah diubah untuk menampilkan daftar semua channel yang terdaftar.
+  - Member dapat menambahkan channel baru kapan saja, dan menghapus channel yang sudah ada.
+  - Fitur "Post ke Channel" sekarang akan menampilkan pilihan channel jika member memiliki lebih dari satu, memberikan kontrol penuh kepada penjual.
+
 ## [5.2.5] - 2025-09-04
 
 ### Diperbaiki

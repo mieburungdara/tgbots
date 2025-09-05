@@ -267,12 +267,12 @@ class ContentController extends MemberBaseController
             $botRepo = new BotRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
-            $sell_channel = $channelRepo->findByOwnerAndFeature($user_id, 'sell');
+            $sell_channels = $channelRepo->findAllByOwnerAndFeature($user_id, 'sell');
             $sell_bots = $botRepo->findAllBotsByFeature('sell');
 
             $this->view('member/content/channels', [
                 'page_title' => 'Channel Saya',
-                'channel' => $sell_channel,
+                'channels' => $sell_channels,
                 'sell_bots' => $sell_bots
             ], 'member_layout');
         } catch (Exception $e) {
@@ -384,18 +384,54 @@ class ContentController extends MemberBaseController
                 'owner_user_id' => $user_id,
             ];
 
-            $existing = $featureChannelRepo->findByOwnerAndFeature($user_id, 'sell');
-
-            if ($existing) {
-                $featureChannelRepo->update($existing['id'], $data);
-                $_SESSION['flash_message'] = "Konfigurasi channel jualan Anda telah berhasil diperbarui.";
-            } else {
-                $featureChannelRepo->create($data);
-                $_SESSION['flash_message'] = "Selamat! Channel '" . htmlspecialchars($channel_title) . "' telah berhasil didaftarkan.";
-            }
+            // With multi-channel support, we always create a new entry.
+            // The user can delete old ones from the interface if they wish.
+            $featureChannelRepo->create($data);
+            $_SESSION['flash_message'] = "Selamat! Channel '" . htmlspecialchars($channel_title) . "' telah berhasil didaftarkan.";
         } catch (Exception $e) {
             \app_log('Error in ContentController/registerChannel: ' . $e->getMessage(), 'error');
             $_SESSION['flash_error'] = 'Terjadi kesalahan internal saat mencoba mendaftarkan channel.';
+        }
+
+        \redirect('/member/channels');
+    }
+
+    /**
+     * Menghapus channel jualan yang terdaftar.
+     *
+     * @return void
+     */
+    public function deleteChannel(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            \redirect('/member/channels');
+        }
+
+        $channel_id = filter_input(INPUT_POST, 'channel_id', FILTER_VALIDATE_INT);
+        $user_id = $_SESSION['member_user_id'];
+
+        if (!$channel_id) {
+            $_SESSION['flash_error'] = "ID channel tidak valid.";
+            \redirect('/member/channels');
+        }
+
+        try {
+            $pdo = \get_db_connection();
+            $channelRepo = new FeatureChannelRepository($pdo);
+
+            // Verify ownership before deleting
+            $channel = $channelRepo->find($channel_id);
+            if (!$channel || $channel['owner_user_id'] != $user_id) {
+                $_SESSION['flash_error'] = "Anda tidak memiliki izin untuk menghapus channel ini.";
+                \redirect('/member/channels');
+            }
+
+            $channelRepo->delete($channel_id);
+            $_SESSION['flash_message'] = "Channel berhasil dihapus.";
+
+        } catch (Exception $e) {
+            \app_log('Error in ContentController/deleteChannel: ' . $e->getMessage(), 'error');
+            $_SESSION['flash_error'] = 'Terjadi kesalahan internal saat mencoba menghapus channel.';
         }
 
         \redirect('/member/channels');
