@@ -49,7 +49,20 @@ function is_member_nav_active($slug, $current_path) {
         .list-table th { font-size: 0.9em; color: #666; font-weight: 600; }
         .list-table tr:last-child td { border-bottom: none; }
 
-        .navbar-toggle { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+        .navbar-toggle {
+            display: none;
+            background-color: transparent;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0px 8px;
+            color: #555;
+            line-height: 1;
+        }
+        .navbar-toggle:hover {
+            background-color: #f0f0f0;
+        }
 
         @media (max-width: 768px) {
             .nav-container { flex-wrap: wrap; }
