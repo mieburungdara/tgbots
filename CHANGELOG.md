@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.2.8] - 2025-09-04
+
+### Diubah
+- **Pendaftaran Channel Hanya via Web**: Perintah `/register_channel` telah dihapus dari bot. Pendaftaran dan pengelolaan channel penjualan sekarang hanya dapat dilakukan melalui panel member di website untuk menyederhanakan alur kerja.
+
 ## [5.2.7] - 2025-09-04
 
 ### Peningkatan
