@@ -61,6 +61,9 @@
     #history-table-container table th, #history-table-container table td { white-space: normal; word-break: break-all; }
     .pagination-btn { margin: 0 5px; }
     textarea { width: calc(100% - 22px); padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace; min-height: 80px; }
+    .collapsible-response { cursor: pointer; }
+    .collapsible-response pre { max-height: 100px; overflow: hidden; transition: max-height 0.2s ease-out; }
+    .collapsible-response.expanded pre { max-height: 1000px; /* Adjust as needed */ }
 </style>
 
 <script>
@@ -265,9 +268,17 @@ document.addEventListener('DOMContentLoaded', function() {
             row.appendChild(requestCell);
 
             const responseCell = document.createElement('td');
+            responseCell.className = 'collapsible-response';
             const responsePre = document.createElement('pre');
-            responsePre.textContent = JSON.stringify(JSON.parse(item.response_payload), null, 2);
+            try {
+                responsePre.textContent = JSON.stringify(JSON.parse(item.response_payload), null, 2);
+            } catch (e) {
+                responsePre.textContent = item.response_payload;
+            }
             responseCell.appendChild(responsePre);
+            responseCell.addEventListener('click', () => {
+                responseCell.classList.toggle('expanded');
+            });
             row.appendChild(responseCell);
 
             tbody.appendChild(row);
