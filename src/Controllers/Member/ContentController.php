@@ -374,12 +374,16 @@ class ContentController extends MemberBaseController
             $channel_info = $managing_bot_api->getChat($channel_id);
             $channel_title = $channel_info['ok'] ? $channel_info['result']['title'] : 'Channel Jualan';
 
+            $group_info = $managing_bot_api->getChat($group_id);
+            $group_title = $group_info['ok'] ? $group_info['result']['title'] : 'Grup Diskusi';
+
             $data = [
                 'name' => $channel_title, // Use the actual channel title
                 'feature_type' => 'sell',
                 'moderation_channel_id' => null, // Not used for 'sell' feature
                 'public_channel_id' => $channel_id,
                 'discussion_group_id' => $group_id,
+                'discussion_group_name' => $group_title,
                 'managing_bot_id' => $managing_bot_id,
                 'owner_user_id' => $user_id,
             ];

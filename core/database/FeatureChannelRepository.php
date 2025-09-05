@@ -43,7 +43,7 @@ class FeatureChannelRepository
      */
     public function create(array $data): bool
     {
-        $sql = "INSERT INTO feature_channels (name, feature_type, moderation_channel_id, public_channel_id, discussion_group_id, managing_bot_id, owner_user_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO feature_channels (name, feature_type, moderation_channel_id, public_channel_id, discussion_group_id, discussion_group_name, managing_bot_id, owner_user_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([
             $data['name'],
@@ -51,6 +51,7 @@ class FeatureChannelRepository
             $data['moderation_channel_id'] ?: null,
             $data['public_channel_id'] ?: null,
             $data['discussion_group_id'] ?: null,
+            $data['discussion_group_name'] ?: null,
             $data['managing_bot_id'],
             $data['owner_user_id'] ?: null,
         ]);
@@ -61,7 +62,7 @@ class FeatureChannelRepository
      */
     public function update(int $id, array $data): bool
     {
-        $sql = "UPDATE feature_channels SET name = ?, feature_type = ?, moderation_channel_id = ?, public_channel_id = ?, discussion_group_id = ?, managing_bot_id = ?, owner_user_id = ? WHERE id = ?";
+        $sql = "UPDATE feature_channels SET name = ?, feature_type = ?, moderation_channel_id = ?, public_channel_id = ?, discussion_group_id = ?, discussion_group_name = ?, managing_bot_id = ?, owner_user_id = ? WHERE id = ?";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([
             $data['name'],
@@ -69,6 +70,7 @@ class FeatureChannelRepository
             $data['moderation_channel_id'] ?: null,
             $data['public_channel_id'] ?: null,
             $data['discussion_group_id'] ?: null,
+            $data['discussion_group_name'] ?: null,
             $data['managing_bot_id'],
             $data['owner_user_id'] ?: null,
             $id
