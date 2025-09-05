@@ -48,6 +48,16 @@ function is_member_nav_active($slug, $current_path) {
         .list-table th, .list-table td { text-align: left; padding: 12px 8px; border-bottom: 1px solid #f0f0f0; }
         .list-table th { font-size: 0.9em; color: #666; font-weight: 600; }
         .list-table tr:last-child td { border-bottom: none; }
+
+        .navbar-toggle { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; }
+
+        @media (max-width: 768px) {
+            .nav-container { flex-wrap: wrap; }
+            nav { display: none; flex-direction: column; width: 100%; background-color: #fff; position: absolute; top: 70px; left: 0; box-shadow: 0 4px 2px -2px gray; }
+            nav.active { display: flex; }
+            nav a { border-bottom: 1px solid #f0f0f0; border-radius: 0; }
+            .navbar-toggle { display: block; }
+        }
     </style>
 </head>
 <body>
@@ -55,7 +65,8 @@ function is_member_nav_active($slug, $current_path) {
     <header class="header">
         <div class="nav-container">
             <h1><a href="/member/dashboard" style="text-decoration: none; color: inherit;">Member Area</a></h1>
-            <nav>
+            <button class="navbar-toggle" id="navbar-toggle-btn">☰</button>
+            <nav id="member-nav">
                 <a href="/member/dashboard" class="<?= is_member_nav_active('member/dashboard', $current_path) ? 'active' : '' ?>">Dashboard</a>
                 <a href="/member/my_content" class="<?= is_member_nav_active('member/my_content', $current_path) ? 'active' : '' ?>">Konten Saya</a>
                 <a href="/member/channels" class="<?= is_member_nav_active('member/channels', $current_path) ? 'active' : '' ?>">Channel Saya</a>
@@ -77,5 +88,15 @@ function is_member_nav_active($slug, $current_path) {
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
 
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('navbar-toggle-btn');
+        const nav = document.getElementById('member-nav');
+
+        toggleBtn.addEventListener('click', function() {
+            nav.classList.toggle('active');
+        });
+    });
+</script>
 </body>
 </html>
