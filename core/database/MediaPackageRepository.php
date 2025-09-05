@@ -348,11 +348,14 @@ class MediaPackageRepository
             // 3. Buat ID publik
             $public_id = $seller_info['public_seller_id'] . '_' . str_pad($new_sequence, 4, '0', STR_PAD_LEFT);
 
-            // 4. Masukkan paket baru
+            // 4. Tentukan status awal berdasarkan jenis post
+            $initial_status = ($post_type === 'sell') ? 'available' : 'pending';
+
+            // 5. Masukkan paket baru
             $stmt_package = $this->pdo->prepare(
-                "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id, post_type, category)\n                 VALUES (?, ?, ?, ?, 'pending', ?, ?, ?)"
+                "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id, post_type, category)\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
             );
-            $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $public_id, $post_type, $category]);
+            $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $initial_status, $public_id, $post_type, $category]);
             $package_id = $this->pdo->lastInsertId();
 
             return (int)$package_id;

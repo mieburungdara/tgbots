@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.2.5] - 2025-09-04
+
+### Diperbaiki
+- **Moderasi Otomatis untuk Fitur /sell**: Memperbaiki alur kerja fitur `/sell` yang sebelumnya secara keliru mengirimkan semua item untuk moderasi manual. Sekarang, item yang dijual melalui `/sell` akan secara otomatis ditandai sebagai `available` dan langsung dapat dibeli, sesuai dengan alur kerja yang diinginkan. Alur moderasi manual kini hanya berlaku untuk fitur `/rate` dan `/tanya`.
+
 ## [5.2.4] - 2025-09-04
 
 ### Fitur
