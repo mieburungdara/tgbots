@@ -264,4 +264,30 @@ class LogController extends BaseController {
             ], 'admin_layout');
         }
     }
+
+    public function clearPublicErrorLog(): void
+    {
+        try {
+            $log_file_path = __DIR__ . '/../../../public/error_log.txt';
+            if (file_exists($log_file_path)) {
+                // Menghapus isi file dengan menulis string kosong
+                if (file_put_contents($log_file_path, '') !== false) {
+                    $_SESSION['flash_message'] = "Log kesalahan publik berhasil dibersihkan.";
+                    \app_log('Log kesalahan publik berhasil dibersihkan oleh admin.', 'system');
+                } else {
+                    $_SESSION['flash_message'] = "Gagal membersihkan isi file log kesalahan publik.";
+                    \app_log('Gagal membersihkan isi public/error_log.txt: ' . $log_file_path, 'error');
+                }
+            } else {
+                $_SESSION['flash_message'] = "File log kesalahan publik tidak ditemukan.";
+                \app_log('File log kesalahan publik tidak ditemukan saat mencoba membersihkan: ' . $log_file_path, 'warning');
+            }
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = "Terjadi kesalahan saat membersihkan log: " . $e->getMessage();
+            \app_log('Error saat membersihkan log kesalahan publik: ' . $e->getMessage(), 'error');
+        }
+
+        header("Location: /xoradmin/public_error_log");
+        exit;
+    }
 }
