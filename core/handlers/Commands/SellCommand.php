@@ -11,6 +11,41 @@ class SellCommand implements CommandInterface
 {
     public function execute(App $app, array $message, array $parts): void
     {
+        $prerequisite_error = $this->validatePrerequisites($app, $message);
+        if ($prerequisite_error !== null) {
+            $app->telegram_api->sendMessage($app->chat_id, $prerequisite_error);
+            return;
+        }
+
+        $replied_message = $message['reply_to_message'];
+        $media_info = $this->getValidatedMediaInfo($app, $replied_message);
+
+        if ($media_info === null) {
+            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.");
+            return;
+        }
+
+        $media_group_id = $media_info['media_group_id'];
+        $description = $media_info['description'];
+
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
+        $state_context = [
+            'media_messages' => [['message_id' => $replied_message['message_id'], 'chat_id' => $replied_message['chat']['id']]]
+        ];
+        $user_repo->setUserState($app->user['id'], 'awaiting_price', $state_context);
+
+        $message_text = "✅ Media telah siap untuk dijual.\n\n";
+        if (!empty($description)) {
+            $message_text .= "Deskripsi: *\"" . $app->telegram_api->escapeMarkdown($description) . "\"*\n";
+        }
+        $message_text .= "Sekarang, silakan masukkan harga untuk paket ini (contoh: 50000).\n\n";
+        $message_text .= "_Ketik /cancel untuk membatalkan._";
+
+        $app->telegram_api->sendMessage($app->chat_id, $message_text, 'Markdown');
+    }
+
+    private function validatePrerequisites(App $app, array $message): ?string
+    {
         if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'sell') {
             $bot_repo = new BotRepository($app->pdo);
             $correct_bots = $bot_repo->findAllBotsByFeature('sell');
@@ -21,31 +56,29 @@ class SellCommand implements CommandInterface
                     $suggestion .= "- @" . $bot['username'] . "\n";
                 }
             }
-            $app->telegram_api->sendMessage($app->chat_id, "Perintah `/sell` tidak tersedia di bot ini." . $suggestion);
-            return;
+            return "Perintah /sell tidak tersedia di bot ini." . $suggestion;
         }
 
-        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
-
         if (!isset($message['reply_to_message'])) {
-            $app->telegram_api->sendMessage($app->chat_id, "Untuk menjual, silakan reply media yang ingin Anda jual dengan perintah /sell.");
-            return;
+            return "Untuk menjual, silakan reply media yang ingin Anda jual dengan perintah /sell.";
         }
 
         if (empty($app->user['public_seller_id'])) {
             $text = "Anda belum terdaftar sebagai penjual. Apakah Anda ingin mendaftar sekarang?\n\nDengan mendaftar, Anda akan mendapatkan ID Penjual unik.";
             $keyboard = ['inline_keyboard' => [[['text' => "Ya, Daftar Sekarang", 'callback_data' => "register_seller"]]]];
             $app->telegram_api->sendMessage($app->chat_id, $text, null, json_encode($keyboard));
-            return;
+            return "register_seller_prompt"; // Special return to indicate prompt sent
         }
 
-        $replied_message = $message['reply_to_message'];
+        return null; // All prerequisites passed
+    }
 
+    private function getValidatedMediaInfo(App $app, array $replied_message): ?array
+    {
         $stmt_check_media = $app->pdo->prepare("SELECT COUNT(*) FROM media_files WHERE message_id = ? AND chat_id = ?");
         $stmt_check_media->execute([$replied_message['message_id'], $replied_message['chat']['id']]);
         if ($stmt_check_media->fetchColumn() == 0) {
-             $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.");
-             return;
+             return null; // Media not found
         }
 
         $stmt_media_info = $app->pdo->prepare("SELECT media_group_id, caption FROM media_files WHERE message_id = ? AND chat_id = ?");
@@ -64,18 +97,9 @@ class SellCommand implements CommandInterface
             }
         }
 
-        $state_context = [
-            'media_messages' => [['message_id' => $replied_message['message_id'], 'chat_id' => $replied_message['chat']['id']]]
+        return [
+            'media_group_id' => $media_group_id,
+            'description' => $description
         ];
-        $user_repo->setUserState($app->user['id'], 'awaiting_price', $state_context);
-
-        $message_text = "✅ Media telah siap untuk dijual.\n\n";
-        if (!empty($description)) {
-            $message_text .= "Deskripsi: *\"" . $app->telegram_api->escapeMarkdown($description) . "\"*\n";
-        }
-        $message_text .= "Sekarang, silakan masukkan harga untuk paket ini (contoh: 50000).\n\n";
-        $message_text .= "_Ketik /cancel untuk membatalkan._";
-
-        $app->telegram_api->sendMessage($app->chat_id, $message_text, 'Markdown');
     }
 }
