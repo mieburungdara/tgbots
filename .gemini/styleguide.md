@@ -1,5 +1,20 @@
 # PHP Coding Style Guide (Tim Kita)
 
+Untuk code review, bagian judul/maksud review diletakkan di atas ikon prioritas, supaya pembaca langsung tahu poin utama sebelum lihat tingkat prioritasnya. Contohnya adalah:
+```
+### [Judul/Maksud Review]  
+
+![priority](https://www.gstatic.com/codereviewagent/medium-priority.svg)  
+
+[Deskripsi masalah] — jelaskan kenapa bagian kode ini nda sesuai, apa dampaknya, dan solusi/refactor yang disarankan.  
+Bisa sertakan snippet kode singkat kalau relevan.  
+
+#### Style Guide References
+[^1]: [Ringkasan aturan] [(link ke styleguide)]  
+
+_Originally posted by @gemini-code-assist[bot] in [PR/Discussion link]_
+```
+
 ## Prinsip Utama
 - **Readability**: kode harus mudah dibaca, komentar hanya jika benar-benar perlu.
 - **Consistency**: ikuti standar PSR-12 sebagai default.
