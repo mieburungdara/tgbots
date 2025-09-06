@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.2.10] - 2025-09-05
+
+### Fitur
+- **Perintah /about**: Menambahkan perintah baru `/about` yang menampilkan informasi tentang pengembang bot dan menyediakan link kontak untuk kerja sama.
+
 ## [5.2.9] - 2025-09-05
 
 ### Peningkatan
