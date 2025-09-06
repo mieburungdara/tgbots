@@ -81,7 +81,7 @@
                 ?>
                 <option value="" <?= empty($feature) ? 'selected' : '' ?>>-- Tidak ada --</option>
                 <?php foreach ($available_features as $value => $label): ?>
-                <option value="<?= $value ?>" <?= ($feature === $value) ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+                <option value="<?= htmlspecialchars($value) ?>" <?= ($feature === $value) ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
                 <?php endforeach; ?>
             </select>
         </div>
