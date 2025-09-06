@@ -375,22 +375,34 @@ class MediaPackageRepository
     public function getThumbnailFile(int $package_id)
     {
         $package = $this->find($package_id);
-        if (!$package) return false;
-
-        $thumbnail_media_id = $package['thumbnail_media_id'];
-
-        // Jika thumbnail spesifik di-set, gunakan itu
-        if (!empty($thumbnail_media_id)) {
-            $stmt = $this->pdo->prepare("SELECT * FROM media_files WHERE id = ?");
-            $stmt->execute([$thumbnail_media_id]);
-            $thumb = $stmt->fetch(PDO::FETCH_ASSOC);
-            if ($thumb) return $thumb;
+        if (!$package) {
+            return false;
         }
 
-        // Jika tidak, gunakan file pertama yang terkait dengan paket
-        $stmt = $this->pdo->prepare("SELECT * FROM media_files WHERE package_id = ? ORDER BY id ASC LIMIT 1");
-        $stmt->execute([$package_id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
+        $is_valid = fn ($file) => $file && !empty($file['storage_channel_id']) && !empty($file['storage_message_id']);
+
+        // 1. Coba dapatkan thumbnail yang eksplisit di-set dan periksa validitasnya.
+        if (!empty($package['thumbnail_media_id'])) {
+            $stmt = $this->pdo->prepare("SELECT * FROM media_files WHERE id = ?");
+            $stmt->execute([$package['thumbnail_media_id']]);
+            $thumb = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($is_valid($thumb)) {
+                return $thumb;
+            }
+        }
+
+        // 2. Jika thumbnail eksplisit tidak ada atau tidak valid, cari file valid pertama dalam paket.
+        $stmt_files = $this->pdo->prepare("SELECT * FROM media_files WHERE package_id = ? ORDER BY id ASC");
+        $stmt_files->execute([$package_id]);
+
+        while ($file = $stmt_files->fetch(PDO::FETCH_ASSOC)) {
+            if ($is_valid($file)) {
+                return $file; // Kembalikan file valid pertama yang ditemukan.
+            }
+        }
+
+        // 3. Jika tidak ada file yang valid sama sekali.
+        return false;
     }
 
     /**

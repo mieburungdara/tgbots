@@ -539,10 +539,9 @@ class MessageHandler implements HandlerInterface
 
         $thumbnail = $package_repo->getThumbnailFile($package_id);
 
-        // Pastikan thumbnail dan detail penyimpanannya valid sebelum melanjutkan.
-        if (!$thumbnail || empty($thumbnail['storage_channel_id']) || empty($thumbnail['storage_message_id'])) {
-            $app->telegram_api->sendMessage($app->chat_id, "Konten ini tidak memiliki media yang dapat ditampilkan atau data media rusak. Silakan hubungi admin.");
-            \app_log("Gagal menampilkan konten: Thumbnail atau detail penyimpanan tidak valid untuk package_id: {$package_id}", 'warning', ['package' => $package, 'thumbnail' => $thumbnail]);
+        if (!$thumbnail) {
+            $app->telegram_api->sendMessage($app->chat_id, "Konten ini tidak memiliki media yang dapat ditampilkan atau semua media di dalamnya rusak. Silakan hubungi admin.");
+            \app_log("Gagal menampilkan konten: Tidak ditemukan thumbnail yang valid untuk package_id: {$package_id}", 'warning', ['package' => $package]);
             return;
         }
 
@@ -569,17 +568,7 @@ class MessageHandler implements HandlerInterface
         $caption = $package['description'];
         $reply_markup = !empty($keyboard) ? json_encode($keyboard) : null;
 
-        // Redundant check for absolute safety, in case of caching or other issues.
-        $channel_id = $thumbnail['storage_channel_id'];
-        $message_id = $thumbnail['storage_message_id'];
-
-        if (!is_numeric($channel_id) || !is_numeric($message_id) || $message_id <= 0) {
-             $app->telegram_api->sendMessage($app->chat_id, "Gagal memuat konten karena data referensi media tidak valid. (Kode: M-568)");
-             \app_log("FATAL PRE-CHECK FAILED: Invalid channel_id or message_id just before copyMessage.", 'error', ['package' => $package, 'thumbnail' => $thumbnail]);
-             return;
-        }
-
-        $app->telegram_api->copyMessage($app->chat_id, (int)$channel_id, (int)$message_id, $caption, null, $reply_markup);
+        $app->telegram_api->copyMessage($app->chat_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $caption, null, $reply_markup);
     }
 
     /**
