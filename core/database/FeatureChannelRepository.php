@@ -95,4 +95,14 @@ class FeatureChannelRepository
         $stmt->execute([$owner_user_id, $feature_type]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }
+
+    /**
+     * Find a system-wide feature channel configuration (where owner is NULL).
+     */
+    public function findSystemChannelByFeature(string $feature_type)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM feature_channels WHERE feature_type = ? AND owner_user_id IS NULL LIMIT 1");
+        $stmt->execute([$feature_type]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
 }
