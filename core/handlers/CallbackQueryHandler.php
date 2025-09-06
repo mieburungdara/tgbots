@@ -17,16 +17,6 @@ class CallbackQueryHandler implements HandlerInterface
     {
         $callback_data = $callback_query['data'];
 
-        // Handle legacy rate/tanya handlers or integrate them into the new system if preferred
-        if (strpos($callback_data, 'rate_') === 0) {
-            (new RateHandler())->handle($app, $callback_query);
-            return;
-        }
-        if (strpos($callback_data, 'tanya_') === 0) {
-            (new TanyaHandler())->handle($app, $callback_query);
-            return;
-        }
-
         // Handle no-op callbacks
         if ($callback_data === 'noop') {
             $app->telegram_api->answerCallbackQuery($callback_query['id']);

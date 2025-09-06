@@ -12,6 +12,8 @@ use TGBot\Handlers\Callbacks\RetractPostCallback;
 use TGBot\Handlers\Callbacks\AdminApprovalCallback;
 use TGBot\Handlers\Callbacks\AdminRejectionCallback;
 use TGBot\Handlers\Callbacks\AdminBanCallback;
+use TGBot\Handlers\Callbacks\RateCallback;
+use TGBot\Handlers\Callbacks\TanyaCallback;
 
 class CallbackRouter
 {
@@ -29,6 +31,8 @@ class CallbackRouter
             'admin_approve_' => new AdminApprovalCallback(),
             'admin_reject_' => new AdminRejectionCallback(),
             'admin_ban_' => new AdminBanCallback(),
+            'rate_' => new RateCallback(),
+            'tanya_' => new TanyaCallback(),
         ];
     }
 
