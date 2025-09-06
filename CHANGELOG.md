@@ -1,5 +1,15 @@
 # Changelog
 
+## [5.2.12] - 2025-09-06
+
+### Diubah
+- **Logika Backup Media /sell**: Mengubah alur backup media yang dijual dari channel moderasi ke channel penyimpanan pribadi (private channel). Media sekarang disalin ke channel pribadi pertama yang ditemukan di database `private_channels` setelah harga divalidasi, bukan ke channel yang dikonfigurasi melalui `findSystemChannelByFeature`.
+
+## [5.2.11] - 2025-09-06
+
+### Dokumentasi
+- **Alur Perintah /sell**: Merevisi `alur.md` untuk menjelaskan secara lebih mudah dipahami alur kerja dan langkah-langkah untuk memeriksa serta menganalisis bagaimana perintah `/sell` diproses dalam sistem bot, mulai dari penerimaan webhook hingga logika penanganan state pengguna.
+
 ## [5.2.10] - 2025-09-05
 
 ### Fitur
@@ -155,7 +165,7 @@
 ## [5.1.17] - 2025-08-31
 
 ### Diperbaiki
-- **Fatal Error Class Not Found**: Memperbaiki error fatal `Class \"TGBot\\Controllers\\BaseController\" not found` yang terjadi secara sporadis di berbagai controller di dalam panel admin.
+- **Fatal Error Class Not Found**: Memperbaiki error fatal `Class "TGBot\\Controllers\\BaseController" not found` yang terjadi secara sporadis di berbagai controller di dalam panel admin.
   - **Penyebab**: Kurangnya autoloader terpusat (seperti Composer) menyebabkan `BaseController.php` tidak selalu dimuat sebelum controller turunan yang membutuhkannya.
   - **Solusi**: Menambahkan `require_once __DIR__ . \'/../BaseController.php\';` secara eksplisit di semua controller admin yang mewarisi `BaseController`. Ini memastikan kelas dasar selalu tersedia, menstabilkan seluruh panel admin dan mencegah error serupa di masa depan.
 

@@ -22,6 +22,7 @@ use TGBot\Database\AnalyticsRepository;
 use TGBot\Database\BotRepository;
 use TGBot\Database\ChannelPostPackageRepository;
 use TGBot\Database\FeatureChannelRepository;
+use TGBot\Database\BotChannelUsageRepository;
 use TGBot\Database\UserRepository;
 
 /**
@@ -165,34 +166,41 @@ class MessageHandler implements HandlerInterface
 
             $user_repo->setUserState($app->user['id'], null, null);
 
-            // --- Logic Backup ke Channel Admin ---
-            $feature_channel_repo = new FeatureChannelRepository($app->pdo);
-            $sell_channel_config = $feature_channel_repo->findSystemChannelByFeature('sell');
+            // --- Logic Backup Media ke Private Channel (menggunakan round-robin) ---
+            // Inisialisasi BotChannelUsageRepository
+            $bot_channel_usage_repo = new BotChannelUsageRepository($app->pdo);
+            $backup_channel_info = $bot_channel_usage_repo->getNextChannelForBot((int)$app->bot['id']);
 
-            if ($sell_channel_config && !empty($sell_channel_config['moderation_channel_id'])) {
-                $moderation_channel_id = $sell_channel_config['moderation_channel_id'];
+            $backup_channel_id = null;
+            if ($backup_channel_info) {
+                $backup_channel_id = $backup_channel_info['channel_id'];
+            }
+
+            if ($backup_channel_id) {
                 $package_files = $post_repo->getGroupedPackageContent($package_id);
 
-                $backup_caption = "Konten Baru untuk Dijual\n\nID Paket: `{$public_id}`\nPenjual: `{$app->user['id']}`\nHarga: Rp " . number_format($price, 0, ',', '.');
+                $backup_caption = "Konten Baru untuk Dijual (Backup)\n\nID Paket: `{$public_id}`\nPenjual: `{$app->user['id']}`\nHarga: Rp " . number_format($price, 0, ',', '.');
 
                 if (!empty($package_files)) {
                     // Kirim caption dulu
-                    $app->telegram_api->sendMessage($moderation_channel_id, $backup_caption, 'Markdown');
+                    $app->telegram_api->sendMessage($backup_channel_id, $backup_caption, 'Markdown');
 
                     // Kirim file-filenya
                     foreach ($package_files as $page) {
                         if (count($page) > 1) {
                             $message_ids = array_map(fn($file) => $file['storage_message_id'], $page);
                             $from_chat_id = $page[0]['storage_channel_id'];
-                            // Pastikan message_ids adalah JSON-encoded array of integers
-                            $app->telegram_api->copyMessages($moderation_channel_id, $from_chat_id, json_encode($message_ids));
+                            $app->telegram_api->copyMessages($backup_channel_id, $from_chat_id, json_encode($message_ids));
                         } elseif (!empty($page)) {
                             $file = $page[0];
-                            $app->telegram_api->copyMessage($moderation_channel_id, $file['storage_channel_id'], $file['storage_message_id']);
+                            $app->telegram_api->copyMessage($backup_channel_id, $file['storage_channel_id'], $file['storage_message_id']);
                         }
                          usleep(300000); // Tunggu 0.3 detik antar pengiriman untuk menghindari rate limit
                     }
+                    \app_log("Media untuk paket {$public_id} berhasil dibackup ke private channel: {$backup_channel_id}", 'info');
                 }
+            } else {
+                \app_log("Tidak ada private channel yang ditemukan atau dikonfigurasi untuk backup media paket {$public_id}.", 'warning');
             }
             // --- Akhir Logic Backup ---
 
