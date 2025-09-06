@@ -173,7 +173,7 @@ class LogController extends BaseController {
     public function publicErrorLog(): void
     {
         try {
-            $log_file_path = __DIR__ . "/../../../public/error_log.txt"; // Adjust path as needed
+            $log_file_path = __DIR__ . '/../../../public/error_log.txt';
             $parsed_logs = [];
             $error_message = null;
 
@@ -183,16 +183,23 @@ class LogController extends BaseController {
                     $error_message = "Gagal membaca isi file log: " . htmlspecialchars($log_file_path);
                     \app_log('Error reading public/error_log.txt: ' . $log_file_path, 'error');
                 } elseif (empty($log_content)) {
-                    $error_message = "File log kosong."; // Changed to error_message for consistency in view
+                    $error_message = "File log kosong.";
                 } else {
                     $lines = explode("\n", $log_content);
+                    $current_log_entry = null;
+
                     foreach ($lines as $line) {
                         $line = trim($line);
                         if (empty($line)) continue;
 
-                        // Regex to parse the log line
-                        // Example: [06-Sep-2025 08:51:22 UTC] PHP Fatal error: Cannot use ...
-                        if (preg_match('/^\[(.*?)\] (PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/', $line, $matches)) {
+                        // Regex to identify the start of a new log entry
+                        // Example: [06-Sep-2025 08:51:22 UTC] PHP Fatal error: ...
+                        if (preg_match('/^\['(.*?)'\].*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/', $line, $matches)) {
+                            // If there's a previous entry being built, save it
+                            if ($current_log_entry !== null) {
+                                $parsed_logs[] = $current_log_entry;
+                            }
+
                             $timestamp_utc_str = $matches[1];
                             $level = $matches[2];
                             $message = $matches[3];
@@ -208,20 +215,31 @@ class LogController extends BaseController {
                                 $timestamp_local_str = $timestamp_utc_str . ' (Error TZ)'; // Fallback
                             }
 
-                            $parsed_logs[] = [
-                                'timestamp' => $timestamp_local_str, // Use local timestamp
+                            $current_log_entry = [
+                                'timestamp' => $timestamp_local_str,
                                 'level' => $level,
                                 'message' => $message
                             ];
                         } else {
-                            // Handle lines that don't match the pattern, perhaps as part of the previous message
-                            // Or just add them as a generic log entry
-                            $parsed_logs[] = [
-                                'timestamp' => 'N/A',
-                                'level' => 'UNKNOWN',
-                                'message' => $line
-                            ];
+                            // This line is part of the previous log entry's message (e.g., stack trace)
+                            if ($current_log_entry !== null) {
+                                $current_log_entry['message'] .= "\n" . $line;
+                            } else {
+                                // If a line doesn't match the start of a new entry and there's no current entry,
+                                // it's an unparsable line at the beginning or a standalone line.
+                                // Treat it as a generic unknown entry.
+                                $parsed_logs[] = [
+                                    'timestamp' => 'N/A',
+                                    'level' => 'UNKNOWN',
+                                    'message' => $line
+                                ];
+                            }
                         }
+                    }
+
+                    // Add the last log entry if it exists
+                    if ($current_log_entry !== null) {
+                        $parsed_logs[] = $current_log_entry;
                     }
                 }
             } else {
@@ -231,7 +249,7 @@ class LogController extends BaseController {
 
             $this->view('admin/logs/public_error', [
                 'page_title' => 'Public Error Log Viewer',
-                'parsed_logs' => $parsed_logs, // Pass the parsed array
+                'parsed_logs' => $parsed_logs,
                 'error_message' => $error_message
             ], 'admin_layout');
         } catch (Exception $e) {
