@@ -173,8 +173,8 @@ class LogController extends BaseController {
     public function publicErrorLog(): void
     {
         try {
-            $log_file_path = __DIR__ . '/../../../public/error_log.txt'; // Adjust path as needed
-            $log_content = '';
+            $log_file_path = __DIR__ . "/../../../public/error_log.txt"; // Adjust path as needed
+            $parsed_logs = [];
             $error_message = null;
 
             if (file_exists($log_file_path)) {
@@ -183,7 +183,46 @@ class LogController extends BaseController {
                     $error_message = "Gagal membaca isi file log: " . htmlspecialchars($log_file_path);
                     \app_log('Error reading public/error_log.txt: ' . $log_file_path, 'error');
                 } elseif (empty($log_content)) {
-                    $log_content = "File log kosong.";
+                    $error_message = "File log kosong."; // Changed to error_message for consistency in view
+                } else {
+                    $lines = explode("\n", $log_content);
+                    foreach ($lines as $line) {
+                        $line = trim($line);
+                        if (empty($line)) continue;
+
+                        // Regex to parse the log line
+                        // Example: [06-Sep-2025 08:51:22 UTC] PHP Fatal error: Cannot use ...
+                        if (preg_match('/^\[(.*?)\] (PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/', $line, $matches)) {
+                            $timestamp_utc_str = $matches[1];
+                            $level = $matches[2];
+                            $message = $matches[3];
+
+                            // Convert UTC timestamp to local timezone
+                            try {
+                                $datetime_utc = new DateTime($timestamp_utc_str, new DateTimeZone('UTC'));
+                                $timezone = new DateTimeZone('Asia/Singapore'); // Assuming user's timezone is UTC+8
+                                $datetime_utc->setTimezone($timezone);
+                                $timestamp_local_str = $datetime_utc->format('d-M-Y H:i:s T'); // Format with timezone abbreviation
+                            } catch (Exception $e) {
+                                \app_log('Error converting timestamp: ' . $e->getMessage(), 'error');
+                                $timestamp_local_str = $timestamp_utc_str . ' (Error TZ)'; // Fallback
+                            }
+
+                            $parsed_logs[] = [
+                                'timestamp' => $timestamp_local_str, // Use local timestamp
+                                'level' => $level,
+                                'message' => $message
+                            ];
+                        } else {
+                            // Handle lines that don't match the pattern, perhaps as part of the previous message
+                            // Or just add them as a generic log entry
+                            $parsed_logs[] = [
+                                'timestamp' => 'N/A',
+                                'level' => 'UNKNOWN',
+                                'message' => $line
+                            ];
+                        }
+                    }
                 }
             } else {
                 $error_message = "File log tidak ditemukan: " . htmlspecialchars($log_file_path);
@@ -192,7 +231,7 @@ class LogController extends BaseController {
 
             $this->view('admin/logs/public_error', [
                 'page_title' => 'Public Error Log Viewer',
-                'log_content' => $log_content,
+                'parsed_logs' => $parsed_logs, // Pass the parsed array
                 'error_message' => $error_message
             ], 'admin_layout');
         } catch (Exception $e) {
