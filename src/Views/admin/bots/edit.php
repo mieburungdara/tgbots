@@ -75,11 +75,14 @@
         <div class="setting-item" style="margin-bottom: 10px;">
             <label for="assigned_feature">Fitur yang Ditugaskan:</label>
             <select name="assigned_feature" id="assigned_feature" style="padding: 5px; border-radius: 4px; border: 1px solid #ccc;">
-                <?php $feature = $data['bot']['assigned_feature'] ?? null; ?>
+                <?php
+                    $feature = $data['bot']['assigned_feature'] ?? null;
+                    $available_features = $data['available_features'] ?? [];
+                ?>
                 <option value="" <?= empty($feature) ? 'selected' : '' ?>>-- Tidak ada --</option>
-                <option value="sell" <?= ($feature === 'sell') ? 'selected' : '' ?>>Jual (/sell)</option>
-                <option value="rate" <?= ($feature === 'rate') ? 'selected' : '' ?>>Rating (/rate)</option>
-                <option value="tanya" <?= ($feature === 'tanya') ? 'selected' : '' ?>>Tanya (/tanya)</option>
+                <?php foreach ($available_features as $value => $label): ?>
+                <option value="<?= $value ?>" <?= ($feature === $value) ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
+                <?php endforeach; ?>
             </select>
         </div>
 

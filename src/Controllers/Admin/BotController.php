@@ -28,6 +28,15 @@ use TGBot\TelegramAPI;
 class BotController extends BaseController
 {
     /**
+     * @var string[]
+     */
+    private $available_features = [
+        'sell' => 'Jual (/sell)',
+        'rate' => 'Rating (/rate)',
+        'tanya' => 'Tanya (/tanya)',
+    ];
+
+    /**
      * Menampilkan halaman manajemen bot.
      *
      * @purpose Menampilkan halaman utama "Kelola Bot" yang berisi daftar semua bot
@@ -181,7 +190,8 @@ class BotController extends BaseController
                 'page_title' => 'Edit Bot: ' . htmlspecialchars($bot['first_name']),
                 'bot' => $bot,
                 'settings' => $settings,
-                'status_message' => $status_message
+                'status_message' => $status_message,
+                'available_features' => $this->available_features
             ], 'admin_layout');
         } catch (Exception $e) {
             \app_log('Error in BotController/edit: ' . $e->getMessage(), 'error');
@@ -232,8 +242,7 @@ class BotController extends BaseController
             }
 
             // Handle assigned_feature
-            $valid_features = ['sell', 'rate', 'tanya'];
-            if (in_array($assigned_feature, $valid_features)) {
+            if (array_key_exists($assigned_feature, $this->available_features)) {
                 $stmt_feature = $pdo->prepare("UPDATE bots SET assigned_feature = ? WHERE id = ?");
                 $stmt_feature->execute([$assigned_feature, $bot_id]);
             } else {
