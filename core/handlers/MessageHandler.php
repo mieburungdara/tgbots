@@ -569,7 +569,17 @@ class MessageHandler implements HandlerInterface
         $caption = $package['description'];
         $reply_markup = !empty($keyboard) ? json_encode($keyboard) : null;
 
-        $app->telegram_api->copyMessage($app->chat_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $caption, null, $reply_markup);
+        // Redundant check for absolute safety, in case of caching or other issues.
+        $channel_id = $thumbnail['storage_channel_id'];
+        $message_id = $thumbnail['storage_message_id'];
+
+        if (!is_numeric($channel_id) || !is_numeric($message_id) || $message_id <= 0) {
+             $app->telegram_api->sendMessage($app->chat_id, "Gagal memuat konten karena data referensi media tidak valid. (Kode: M-568)");
+             \app_log("FATAL PRE-CHECK FAILED: Invalid channel_id or message_id just before copyMessage.", 'error', ['package' => $package, 'thumbnail' => $thumbnail]);
+             return;
+        }
+
+        $app->telegram_api->copyMessage($app->chat_id, (int)$channel_id, (int)$message_id, $caption, null, $reply_markup);
     }
 
     /**
