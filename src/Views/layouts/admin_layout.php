@@ -44,7 +44,7 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
         .sidebar-header a { text-decoration: none; color: inherit; }
         .sidebar-nav { flex-grow: 1; display: flex; flex-direction: column; padding: 15px; }
         .sidebar-heading { font-size: 0.8em; color: #6c757d; margin-top: 10px; margin-bottom: 5px; padding: 0 15px; text-transform: uppercase; font-weight: bold; }
-        .sidebar-nav a { text-decoration: none; color: #333; padding: 0; border-radius: 5px; margin-bottom: 5px; transition: all 0.2s ease; font-size: 0.9em; }
+        .sidebar-nav a { text-decoration: none; color: #333; padding: 0; border-radius: 5px; margin-bottom: 8px; transition: all 0.2s ease; font-size: 0.9em; }
         .sidebar-nav a:hover { background-color: #f0f0f0; }
         .sidebar-nav a.active { font-weight: bold; background-color: #007bff; color: #fff; }
         .sidebar-footer { padding: 15px; border-top: 1px solid #f0f0f0; margin-top: 15px; transition: all 0.2s ease; }
@@ -251,11 +251,17 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
                 const targetContent = document.getElementById(targetId);
                 if (!targetContent) return;
 
-                // Initial state from localStorage or default to expanded
-                const isCollapsed = localStorage.getItem(`sidebar_collapse_${targetId}`) === 'true';
+                // Get state from localStorage, default to 'true' (collapsed) if not found
+                const storedState = localStorage.getItem(`sidebar_collapse_${targetId}`);
+                const isCollapsed = storedState === null ? true : storedState === 'true'; // Default to true (collapsed)
+
                 if (isCollapsed) {
                     targetContent.classList.add('collapsed');
                     toggle.classList.add('collapsed');
+                } else {
+                    // Ensure it's expanded if not collapsed (e.g., if it was explicitly expanded before)
+                    targetContent.classList.remove('collapsed');
+                    toggle.classList.remove('collapsed');
                 }
 
                 toggle.addEventListener('click', () => {
