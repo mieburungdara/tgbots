@@ -22,7 +22,29 @@ class AwaitingPriceState implements StateInterface
         }
 
         $post_repo = new MediaPackageRepository($app->pdo);
+        $package_data = $this->createMediaPackage($app, $state_context, $price, $post_repo);
+        $package_id = $package_data['package_id'];
+        $public_id = $package_data['public_id'];
 
+        $user_repo->setUserState($app->user['id'], null, null);
+
+        $bot_channel_usage_repo = new BotChannelUsageRepository($app->pdo);
+        $backup_channel_info = $bot_channel_usage_repo->getNextChannelForBot((int)$app->bot['id']);
+
+        if ($backup_channel_info) {
+            $backup_channel_id = $backup_channel_info['channel_id'];
+            $this->backupMedia($app, $package_id, $public_id, $price, $post_repo, $backup_channel_id);
+        }
+
+        $message_text = "✅ Paket berhasil dibuat dengan ID: `{$public_id}`\n";
+        $message_text .= "Harga: *Rp " . number_format($price, 0, ',', '.') . "*\n\n";
+        $message_text .= "Anda dapat melihat konten Anda dengan perintah `/konten {$public_id}`.";
+
+        $app->telegram_api->sendMessage($app->chat_id, $message_text, 'Markdown');
+    }
+
+    private function createMediaPackage(App $app, array $state_context, int $price, MediaPackageRepository $post_repo): array
+    {
         $media_message = $state_context['media_messages'][0];
         $message_id = $media_message['message_id'];
         $chat_id = $media_message['chat_id'];
@@ -52,21 +74,10 @@ class AwaitingPriceState implements StateInterface
         $post = $post_repo->find($package_id);
         $public_id = $post['public_id'];
 
-        $user_repo->setUserState($app->user['id'], null, null);
-
-        $bot_channel_usage_repo = new BotChannelUsageRepository($app->pdo);
-        $backup_channel_info = $bot_channel_usage_repo->getNextChannelForBot((int)$app->bot['id']);
-
-        if ($backup_channel_info) {
-            $backup_channel_id = $backup_channel_info['channel_id'];
-            $this->backupMedia($app, $package_id, $public_id, $price, $post_repo, $backup_channel_id);
-        }
-
-        $message_text = "✅ Paket berhasil dibuat dengan ID: `{$public_id}`\n";
-        $message_text .= "Harga: *Rp " . number_format($price, 0, ',', '.') . "*\n\n";
-        $message_text .= "Anda dapat melihat konten Anda dengan perintah `/konten {$public_id}`.";
-
-        $app->telegram_api->sendMessage($app->chat_id, $message_text, 'Markdown');
+        return [
+            'package_id' => $package_id,
+            'public_id' => $public_id
+        ];
     }
 
     private function backupMedia(App $app, int $package_id, string $public_id, int $price, MediaPackageRepository $post_repo, string $backup_channel_id): void
