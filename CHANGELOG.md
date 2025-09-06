@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.2.16] - 2025-09-06
+
+### Diperbaiki
+- **Duplikasi Teks Perintah Umum**: Merefaktor `HelpCommand.php` untuk menghilangkan duplikasi teks "PERINTAH UMUM" dalam pesan bantuan. Teks umum sekarang didefinisikan sekali dan ditambahkan secara terpusat, sesuai prinsip DRY.
+
 ## [5.2.15] - 2025-09-06
 
 ### Peningkatan
@@ -804,7 +809,7 @@
 
 ### Ditambahkan
 - **Fitur Bersihkan Database (Admin)**: Menambahkan fitur berisiko tinggi di halaman `admin/database.php` untuk membersihkan semua data transaksional.
-  - **Aksi**: Menghapus semua data dari tabel `users`, `sales`, `media_packages`, `media_files`, `messages`, dan tabel terkait lainnya.
+  - **Aksi**: Menghapus semua data dari tabel `users`, `sales`, `media_packages`, `media_files`, dan tabel terkait lainnya.
   - **Tujuan**: Memungkinkan admin untuk memulai ulang (reset) data aplikasi tanpa menghapus konfigurasi penting seperti `bots` dan `private_channels`.
   - **Keamanan**: Fitur ini ditempatkan di "Zona Berbahaya" dengan teks peringatan yang jelas dan dialog konfirmasi ganda untuk mencegah penggunaan yang tidak disengaja.
 
