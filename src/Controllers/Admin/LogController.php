@@ -245,6 +245,7 @@ class LogController extends BaseController {
                     usort($parsed_logs, function($a, $b) {
                         return $b['sortable_timestamp'] <=> $a['sortable_timestamp'];
                     });
+                }
             } else {
                 $error_message = "File log tidak ditemukan: " . htmlspecialchars($log_file_path);
                 \app_log('Public error log file not found: ' . $log_file_path, 'warning');
