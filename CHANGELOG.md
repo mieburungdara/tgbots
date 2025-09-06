@@ -1,5 +1,15 @@
 # Changelog
 
+## [5.2.10] - 2025-09-05
+
+### Fitur
+- **Perintah /about**: Menambahkan perintah baru `/about` yang menampilkan informasi tentang pengembang bot dan menyediakan link kontak untuk kerja sama.
+
+## [5.2.9] - 2025-09-05
+
+### Peningkatan
+- **Wizard Pendaftaran Channel**: Formulir pendaftaran channel di panel member telah diubah menjadi format wizard multi-langkah yang lebih interaktif dan menarik, meningkatkan pengalaman pengguna saat menambahkan channel baru.
+
 ## [5.2.8] - 2025-09-04
 
 ### Diubah

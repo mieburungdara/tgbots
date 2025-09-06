@@ -95,6 +95,9 @@ class MessageHandler implements HandlerInterface
             case '/help':
                 $this->handleHelpCommand($app, $message);
                 break;
+            case '/about':
+                $this->handleAboutCommand($app, $message);
+                break;
             case '/dev_addsaldo':
             case '/feature':
                 $this->handleAdminCommands($app, $message, $command, $parts);
@@ -227,6 +230,7 @@ class MessageHandler implements HandlerInterface
                 $help_text .= "➡️ `/me`\nLihat profil dan ringkasan penjualan.\n";
                 $help_text .= "➡️ `/balance`\nCek saldo Anda.\n";
                 $help_text .= "➡️ `/login`\nMasuk ke panel member web.\n";
+                $help_text .= "➡️ `/about`\nTentang bot ini.\n";
                 break;
 
             case 'rate':
@@ -235,6 +239,7 @@ class MessageHandler implements HandlerInterface
                 $help_text .= "*--- PERINTAH UMUM ---*\n";
                 $help_text .= "➡️ `/me`\nLihat profil Anda.\n";
                 $help_text .= "➡️ `/login`\nMasuk ke panel member web.\n";
+                $help_text .= "➡️ `/about`\nTentang bot ini.\n";
                 break;
 
             case 'tanya':
@@ -243,6 +248,7 @@ class MessageHandler implements HandlerInterface
                 $help_text .= "*--- PERINTAH UMUM ---*\n";
                 $help_text .= "➡️ `/me`\nLihat profil Anda.\n";
                 $help_text .= "➡️ `/login`\nMasuk ke panel member web.\n";
+                $help_text .= "➡️ `/about`\nTentang bot ini.\n";
                 break;
 
             default: // General or null feature
@@ -250,6 +256,7 @@ class MessageHandler implements HandlerInterface
                 $help_text .= "➡️ `/me`\nLihat profil Anda.\n";
                 $help_text .= "➡️ `/balance`\nCek saldo Anda.\n";
                 $help_text .= "➡️ `/login`\nMasuk ke panel member web.\n";
+                $help_text .= "➡️ `/about`\nTentang bot ini.\n";
                 break;
         }
 
@@ -260,6 +267,22 @@ class MessageHandler implements HandlerInterface
         }
 
         $app->telegram_api->sendLongMessage($app->chat_id, $help_text, 'Markdown');
+    }
+
+    /**
+     * Handle the /about command.
+     *
+     * @param App $app
+     * @param array $message
+     * @return void
+     */
+    private function handleAboutCommand(App $app, array $message): void
+    {
+        $about_text = "🤖 *Tentang Bot Ini*\n\n" .
+                      "Bot ini dikembangkan oleh *Zidin Mitra Abadi*.\n\n" .
+                      "Untuk pertanyaan atau peluang kerja sama, silakan hubungi kami melalui [link ini](https://t.me/your_contact_link_here)."; // Placeholder link
+
+        $app->telegram_api->sendMessage($app->chat_id, $about_text, 'Markdown');
     }
 
     /**
