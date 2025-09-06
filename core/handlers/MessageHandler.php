@@ -22,7 +22,6 @@ use TGBot\Database\AnalyticsRepository;
 use TGBot\Database\BotRepository;
 use TGBot\Database\ChannelPostPackageRepository;
 use TGBot\Database\FeatureChannelRepository;
-use TGBot\Database\BotChannelUsageRepository;
 use TGBot\Database\UserRepository;
 
 /**
