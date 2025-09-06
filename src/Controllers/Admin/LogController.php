@@ -199,8 +199,8 @@ class LogController extends BaseController {
 
                             // Convert UTC timestamp to local timezone
                             try {
-                                $datetime_utc = new DateTime($timestamp_utc_str, new DateTimeZone('UTC'));
-                                $timezone = new DateTimeZone('Asia/Singapore'); // Assuming user's timezone is UTC+8
+                                $datetime_utc = new \DateTime($timestamp_utc_str, new \DateTimeZone('UTC'));
+                                $timezone = new \DateTimeZone('Asia/Singapore'); // Assuming user's timezone is UTC+8
                                 $datetime_utc->setTimezone($timezone);
                                 $timestamp_local_str = $datetime_utc->format('d-M-Y H:i:s T'); // Format with timezone abbreviation
                             } catch (Exception $e) {
