@@ -59,7 +59,7 @@ class AwaitingPriceState implements StateInterface
 
         if ($backup_channel_info) {
             $backup_channel_id = $backup_channel_info['channel_id'];
-            $this->backupMedia($app, $package_id, $public_id, $price, $post_repo);
+            $this->backupMedia($app, $package_id, $public_id, $price, $post_repo, $backup_channel_id);
         }
 
         $message_text = "✅ Paket berhasil dibuat dengan ID: `{$public_id}`\n";
@@ -69,9 +69,8 @@ class AwaitingPriceState implements StateInterface
         $app->telegram_api->sendMessage($app->chat_id, $message_text, 'Markdown');
     }
 
-    private function backupMedia(App $app, int $package_id, string $public_id, int $price, MediaPackageRepository $post_repo): void
+    private function backupMedia(App $app, int $package_id, string $public_id, int $price, MediaPackageRepository $post_repo, string $backup_channel_id): void
     {
-        $backup_channel_id = (new BotChannelUsageRepository($app->pdo))->getNextChannelForBot((int)$app->bot['id'])['channel_id'] ?? null;
         if (!$backup_channel_id) return;
 
         $package_files = $post_repo->getGroupedPackageContent($package_id);
