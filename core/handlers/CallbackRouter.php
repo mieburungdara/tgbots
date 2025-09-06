@@ -35,13 +35,17 @@ class CallbackRouter
     public function route(string $callback_data): ?array
     {
         foreach ($this->routes as $prefix => $handler) {
-            if ($callback_data === $prefix) {
-                // Exact match
-                return ['handler' => $handler, 'params' => ''];
-            }
-            if (strpos($callback_data, $prefix) === 0) {
-                $params = substr($callback_data, strlen($prefix));
-                return ['handler' => $handler, 'params' => $params];
+            if (substr($prefix, -1) === '_') {
+                // Prefix route
+                if (strpos($callback_data, $prefix) === 0) {
+                    $params = substr($callback_data, strlen($prefix));
+                    return ['handler' => $handler, 'params' => $params];
+                }
+            } else {
+                // Exact match route
+                if ($callback_data === $prefix) {
+                    return ['handler' => $handler, 'params' => ''];
+                }
             }
         }
 
