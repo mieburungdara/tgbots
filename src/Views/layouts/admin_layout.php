@@ -44,7 +44,7 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
         .sidebar-header a { text-decoration: none; color: inherit; }
         .sidebar-nav { flex-grow: 1; display: flex; flex-direction: column; padding: 15px; }
         .sidebar-heading { font-size: 0.8em; color: #6c757d; margin-top: 10px; margin-bottom: 5px; padding: 0 15px; text-transform: uppercase; font-weight: bold; }
-        .sidebar-nav a { text-decoration: none; color: #333; padding: 12px 15px; border-radius: 5px; margin-bottom: 5px; transition: all 0.2s ease; font-size: 0.9em; }
+        .sidebar-nav a { text-decoration: none; color: #333; padding: 0; border-radius: 5px; margin-bottom: 5px; transition: all 0.2s ease; font-size: 0.9em; }
         .sidebar-nav a:hover { background-color: #f0f0f0; }
         .sidebar-nav a.active { font-weight: bold; background-color: #007bff; color: #fff; }
         .sidebar-footer { padding: 15px; border-top: 1px solid #f0f0f0; margin-top: 15px; transition: all 0.2s ease; }
@@ -92,6 +92,39 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
         .form-actions { margin-top: 20px; text-align: right; }
+
+        /* Collapsible styles */
+        .collapsible-toggle {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 15px; /* Match sidebar-nav a padding */
+            margin-bottom: 5px;
+            border-radius: 5px;
+            transition: background-color 0.2s ease;
+            user-select: none; /* Prevent text selection on double click */
+        }
+        .collapsible-toggle:hover {
+            background-color: #f0f0f0;
+        }
+        .collapsible-toggle::after {
+            content: '▼'; /* Down arrow */
+            font-size: 0.7em;
+            transition: transform 0.2s ease;
+        }
+        .collapsible-toggle.collapsed::after {
+            content: '►'; /* Right arrow */
+            transform: rotate(0deg);
+        }
+        .collapsible-content {
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            max-height: 500px; /* Max height when expanded, adjust as needed */
+        }
+        .collapsible-content.collapsed {
+            max-height: 0;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-okaidia.min.css" />
 </head>
@@ -104,29 +137,47 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
             <a href="/xoradmin/dashboard">Admin Panel</a>
         </div>
         <nav class="sidebar-nav">
-            <a href="/xoradmin/dashboard" class="<?= is_active_nav('xoradmin/dashboard', $current_path) ? 'active' : '' ?>">Dashboard</a>
-            <hr>
-            <p class="sidebar-heading">Content & Sales</p>
-            <a href="/xoradmin/analytics" class="<?= is_active_nav('xoradmin/analytics', $current_path) ? 'active' : '' ?>">Analytics</a>
-            <a href="/xoradmin/packages" class="<?= is_active_nav('xoradmin/packages', $current_path) ? 'active' : '' ?>">Content Management</a>
-            <hr>
-            <p class="sidebar-heading">Users & Roles</p>
-            <a href="/xoradmin/users" class="<?= is_active_nav('xoradmin/users', $current_path) ? 'active' : '' ?>">Users</a>
-            <a href="/xoradmin/balance" class="<?= is_active_nav('xoradmin/balance', $current_path) ? 'active' : '' ?>">Balance</a>
-            <a href="/xoradmin/roles" class="<?= is_active_nav('xoradmin/roles', $current_path) ? 'active' : '' ?>">Roles</a>
-            <hr>
-            <p class="sidebar-heading">Bot & Channels</p>
-            <a href="/xoradmin/bots" class="<?= is_active_nav('xoradmin/bots', $current_path) ? 'active' : '' ?>">Bot Management</a>
-            <a href="/xoradmin/storage_channels" class="<?= is_active_nav('xoradmin/storage_channels', $current_path) ? 'active' : '' ?>">Storage Channels</a>
-            <a href="/xoradmin/feature-channels" class="<?= is_active_nav('xoradmin/feature-channels', $current_path) ? 'active' : '' ?>">Feature Channels</a>
-            <hr>
-            <p class="sidebar-heading">System & Debug</p>
-            <a href="/xoradmin/logs" class="<?= is_active_nav('xoradmin/logs', $current_path) ? 'active' : '' ?>">App Logs</a>
-            <a href="/xoradmin/telegram_logs" class="<?= is_active_nav('xoradmin/telegram_logs', $current_path) ? 'active' : '' ?>">Telegram Error Logs</a>
-            <a href="/xoradmin/media_logs" class="<?= is_active_nav('xoradmin/media_logs', $current_path) ? 'active' : '' ?>">Media Logs</a>
-            <a href="/xoradmin/debug_feed" class="<?= is_active_nav('xoradmin/debug_feed', $current_path) ? 'active' : '' ?>">Debug Feed</a>
-            <a href="/xoradmin/database" class="<?= is_active_nav('xoradmin/database', $current_path) ? 'active' : '' ?>">Database</a>
-            <a href="/xoradmin/api_test" class="<?= is_active_nav('xoradmin/api_test', $current_path) ? 'active' : '' ?>">API Tester</a>
+            <div class="sidebar-section">
+                <a href="/xoradmin/dashboard" class="<?= is_active_nav('xoradmin/dashboard', $current_path) ? 'active' : '' ?>">Dashboard</a>
+            </div>
+
+            <div class="sidebar-section">
+                <p class="sidebar-heading collapsible-toggle" data-target="content-sales-collapse">Content & Sales</p>
+                <div id="content-sales-collapse" class="collapsible-content">
+                    <a href="/xoradmin/analytics" class="<?= is_active_nav('xoradmin/analytics', $current_path) ? 'active' : '' ?>">Analytics</a>
+                    <a href="/xoradmin/packages" class="<?= is_active_nav('xoradmin/packages', $current_path) ? 'active' : '' ?>">Content Management</a>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <p class="sidebar-heading collapsible-toggle" data-target="users-roles-collapse">Users & Roles</p>
+                <div id="users-roles-collapse" class="collapsible-content">
+                    <a href="/xoradmin/users" class="<?= is_active_nav('xoradmin/users', $current_path) ? 'active' : '' ?>">Users</a>
+                    <a href="/xoradmin/balance" class="<?= is_active_nav('xoradmin/balance', $current_path) ? 'active' : '' ?>">Balance</a>
+                    <a href="/xoradmin/roles" class="<?= is_active_nav('xoradmin/roles', $current_path) ? 'active' : '' ?>">Roles</a>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <p class="sidebar-heading collapsible-toggle" data-target="bot-channels-collapse">Bot & Channels</p>
+                <div id="bot-channels-collapse" class="collapsible-content">
+                    <a href="/xoradmin/bots" class="<?= is_active_nav('xoradmin/bots', $current_path) ? 'active' : '' ?>">Bot Management</a>
+                    <a href="/xoradmin/storage_channels" class="<?= is_active_nav('xoradmin/storage_channels', $current_path) ? 'active' : '' ?>">Storage Channels</a>
+                    <a href="/xoradmin/feature-channels" class="<?= is_active_nav('xoradmin/feature-channels', $current_path) ? 'active' : '' ?>">Feature Channels</a>
+                </div>
+            </div>
+
+            <div class="sidebar-section">
+                <p class="sidebar-heading collapsible-toggle" data-target="system-debug-collapse">System & Debug</p>
+                <div id="system-debug-collapse" class="collapsible-content">
+                    <a href="/xoradmin/logs" class="<?= is_active_nav('xoradmin/logs', $current_path) ? 'active' : '' ?>">App Logs</a>
+                    <a href="/xoradmin/telegram_logs" class="<?= is_active_nav('xoradmin/telegram_logs', $current_path) ? 'active' : '' ?>">Telegram Error Logs</a>
+                    <a href="/xoradmin/media_logs" class="<?= is_active_nav('xoradmin/media_logs', $current_path) ? 'active' : '' ?>">Media Logs</a>
+                    <a href="/xoradmin/debug_feed" class="<?= is_active_nav('xoradmin/debug_feed', $current_path) ? 'active' : '' ?>">Debug Feed</a>
+                    <a href="/xoradmin/database" class="<?= is_active_nav('xoradmin/database', $current_path) ? 'active' : '' ?>">Database</a>
+                    <a href="/xoradmin/api_test" class="<?= is_active_nav('xoradmin/api_test', $current_path) ? 'active' : '' ?>">API Tester</a>
+                </div>
+            </div>
         </nav>
         <div class="sidebar-footer">
             <?php if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true): ?>
@@ -191,6 +242,28 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
 
             window.addEventListener('resize', applySidebarState);
             applySidebarState(); // Initial state
+
+            // Collapsible sidebar-heading logic
+            const collapsibleToggles = document.querySelectorAll('.collapsible-toggle');
+
+            collapsibleToggles.forEach(toggle => {
+                const targetId = toggle.dataset.target;
+                const targetContent = document.getElementById(targetId);
+                if (!targetContent) return;
+
+                // Initial state from localStorage or default to expanded
+                const isCollapsed = localStorage.getItem(`sidebar_collapse_${targetId}`) === 'true';
+                if (isCollapsed) {
+                    targetContent.classList.add('collapsed');
+                    toggle.classList.add('collapsed');
+                }
+
+                toggle.addEventListener('click', () => {
+                    const isCurrentlyCollapsed = targetContent.classList.toggle('collapsed');
+                    toggle.classList.toggle('collapsed');
+                    localStorage.setItem(`sidebar_collapse_${targetId}`, isCurrentlyCollapsed);
+                });
+            });
         });
     </script>
 </body>
