@@ -39,6 +39,7 @@ $router->post('xoradmin/chat/delete', 'Admin/ChatController@delete');
 $router->get('xoradmin/logs', 'Admin/LogController@app');
 $router->post('xoradmin/logs/clear', 'Admin/LogController@clearAppLogs');
 $router->get('xoradmin/media_logs', 'Admin/LogController@media');
+$router->get('xoradmin/public_error_log', 'Admin/LogController@publicErrorLog');
 $router->get('xoradmin/telegram_logs', 'Admin/LogController@telegram');
 
 // API routes for Admin

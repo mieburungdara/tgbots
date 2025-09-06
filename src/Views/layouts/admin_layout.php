@@ -173,6 +173,7 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
                     <a href="/xoradmin/logs" class="<?= is_active_nav('xoradmin/logs', $current_path) ? 'active' : '' ?>">App Logs</a>
                     <a href="/xoradmin/telegram_logs" class="<?= is_active_nav('xoradmin/telegram_logs', $current_path) ? 'active' : '' ?>">Telegram Error Logs</a>
                     <a href="/xoradmin/media_logs" class="<?= is_active_nav('xoradmin/media_logs', $current_path) ? 'active' : '' ?>">Media Logs</a>
+                    <a href="/xoradmin/public_error_log" class="<?= is_active_nav('xoradmin/public_error_log', $current_path) ? 'active' : '' ?>">Public Error Log</a>
                     <a href="/xoradmin/debug_feed" class="<?= is_active_nav('xoradmin/debug_feed', $current_path) ? 'active' : '' ?>">Debug Feed</a>
                     <a href="/xoradmin/database" class="<?= is_active_nav('xoradmin/database', $current_path) ? 'active' : '' ?>">Database</a>
                     <a href="/xoradmin/api_test" class="<?= is_active_nav('xoradmin/api_test', $current_path) ? 'active' : '' ?>">API Tester</a>

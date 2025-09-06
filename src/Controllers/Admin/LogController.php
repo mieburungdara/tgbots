@@ -169,4 +169,38 @@ class LogController extends BaseController {
             ], 'admin_layout');
         }
     }
+
+    public function publicErrorLog(): void
+    {
+        try {
+            $log_file_path = __DIR__ . '/../../../public/error_log.txt'; // Adjust path as needed
+            $log_content = '';
+            $error_message = null;
+
+            if (file_exists($log_file_path)) {
+                $log_content = file_get_contents($log_file_path);
+                if ($log_content === false) {
+                    $error_message = "Gagal membaca isi file log: " . htmlspecialchars($log_file_path);
+                    \app_log('Error reading public/error_log.txt: ' . $log_file_path, 'error');
+                } elseif (empty($log_content)) {
+                    $log_content = "File log kosong.";
+                }
+            } else {
+                $error_message = "File log tidak ditemukan: " . htmlspecialchars($log_file_path);
+                \app_log('Public error log file not found: ' . $log_file_path, 'warning');
+            }
+
+            $this->view('admin/logs/public_error', [
+                'page_title' => 'Public Error Log Viewer',
+                'log_content' => $log_content,
+                'error_message' => $error_message
+            ], 'admin_layout');
+        } catch (Exception $e) {
+            \app_log('Error in LogController/publicErrorLog: ' . $e->getMessage(), 'error');
+            $this->view('admin/error', [
+                'page_title' => 'Error',
+                'error_message' => 'An error occurred while loading the public error log.'
+            ], 'admin_layout');
+        }
+    }
 }
