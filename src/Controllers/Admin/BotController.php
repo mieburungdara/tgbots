@@ -30,7 +30,7 @@ class BotController extends BaseController
     /**
      * @var string[]
      */
-    private $available_features = [
+    private const AVAILABLE_FEATURES = [
         'sell' => 'Jual (/sell)',
         'rate' => 'Rating (/rate)',
         'tanya' => 'Tanya (/tanya)',
@@ -191,7 +191,7 @@ class BotController extends BaseController
                 'bot' => $bot,
                 'settings' => $settings,
                 'status_message' => $status_message,
-                'available_features' => $this->available_features
+                'available_features' => self::AVAILABLE_FEATURES
             ], 'admin_layout');
         } catch (Exception $e) {
             \app_log('Error in BotController/edit: ' . $e->getMessage(), 'error');
@@ -242,7 +242,7 @@ class BotController extends BaseController
             }
 
             // Handle assigned_feature
-            if (array_key_exists($assigned_feature, $this->available_features)) {
+            if (array_key_exists($assigned_feature, self::AVAILABLE_FEATURES)) {
                 $stmt_feature = $pdo->prepare("UPDATE bots SET assigned_feature = ? WHERE id = ?");
                 $stmt_feature->execute([$assigned_feature, $bot_id]);
             } else {
