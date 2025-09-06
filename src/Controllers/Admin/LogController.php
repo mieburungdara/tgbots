@@ -209,39 +209,42 @@ class LogController extends BaseController {
                                 $datetime_utc = new \DateTime($timestamp_utc_str, new \DateTimeZone('UTC'));
                                 $timezone = new \DateTimeZone('Asia/Singapore'); // Assuming user's timezone is UTC+8
                                 $datetime_utc->setTimezone($timezone);
-                                $timestamp_local_str = $datetime_utc->format('d-M-Y H:i:s T'); // Format with timezone abbreviation
+                                $timestamp_local_str = $datetime_utc->format('d-M-Y H:i:s'); // Removed 'T'
+                                $sortable_timestamp = $datetime_utc->getTimestamp(); // Get Unix timestamp for sorting
                             } catch (Exception $e) {
                                 \app_log('Error converting timestamp: ' . $e->getMessage(), 'error');
-                                $timestamp_local_str = $timestamp_utc_str . ' (Error TZ)'; // Fallback
+                                $timestamp_local_str = $timestamp_utc_str . ' (Error TZ)';
+                                $sortable_timestamp = 0; // Fallback for sorting
                             }
 
                             $current_log_entry = [
                                 'timestamp' => $timestamp_local_str,
                                 'level' => $level,
-                                'message' => $message
+                                'message' => $message,
+                                'sortable_timestamp' => $sortable_timestamp // Store for sorting
                             ];
                         } else {
-                            // This line is part of the previous log entry's message (e.g., stack trace)
                             if ($current_log_entry !== null) {
                                 $current_log_entry['message'] .= "\n" . $line;
                             } else {
-                                // If a line doesn't match the start of a new entry and there's no current entry,
-                                // it's an unparsable line at the beginning or a standalone line.
-                                // Treat it as a generic unknown entry.
                                 $parsed_logs[] = [
                                     'timestamp' => 'N/A',
                                     'level' => 'UNKNOWN',
-                                    'message' => $line
+                                    'message' => $line,
+                                    'sortable_timestamp' => 0 // Fallback for sorting
                                 ];
                             }
                         }
                     }
 
-                    // Add the last log entry if it exists
                     if ($current_log_entry !== null) {
                         $parsed_logs[] = $current_log_entry;
                     }
-                }
+
+                    // Sort the logs by sortable_timestamp in descending order (newest first)
+                    usort($parsed_logs, function($a, $b) {
+                        return $b['sortable_timestamp'] <=> $a['sortable_timestamp'];
+                    });
             } else {
                 $error_message = "File log tidak ditemukan: " . htmlspecialchars($log_file_path);
                 \app_log('Public error log file not found: ' . $log_file_path, 'warning');
