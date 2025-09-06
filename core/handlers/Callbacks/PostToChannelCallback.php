@@ -66,10 +66,14 @@ class PostToChannelCallback implements CallbackCommandInterface
         );
 
         try {
+            $app->pdo->beginTransaction();
+
             $result = $posting_api->copyMessage($channel_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $caption, 'Markdown', null, (bool)$package['protect_content']);
             if (!$result || ($result['ok'] === false)) throw new Exception($result['description'] ?? 'Unknown error');
 
             $post_package_repo->create($channel_id, $result['result']['message_id'], $package['id']);
+
+            $app->pdo->commit();
 
             if (isset($callback_query['message']['message_id'])) {
                 $app->telegram_api->editMessageText($app->chat_id, $callback_query['message']['message_id'], '✅ Berhasil di-posting ke channel ' . htmlspecialchars($sales_channel['name']) . '!');
@@ -78,6 +82,7 @@ class PostToChannelCallback implements CallbackCommandInterface
             }
 
         } catch (Exception $e) {
+            $app->pdo->rollBack();
             $error_message = "❌ Gagal mem-posting. Pastikan bot adalah admin dengan izin yang benar.";
             if (stripos($e->getMessage(), 'bot was kicked') !== false || stripos($e->getMessage(), 'not a member') !== false) {
                  $error_message = "❌ Gagal: Bot bukan lagi admin di channel.";
