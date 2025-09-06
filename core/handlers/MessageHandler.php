@@ -175,6 +175,20 @@ class MessageHandler implements HandlerInterface
                 $backup_channel_id = $backup_channel_info['channel_id'];
             }
 
+            // --- Logic Backup Media ke Private Channel (menggunakan round-robin) ---
+            \app_log("[TRACE] Memulai logic backup media untuk package_id: {$package_id}", 'trace');
+            // Inisialisasi BotChannelUsageRepository
+            $bot_channel_usage_repo = new BotChannelUsageRepository($app->pdo);
+            $backup_channel_info = $bot_channel_usage_repo->getNextChannelForBot((int)$app->bot['id']);
+
+            $backup_channel_id = null;
+            if ($backup_channel_info) {
+                $backup_channel_id = $backup_channel_info['channel_id'];
+                \app_log("[TRACE] Channel backup ditemukan: {$backup_channel_id}", 'trace');
+            } else {
+                \app_log("[TRACE] Tidak ada channel backup yang ditemukan untuk bot ID: {$app->bot['id']}", 'trace');
+            }
+
             if ($backup_channel_id) {
                 $package_files = $post_repo->getGroupedPackageContent($package_id);
                 $media_file_repo = new MediaFileRepository($app->pdo); // Initialize MediaFileRepository
@@ -182,17 +196,21 @@ class MessageHandler implements HandlerInterface
                 $backup_caption = "Konten Baru untuk Dijual (Backup)\n\nID Paket: `{$public_id}`\nPenjual: `{$app->user['id']}`\nHarga: Rp " . number_format($price, 0, ',', '.');
 
                 if (!empty($package_files)) {
+                    \app_log("[TRACE] Mengirim caption backup ke channel: {$backup_channel_id}", 'trace');
                     // Kirim caption dulu
                     $app->telegram_api->sendMessage($backup_channel_id, $backup_caption, 'Markdown');
 
                     // Kirim file-filenya
-                    foreach ($package_files as $page) {
+                    foreach ($package_files as $page_index => $page) {
+                        \app_log("[TRACE] Memproses page {$page_index} dengan " . count($page) . " file.", 'trace');
                         if (count($page) > 1) {
-                            $message_ids_to_to_copy = array_map(fn($file) => $file['storage_message_id'], $page);
+                            $message_ids_to_copy = array_map(fn($file) => $file['storage_message_id'], $page);
                             $from_chat_id = $page[0]['storage_channel_id'];
+                            \app_log("[TRACE] Menyalin media group dari {$from_chat_id} ke {$backup_channel_id}. Message IDs: " . implode(', ', $message_ids_to_copy), 'trace');
                             $copied_messages_response = $app->telegram_api->copyMessages($backup_channel_id, $from_chat_id, json_encode($message_ids_to_copy));
 
                             if ($copied_messages_response && $copied_messages_response['ok']) {
+                                \app_log("[TRACE] Media group berhasil disalin. Memperbarui info penyimpanan.", 'trace');
                                 foreach ($copied_messages_response['result'] as $index => $copied_message) {
                                     $original_file = $page[$index]; // Assuming order is preserved
                                     $media_file_repo->updateStorageInfo(
@@ -200,25 +218,35 @@ class MessageHandler implements HandlerInterface
                                         $backup_channel_id,
                                         $copied_message['message_id']
                                     );
+                                    \app_log("[TRACE] Info penyimpanan diperbarui untuk media_file_id: {$original_file['id']} ke channel: {$backup_channel_id}, message_id: {$copied_message['message_id']}", 'trace');
                                 }
+                            } else {
+                                \app_log("[ERROR] Gagal menyalin media group. Response: " . json_encode($copied_messages_response), 'error');
                             }
                         } elseif (!empty($page)) {
                             $file = $page[0];
+                            \app_log("[TRACE] Menyalin file tunggal dari {$file['storage_channel_id']} ke {$backup_channel_id}. Message ID: {$file['storage_message_id']}", 'trace');
                             $copied_message_response = $app->telegram_api->copyMessage($backup_channel_id, $file['storage_channel_id'], $file['storage_message_id']);
                             if ($copied_message_response && $copied_message_response['ok']) {
+                                \app_log("[TRACE] File tunggal berhasil disalin. Memperbarui info penyimpanan.", 'trace');
                                 $media_file_repo->updateStorageInfo(
                                     $file['id'], // Assuming 'id' is available in $file
                                     $backup_channel_id,
                                     $copied_message_response['result']['message_id']
                                 );
+                                \app_log("[TRACE] Info penyimpanan diperbarui untuk media_file_id: {$file['id']} ke channel: {$backup_channel_id}, message_id: {$copied_message_response['result']['message_id']}", 'trace');
+                            } else {
+                                \app_log("[ERROR] Gagal menyalin file tunggal. Response: " . json_encode($copied_message_response), 'error');
                             }
                         }
                          usleep(300000); // Tunggu 0.3 detik antar pengiriman untuk menghindari rate limit
                     }
                     \app_log("Media untuk paket {$public_id} berhasil dibackup ke private channel: {$backup_channel_id}", 'info');
+                } else {
+                    \app_log("[WARNING] package_files kosong untuk package_id: {$package_id}. Tidak ada media yang akan dibackup.", 'warning');
                 }
             } else {
-                \app_log("Tidak ada private channel yang ditemukan atau dikonfigurasi untuk backup media paket {$public_id}.", 'warning');
+                \app_log("Tidak ada private channel yang ditemukan atau dikonfigurasi untuk backup media paket {$public_id}. Proses backup dilewati.", 'warning');
             }
             // --- Akhir Logic Backup ---
 

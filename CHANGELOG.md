@@ -1,5 +1,11 @@
 # Changelog
 
+## [5.2.15] - 2025-09-06
+
+### Peningkatan
+- **Logging Diagnostik Backup Media**: Menambahkan trace log yang lebih rinci pada alur backup media di `MessageHandler::handleState`.
+  - **Tujuan**: Membantu mendiagnosis mengapa media tidak berhasil disalin ke private channel backup, dengan mencatat setiap langkah proses, termasuk pemilihan channel, status penyalinan, dan pembaruan informasi penyimpanan.
+
 ## [5.2.14] - 2025-09-06
 
 ### Diperbaiki
