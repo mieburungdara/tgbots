@@ -42,8 +42,8 @@ class MediaFileRepository
      */
     public function saveMediaFile(array $params): string
     {
-        $sql = "INSERT INTO media_files (type, file_size, width, height, duration, mime_type, file_name, caption, caption_entities, user_id, chat_id, message_id, media_group_id, has_spoiler)
-                VALUES (:type, :file_size, :width, :height, :duration, :mime_type, :file_name, :caption, :caption_entities, :user_id, :chat_id, :message_id, :media_group_id, :has_spoiler)";
+        $sql = "INSERT INTO media_files (type, file_size, width, height, duration, mime_type, file_name, caption, caption_entities, user_id, chat_id, message_id, media_group_id, has_spoiler, storage_channel_id, storage_message_id)
+                VALUES (:type, :file_size, :width, :height, :duration, :mime_type, :file_name, :caption, :caption_entities, :user_id, :chat_id, :message_id, :media_group_id, :has_spoiler, :storage_channel_id, :storage_message_id)";
 
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute([
@@ -60,9 +60,25 @@ class MediaFileRepository
             ':chat_id' => $params['chat_id'],
             ':message_id' => $params['message_id'],
             ':media_group_id' => $params['media_group_id'] ?? null,
-            ':has_spoiler' => $params['has_spoiler'] ?? false
+            ':has_spoiler' => $params['has_spoiler'] ?? false,
+            ':storage_channel_id' => $params['storage_channel_id'] ?? null,
+            ':storage_message_id' => $params['storage_message_id'] ?? null
         ]);
 
         return $this->pdo->lastInsertId();
+    }
+
+    /**
+     * Update storage information for a media file.
+     *
+     * @param int $mediaFileId
+     * @param string $storageChannelId
+     * @param int $storageMessageId
+     * @return bool
+     */
+    public function updateStorageInfo(int $mediaFileId, string $storageChannelId, int $storageMessageId): bool
+    {
+        $stmt = $this->pdo->prepare("UPDATE media_files SET storage_channel_id = ?, storage_message_id = ? WHERE id = ?");
+        return $stmt->execute([$storageChannelId, $storageMessageId, $mediaFileId]);
     }
 }

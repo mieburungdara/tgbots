@@ -1,5 +1,20 @@
 # Changelog
 
+## [5.2.14] - 2025-09-06
+
+### Diperbaiki
+- **Thumbnail Tidak Ditemukan**: Memperbaiki masalah "Tidak ditemukan thumbnail yang valid" pada paket media.
+  - **Penyebab**: `storage_channel_id` dan `storage_message_id` tidak disimpan ke tabel `media_files` setelah media berhasil disalin ke channel penyimpanan pribadi.
+  - **Solusi**:
+    1.  Memperbarui `MediaFileRepository::saveMediaFile` untuk menyertakan kolom `storage_channel_id` dan `storage_message_id`.
+    2.  Menambahkan metode `MediaFileRepository::updateStorageInfo` untuk memperbarui informasi penyimpanan media.
+    3.  Memodifikasi `MessageHandler::handleState` untuk memanggil `MediaFileRepository::updateStorageInfo` setelah media berhasil disalin ke channel penyimpanan, memastikan `storage_channel_id` dan `storage_message_id` tercatat dengan benar.
+
+## [5.2.13] - 2025-09-06
+
+### Dokumentasi
+- **Alur Fitur /sell**: Menambahkan dokumentasi baru `alur_sell.md` yang menjelaskan secara rinci alur kerja dan logika penggunaan perintah `/sell`.
+
 ## [5.2.12] - 2025-09-06
 
 ### Diubah

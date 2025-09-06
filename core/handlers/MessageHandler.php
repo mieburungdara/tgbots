@@ -177,6 +177,7 @@ class MessageHandler implements HandlerInterface
 
             if ($backup_channel_id) {
                 $package_files = $post_repo->getGroupedPackageContent($package_id);
+                $media_file_repo = new MediaFileRepository($app->pdo); // Initialize MediaFileRepository
 
                 $backup_caption = "Konten Baru untuk Dijual (Backup)\n\nID Paket: `{$public_id}`\nPenjual: `{$app->user['id']}`\nHarga: Rp " . number_format($price, 0, ',', '.');
 
@@ -187,12 +188,30 @@ class MessageHandler implements HandlerInterface
                     // Kirim file-filenya
                     foreach ($package_files as $page) {
                         if (count($page) > 1) {
-                            $message_ids = array_map(fn($file) => $file['storage_message_id'], $page);
+                            $message_ids_to_to_copy = array_map(fn($file) => $file['storage_message_id'], $page);
                             $from_chat_id = $page[0]['storage_channel_id'];
-                            $app->telegram_api->copyMessages($backup_channel_id, $from_chat_id, json_encode($message_ids));
+                            $copied_messages_response = $app->telegram_api->copyMessages($backup_channel_id, $from_chat_id, json_encode($message_ids_to_copy));
+
+                            if ($copied_messages_response && $copied_messages_response['ok']) {
+                                foreach ($copied_messages_response['result'] as $index => $copied_message) {
+                                    $original_file = $page[$index]; // Assuming order is preserved
+                                    $media_file_repo->updateStorageInfo(
+                                        $original_file['id'], // Assuming 'id' is available in $page
+                                        $backup_channel_id,
+                                        $copied_message['message_id']
+                                    );
+                                }
+                            }
                         } elseif (!empty($page)) {
                             $file = $page[0];
-                            $app->telegram_api->copyMessage($backup_channel_id, $file['storage_channel_id'], $file['storage_message_id']);
+                            $copied_message_response = $app->telegram_api->copyMessage($backup_channel_id, $file['storage_channel_id'], $file['storage_message_id']);
+                            if ($copied_message_response && $copied_message_response['ok']) {
+                                $media_file_repo->updateStorageInfo(
+                                    $file['id'], // Assuming 'id' is available in $file
+                                    $backup_channel_id,
+                                    $copied_message_response['result']['message_id']
+                                );
+                            }
                         }
                          usleep(300000); // Tunggu 0.3 detik antar pengiriman untuk menghindari rate limit
                     }
