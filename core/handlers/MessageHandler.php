@@ -165,6 +165,37 @@ class MessageHandler implements HandlerInterface
 
             $user_repo->setUserState($app->user['id'], null, null);
 
+            // --- Logic Backup ke Channel Admin ---
+            $feature_channel_repo = new FeatureChannelRepository($app->pdo);
+            $sell_channel_config = $feature_channel_repo->findSystemChannelByFeature('sell');
+
+            if ($sell_channel_config && !empty($sell_channel_config['moderation_channel_id'])) {
+                $moderation_channel_id = $sell_channel_config['moderation_channel_id'];
+                $package_files = $post_repo->getGroupedPackageContent($package_id);
+
+                $backup_caption = "Konten Baru untuk Dijual\n\nID Paket: `{$public_id}`\nPenjual: `{$app->user['id']}`\nHarga: Rp " . number_format($price, 0, ',', '.');
+
+                if (!empty($package_files)) {
+                    // Kirim caption dulu
+                    $app->telegram_api->sendMessage($moderation_channel_id, $backup_caption, 'Markdown');
+
+                    // Kirim file-filenya
+                    foreach ($package_files as $page) {
+                        if (count($page) > 1) {
+                            $message_ids = array_map(fn($file) => $file['storage_message_id'], $page);
+                            $from_chat_id = $page[0]['storage_channel_id'];
+                            // Pastikan message_ids adalah JSON-encoded array of integers
+                            $app->telegram_api->copyMessages($moderation_channel_id, $from_chat_id, json_encode($message_ids));
+                        } elseif (!empty($page)) {
+                            $file = $page[0];
+                            $app->telegram_api->copyMessage($moderation_channel_id, $file['storage_channel_id'], $file['storage_message_id']);
+                        }
+                         usleep(300000); // Tunggu 0.3 detik antar pengiriman untuk menghindari rate limit
+                    }
+                }
+            }
+            // --- Akhir Logic Backup ---
+
             $message_text = "✅ Paket berhasil dibuat dengan ID: `{$public_id}`\n";
             $message_text .= "Harga: *Rp " . number_format($price, 0, ',', '.') . "*\n\n";
             $message_text .= "Anda dapat melihat konten Anda dengan perintah `/konten {$public_id}`.";
@@ -467,10 +498,9 @@ class MessageHandler implements HandlerInterface
 
         $thumbnail = $package_repo->getThumbnailFile($package_id);
 
-        // Pastikan thumbnail dan detail penyimpanannya valid sebelum melanjutkan.
-        if (!$thumbnail || empty($thumbnail['storage_channel_id']) || empty($thumbnail['storage_message_id'])) {
-            $app->telegram_api->sendMessage($app->chat_id, "Konten ini tidak memiliki media yang dapat ditampilkan atau data media rusak. Silakan hubungi admin.");
-            \app_log("Gagal menampilkan konten: Thumbnail atau detail penyimpanan tidak valid untuk package_id: {$package_id}", 'warning', ['package' => $package, 'thumbnail' => $thumbnail]);
+        if (!$thumbnail) {
+            $app->telegram_api->sendMessage($app->chat_id, "Konten ini tidak memiliki media yang dapat ditampilkan atau semua media di dalamnya rusak. Silakan hubungi admin.");
+            \app_log("Gagal menampilkan konten: Tidak ditemukan thumbnail yang valid untuk package_id: {$package_id}", 'warning', ['package' => $package]);
             return;
         }
 
@@ -497,17 +527,7 @@ class MessageHandler implements HandlerInterface
         $caption = $package['description'];
         $reply_markup = !empty($keyboard) ? json_encode($keyboard) : null;
 
-        // Redundant check for absolute safety, in case of caching or other issues.
-        $channel_id = $thumbnail['storage_channel_id'];
-        $message_id = $thumbnail['storage_message_id'];
-
-        if (!is_numeric($channel_id) || !is_numeric($message_id) || $message_id <= 0) {
-             $app->telegram_api->sendMessage($app->chat_id, "Gagal memuat konten karena data referensi media tidak valid. (Kode: M-568)");
-             \app_log("FATAL PRE-CHECK FAILED: Invalid channel_id or message_id just before copyMessage.", 'error', ['package' => $package, 'thumbnail' => $thumbnail]);
-             return;
-        }
-
-        $app->telegram_api->copyMessage($app->chat_id, (int)$channel_id, (int)$message_id, $caption, null, $reply_markup);
+        $app->telegram_api->copyMessage($app->chat_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $caption, null, $reply_markup);
     }
 
     /**
