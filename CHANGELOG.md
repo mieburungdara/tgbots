@@ -3,6 +3,7 @@
 ## [5.2.16] - 2025-09-06
 
 ### Diperbaiki
+- **Duplikasi Instansiasi AdminCommand**: Merefaktor `CommandRouter.php` untuk menggunakan satu instansi `AdminCommand` untuk perintah `/dev_addsaldo` dan `/feature`, menghilangkan duplikasi dan meningkatkan efisiensi.
 - **Duplikasi Teks Perintah Umum**: Merefaktor `HelpCommand.php` untuk menghilangkan duplikasi teks "PERINTAH UMUM" dalam pesan bantuan. Teks umum sekarang didefinisikan sekali dan ditambahkan secara terpusat, sesuai prinsip DRY.
 
 ## [5.2.15] - 2025-09-06
@@ -220,12 +221,12 @@
 ### Dokumentasi
 - **Langkah Verifikasi Instalasi**: Menambahkan bagian "Langkah 7: Verifikasi Instalasi" ke dalam `DOCUMENTATION.md`. Bagian ini memberikan daftar periksa (checklist) bagi pengguna untuk memastikan semua komponen (panel admin, respons bot, koneksi database) berfungsi dengan benar setelah proses instalasi selesai.
 
-## [5.1.11] - 2025-08-30
+## [5.1.11] - 2025-02-30
 
 ### Dokumentasi
 - **Panduan Troubleshooting**: Menambahkan bagian "Penyelesaian Masalah Umum" (Troubleshooting) baru ke dalam `DOCUMENTATION.md`. Bagian ini memberikan solusi langkah-demi-langkah untuk masalah umum seperti bot yang tidak merespons, error 500, masalah routing URL (`.htaccess`), dan kegagalan koneksi database.
 
-## [5.1.10] - 2025-08-30
+## [5.1.10] - 2025-09-05
 
 ### Dokumentasi
 - **Konsolidasi Dokumentasi**: Menggabungkan file `INSTALL.md` dan `howto.md` ke dalam satu file `DOCUMENTATION.md` yang komprehensif. File-file lama dihapus untuk menyederhanakan struktur dokumentasi dan menyediakan satu sumber informasi terpusat.
