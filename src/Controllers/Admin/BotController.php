@@ -36,6 +36,27 @@ class BotController extends BaseController
         'tanya' => 'Tanya (/tanya)',
     ];
 
+    private const FEATURE_COMMANDS = [
+        'sell' => [
+            ['command' => 'sell', 'description' => 'Jual konten Anda'],
+            ['command' => 'konten', 'description' => 'Lihat konten'],
+        ],
+        'rate' => [
+            ['command' => 'rate', 'description' => 'Minta Rate'],
+        ],
+        'tanya' => [
+            ['command' => 'tanya', 'description' => 'Ajukan pertanyaan'],
+        ],
+    ];
+
+    private const COMMON_COMMANDS = [
+        ['command' => 'start', 'description' => 'Memulai bot'],
+        ['command' => 'help', 'description' => 'Daftar perintah'],
+        ['command' => 'login', 'description' => 'Login ke panel member'],
+        ['command' => 'me', 'description' => 'Lihat profil Anda'],
+        ['command' => 'balance', 'description' => 'Lihat saldo Anda'],
+    ];
+
     /**
      * Menampilkan halaman manajemen bot.
      *
@@ -245,11 +266,19 @@ class BotController extends BaseController
             if (array_key_exists($assigned_feature, self::AVAILABLE_FEATURES)) {
                 $stmt_feature = $pdo->prepare("UPDATE bots SET assigned_feature = ? WHERE id = ?");
                 $stmt_feature->execute([$assigned_feature, $bot_id]);
+
+                $commands_to_set = array_merge(self::COMMON_COMMANDS, self::FEATURE_COMMANDS[$assigned_feature]);
             } else {
                 // If the value is empty or invalid, set it to NULL
                 $stmt_feature = $pdo->prepare("UPDATE bots SET assigned_feature = NULL WHERE id = ?");
                 $stmt_feature->execute([$bot_id]);
+
+                $commands_to_set = self::COMMON_COMMANDS; // Only common commands if feature is removed
             }
+
+            // Call setMyCommands
+            $telegram_api = $this->getBotAndApi($bot_id);
+            $telegram_api->setMyCommands($commands_to_set);
 
             $pdo->commit();
             $status_message = "Pengaturan berhasil disimpan.";
