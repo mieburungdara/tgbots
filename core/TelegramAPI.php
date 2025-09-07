@@ -563,6 +563,32 @@ class TelegramAPI
     }
 
     /**
+     * Edit a message's text.
+     *
+     * @param int|string $chat_id
+     * @param int $message_id
+     * @param string $text
+     * @param string|null $parse_mode
+     * @param string|null $reply_markup
+     * @return array
+     */
+    public function editMessageText($chat_id, int $message_id, string $text, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
+    {
+        $data = [
+            'chat_id' => $chat_id,
+            'message_id' => $message_id,
+            'text' => $text,
+        ];
+        if ($parse_mode) {
+            $data['parse_mode'] = $parse_mode;
+        }
+        if ($reply_markup) {
+            $data['reply_markup'] = $reply_markup;
+        }
+        return $this->apiRequest('editMessageText', $data);
+    }
+
+    /**
      * Send a long message.
      *
      * @param int|string $chat_id
@@ -611,4 +637,5 @@ class TelegramAPI
             $this->sendMessage($chat_id, $current_message, $parse_mode);
         }
     }
+}
 }
