@@ -52,9 +52,17 @@ class AwaitingPriceState implements StateInterface
         $message_id = $media_message['message_id'];
         $chat_id = $media_message['chat_id'];
 
+        error_log("[AwaitingPriceState] createMediaPackage - message_id: " . $message_id . ", chat_id: " . $chat_id);
+
         $stmt = $app->pdo->prepare("SELECT * FROM media_files WHERE message_id = ? AND chat_id = ?");
         $stmt->execute([$message_id, $chat_id]);
         $media_file = $stmt->fetch();
+
+        if (!$media_file) {
+            error_log("[AwaitingPriceState] createMediaPackage - No media_file found for message_id: " . $message_id . ", chat_id: " . $chat_id);
+            throw new \Exception("Media file not found for the given message.");
+        }
+        error_log("[AwaitingPriceState] createMediaPackage - media_file found: " . json_encode($media_file));
 
         $package_id = $post_repo->createPackageWithPublicId(
             $app->user['id'],
@@ -69,9 +77,11 @@ class AwaitingPriceState implements StateInterface
         if ($media_file['media_group_id']) {
             $stmt = $app->pdo->prepare("UPDATE media_files SET package_id = ? WHERE media_group_id = ?");
             $stmt->execute([$package_id, $media_file['media_group_id']]);
+            error_log("[AwaitingPriceState] createMediaPackage - Updated media_files for media_group_id: " . $media_file['media_group_id'] . ", rows affected: " . $stmt->rowCount());
         } else {
             $stmt = $app->pdo->prepare("UPDATE media_files SET package_id = ? WHERE id = ?");
             $stmt->execute([$package_id, $media_file['id']]);
+            error_log("[AwaitingPriceState] createMediaPackage - Updated media_file for id: " . $media_file['id'] . ", rows affected: " . $stmt->rowCount());
         }
 
         $post = $post_repo->find($package_id);
