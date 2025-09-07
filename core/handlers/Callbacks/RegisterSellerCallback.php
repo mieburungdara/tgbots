@@ -15,6 +15,7 @@ class RegisterSellerCallback implements CallbackCommandInterface
 
         if (!empty($app->user['public_seller_id'])) {
             $app->telegram_api->answerCallbackQuery($callback_query['id'], 'Anda sudah terdaftar sebagai penjual.', true);
+            $app->telegram_api->deleteMessage($callback_query['message']['chat']['id'], $callback_query['message']['message_id']);
             return;
         }
 
@@ -23,6 +24,7 @@ class RegisterSellerCallback implements CallbackCommandInterface
             $message = "Selamat! Anda berhasil terdaftar sebagai penjual.\n\nID Penjual Publik Anda adalah: *" . $app->telegram_api->escapeMarkdown($public_id) . "*\n\nSekarang Anda dapat menggunakan perintah /sell.";
             $app->telegram_api->sendMessage($app->chat_id, $message, 'Markdown');
             $app->telegram_api->answerCallbackQuery($callback_query['id']);
+            $app->telegram_api->deleteMessage($callback_query['message']['chat']['id'], $callback_query['message']['message_id']);
         } catch (Exception $e) {
             $app->telegram_api->answerCallbackQuery($callback_query['id'], 'Terjadi kesalahan saat mendaftar. Coba lagi.', true);
             app_log("Gagal mendaftarkan penjual: " . $e->getMessage(), 'error');
