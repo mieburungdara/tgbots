@@ -126,7 +126,7 @@ class AwaitingPriceState implements StateInterface
                 $file = $page[0];
                 $copied_message_response = $app->telegram_api->copyMessage($backup_channel_id, $file['storage_channel_id'], $file['storage_message_id']);
                 error_log("[AwaitingPriceState] copyMessage response: " . json_encode($copied_message_response));
-                if ($copied_message_response && $copied_messages_response['ok']) {
+                if ($copied_message_response && $copied_message_response['ok']) {
                     $media_file_repo->updateStorageInfo($file['id'], $backup_channel_id, $copied_message_response['result']['message_id']);
                 }
             }
