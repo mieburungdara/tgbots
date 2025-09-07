@@ -276,9 +276,10 @@ class BotController extends BaseController
                 $commands_to_set = self::COMMON_COMMANDS; // Only common commands if feature is removed
             }
 
-            // Call setMyCommands
+            // Call deleteMyCommands first, then setMyCommands
             $telegram_api = $this->getBotAndApi($bot_id);
-            $telegram_api->setMyCommands($commands_to_set);
+            $telegram_api->deleteMyCommands(); // Hapus perintah yang ada
+            $telegram_api->setMyCommands($commands_to_set); // Atur perintah baru
 
             $pdo->commit();
             $status_message = "Pengaturan berhasil disimpan.";
