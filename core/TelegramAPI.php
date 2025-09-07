@@ -206,7 +206,18 @@ class TelegramAPI
     {
         // Karakter yang perlu di-escape untuk Markdown lama
         $escape_chars = '_*`[';
-        return preg_replace('/([' . preg_quote($escape_chars, '/') . '])/', '\\$1', $text);
+        return preg_replace('/([' . preg_quote($escape_chars, '/') . '])/', '\$1', $text);
+    }
+
+    /**
+     * Escape text for HTML parse mode.
+     *
+     * @param string $text
+     * @return string
+     */
+    public function escapeHtml(string $text): string
+    {
+        return htmlspecialchars($text, ENT_HTML5, 'UTF-8', false);
     }
 
     /**
