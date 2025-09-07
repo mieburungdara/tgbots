@@ -109,68 +109,69 @@ class AwaitingPriceState implements StateInterface
             return;
         }
 
-        // Group files by their storage channel to handle multi-channel storage
-        $files_by_channel = [];
+        // Group files by their ORIGINAL chat_id
+        $files_by_chat = [];
         foreach ($all_files as $file) {
-            if (isset($file['storage_channel_id'], $file['storage_message_id'])) {
-                $files_by_channel[$file['storage_channel_id']][] = $file;
+            if (isset($file['chat_id'], $file['message_id'])) {
+                $files_by_chat[$file['chat_id']][] = $file;
             }
         }
 
         $media_file_repo = new MediaFileRepository($app->pdo);
 
-        // Process each channel group separately
-        foreach ($files_by_channel as $from_chat_id => $files) {
-            if (count($files) > 1) {
-                // Use copyMessages for groups of 2-100.
-                $message_ids_to_copy = array_map(fn($file) => (int)$file['storage_message_id'], $files);
+        // Process each original chat group separately
+        foreach ($files_by_chat as $from_chat_id => $files) {
+            $destination_chat_id = $backup_channel_id;
 
-                // copyMessages can only handle 100 messages at a time, so we chunk the array.
+            if (count($files) > 1) {
+                // Use the original message IDs for copying
+                $message_ids_to_copy = array_map(fn($file) => (int)$file['message_id'], $files);
+
                 $id_chunks = array_chunk($message_ids_to_copy, 100);
                 $file_chunks = array_chunk($files, 100);
 
                 foreach ($id_chunks as $index => $id_chunk) {
-                    // A chunk must have at least 2 messages for copyMessages
                     if (count($id_chunk) < 2) {
                         if (!empty($id_chunk)) {
                             $file = $file_chunks[$index][0];
-                            $copied_message_response = $app->telegram_api->copyMessage($backup_channel_id, $from_chat_id, $id_chunk[0]);
+                            $copied_message_response = $app->telegram_api->copyMessage($destination_chat_id, $from_chat_id, $id_chunk[0]);
                             if ($copied_message_response && $copied_message_response['ok']) {
-                                $media_file_repo->updateStorageInfo($file['id'], $backup_channel_id, $copied_message_response['result']['message_id']);
+                                // Now we update the storage info with the backup channel details
+                                $media_file_repo->updateStorageInfo($file['id'], $destination_chat_id, $copied_message_response['result']['message_id']);
                             } else {
                                 error_log("[AwaitingPriceState] Failed to copy single message from chunk to backup channel. Response: " . json_encode($copied_message_response));
-                                $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal mem-backup sebagian media ke channel penyimpanan.");
                             }
                             usleep(300000);
                         }
                         continue;
                     }
 
-                    $copied_messages_response = $app->telegram_api->copyMessages($backup_channel_id, $from_chat_id, json_encode($id_chunk));
+                    $copied_messages_response = $app->telegram_api->copyMessages($destination_chat_id, $from_chat_id, json_encode($id_chunk));
                     if ($copied_messages_response && $copied_messages_response['ok']) {
                         $original_files_chunk = $file_chunks[$index];
                         foreach ($copied_messages_response['result'] as $copied_index => $copied_message) {
                             $original_file = $original_files_chunk[$copied_index];
-                            $media_file_repo->updateStorageInfo($original_file['id'], $backup_channel_id, $copied_message['message_id']);
+                            // Update storage info with the backup channel details
+                            $media_file_repo->updateStorageInfo($original_file['id'], $destination_chat_id, $copied_message['message_id']);
                         }
                     } else {
                         error_log("[AwaitingPriceState] Failed to copy messages to backup channel. Response: " . json_encode($copied_messages_response));
-                        $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal mem-backup media ke channel penyimpanan. Media ini mungkin tidak dapat diakses di kemudian hari.");
+                        $app->telegram_api->sendMessage($app->user['id'], "⚠️ Gagal menyalin media Anda ke channel penyimpanan. Silakan coba lagi nanti atau hubungi admin.");
                     }
-                    usleep(300000); // Sleep between chunks
+                    usleep(300000);
                 }
             } elseif (!empty($files)) {
-                // Use copyMessage for single files
                 $file = $files[0];
-                $copied_message_response = $app->telegram_api->copyMessage($backup_channel_id, $from_chat_id, (int)$file['storage_message_id']);
+                $copied_message_response = $app->telegram_api->copyMessage($destination_chat_id, $from_chat_id, (int)$file['message_id']);
                 if ($copied_message_response && $copied_message_response['ok']) {
-                    $media_file_repo->updateStorageInfo($file['id'], $backup_channel_id, $copied_message_response['result']['message_id']);
+                    // Update storage info with the backup channel details
+                    $media_file_repo->updateStorageInfo($file['id'], $destination_chat_id, $copied_message_response['result']['message_id']);
                 } else {
                     error_log("[AwaitingPriceState] Failed to copy single message to backup channel. Response: " . json_encode($copied_message_response));
-                    $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal mem-backup media ke channel penyimpanan. Media ini mungkin tidak dapat diakses di kemudian hari.");
+                    $app->telegram_api->sendMessage($app->user['id'], "⚠️ Gagal menyalin media Anda ke channel penyimpanan. Silakan coba lagi nanti atau hubungi admin.");
                 }
             }
-            usleep(300000); // Sleep between channel groups
+            usleep(300000);
         }
     }
 }
