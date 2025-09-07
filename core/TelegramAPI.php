@@ -491,6 +491,27 @@ class TelegramAPI
     }
 
     /**
+     * Set the list of the bot's commands.
+     *
+     * @param array $commands A JSON-serialized list of bot commands to be set as the list of the bot's commands.
+     * @return array
+     */
+    public function setMyCommands(array $commands): array
+    {
+        return $this->apiRequest('setMyCommands', ['commands' => json_encode($commands)]);
+    }
+
+    /**
+     * Delete the list of the bot's commands.
+     *
+     * @return array
+     */
+    public function deleteMyCommands(): array
+    {
+        return $this->apiRequest('deleteMyCommands');
+    }
+
+    /**
      * Get bot info.
      *
      * @return array
