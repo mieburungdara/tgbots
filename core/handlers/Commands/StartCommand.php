@@ -63,7 +63,12 @@ class StartCommand implements CommandInterface
             $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
             $balance_formatted = "Rp " . number_format($app->user['balance'], 0, ',', '.');
             $escaped_description = $app->telegram_api->escapeMarkdown($package['description']);
-            $caption = "Anda tertarik dengan item berikut:\n\n*Deskripsi:* {"$escaped_description"}\n*Harga:* {"$price_formatted"}\n\nSaldo Anda saat ini: {"$balance_formatted"}.";
+            $caption = "Anda tertarik dengan item berikut:
+
+*Deskripsi:* {$escaped_description}
+*Harga:* {$price_formatted}
+
+Saldo Anda saat ini: {$balance_formatted}."
             $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang ({$price_formatted})", 'callback_data' => "buy_{$public_id}"]]]];
             $reply_markup = json_encode($keyboard);
 
