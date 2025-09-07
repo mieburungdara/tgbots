@@ -34,22 +34,11 @@ class CommandRouter
             '/me' => new MeCommand(),
             '/help' => new HelpCommand(),
             '/about' => new AboutCommand(),
-            $adminCommand = new AdminCommand();
-        $this->commands = [
-            '/start' => new StartCommand(),
-            '/sell' => new SellCommand(),
-            '/rate' => new RateCommand(),
-            '/tanya' => new TanyaCommand(),
-            '/addmedia' => new AddMediaCommand(),
-            '/konten' => new KontenCommand(),
-            '/balance' => new BalanceCommand(),
-            '/login' => new LoginCommand(),
-            '/me' => new MeCommand(),
-            '/help' => new HelpCommand(),
             '/about' => new AboutCommand(),
-            '/dev_addsaldo' => $adminCommand,
-            '/feature' => $adminCommand,
         ];
+        $adminCommand = new AdminCommand();
+        $this->commands['/dev_addsaldo'] = $adminCommand;
+        $this->commands['/feature'] = $adminCommand;
     }
 
     public function getCommand(string $command_name): ?CommandInterface

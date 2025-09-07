@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.2.17] - 2025-09-07
+
+### Diperbaiki
+- **Syntax Error di CommandRouter.php**: Memperbaiki `syntax error` yang disebabkan oleh penempatan yang salah dari instansiasi `AdminCommand` dan duplikasi inisialisasi array `$this->commands` di `core/handlers/CommandRouter.php`. Logika telah direstrukturisasi untuk memastikan instansiasi yang benar dan menghindari duplikasi.
+
 ## [5.2.16] - 2025-09-06
 
 ### Diperbaiki
