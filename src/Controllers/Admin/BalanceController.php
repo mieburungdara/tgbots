@@ -109,6 +109,10 @@ class BalanceController extends BaseController
      */
     public function adjust(): void
     {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
             header('Location: /xoradmin/balance');
             exit();
