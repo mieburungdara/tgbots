@@ -13,7 +13,12 @@
 ## [5.2.19] - 2025-09-07
 
 ### Diperbaiki
-- **Fatal Error Class Not Found di Autoloader**: Memperbaiki masalah `Class not found` untuk kelas-kelas di direktori `handlers/` dan `database/` yang disebabkan oleh penanganan path yang tidak konsisten pada autoloader. Mengubah `strtolower($directoryPath)` menjadi `strtolower(str_replace('\', '/', $directoryPath))` untuk memastikan path direktori selalu dalam huruf kecil dan menggunakan forward slashes, sesuai dengan struktur file pada sistem operasi case-sensitive seperti Linux.
+- **Fatal Error Class Not Found di Autoloader**: Memperbaiki masalah `Class not found` untuk kelas-kelas di direktori `handlers/` dan `database/` yang disebabkan oleh penanganan path yang tidak konsisten pada autoloader. Mengubah `strtolower($directoryPath)` menjadi `strtolower(str_replace('\\', '/', $directoryPath))` untuk memastikan path direktori selalu dalam huruf kecil dan menggunakan forward slashes, sesuai dengan struktur file pada sistem operasi case-sensitive seperti Linux.
+
+## [5.2.20] - 2025-09-07
+
+### Diperbaiki
+- **Parse Error di Autoloader**: Memperbaiki `parse error` pada `core/autoloader.php` baris 30 yang disebabkan oleh kesalahan escaping backslash dalam string. Mengubah `str_replace('\', '/', $directoryPath)` menjadi `str_replace('\\', '/', $directoryPath)` untuk memastikan sintaks yang benar.
 
 
 ## [5.2.16] - 2025-09-06

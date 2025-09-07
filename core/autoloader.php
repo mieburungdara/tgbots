@@ -25,7 +25,7 @@ spl_autoload_register(function ($class) {
             // Use dirname() and basename() for cleaner path manipulation.
             $directoryPath = dirname($relative_path);
             $classFileName = basename($relative_path);
-            $file = $base_dir . '/core/' . strtolower(str_replace('\', '/', $directoryPath)) . '/' . $classFileName . '.php';
+            $file = $base_dir . '/core/' . strtolower(str_replace('\\', '/', $directoryPath)) . '/' . $classFileName . '.php';
         } else {
             $file = $base_dir . '/core/' . $relative_path . '.php';
         }
