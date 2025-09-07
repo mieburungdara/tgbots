@@ -41,14 +41,31 @@ class StartCommand implements CommandInterface
         $has_purchased = $sale_repo->hasUserPurchased($package_id, $telegram_user_id);
 
         if ($is_seller) {
-            $response = "Anda adalah pemilik konten ini. Anda dapat melihat atau mem-postingnya ke channel.";
+            $sales_count = $sale_repo->countSalesForPackage($package_id);
+            $total_profit = $sales_count * $package['price'];
+
+            $response_text = sprintf(
+                "Anda adalah pemilik konten ini.\n\n*Deskripsi:* %s\n*Harga:* Rp %s\n*Terjual:* %d kali\n*Total Keuntungan:* Rp %s",
+                $app->telegram_api->escapeMarkdown($package['description']),
+                number_format($package['price'], 0, ',', '.'),
+                $sales_count,
+                number_format($total_profit, 0, ',', '.')
+            );
+
             $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$public_id}_0"]]];
             $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($telegram_user_id, 'sell');
             if (!empty($sales_channels)) {
                 $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$public_id}"];
             }
             $keyboard = ['inline_keyboard' => $keyboard_buttons];
-            $app->telegram_api->sendMessage($app->chat_id, $response, 'Markdown', json_encode($keyboard));
+
+            $thumbnail = $package_repo->getThumbnailFile($package_id);
+
+            if ($thumbnail && !empty($thumbnail['storage_channel_id']) && !empty($thumbnail['storage_message_id'])) {
+                $app->telegram_api->copyMessage($app->chat_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $response_text, 'Markdown', json_encode($keyboard));
+            } else {
+                $app->telegram_api->sendMessage($app->chat_id, $response_text, 'Markdown', json_encode($keyboard));
+            }
             return;
         }
 

@@ -83,13 +83,22 @@ class SaleRepository
     public function findPackagesByBuyerId(int $buyer_user_id): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT s.purchased_at, mp.*
-             FROM sales s
-             JOIN media_packages mp ON s.package_id = mp.id
-             WHERE s.buyer_user_id = ?
-             ORDER BY s.purchased_at DESC"
+            "SELECT s.purchased_at, mp.*\n             FROM sales s\n             JOIN media_packages mp ON s.package_id = mp.id\n             WHERE s.buyer_user_id = ?\n             ORDER BY s.purchased_at DESC"
         );
         $stmt->execute([$buyer_user_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Count the number of sales for a specific package.
+     *
+     * @param int $package_id The ID of the package.
+     * @return int The number of sales for the package.
+     */
+    public function countSalesForPackage(int $package_id): int
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM sales WHERE package_id = ?");
+        $stmt->execute([$package_id]);
+        return (int)$stmt->fetchColumn();
     }
 }
