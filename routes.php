@@ -58,6 +58,7 @@ $router->get('api/xoradmin/api_test', 'Admin/ApiTestController@handle');
 $router->post('api/xoradmin/api_test', 'Admin/ApiTestController@handle');
 $router->post('api/xoradmin/media/forward', 'Admin/ForwardManagerController@forward');
 $router->post('api/xoradmin/bots/check-webhook', 'Admin/BotController@getWebhookInfo');
+$router->post('api/xoradmin/bots/get-me', 'Admin/BotController@getMe');
 
 // Balance Page
 $router->get('xoradmin/balance', 'Admin/BalanceController@index');

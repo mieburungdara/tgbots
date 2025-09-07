@@ -5,6 +5,11 @@
 ### Diperbaiki
 - **Syntax Error di CommandRouter.php**: Memperbaiki `syntax error` yang disebabkan oleh penempatan yang salah dari instansiasi `AdminCommand` dan duplikasi inisialisasi array `$this->commands` di `core/handlers/CommandRouter.php`. Logika telah direstrukturisasi untuk memastikan instansiasi yang benar dan menghindari duplikasi.
 
+## [5.2.18] - 2025-09-07
+
+### Fitur
+- **Endpoint API getMe untuk Bot**: Menambahkan rute API baru `/api/xoradmin/bots/get-me` yang mengarah ke `Admin/BotController@getMe`. Ini memungkinkan pengambilan informasi bot terbaru dari Telegram API dan memperbarui data bot di database secara langsung melalui endpoint ini.
+
 ## [5.2.16] - 2025-09-06
 
 ### Diperbaiki
