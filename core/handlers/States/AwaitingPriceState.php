@@ -105,10 +105,6 @@ class AwaitingPriceState implements StateInterface
 
         $media_file_repo = new MediaFileRepository($app->pdo);
 
-        $backup_caption = "Konten Baru untuk Dijual (Backup)\n\nID Paket: `{$public_id}`\nPenjual: `{$app->user['id']}`\nHarga: Rp " . number_format($price, 0, ',', '.');
-
-        $app->telegram_api->sendMessage($backup_channel_id, $backup_caption, 'Markdown');
-
         foreach ($package_files as $page) {
             if (count($page) > 1) {
                 $message_ids_to_copy = array_map(fn($file) => $file['storage_message_id'], $page);
