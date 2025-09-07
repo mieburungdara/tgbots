@@ -638,4 +638,3 @@ class TelegramAPI
         }
     }
 }
-}
