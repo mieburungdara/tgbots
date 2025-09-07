@@ -45,7 +45,7 @@ class PostToChannelCallback implements CallbackCommandInterface
         $managing_bot_id = $sales_channel['managing_bot_id'];
 
         $bot_repo = new BotRepository($app->pdo);
-        $managing_bot = $bot_repo->find($managing_bot_id);
+        $managing_bot = $bot_repo->findBotByTelegramId($managing_bot_id);
         if (!$managing_bot) {
              $app->telegram_api->answerCallbackQuery($callback_query_id, '⚠️ Gagal mendapatkan data bot pengelola.', true);
              return;
