@@ -44,7 +44,6 @@ class HelpCommand implements CommandInterface
         }
 
         $help_text .= $general_commands_text;
-        }
 
         if ($app->user['role'] === 'Admin') {
             $help_text .= "\n*--- KHUSUS ADMIN ---*\n";
