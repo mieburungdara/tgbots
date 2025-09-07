@@ -63,7 +63,33 @@ class MediaHandler implements HandlerInterface
                 'has_spoiler' => $message['has_media_spoiler'] ?? false
             ];
 
-            $media_repo->saveMediaFile($params);
+            // Save initial media file info
+            $media_file_id = $media_repo->saveMediaFile($params);
+
+            // Attempt to copy media to storage channel
+            $bot_channel_usage_repo = new \TGBot\Database\BotChannelUsageRepository($app->pdo);
+            $storage_channel_info = $bot_channel_usage_repo->getNextChannelForBot((int)$app->bot['id']);
+
+            if ($storage_channel_info) {
+                $storage_channel_id = $storage_channel_info['channel_id'];
+                error_log("[MediaHandler] Copying message " . $message['message_id'] . " from chat " . $app->chat_id . " to storage channel " . $storage_channel_id);
+
+                $copied_message_response = $app->telegram_api->copyMessage(
+                    $storage_channel_id,
+                    $app->chat_id,
+                    $message['message_id']
+                );
+
+                if ($copied_message_response && $copied_message_response['ok']) {
+                    $copied_message_id = $copied_message_response['result']['message_id'];
+                    $media_repo->updateStorageInfo($media_file_id, $storage_channel_id, $copied_message_id);
+                    error_log("[MediaHandler] Successfully copied message to storage. media_file_id: " . $media_file_id . ", storage_channel_id: " . $storage_channel_id . ", storage_message_id: " . $copied_message_id);
+                } else {
+                    error_log("[MediaHandler] Failed to copy message to storage channel. Response: " . json_encode($copied_message_response));
+                }
+            } else {
+                error_log("[MediaHandler] No storage channel found for bot ID: " . $app->bot['id']);
+            }
         }
     }
 }
