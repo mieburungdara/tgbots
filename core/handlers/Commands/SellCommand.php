@@ -12,7 +12,11 @@ class SellCommand implements CommandInterface
     public function execute(App $app, array $message, array $parts): void
     {
         $prerequisite_error = $this->validatePrerequisites($app, $message);
-        if ($prerequisite_error !== null) {
+        if ($prerequisite_error === "register_seller_prompt") {
+            // Pesan pendaftaran sudah dikirim di validatePrerequisites(), jadi cukup berhenti di sini
+            return;
+        } elseif ($prerequisite_error !== null) {
+            // Ini adalah pesan error lain, kirimkan ke pengguna
             $app->telegram_api->sendMessage($app->chat_id, $prerequisite_error);
             return;
         }
@@ -67,8 +71,7 @@ class SellCommand implements CommandInterface
             $text = "Anda belum terdaftar sebagai penjual. Apakah Anda ingin mendaftar sekarang?\n\nDengan mendaftar, Anda akan mendapatkan ID Penjual unik.";
             $keyboard = ['inline_keyboard' => [[['text' => "Ya, Daftar Sekarang", 'callback_data' => "register_seller"]]]];
             $app->telegram_api->sendMessage($app->chat_id, $text, null, json_encode($keyboard));
-            return false;
-            //return "register_seller_prompt"; // Special return to indicate prompt sent
+            return "register_seller_prompt";
         }
 
         return null; // All prerequisites passed
