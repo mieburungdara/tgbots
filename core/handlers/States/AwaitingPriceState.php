@@ -109,6 +109,7 @@ class AwaitingPriceState implements StateInterface
             if (count($page) > 1) {
                 $message_ids_to_copy = array_map(fn($file) => $file['storage_message_id'], $page);
                 $from_chat_id = $page[0]['storage_channel_id'];
+                error_log("[AwaitingPriceState] Debug copyMessages - backup_channel_id: " . $backup_channel_id . ", from_chat_id: " . $from_chat_id . ", message_ids_to_copy: " . json_encode($message_ids_to_copy));
                 $copied_messages_response = $app->telegram_api->copyMessages($backup_channel_id, $from_chat_id, json_encode($message_ids_to_copy));
                 error_log("[AwaitingPriceState] copyMessages response: " . json_encode($copied_messages_response));
 
