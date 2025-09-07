@@ -10,6 +10,12 @@
 ### Fitur
 - **Endpoint API getMe untuk Bot**: Menambahkan rute API baru `/api/xoradmin/bots/get-me` yang mengarah ke `Admin/BotController@getMe`. Ini memungkinkan pengambilan informasi bot terbaru dari Telegram API dan memperbarui data bot di database secara langsung melalui endpoint ini.
 
+## [5.2.19] - 2025-09-07
+
+### Diperbaiki
+- **Fatal Error Class Not Found di Autoloader**: Memperbaiki masalah `Class not found` untuk kelas-kelas di direktori `handlers/` dan `database/` yang disebabkan oleh penanganan path yang tidak konsisten pada autoloader. Mengubah `strtolower($directoryPath)` menjadi `strtolower(str_replace('\', '/', $directoryPath))` untuk memastikan path direktori selalu dalam huruf kecil dan menggunakan forward slashes, sesuai dengan struktur file pada sistem operasi case-sensitive seperti Linux.
+
+
 ## [5.2.16] - 2025-09-06
 
 ### Diperbaiki
