@@ -12,32 +12,25 @@ spl_autoload_register(function ($class) {
 
     $relative_class = substr($class, strlen($prefix));
     $base_dir = realpath(__DIR__ . '/../');
-
-    // Controllers are in src/, other core classes are in core/
-    // IMPORTANT: Convert to lowercase for case-sensitive filesystems (Linux)
-    $relative_path = str_replace('\\', '/', $relative_class);
+    $relative_path = str_replace('\\', '/', $relative_class) . '.php';
 
     if (strpos($relative_class, 'Controllers\\') === 0) {
-        $file = $base_dir . '/src/' . $relative_path . '.php';
+        $file = $base_dir . '/src/' . $relative_path;
     } else {
-        // Handle special cases for `database` and `handlers` directories
-        if (strpos(strtolower($relative_path), 'database/') === 0 || strpos(strtolower($relative_path), 'handlers/') === 0) {
-            // Use dirname() and basename() for cleaner path manipulation.
-            $directoryPath = dirname($relative_path);
-            $classFileName = basename($relative_path);
-            $file = $base_dir . '/core/' . strtolower(str_replace('\\', '/', $directoryPath)) . '/' . $classFileName . '.php';
-        } else {
-            $file = $base_dir . '/core/' . $relative_path . '.php';
+        // First, try a direct mapping (PSR-4 style)
+        $file = $base_dir . '/core/' . $relative_path;
+
+        // If that fails, handle the inconsistent directory casing
+        if (!file_exists($file)) {
+            $parts = explode('/', $relative_path);
+            // Lowercase the first segment (e.g., 'Database' -> 'database', 'Handlers' -> 'handlers')
+            $parts[0] = strtolower($parts[0]);
+            $alt_file_path = implode('/', $parts);
+            $file = $base_dir . '/core/' . $alt_file_path;
         }
     }
 
     if (file_exists($file)) {
         require_once $file;
-    } else {
-        // Fallback for cases where the namespace doesn't match the directory
-        $fallback_file = $base_dir . '/src/' . str_replace('\\', '/', $relative_class) . '.php';
-        if (file_exists($fallback_file)) {
-            require_once $fallback_file;
-        }
     }
 });
