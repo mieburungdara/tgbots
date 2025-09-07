@@ -32,23 +32,28 @@ class KontenCommand implements CommandInterface
         $is_seller = ($package['seller_user_id'] == $app->user['id']);
 
         if ($is_seller) {
-            $sales_count = $sale_repo->countSalesForPackage($package_id);
-            $total_earnings = $sales_count * $package['price'];
-            $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
-            $total_earnings_formatted = "Rp " . number_format($total_earnings, 0, ',', '.');
-            $created_at = date('d M Y H:i', strtotime($package['created_at']));
+            try {
+                $sales_count = $sale_repo->countSalesForPackage($package_id);
+                $total_earnings = $sales_count * $package['price'];
+                $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+                $total_earnings_formatted = "Rp " . number_format($total_earnings, 0, ',', '.');
+                $created_at = date('d M Y H:i', strtotime($package['created_at']));
 
-            $report = "✨ *Laporan Konten*\n\n" .
-                "ID Konten: `{$package['public_id']}`\n" .
-                "Deskripsi: {$package['description']}\n" .
-                "Harga: {$price_formatted}\n" .
-                "Status: {$package['status']}\n" .
-                "Tanggal Dibuat: {$created_at}\n\n" .
-                "📈 *Statistik Penjualan*\n" .
-                "Jumlah Terjual: {$sales_count} kali\n" .
-                "Total Pendapatan: {$total_earnings_formatted}";
+                $report = "✨ *Laporan Konten*\n\n" .
+                    "ID Konten: `{$package['public_id']}`\n" .
+                    "Deskripsi: {$package['description']}\n" .
+                    "Harga: {$price_formatted}\n" .
+                    "Status: {$package['status']}\n" .
+                    "Tanggal Dibuat: {$created_at}\n\n" .
+                    "📈 *Statistik Penjualan*\n" .
+                    "Jumlah Terjual: {$sales_count} kali\n" .
+                    "Total Pendapatan: {$total_earnings_formatted}";
 
-            $app->telegram_api->sendMessage($app->chat_id, $report, 'Markdown');
+                $app->telegram_api->sendMessage($app->chat_id, $report, 'Markdown');
+            } catch (\Exception $e) {
+                app_log("Gagal membuat laporan konten untuk seller: " . $e->getMessage(), 'error', ['package_id' => $package_id]);
+                $app->telegram_api->sendMessage($app->chat_id, "Terjadi kesalahan saat mengambil data laporan. Silakan coba lagi nanti.");
+            }
             return;
         }
 
