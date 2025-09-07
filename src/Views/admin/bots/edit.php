@@ -79,7 +79,7 @@
                     $feature = $data['bot']['assigned_feature'] ?? null;
                     $available_features = $data['available_features'] ?? [];
                 ?>
-                <option value="" <?= empty($feature) ? 'selected' : '' ?>>-- Tidak ada --</option>
+                <option value="" <?php if ($feature === null || $feature === '') echo 'selected'; ?>>-- Tidak ada --</option>
                 <?php foreach ($available_features as $value => $label): ?>
                 <option value="<?= htmlspecialchars($value) ?>" <?= ($feature === $value) ? 'selected' : '' ?>><?= htmlspecialchars($label) ?></option>
                 <?php endforeach; ?>
