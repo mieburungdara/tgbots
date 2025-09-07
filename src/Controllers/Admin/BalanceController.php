@@ -109,10 +109,6 @@ class BalanceController extends BaseController
      */
     public function adjust(): void
     {
-        if (session_status() === PHP_SESSION_NONE) {
-            session_start();
-        }
-
         if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['action'])) {
             header('Location: /xoradmin/balance');
             exit();
@@ -124,14 +120,20 @@ class BalanceController extends BaseController
         $description = trim($_POST['description'] ?? '');
         $action = $_POST['action'];
 
-        // Get admin ID from session
-        $admin_id = $_SESSION['user_id'] ?? null;
-        if (!$admin_id) {
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Check if admin is logged in
+        if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             $_SESSION['flash_message'] = "Sesi admin tidak valid atau telah berakhir. Silakan login kembali.";
             $_SESSION['flash_message_type'] = 'danger';
-            header("Location: /xoradmin/balance");
+            header("Location: /xoradmin/login");
             exit;
         }
+
+        // Get admin ID from session for logging purposes
+        $admin_id = $_SESSION['user_id'] ?? 0; // Default to 0 as per LoginController logic
 
         if ($user_id && $amount > 0) {
             $transaction_amount = ($action === 'add_balance') ? $amount : -$amount;
