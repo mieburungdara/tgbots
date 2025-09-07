@@ -106,6 +106,7 @@ class AwaitingPriceState implements StateInterface
         // Flatten the pages into a single list of files
         $all_files = empty($package_pages) ? [] : array_merge(...$package_pages);
         if (empty($all_files)) {
+        error_log("[AwaitingPriceState] Flattened file list is empty, cannot proceed with backup for package ID: " . $package_id);
             return;
         }
 
