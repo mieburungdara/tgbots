@@ -21,7 +21,7 @@ class RegisterSellerCallback implements CallbackCommandInterface
 
         try {
             $public_id = $user_repo->setPublicId($app->user['id']);
-            $message = "Selamat! Anda berhasil terdaftar sebagai penjual.\n\nID Penjual Publik Anda adalah: *" . $app->telegram_api->escapeMarkdown($public_id) . "*\n\nSekarang Anda dapat menggunakan perintah /sell.";
+            $message = "Selamat! Anda berhasil terdaftar sebagai penjual.\n\nID Penjual Publik Anda adalah: *" . $app->telegram_api->escapeMarkdown($public_id) . "*\n\nSekarang Anda dapat menggunakan perintah /sell ulang ke media yang anda ingin jual.";
             $app->telegram_api->sendMessage($app->chat_id, $message, 'Markdown');
             $app->telegram_api->answerCallbackQuery($callback_query['id']);
             $app->telegram_api->deleteMessage($callback_query['message']['chat']['id'], $callback_query['message']['message_id']);
