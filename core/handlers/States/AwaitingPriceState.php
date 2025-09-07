@@ -118,7 +118,9 @@ class AwaitingPriceState implements StateInterface
 
                 if ($copied_messages_response && $copied_messages_response['ok']) {
                     foreach ($copied_messages_response['result'] as $index => $copied_message) {
+                        error_log("[AwaitingPriceState] Debugging media group - page: " . json_encode($page));
                         $original_file = $page[$index];
+                        error_log("[AwaitingPriceState] Debugging media group - original_file: " . json_encode($original_file));
                         $media_file_repo->updateStorageInfo($original_file['id'], $backup_channel_id, $copied_message['message_id']);
                     }
                 }
