@@ -68,7 +68,7 @@ class StartCommand implements CommandInterface
 *Deskripsi:* {$escaped_description}
 *Harga:* {$price_formatted}
 
-Saldo Anda saat ini: {$balance_formatted}."
+Saldo Anda saat ini: {$balance_formatted}.";
             $keyboard = ['inline_keyboard' => [[['text' => "Beli Sekarang ({$price_formatted})", 'callback_data' => "buy_{$public_id}"]]]];
             $reply_markup = json_encode($keyboard);
 
