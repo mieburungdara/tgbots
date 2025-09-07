@@ -54,7 +54,6 @@ class KontenCommand implements CommandInterface
                 app_log("Gagal membuat laporan konten untuk seller: " . $e->getMessage(), 'error', ['package_id' => $package_id]);
                 $app->telegram_api->sendMessage($app->chat_id, "Terjadi kesalahan saat mengambil data laporan. Silakan coba lagi nanti.");
             }
-            return;
         }
 
         $thumbnail = $package_repo->getThumbnailFile($package_id);
@@ -67,11 +66,17 @@ class KontenCommand implements CommandInterface
 
         $is_admin = ($app->user['role'] === 'Admin');
         $has_purchased = $sale_repo->hasUserPurchased($package_id, $app->user['id']);
-        $has_access = $is_admin || $has_purchased;
+        $has_access = $is_admin || $is_seller || $has_purchased;
 
         $keyboard = [];
         if ($has_access) {
             $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
+            if ($is_seller) {
+                $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($app->user['id'], 'sell');
+                if (!empty($sales_channels)) {
+                    $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
+                }
+            }
             $keyboard = ['inline_keyboard' => $keyboard_buttons];
         } elseif ($package['status'] === 'available') {
             $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
