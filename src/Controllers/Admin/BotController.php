@@ -184,7 +184,7 @@ class BotController extends BaseController
             $bot_id = (int)$_GET['id'];
             $pdo = \get_db_connection();
 
-            $stmt = $pdo->prepare("SELECT id, first_name, username, token, created_at FROM bots WHERE id = ?");
+            $stmt = $pdo->prepare("SELECT id, first_name, username, token, created_at, assigned_feature FROM bots WHERE id = ?");
             $stmt->execute([$bot_id]);
             $bot = $stmt->fetch();
 
