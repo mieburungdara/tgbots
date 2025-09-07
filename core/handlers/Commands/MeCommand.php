@@ -21,7 +21,7 @@ class MeCommand implements CommandInterface
         $total_revenue = "Rp " . number_format($sales_stats['total_revenue'], 0, ',', '.');
 
         $response = "👤 *Profil Anda*\n\n";
-        $response .= "Nama: *{$user_name}*\n";
+        
         $response .= "Telegram ID: `{$app->user['id']}`\n";
         $response .= "ID Penjual: {$seller_id}\n\n";
         $response .= "💰 *Keuangan*\n";
