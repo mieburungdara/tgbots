@@ -45,7 +45,8 @@ class StartCommand implements CommandInterface
             $total_profit = $sales_count * $package['price'];
 
             $response_text = sprintf(
-                "Anda adalah pemilik konten ini.\n\n*Deskripsi:* %s\n*Harga:* Rp %s\n*Terjual:* %d kali\n*Total Keuntungan:* Rp %s",
+                "ℹ️ Anda adalah pemilik konten ini.\n\n*Deskripsi:*
+> %s\n*Harga:* Rp %s\n*Terjual:* %d kali\n*Total Keuntungan:* Rp %s",
                 $app->telegram_api->escapeMarkdown($package['description']),
                 number_format($package['price'], 0, ',', '.'),
                 $sales_count,
