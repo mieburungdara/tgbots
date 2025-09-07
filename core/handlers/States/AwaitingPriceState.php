@@ -33,7 +33,10 @@ class AwaitingPriceState implements StateInterface
 
         if ($backup_channel_info) {
             $backup_channel_id = $backup_channel_info['channel_id'];
+            error_log("[AwaitingPriceState] Backup channel found: " . $backup_channel_id);
             $this->backupMedia($app, $package_id, $public_id, $price, $post_repo, $backup_channel_id);
+        } else {
+            error_log("[AwaitingPriceState] No backup channel found for bot ID: " . $app->bot['id']);
         }
 
         $message_text = "✅ Paket berhasil dibuat dengan ID: `{$public_id}`\n";
@@ -82,37 +85,54 @@ class AwaitingPriceState implements StateInterface
 
     private function backupMedia(App $app, int $package_id, string $public_id, int $price, MediaPackageRepository $post_repo, string $backup_channel_id): void
     {
-        if (!$backup_channel_id) return;
+        error_log("[AwaitingPriceState] Attempting to backup media to channel: " . $backup_channel_id);
+        if (!$backup_channel_id) {
+            error_log("[AwaitingPriceState] backupMedia called with empty backup_channel_id.");
+            return;
+        }
 
         $package_files = $post_repo->getGroupedPackageContent($package_id);
+        error_log("[AwaitingPriceState] Package files count: " . count($package_files));
         $media_file_repo = new MediaFileRepository($app->pdo);
 
         $backup_caption = "Konten Baru untuk Dijual (Backup)\n\nID Paket: `{$public_id}`\nPenjual: `{$app->user['id']}`\nHarga: Rp " . number_format($price, 0, ',', '.');
 
         if (!empty($package_files)) {
+            error_log("[AwaitingPriceState] Sending backup caption to channel: " . $backup_channel_id);
             $app->telegram_api->sendMessage($backup_channel_id, $backup_caption, 'Markdown');
 
             foreach ($package_files as $page) {
                 if (count($page) > 1) {
                     $message_ids_to_copy = array_map(fn($file) => $file['storage_message_id'], $page);
                     $from_chat_id = $page[0]['storage_channel_id'];
+                    error_log("[AwaitingPriceState] Copying multiple messages from " . $from_chat_id . " to " . $backup_channel_id . ": " . json_encode($message_ids_to_copy));
                     $copied_messages_response = $app->telegram_api->copyMessages($backup_channel_id, $from_chat_id, json_encode($message_ids_to_copy));
 
+                    error_log("[AwaitingPriceState] copyMessages response: " . json_encode($copied_messages_response));
                     if ($copied_messages_response && $copied_messages_response['ok']) {
                         foreach ($copied_messages_response['result'] as $index => $copied_message) {
                             $original_file = $page[$index];
                             $media_file_repo->updateStorageInfo($original_file['id'], $backup_channel_id, $copied_message['message_id']);
+                            error_log("[AwaitingPriceState] Updated storage info for file ID " . $original_file['id'] . ": " . $copied_message['message_id']);
                         }
+                    } else {
+                        error_log("[AwaitingPriceState] Failed to copy multiple messages. Response: " . json_encode($copied_messages_response));
                     }
                 } elseif (!empty($page)) {
                     $file = $page[0];
+                    error_log("[AwaitingPriceState] Copying single message from " . $file['storage_channel_id'] . " to " . $backup_channel_id . ": " . $file['storage_message_id']);
                     $copied_message_response = $app->telegram_api->copyMessage($backup_channel_id, $file['storage_channel_id'], $file['storage_message_id']);
+                    error_log("[AwaitingPriceState] copyMessage response: " . json_encode($copied_message_response));
                     if ($copied_message_response && $copied_message_response['ok']) {
                         $media_file_repo->updateStorageInfo($file['id'], $backup_channel_id, $copied_message_response['result']['message_id']);
+                        error_log("[AwaitingPriceState] Updated storage info for file ID " . $file['id'] . ": " . $copied_message_response['result']['message_id']);
+                    } else {
+                        error_log("[AwaitingPriceState] Failed to copy single message. Response: " . json_encode($copied_messages_response));
                     }
                 }
                 usleep(300000);
             }
+        } else {
+            error_log("[AwaitingPriceState] No package files found for package ID: " . $package_id);
         }
     }
-}
