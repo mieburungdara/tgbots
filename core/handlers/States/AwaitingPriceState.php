@@ -120,6 +120,9 @@ class AwaitingPriceState implements StateInterface
                         error_log("[AwaitingPriceState] Debugging media group - original_file: " . json_encode($original_file));
                         $media_file_repo->updateStorageInfo($original_file['id'], $backup_channel_id, $copied_message['message_id']);
                     }
+                } else {
+                    error_log("[AwaitingPriceState] Failed to copy messages to backup channel. Response: " . json_encode($copied_messages_response));
+                    $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal mem-backup media ke channel penyimpanan. Media ini mungkin tidak dapat diakses di kemudian hari.");
                 }
             } elseif (!empty($page)) {
                 $file = $page[0];
@@ -127,6 +130,9 @@ class AwaitingPriceState implements StateInterface
                 error_log("[AwaitingPriceState] copyMessage response: " . json_encode($copied_message_response));
                 if ($copied_message_response && $copied_message_response['ok']) {
                     $media_file_repo->updateStorageInfo($file['id'], $backup_channel_id, $copied_message_response['result']['message_id']);
+                } else {
+                    error_log("[AwaitingPriceState] Failed to copy message to backup channel. Response: " . json_encode($copied_message_response));
+                    $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal mem-backup media ke channel penyimpanan. Media ini mungkin tidak dapat diakses di kemudian hari.");
                 }
             }
             usleep(300000);
