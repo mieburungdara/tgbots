@@ -156,10 +156,8 @@ class UpdateDispatcher
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
-            // Log the error, but don't re-throw it. This prevents the webhook from failing
-            // and causing Telegram to send the same update repeatedly.
-            // The specific handler (e.g., BuyCallback) is responsible for notifying the user.
-            app_log("Dispatcher caught a throwable: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine(), 'error');
+            // Lemparkan kembali agar bisa ditangkap oleh blok catch di webhook.php
+            throw $e;
         }
     }
 

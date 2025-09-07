@@ -17,6 +17,8 @@ class BuyCallback implements CallbackCommandInterface
         $app->telegram_api->answerCallbackQuery($callback_query['id'], 'Memproses pembelian...');
 
         try {
+            $app->pdo->beginTransaction();
+
             $package = $package_repo->findByPublicId($public_id);
             if (!$package || $package['status'] !== 'available') {
                 throw new Exception('Paket tidak ditemukan atau sudah tidak tersedia.');
@@ -29,6 +31,8 @@ class BuyCallback implements CallbackCommandInterface
             $sale_repo->createSale($package['id'], $package['seller_user_id'], $app->user['id'], $package['price']);
             $package_repo->markAsSold($package['id']);
 
+            $app->pdo->commit();
+
             $app->telegram_api->sendMessage($app->chat_id, '✅ Pembelian berhasil! Menampilkan konten Anda...');
 
             // Delegate to ViewPageCallback to show the content
@@ -36,12 +40,10 @@ class BuyCallback implements CallbackCommandInterface
             $viewPageCallback->execute($app, $callback_query, "{$public_id}_0");
 
         } catch (Exception $e) {
-            // Rollback will be handled by UpdateDispatcher
+            $app->pdo->rollBack();
             $error_message = "⚠️ Gagal: " . $e->getMessage();
             $app->telegram_api->sendMessage($app->chat_id, $error_message);
             app_log("Gagal menangani pembelian untuk public_id {$public_id}: " . $e->getMessage(), 'error');
-            // Re-throw the exception to ensure the dispatcher rolls back the transaction
-            throw $e;
         }
     }
 }

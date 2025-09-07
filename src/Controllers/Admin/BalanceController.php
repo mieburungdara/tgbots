@@ -120,9 +120,14 @@ class BalanceController extends BaseController
         $description = trim($_POST['description'] ?? '');
         $action = $_POST['action'];
 
-        // BaseController's constructor handles session validation.
-        // We just get the admin ID here for logging the transaction.
-        $admin_id = $_SESSION['user_id'] ?? 0;
+        // Get admin ID from session
+        $admin_id = $_SESSION['user_id'] ?? null;
+        if (!$admin_id) {
+            $_SESSION['flash_message'] = "Sesi admin tidak valid atau telah berakhir. Silakan login kembali.";
+            $_SESSION['flash_message_type'] = 'danger';
+            header("Location: /xoradmin/balance");
+            exit;
+        }
 
         if ($user_id && $amount > 0) {
             $transaction_amount = ($action === 'add_balance') ? $amount : -$amount;

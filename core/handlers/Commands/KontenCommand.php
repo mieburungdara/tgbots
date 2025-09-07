@@ -28,6 +28,41 @@ class KontenCommand implements CommandInterface
             return;
         }
         $package_id = $package['id'];
+        $is_seller = ($package['seller_user_id'] == $app->user['id']);
+
+        // If the user is the seller, show detailed info and stop.
+        if ($is_seller) {
+            $status_map = [
+                'available' => '✅ Tersedia',
+                'sold' => '💲 Terjual',
+                'pending' => '⏳ Menunggu Persetujuan',
+                'deleted' => '❌ Dihapus',
+            ];
+            $status_text = $status_map[$package['status']] ?? ucfirst($package['status']);
+            $price_formatted = "Rp " . number_format($package['price'] ?? 0, 0, ',', '.');
+            $created_at = date('d M Y, H:i', strtotime($package['created_at']));
+
+            $responseText = "📄 *Detail Konten Anda*
+
+";
+            $responseText .= "🆔 *ID Publik:* `{$package['public_id']}`
+";
+            $responseText .= "✏️ *Deskripsi:* " . ($package['description'] ? '`' . $package['description'] . '`' : '_Tidak ada_') . "
+";
+            $responseText .= "💰 *Harga:* `{$price_formatted}`
+";
+            $responseText .= "📊 *Status:* {$status_text}
+";
+            $responseText .= "📅 *Tanggal Dibuat:* {$created_at}
+";
+            $responseText .= "🔒 *Konten Dilindungi:* " . (!empty($package['protect_content']) ? 'Ya' : 'Tidak') . "
+";
+
+            $app->telegram_api->sendMessage($app->chat_id, $responseText, 'Markdown');
+            return;
+        }
+
+        // --- Existing logic for buyers and other users ---
 
         $thumbnail = $package_repo->getThumbnailFile($package_id);
 
@@ -38,13 +73,13 @@ class KontenCommand implements CommandInterface
         }
 
         $is_admin = ($app->user['role'] === 'Admin');
-        $is_seller = ($package['seller_user_id'] == $app->user['id']);
         $has_purchased = $sale_repo->hasUserPurchased($package_id, $app->user['id']);
-        $has_access = $is_admin || $is_seller || $has_purchased;
+        $has_access = $is_admin || $has_purchased; // Seller case is handled above
 
         $keyboard = [];
         if ($has_access) {
             $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
+            // This part is now redundant for sellers, but harmless to leave for admins
             if ($is_seller) {
                 $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($app->user['id'], 'sell');
                 if (!empty($sales_channels)) {

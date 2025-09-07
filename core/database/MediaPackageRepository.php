@@ -70,7 +70,7 @@ class MediaPackageRepository
     public function getGroupedPackageContent(int $package_id): array
     {
         $stmt = $this->pdo->prepare(
-            "SELECT id, storage_channel_id, storage_message_id, media_group_id, chat_id, message_id\n             FROM media_files\n             WHERE package_id = ?\n             ORDER BY id ASC"
+            "SELECT id, storage_channel_id, storage_message_id, media_group_id\n             FROM media_files\n             WHERE package_id = ? AND storage_message_id IS NOT NULL\n             ORDER BY storage_message_id ASC"
         );
         $stmt->execute([$package_id]);
         $all_files = $stmt->fetchAll(PDO::FETCH_ASSOC);
