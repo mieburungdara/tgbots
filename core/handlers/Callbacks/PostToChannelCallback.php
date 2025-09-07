@@ -76,7 +76,7 @@ class PostToChannelCallback implements CallbackCommandInterface
             $app->pdo->commit();
 
             if (isset($callback_query['message']['message_id'])) {
-                $app->telegram_api->editMessageText($app->chat_id, $callback_query['message']['message_id'], '✅ Berhasil di-posting ke channel ' . htmlspecialchars($sales_channel['name']) . '!');
+                $app->telegram_api->editMessageCaption($app->chat_id, $callback_query['message']['message_id'], '✅ Berhasil di-posting ke channel ' . htmlspecialchars($sales_channel['name']) . '!');
             } else {
                 $app->telegram_api->answerCallbackQuery($callback_query_id, '✅ Berhasil di-posting!', false);
             }
@@ -89,7 +89,7 @@ class PostToChannelCallback implements CallbackCommandInterface
             }
 
             if (isset($callback_query['message']['message_id'])) {
-                $app->telegram_api->editMessageText($app->chat_id, $callback_query['message']['message_id'], $error_message);
+                $app->telegram_api->editMessageCaption($app->chat_id, $callback_query['message']['message_id'], $error_message);
             } else {
                 $app->telegram_api->answerCallbackQuery($callback_query_id, $error_message, true);
             }

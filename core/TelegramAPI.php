@@ -563,6 +563,32 @@ class TelegramAPI
     }
 
     /**
+     * Edit a message's caption.
+     *
+     * @param int|string $chat_id
+     * @param int $message_id
+     * @param string $caption
+     * @param string|null $parse_mode
+     * @param string|null $reply_markup
+     * @return array
+     */
+    public function editMessageCaption($chat_id, int $message_id, string $caption, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
+    {
+        $data = [
+            'chat_id' => $chat_id,
+            'message_id' => $message_id,
+            'caption' => $caption,
+        ];
+        if ($parse_mode) {
+            $data['parse_mode'] = $parse_mode;
+        }
+        if ($reply_markup) {
+            $data['reply_markup'] = $reply_markup;
+        }
+        return $this->apiRequest('editMessageCaption', $data);
+    }
+
+    /**
      * Edit a message's text.
      *
      * @param int|string $chat_id
