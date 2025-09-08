@@ -69,7 +69,7 @@ class MediaPackageRepository
      */
     public function getFilesByPackageId(int $package_id): array
     {
-        $stmt = $this->pdo->prepare("SELECT file_type, file_size FROM media_files WHERE package_id = ?");
+        $stmt = $this->pdo->prepare("SELECT type, file_size FROM media_files WHERE package_id = ?");
         $stmt->execute([$package_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

@@ -111,7 +111,7 @@ class KontenCommand implements CommandInterface
         $type_counts = [];
         $total_size = 0;
         foreach ($media_files as $file) {
-            $type = $file['file_type'];
+            $type = $file['type'];
             $type_counts[$type] = ($type_counts[$type] ?? 0) + 1;
             $total_size += $file['file_size'];
         }
