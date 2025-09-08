@@ -29,13 +29,18 @@ class KontenCommand implements CommandInterface
         }
         $package_id = $package['id'];
 
-        $is_seller = ($package['seller_user_id'] == $app->user['id']);
-        $caption = $package['description'];
-        $keyboard = [];
-
-        // Generate media summary
+        // 1. Generate media summary and create the base description
         $media_files = $package_repo->getFilesByPackageId($package_id);
         $media_summary_str = $this->generateMediaSummary($media_files);
+        $description = $package['description'];
+        if (!empty($media_summary_str)) {
+            $description = $media_summary_str . "\n" . $description;
+        }
+
+        // 2. Determine user type and prepare caption and keyboard
+        $is_seller = ($package['seller_user_id'] == $app->user['id']);
+        $caption = '';
+        $keyboard = [];
 
         if ($is_seller) {
             try {
@@ -45,11 +50,9 @@ class KontenCommand implements CommandInterface
                 $total_earnings_formatted = "Rp " . number_format($total_earnings, 0, ',', '.');
                 $created_at = date('d M Y H:i', strtotime($package['created_at']));
 
-                $description_with_summary = !empty($media_summary_str) ? $media_summary_str . "\n" . $package['description'] : $package['description'];
-
                 $report = "✨ *Laporan Konten*\n\n" .
                     "ID Konten: `{$package['public_id']}`\n" .
-                    "Deskripsi: {$description_with_summary}\n" .
+                    "Deskripsi: {$description}\n" .
                     "Harga: {$price_formatted}\n" .
                     "Status: {$package['status']}\n" .
                     "Tanggal Dibuat: {$created_at}\n\n" .
@@ -74,10 +77,7 @@ class KontenCommand implements CommandInterface
                 return; // Stop execution if report fails
             }
         } else {
-            if (!empty($media_summary_str)) {
-                $caption = $media_summary_str . "\n" . $caption;
-            }
-
+            $caption = $description;
             $is_admin = ($app->user['role'] === 'Admin');
             $has_purchased = $sale_repo->hasUserPurchased($package_id, $app->user['id']);
             $has_access = $is_admin || $has_purchased;
