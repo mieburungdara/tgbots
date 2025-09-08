@@ -67,6 +67,16 @@ class SellCommand implements CommandInterface
             return "Untuk menjual, silakan reply media yang ingin Anda jual dengan perintah /sell.";
         }
 
+        $replied = $message['reply_to_message'];
+        if (
+            !isset($replied['photo']) &&
+            !isset($replied['video']) &&
+            !isset($replied['document']) &&
+            !isset($replied['audio'])
+        ) {
+            return "Pesan yang Anda reply tidak berisi media. Silakan reply pesan dengan foto, video, atau dokumen untuk dijual.";
+        }
+
         if (empty($app->user['public_seller_id'])) {
             $text = "Anda belum terdaftar sebagai penjual. Apakah Anda ingin mendaftar sekarang?\n\nDengan mendaftar, Anda akan mendapatkan ID Penjual unik.";
             $keyboard = ['inline_keyboard' => [[['text' => "Ya, Daftar Sekarang", 'callback_data' => "register_seller"]]]];
