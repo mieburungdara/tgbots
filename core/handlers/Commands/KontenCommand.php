@@ -35,34 +35,7 @@ class KontenCommand implements CommandInterface
 
         // Generate media summary
         $media_files = $package_repo->getFilesByPackageId($package_id);
-        $media_summary_str = '';
-        if (!empty($media_files)) {
-            $type_counts = [];
-            $total_size = 0;
-            foreach ($media_files as $file) {
-                $type = $file['file_type'];
-                $type_counts[$type] = ($type_counts[$type] ?? 0) + 1;
-                $total_size += $file['file_size'];
-            }
-
-            $summary_parts = [];
-            $order = ['photo', 'video', 'document', 'audio'];
-            foreach ($order as $type) {
-                if (!empty($type_counts[$type])) {
-                    $initial = strtoupper(substr($type, 0, 1));
-                    $summary_parts[] = $type_counts[$type] . $initial;
-                    unset($type_counts[$type]);
-                }
-            }
-            // Add any other types
-            foreach ($type_counts as $type => $count) {
-                $initial = strtoupper(substr($type, 0, 1));
-                $summary_parts[] = $count . $initial;
-            }
-
-            $size_in_mb = round($total_size / 1024 / 1024, 2);
-            $media_summary_str = '[' . implode('', $summary_parts) . ' ' . $size_in_mb . 'MB]';
-        }
+        $media_summary_str = $this->generateMediaSummary($media_files);
 
         if ($is_seller) {
             try {
@@ -127,5 +100,37 @@ class KontenCommand implements CommandInterface
 
         $reply_markup = !empty($keyboard) ? json_encode($keyboard) : null;
         $app->telegram_api->copyMessage($app->chat_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $caption, 'Markdown', $reply_markup);
+    }
+
+    private function generateMediaSummary(array $media_files): string
+    {
+        if (empty($media_files)) {
+            return '';
+        }
+
+        $type_counts = [];
+        $total_size = 0;
+        foreach ($media_files as $file) {
+            $type = $file['file_type'];
+            $type_counts[$type] = ($type_counts[$type] ?? 0) + 1;
+            $total_size += $file['file_size'];
+        }
+
+        $summary_parts = [];
+        $order = ['photo', 'video', 'document', 'audio'];
+
+        // Combine ordered types with any other existing types to maintain order
+        $all_types = array_keys($type_counts);
+        $sorted_types = array_unique(array_merge($order, $all_types));
+
+        foreach ($sorted_types as $type) {
+            if (isset($type_counts[$type])) {
+                $initial = strtoupper(substr($type, 0, 1));
+                $summary_parts[] = $type_counts[$type] . $initial;
+            }
+        }
+
+        $size_in_mb = round($total_size / 1024 / 1024, 2);
+        return '[' . implode('', $summary_parts) . ' ' . $size_in_mb . 'MB]';
     }
 }
