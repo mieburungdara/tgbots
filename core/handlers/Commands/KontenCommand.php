@@ -30,6 +30,8 @@ class KontenCommand implements CommandInterface
         $package_id = $package['id'];
 
         $is_seller = ($package['seller_user_id'] == $app->user['id']);
+        $caption = $package['description'];
+        $keyboard = [];
 
         if ($is_seller) {
             try {
@@ -49,43 +51,44 @@ class KontenCommand implements CommandInterface
                     "Jumlah Terjual: {$sales_count} kali\n" .
                     "Total Pendapatan: {$total_earnings_formatted}";
 
-                $app->telegram_api->sendMessage($app->chat_id, $report, 'Markdown');
+                $caption = $report;
+
+                $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
+                $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($app->user['id'], 'sell');
+                if (!empty($sales_channels)) {
+                    $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
+                } else {
+                    $caption .= "\n\n*Anda belum mendaftarkan channel pribadi, silahkan daftarkan channel pribadi anda untuk berjualan di panel member pada /login*";
+                }
+                $keyboard = ['inline_keyboard' => $keyboard_buttons];
+
             } catch (\Exception $e) {
                 app_log("Gagal membuat laporan konten untuk seller: " . $e->getMessage(), 'error', ['package_id' => $package_id]);
                 $app->telegram_api->sendMessage($app->chat_id, "Terjadi kesalahan saat mengambil data laporan. Silakan coba lagi nanti.");
+                return; // Stop execution if report fails
+            }
+        } else {
+            $is_admin = ($app->user['role'] === 'Admin');
+            $has_purchased = $sale_repo->hasUserPurchased($package_id, $app->user['id']);
+            $has_access = $is_admin || $has_purchased;
+
+            if ($has_access) {
+                $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
+                $keyboard = ['inline_keyboard' => $keyboard_buttons];
+            } elseif ($package['status'] === 'available') {
+                $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+                $keyboard = ['inline_keyboard' => [[['text' => "Beli Konten Ini ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"]]]];
             }
         }
 
         $thumbnail = $package_repo->getThumbnailFile($package_id);
-
         if (!$thumbnail) {
             $app->telegram_api->sendMessage($app->chat_id, "Konten ini tidak memiliki media yang dapat ditampilkan atau semua media di dalamnya rusak. Silakan hubungi admin.");
             \app_log("Gagal menampilkan konten: Tidak ditemukan thumbnail yang valid untuk package_id: {$package_id}", 'warning', ['package' => $package]);
             return;
         }
 
-        $is_admin = ($app->user['role'] === 'Admin');
-        $has_purchased = $sale_repo->hasUserPurchased($package_id, $app->user['id']);
-        $has_access = $is_admin || $is_seller || $has_purchased;
-
-        $keyboard = [];
-        if ($has_access) {
-            $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
-            if ($is_seller) {
-                $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($app->user['id'], 'sell');
-                if (!empty($sales_channels)) {
-                    $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
-                }
-            }
-            $keyboard = ['inline_keyboard' => $keyboard_buttons];
-        } elseif ($package['status'] === 'available') {
-            $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
-            $keyboard = ['inline_keyboard' => [[['text' => "Beli Konten Ini ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"]]]];
-        }
-
-        $caption = $package['description'];
         $reply_markup = !empty($keyboard) ? json_encode($keyboard) : null;
-
-        $app->telegram_api->copyMessage($app->chat_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $caption, null, $reply_markup);
+        $app->telegram_api->copyMessage($app->chat_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $caption, 'Markdown', $reply_markup);
     }
 }
