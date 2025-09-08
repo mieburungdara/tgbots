@@ -29,40 +29,18 @@ class KontenCommand implements CommandInterface
         }
         $package_id = $package['id'];
 
-        $is_seller = ($package['seller_user_id'] == $app->user['id']);
-        $caption = $package['description'];
-        $keyboard = [];
-
-        // Generate media summary
+        // 1. Generate media summary and create the base description
         $media_files = $package_repo->getFilesByPackageId($package_id);
-        $media_summary_str = '';
-        if (!empty($media_files)) {
-            $type_counts = [];
-            $total_size = 0;
-            foreach ($media_files as $file) {
-                $type = $file['file_type'];
-                $type_counts[$type] = ($type_counts[$type] ?? 0) + 1;
-                $total_size += $file['file_size'];
-            }
-
-            $summary_parts = [];
-            $order = ['photo', 'video', 'document', 'audio'];
-            foreach ($order as $type) {
-                if (!empty($type_counts[$type])) {
-                    $initial = strtoupper(substr($type, 0, 1));
-                    $summary_parts[] = $type_counts[$type] . $initial;
-                    unset($type_counts[$type]);
-                }
-            }
-            // Add any other types
-            foreach ($type_counts as $type => $count) {
-                $initial = strtoupper(substr($type, 0, 1));
-                $summary_parts[] = $count . $initial;
-            }
-
-            $size_in_mb = round($total_size / 1024 / 1024, 2);
-            $media_summary_str = '[' . implode('', $summary_parts) . ' ' . $size_in_mb . 'MB]';
+        $media_summary_str = $this->generateMediaSummary($media_files);
+        $description = $package['description'];
+        if (!empty($media_summary_str)) {
+            $description = $media_summary_str . "\n" . $description;
         }
+
+        // 2. Determine user type and prepare caption and keyboard
+        $is_seller = ($package['seller_user_id'] == $app->user['id']);
+        $caption = '';
+        $keyboard = [];
 
         if ($is_seller) {
             try {
@@ -72,11 +50,9 @@ class KontenCommand implements CommandInterface
                 $total_earnings_formatted = "Rp " . number_format($total_earnings, 0, ',', '.');
                 $created_at = date('d M Y H:i', strtotime($package['created_at']));
 
-                $description_with_summary = !empty($media_summary_str) ? $media_summary_str . "\n" . $package['description'] : $package['description'];
-
                 $report = "✨ *Laporan Konten*\n\n" .
                     "ID Konten: `{$package['public_id']}`\n" .
-                    "Deskripsi: {$description_with_summary}\n" .
+                    "Deskripsi: {$description}\n" .
                     "Harga: {$price_formatted}\n" .
                     "Status: {$package['status']}\n" .
                     "Tanggal Dibuat: {$created_at}\n\n" .
@@ -101,10 +77,7 @@ class KontenCommand implements CommandInterface
                 return; // Stop execution if report fails
             }
         } else {
-            if (!empty($media_summary_str)) {
-                $caption = $media_summary_str . "\n" . $caption;
-            }
-
+            $caption = $description;
             $is_admin = ($app->user['role'] === 'Admin');
             $has_purchased = $sale_repo->hasUserPurchased($package_id, $app->user['id']);
             $has_access = $is_admin || $has_purchased;
@@ -127,5 +100,37 @@ class KontenCommand implements CommandInterface
 
         $reply_markup = !empty($keyboard) ? json_encode($keyboard) : null;
         $app->telegram_api->copyMessage($app->chat_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $caption, 'Markdown', $reply_markup);
+    }
+
+    private function generateMediaSummary(array $media_files): string
+    {
+        if (empty($media_files)) {
+            return '';
+        }
+
+        $type_counts = [];
+        $total_size = 0;
+        foreach ($media_files as $file) {
+            $type = $file['file_type'];
+            $type_counts[$type] = ($type_counts[$type] ?? 0) + 1;
+            $total_size += $file['file_size'];
+        }
+
+        $summary_parts = [];
+        $order = ['photo', 'video', 'document', 'audio'];
+
+        // Combine ordered types with any other existing types to maintain order
+        $all_types = array_keys($type_counts);
+        $sorted_types = array_unique(array_merge($order, $all_types));
+
+        foreach ($sorted_types as $type) {
+            if (isset($type_counts[$type])) {
+                $initial = strtoupper(substr($type, 0, 1));
+                $summary_parts[] = $type_counts[$type] . $initial;
+            }
+        }
+
+        $size_in_mb = round($total_size / 1024 / 1024, 2);
+        return '[' . implode('', $summary_parts) . ' ' . $size_in_mb . 'MB]';
     }
 }
