@@ -62,6 +62,19 @@ class MediaPackageRepository
     }
 
     /**
+     * Get all files for a package with their details for summary purposes.
+     *
+     * @param int $package_id
+     * @return array
+     */
+    public function getFilesByPackageId(int $package_id): array
+    {
+        $stmt = $this->pdo->prepare("SELECT file_type, file_size FROM media_files WHERE package_id = ?");
+        $stmt->execute([$package_id]);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    }
+
+    /**
      * Get grouped package content.
      *
      * @param int $package_id
