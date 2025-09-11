@@ -2,34 +2,94 @@
   "class_name": "BotRepository",
   "table": "bots",
   "summary": "Mengelola data dan pengaturan untuk setiap bot.",
-  "description": "Repositori ini bertanggung jawab untuk semua operasi CRUD (Create, Read, Update, Delete) yang berkaitan dengan entitas bot di tabel `bots`. Ini termasuk mencari bot berdasarkan berbagai kriteria seperti ID, username, atau fitur yang ditugaskan.",
+  "description": "Repositori ini bertanggung jawab untuk semua operasi CRUD yang berkaitan dengan entitas bot di tabel `bots`, termasuk mencari bot berdasarkan berbagai kriteria dan mengambil pengaturannya.",
   "methods": [
     {
       "name": "__construct",
       "description": "Menginisialisasi repositori dengan koneksi PDO.",
-      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "getAllBots",
+      "description": "Mengambil semua bot yang terdaftar, diurutkan berdasarkan nama.",
+      "parameters": [],
+      "logic": "SELECT id, first_name, username FROM bots ORDER BY first_name ASC",
+      "returns": "array",
+      "return_description": "Array dari semua bot."
     },
     {
       "name": "findBotByTelegramId",
-      "description": "Mencari satu bot berdasarkan ID Telegram uniknya.",
-      "parameters": [{"name": "bot_id", "type": "int", "description": "ID Telegram bot."}],
-      "logic": "`SELECT * FROM bots WHERE telegram_id = ?`",
+      "description": "Mencari satu bot berdasarkan ID Telegram uniknya (yang juga merupakan Primary Key).",
+      "parameters": [
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID Telegram bot."
+        }
+      ],
+      "logic": "SELECT id, token, username, assigned_feature FROM bots WHERE id = ?",
       "returns": "array|false",
       "return_description": "Data bot jika ditemukan, jika tidak `false`."
+    },
+    {
+      "name": "getBotSettings",
+      "description": "Mengambil pengaturan spesifik untuk sebuah bot dari tabel `bot_settings`.",
+      "parameters": [
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID Telegram bot."
+        }
+      ],
+      "logic": "SELECT setting_key, setting_value FROM bot_settings WHERE bot_id = ?",
+      "returns": "array",
+      "return_description": "Array asosiatif dari pengaturan bot."
     },
     {
       "name": "findBotByFeature",
       "description": "Mencari bot pertama yang cocok dengan fitur yang diberikan. Berguna untuk menemukan bot fungsional (misalnya, bot untuk fitur 'rate').",
-      "parameters": [{"name": "feature", "type": "string", "description": "Nama fitur yang dicari (misalnya, 'sell', 'rate')."}],
-      "logic": "`SELECT * FROM bots WHERE assigned_feature = ? LIMIT 1`",
+      "parameters": [
+        {
+          "name": "feature",
+          "type": "string",
+          "description": "Nama fitur yang dicari (misalnya, 'sell', 'rate')."
+        }
+      ],
+      "logic": "SELECT username FROM bots WHERE assigned_feature = ? LIMIT 1",
       "returns": "array|false",
       "return_description": "Data bot jika ditemukan, jika tidak `false`."
     },
     {
+      "name": "findAllBotsByFeature",
+      "description": "Mencari semua bot yang cocok dengan fitur yang diberikan.",
+      "parameters": [
+        {
+          "name": "feature",
+          "type": "string",
+          "description": "Nama fitur yang dicari."
+        }
+      ],
+      "logic": "SELECT id, username FROM bots WHERE assigned_feature = ? ORDER BY username ASC",
+      "returns": "array",
+      "return_description": "Array dari semua bot yang cocok."
+    },
+    {
       "name": "findByUsername",
       "description": "Mencari satu bot berdasarkan username-nya (tanpa @).",
-      "parameters": [{"name": "username", "type": "string", "description": "Username bot."}],
-      "logic": "`SELECT * FROM bots WHERE username = ?`",
+      "parameters": [
+        {
+          "name": "username",
+          "type": "string",
+          "description": "Username bot."
+        }
+      ],
+      "logic": "SELECT * FROM bots WHERE username = ?",
       "returns": "array|false",
       "return_description": "Data bot jika ditemukan, jika tidak `false`."
     }

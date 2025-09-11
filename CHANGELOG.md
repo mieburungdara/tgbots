@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.2.24] - 2025-09-11
+
+### Peningkatan
+- **Sinkronisasi Dokumentasi Kritis**: Memperbarui dokumentasi JSON untuk tiga repositori paling kritis (`BotRepository`, `MediaPackageRepository`, `UserRepository`) agar sepenuhnya sinkron dengan kode PHP. Ini memperbaiki puluhan metode dan parameter yang hilang atau tidak akurat.
+
 ## [5.2.23] - 2025-09-11
 
 ### Peningkatan
@@ -632,7 +637,7 @@
 - **Mengembalikan ke Mode `Markdown` Legacy**: Sesuai permintaan pengguna, semua penggunaan `parse_mode` diubah kembali dari `MarkdownV2` ke mode `Markdown` legacy.
   - **Penyebab**: Pengguna meminta untuk menggunakan mode parsing Markdown yang biasa, bukan `MarkdownV2`.
   - **Solusi**:
-    1.  Mengganti nama fungsi `escapeMarkdownV2` menjadi `escapeMarkdown` di `TelegramAPI.php` dan menyesuaikan logikanya untuk hanya melakukan escape pada karakter `_`, `*`, ```, dan `[`.
+    1.  Mengganti nama fungsi `escapeMarkdownV2` menjadi `escapeMarkdown` di `TelegramAPI.php` dan menyesuaikan logikanya untuk hanya melakukan escape pada karakter `_`, `*`, `\``, dan `[`.
     2.  Mengubah semua `parse_mode` dari `\'MarkdownV2\'` menjadi `\'Markdown\'` di semua file handler (`MessageHandler`, `CallbackQueryHandler`, `ChannelPostHandler`) dan `webhook.php`.
     3.  Menghapus escaping manual untuk karakter yang tidak relevan dengan mode `Markdown` legacy (seperti `.`, `!`, `(`, `)`).
 
