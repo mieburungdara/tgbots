@@ -1,30 +1,41 @@
 {
   "class_name": "AdminApprovalCallback",
   "implements": "CallbackCommandInterface",
-  "summary": "Menangani aksi saat admin menyetujui sebuah kiriman.",
-  "description": "Callback ini dipicu ketika seorang admin menekan tombol \"Setujui\" pada pesan moderasi. Ini akan memproses kiriman (misalnya, dari fitur Rate atau Tanya), mempostingnya ke channel publik, dan memberi notifikasi kepada pengguna asli.",
+  "summary": "Menangani aksi saat admin menyetujui sebuah kiriman moderasi.",
+  "description": "Callback ini dipicu ketika admin menekan tombol \"Setujui\". Ini akan mengubah status post menjadi 'available', mempublikasikannya ke channel yang sesuai, dan memberi notifikasi kepada pengguna.",
+  "dependencies": [
+    "MediaPackageRepository",
+    "ChannelPostPackageRepository"
+  ],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi callback dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "execute",
-      "description": "Menjalankan logika persetujuan.",
+      "description": "Menjalankan logika persetujuan dalam sebuah transaksi database.",
       "parameters": [
-        {"name": "callback_query", "type": "array", "description": "Data callback query asli."}, 
-        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['approve', 'submission_id']`."}
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string",
+          "description": "ID publik dari post yang disetujui."
+        }
       ],
       "logic_flow": [
-        "1. Jawab `callback_query` untuk menghilangkan status loading pada tombol.",
-        "2. Ambil ID kiriman dari `$parts[1]`.",
-        "3. Ambil detail kiriman dari database (misalnya, dari tabel `rate_submissions`).",
-        "4. Tentukan channel tujuan berdasarkan tipe kiriman.",
-        "5. Salin atau format pesan untuk diposting ke channel publik menggunakan `TelegramAPI`.",
-        "6. Kirim notifikasi ke pengguna asli bahwa kiriman mereka telah disetujui dan dipublikasikan.",
-        "7. Edit pesan moderasi asli untuk menunjukkan bahwa kiriman telah disetujui (misalnya, menghilangkan tombol).",
-        "8. Perbarui status kiriman di database menjadi 'approved'."
+        "1. Memulai transaksi database.",
+        "2. Cari post berdasarkan `public_id` dan validasi statusnya adalah 'pending'.",
+        "3. Ubah status post menjadi 'available' di `media_packages`.",
+        "4. Tentukan channel publik tujuan berdasarkan `post_type` dan `category`.",
+        "5. Salin media (untuk 'rate') atau kirim teks (untuk 'tanya') ke channel publik.",
+        "6. Jika berhasil, kirim notifikasi ke pengguna asli dengan link ke post publik.",
+        "7. Buat catatan di `channel_post_packages` untuk menautkan post di channel dengan paket.",
+        "8. Edit pesan moderasi asli untuk menandai bahwa post telah disetujui.",
+        "9. Commit transaksi."
       ]
     }
   ]

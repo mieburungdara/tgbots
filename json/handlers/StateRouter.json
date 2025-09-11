@@ -1,28 +1,25 @@
 {
   "class_name": "StateRouter",
-  "summary": "Merutekan pesan ke kelas State yang spesifik berdasarkan state pengguna.",
-  "description": "Setelah `StateHandler` meneruskan pesan, router ini memetakan nama state (misalnya, `awaiting_price`) ke kelas `State` yang sesuai (misalnya, `AwaitingPriceState`), lalu mengeksekusinya untuk menangani input pengguna.",
+  "summary": "Merutekan pesan ke kelas State yang spesifik berdasarkan nama state.",
+  "description": "Setelah `StateHandler` meneruskan pesan, router ini memetakan nama state (misalnya, `awaiting_price`) ke kelas `StateInterface` yang sesuai menggunakan peta routing array sederhana.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Menginisialisasi router dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
+      "description": "Menginisialisasi router dengan mendefinisikan semua rute state yang tersedia.",
+      "parameters": []
     },
     {
-      "name": "route",
-      "description": "Mencari dan mengeksekusi kelas `State` yang sesuai.",
+      "name": "getState",
+      "description": "Mencari dan mengembalikan instance handler state yang cocok dari peta routing.",
       "parameters": [
-        {"name": "message", "type": "array", "description": "Objek pesan asli."}, 
-        {"name": "state", "type": "string", "description": "Nama state pengguna saat ini."}, 
-        {"name": "state_context", "type": "?array", "description": "Data kontekstual yang disimpan bersama state."}
+        {
+          "name": "state_name",
+          "type": "string",
+          "description": "Nama state yang akan dirutekan."
+        }
       ],
-      "logic_flow": [
-        "1. Mengonversi nama state menjadi nama kelas (misalnya, `awaiting_price` -> `AwaitingPriceState`).",
-        "2. Memeriksa apakah file dan kelas untuk state tersebut ada di direktori `core/handlers/States/`.",
-        "3. Jika ada, membuat instance dari kelas state tersebut (misalnya, `new AwaitingPriceState($this->app)`).",
-        "4. Memanggil metode `handle($message, $state_context)` pada instance state tersebut.",
-        "5. Jika kelas tidak ditemukan, pesan diabaikan."
-      ]
+      "returns": "?StateInterface",
+      "return_description": "Instance dari handler state jika ditemukan, jika tidak `null`."
     }
   ]
 }

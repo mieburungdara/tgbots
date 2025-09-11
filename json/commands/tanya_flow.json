@@ -1,44 +1,37 @@
 {
   "flow_name": "/tanya",
   "summary": "Memulai alur untuk mengajukan pertanyaan terkait sebuah pesan.",
-  "description": "Dipicu dengan membalas (reply) sebuah pesan dengan perintah /tanya. Perintah ini memulai proses interaktif di mana pengguna diminta untuk memilih kategori pertanyaan, yang kemudian akan diproses lebih lanjut (kemungkinan untuk moderasi atau ditampilkan di channel khusus).",
+  "description": "Dipicu dengan me-reply sebuah pesan dengan perintah /tanya. Memulai proses interaktif di mana pengguna diminta memilih kategori pertanyaan.",
   "initial_checks": [
     {
       "name": "Pengecekan Fitur Bot",
-      "condition": "Fitur yang ditetapkan untuk bot (`$app->bot['assigned_feature']`) bukan 'tanya'.",
-      "action_if_true": "Kirim pesan error yang menyarankan bot lain yang memiliki fitur 'tanya' (jika ada). Alur berhenti."
+      "action": "Memastikan fitur bot adalah 'tanya'. Jika tidak, sarankan bot yang benar."
     },
     {
       "name": "Pengecekan Kiriman Tertunda",
-      "description": "Memeriksa apakah pengguna sudah memiliki kiriman lain yang statusnya masih dalam moderasi.",
-      "condition": "Ada entri moderasi yang aktif untuk pengguna.",
-      "action_if_true": "Kirim pesan: 'Anda masih memiliki kiriman yang sedang dalam proses moderasi...'. Alur berhenti."
+      "action": "Memanggil `MediaPackageRepository::hasPendingPost()` untuk memeriksa apakah pengguna sudah memiliki kiriman yang menunggu moderasi."
     },
     {
       "name": "Pengecekan Pesan Balasan (Reply)",
-      "condition": "Perintah tidak membalas pesan lain.",
-      "action_if_true": "Kirim pesan: 'Untuk bertanya, silakan reply pesan yang ingin Anda tanyakan...'. Alur berhenti."
+      "action": "Memastikan perintah me-reply pesan lain."
     },
     {
       "name": "Validasi Kepemilikan Pesan",
-      "description": "Memastikan pengguna tidak mencoba bertanya pada pesan yang dikirim oleh orang lain.",
-      "condition": "`from_id` dari pesan yang dibalas tidak sama dengan ID pengguna saat ini.",
-      "action_if_true": "Kirim pesan error: '⚠️ Gagal. Anda hanya bisa bertanya pada pesan milik Anda sendiri.'. Alur berhenti."
+      "action": "Memastikan pengguna tidak bertanya pada pesan milik orang lain."
     }
   ],
   "main_flow": [
     {
       "step_number": 1,
       "name": "Pengaturan State Pengguna",
-      "description": "Menyimpan state pengguna saat ini ke `awaiting_tanya_category` di database. Konteks yang disimpan mencakup detail dari pesan yang dibalas (`message_id`, `chat_id`, `from_id`, dan `text`/`caption`) untuk digunakan pada langkah selanjutnya.",
+      "description": "Menyimpan state pengguna ke `awaiting_tanya_category` dan menyimpan konteks pesan yang dibalas (termasuk teksnya).",
       "action": "`UserRepository::setUserState()`"
     },
     {
       "step_number": 2,
       "name": "Permintaan Pemilihan Kategori",
-      "description": "Mengirim pesan kepada pengguna dengan teks \"Silakan pilih kategori:\" dan menyertakan keyboard inline dengan pilihan kategori (misalnya, 'Mutualan', 'Tanya', 'Dll'). Pesan ini dikirim sebagai balasan ke pesan asli yang ditanyakan.",
-      "output": "Pesan dengan keyboard inline terkirim ke pengguna."
+      "description": "Mengirim pesan \"Silakan pilih kategori:\" dengan keyboard inline berisi pilihan kategori."
     }
   ],
-  "next_flow": "Alur selanjutnya ditangani oleh `CallbackQueryHandler` ketika pengguna menekan salah satu tombol kategori. Ini akan memicu `TanyaCallback`."
+  "next_flow": "Alur selanjutnya ditangani oleh `CallbackQueryHandler` yang akan memicu `TanyaCallback`."
 }

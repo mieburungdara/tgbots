@@ -1,20 +1,36 @@
 {
   "class_name": "CallbackQueryHandler",
-  "summary": "Handler perantara untuk semua `callback_query` dari tombol inline.",
-  "description": "Handler ini dipanggil oleh `UpdateHandler` setiap kali pengguna menekan tombol inline. Tugasnya hanya satu: meneruskan `callback_query` ke `CallbackRouter` untuk di-dispatch ke logika yang benar.",
-  "dependencies": ["CallbackRouter"],
+  "implements": "HandlerInterface",
+  "summary": "Memproses dan merutekan semua `callback_query` dari tombol inline.",
+  "description": "Handler ini dipanggil oleh `UpdateDispatcher`. Tugasnya adalah menerima `callback_query`, menangani kasus khusus (seperti callback 'noop'), dan mendelegasikan sisanya ke `CallbackRouter` untuk dieksekusi oleh handler callback yang sesuai.",
+  "dependencies": [
+    "CallbackRouter"
+  ],
   "methods": [
     {
       "name": "__construct",
-      "description": "Menginisialisasi handler dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
+      "description": "Menginisialisasi handler dan `CallbackRouter` internalnya.",
+      "parameters": []
     },
     {
       "name": "handle",
-      "description": "Meneruskan `callback_query` ke `CallbackRouter`.",
-      "parameters": [{"name": "callback_query", "type": "array", "description": "Data callback query dari Telegram."}],
+      "description": "Menganalisis `callback_data` dan meneruskannya ke handler yang benar.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array",
+          "description": "Data callback query dari Telegram."
+        }
+      ],
       "logic_flow": [
-        "1. Memanggil `CallbackRouter->route(callback_query)` untuk pemrosesan lebih lanjut."
+        "1. Jika `callback_data` adalah 'noop', jawab query dan berhenti.",
+        "2. Memanggil `CallbackRouter->route()` dengan `callback_data` untuk mendapatkan handler dan parameter yang cocok.",
+        "3. Jika rute ditemukan, panggil metode `execute()` pada handler yang sesuai.",
+        "4. Jika tidak ada rute yang cocok, jawab query dengan pesan error."
       ]
     }
   ]

@@ -1,45 +1,27 @@
 {
   "flow_name": "/help",
   "summary": "Menampilkan daftar perintah yang relevan bagi pengguna.",
-  "description": "Menyusun dan mengirimkan pesan bantuan yang dinamis. Konten pesan disesuaikan berdasarkan dua faktor utama: fitur yang diaktifkan untuk bot (`assigned_feature`) dan peran pengguna (apakah pengguna adalah 'Admin').",
+  "description": "Menyusun dan mengirimkan pesan bantuan yang dinamis. Konten pesan disesuaikan berdasarkan fitur yang diaktifkan untuk bot (`assigned_feature`) dan peran pengguna (apakah pengguna adalah 'Admin').",
   "steps": [
     {
       "step_number": 1,
       "name": "Identifikasi Fitur Bot",
-      "description": "Memeriksa properti `$app->bot['assigned_feature']` untuk menentukan konteks fungsional bot saat ini. Jika tidak ada fitur yang ditetapkan, akan menggunakan nilai default 'general'.",
-      "output": "String nama fitur (misalnya, 'sell', 'rate', 'general')."
+      "description": "Memeriksa properti `$app->bot['assigned_feature']` untuk menentukan konteks fungsional bot."
     },
     {
       "step_number": 2,
-      "name": "Penyusunan Perintah Dasar",
-      "description": "Membangun blok teks awal yang berisi perintah-perintah umum yang tersedia untuk semua pengguna, seperti `/me`, `/login`, dan `/about`.",
-      "output": "String berisi daftar perintah dasar."
+      "name": "Penyusunan Pesan Bantuan",
+      "description": "Membangun blok teks bantuan menggunakan struktur `switch` pada nama fitur untuk menambahkan perintah yang relevan. Juga menambahkan blok perintah umum."
     },
     {
       "step_number": 3,
-      "name": "Penambahan Perintah Kontekstual",
-      "description": "Menggunakan struktur `switch` pada nama fitur yang didapat dari langkah 1 untuk menambahkan blok perintah yang relevan.",
-      "input": "String nama fitur.",
-      "feature_specific_commands": {
-        "sell": "Menambahkan perintah `/sell`, `/addmedia`, `/konten`, `/balance`.",
-        "rate": "Menambahkan perintah `/rate`.",
-        "tanya": "Menambahkan perintah `/tanya`.",
-        "general": "Menambahkan perintah `/balance`."
-      },
-      "output": "String bantuan yang diperbarui dengan perintah kontekstual."
+      "name": "Penambahan Perintah Admin",
+      "description": "Jika pengguna adalah 'Admin', sebuah bagian khusus 'KHUSUS ADMIN' ditambahkan ke pesan."
     },
     {
       "step_number": 4,
-      "name": "Penambahan Perintah Admin",
-      "description": "Memeriksa apakah `$app->user['role']` adalah 'Admin'. Jika ya, sebuah bagian khusus 'KHUSUS ADMIN' ditambahkan ke pesan, berisi perintah seperti `/dev_addsaldo` dan `/feature`.",
-      "condition": "Pengguna adalah Admin.",
-      "output": "String bantuan yang diperbarui dengan perintah admin (jika berlaku)."
-    },
-    {
-      "step_number": 5,
-      "name": "Pengiriman Pesan Bantuan",
-      "description": "Mengirimkan keseluruhan string pesan bantuan yang telah disusun ke chat pengguna.",
-      "input": "String final pesan bantuan."
+      "name": "Pengiriman Pesan Panjang",
+      "description": "Menggunakan metode `sendLongMessage` untuk mengirim keseluruhan teks bantuan, yang secara otomatis akan memecah pesan jika terlalu panjang."
     }
   ]
 }

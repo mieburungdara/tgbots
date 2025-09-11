@@ -1,26 +1,30 @@
 {
   "class_name": "CallbackRouter",
-  "summary": "Merutekan `callback_query` ke kelas Callback yang spesifik.",
-  "description": "Setelah menerima `callback_query` dari `CallbackQueryHandler`, router ini menganalisis `callback_data`. Berdasarkan prefiks data (misalnya, `buy:`, `rate:`), ia memetakan ke kelas `Callback` yang sesuai (misalnya, `BuyCallback`, `RateCallback`), lalu mengeksekusinya.",
+  "summary": "Merutekan `callback_data` ke kelas Callback yang spesifik berdasarkan prefix.",
+  "description": "Router ini memetakan `callback_data` ke kelas-kelas `CallbackCommandInterface` yang sesuai. Ia menggunakan sebuah array `routes` di mana kunci adalah prefix dari `callback_data` (misalnya, `view_page_`) dan nilainya adalah instance dari handler callback.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Menginisialisasi router dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
+      "description": "Menginisialisasi router dengan mendefinisikan semua rute callback yang tersedia.",
+      "parameters": []
     },
     {
       "name": "route",
-      "description": "Mencari dan mengeksekusi kelas `Callback` yang sesuai.",
-      "parameters": [{"name": "callback_query", "type": "array", "description": "Objek callback query asli."}],
+      "description": "Mencocokkan `callback_data` dengan prefix rute dan mengembalikan handler yang sesuai beserta parameternya.",
+      "parameters": [
+        {
+          "name": "callback_data",
+          "type": "string"
+        }
+      ],
       "logic_flow": [
-        "1. Mengambil `callback_data` dari `callback_query`.",
-        "2. Memecah data berdasarkan `:` menjadi beberapa bagian (`$parts`). Bagian pertama (`$parts[0]`) adalah kunci routing.",
-        "3. Mengonversi kunci routing menjadi nama kelas (misalnya, `buy` -> `BuyCallback`).",
-        "4. Memeriksa apakah file dan kelas untuk callback tersebut ada di direktori `core/handlers/Callbacks/`.",
-        "5. Jika ada, membuat instance dari kelas callback tersebut (misalnya, `new BuyCallback($this->app)`).",
-        "6. Memanggil metode `execute($callback_query, $parts)` pada instance tersebut.",
-        "7. Jika kelas tidak ditemukan, query diabaikan."
-      ]
+        "1. Melakukan iterasi pada array `routes`.",
+        "2. Jika rute adalah tipe prefix (diakhiri `_`), periksa apakah `callback_data` dimulai dengan prefix tersebut. Jika ya, kembalikan handler dan sisa string sebagai parameter.",
+        "3. Jika rute adalah tipe pencocokan pasti, periksa kesamaan. Jika ya, kembalikan handler.",
+        "4. Jika tidak ada yang cocok, kembalikan `null`."
+      ],
+      "returns": "?array",
+      "return_description": "Array berisi 'handler' dan 'params' jika cocok, jika tidak `null`."
     }
   ]
 }

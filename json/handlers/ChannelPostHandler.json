@@ -1,21 +1,27 @@
 {
   "class_name": "ChannelPostHandler",
+  "implements": "HandlerInterface",
   "summary": "Menangani update ketika ada post baru di channel yang terhubung.",
-  "description": "Handler ini dipanggil oleh `UpdateHandler` untuk setiap post baru atau editan di channel di mana bot menjadi admin. Ini berguna untuk melacak pesan yang dikirim bot ke channel atau merespons post dari admin lain.",
+  "description": "Handler ini dipanggil oleh `UpdateDispatcher` untuk setiap post baru di channel di mana bot menjadi admin. Tugas utamanya adalah mencatat pesan channel ke database dan menangani perintah spesifik yang mungkin dijalankan di dalam channel.",
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi handler dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "handle",
-      "description": "Menjalankan logika untuk post channel.",
-      "parameters": [{"name": "channel_post", "type": "array", "description": "Data `channel_post` atau `edited_channel_post` dari Telegram."}],
+      "description": "Mencatat post channel dan merutekan perintah jika ada.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "channel_post",
+          "type": "array",
+          "description": "Data `channel_post` dari Telegram."
+        }
+      ],
       "logic_flow": [
-        "1. (Placeholder) Logika untuk menangani post channel akan ditempatkan di sini.",
-        "2. Contoh: Jika bot memposting konten yang dijual, handler ini bisa mencatat `message_id` dari post di channel untuk referensi di masa depan (misalnya, untuk menarik kembali post).",
-        "3. Saat ini, kemungkinan besar handler ini tidak memiliki implementasi yang signifikan."
+        "1. Mencatat seluruh data post ke dalam tabel `messages` untuk riwayat.",
+        "2. Memeriksa apakah teks post mengandung perintah (dimulai dengan '/').",
+        "3. Jika ya, memanggil metode handler internal yang sesuai (misalnya, `handleRegisterChannelCommand`)."
       ]
     }
   ]

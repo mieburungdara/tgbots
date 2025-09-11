@@ -1,50 +1,32 @@
 {
   "flow_name": "/me",
   "summary": "Menampilkan ringkasan profil dan statistik pengguna.",
-  "description": "Mengumpulkan dan menampilkan informasi terperinci tentang pengguna, termasuk data identitas (ID Telegram, ID Penjual), status keuangan (saldo), dan rekap aktivitas penjualan (jumlah item terjual dan total pendapatan).",
+  "description": "Mengumpulkan dan menampilkan informasi terperinci tentang pengguna, termasuk data identitas, status keuangan, dan rekap aktivitas penjualan.",
   "steps": [
     {
       "step_number": 1,
-      "name": "Inisialisasi Repositori",
-      "description": "Membuat instance dari `AnalyticsRepository` untuk mengambil data statistik penjualan."
-    },
-    {
-      "step_number": 2,
       "name": "Pengambilan Data",
       "description": "Mengambil data dari beberapa sumber:",
       "data_sources": [
         {
           "source": "Objek Aplikasi (`$app->user`)",
-          "data": "Informasi dasar pengguna seperti `telegram_id`, `first_name`, `last_name`, `public_seller_id`, dan `balance`."
+          "data": "Informasi dasar pengguna."
         },
         {
-          "source": "`AnalyticsRepository::getSellerStats()`",
-          "data": "Statistik agregat penjualan seperti `total_sales` (jumlah transaksi) dan `total_revenue` (total pendapatan kotor).",
-          "input": "ID pengguna (`$app->user['id']`)."
+          "source": "`AnalyticsRepository::getSellerSummary()`",
+          "data": "Statistik penjualan seperti `total_sales` dan `total_revenue`."
         }
       ]
     },
     {
+      "step_number": 2,
+      "name": "Pemformatan dan Penyusunan Pesan",
+      "description": "Membangun string pesan multi-baris dalam format Markdown, memformat angka sebagai mata uang, dan menangani kasus di mana pengguna belum menjadi penjual."
+    },
+    {
       "step_number": 3,
-      "name": "Pemformatan Data",
-      "description": "Mengubah data mentah menjadi format yang lebih mudah dibaca oleh pengguna.",
-      "formatting_actions": [
-        "Menggabungkan `first_name` dan `last_name`.",
-        "Mengonversi nilai `balance` dan `total_revenue` ke format mata uang Rupiah (misal: `toRupiah()`).",
-        "Menampilkan `public_seller_id` jika ada, jika tidak, menampilkan 'Belum terdaftar'."
-      ]
-    },
-    {
-      "step_number": 4,
-      "name": "Penyusunan Pesan Respons",
-      "description": "Membangun string pesan multi-baris yang terstruktur dengan baik, mengelompokkan informasi ke dalam beberapa bagian seperti \"Profil Anda\", \"Keuangan\", dan \"Aktivitas Penjualan\".",
-      "output": "String pesan yang siap dikirim."
-    },
-    {
-      "step_number": 5,
       "name": "Pengiriman Pesan",
-      "description": "Mengirimkan pesan yang telah disusun ke chat pengguna.",
-      "input": "String pesan dari langkah 4."
+      "description": "Mengirimkan pesan yang telah disusun ke chat pengguna dengan `parse_mode` Markdown."
     }
   ]
 }

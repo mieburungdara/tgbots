@@ -1,23 +1,35 @@
 {
   "class_name": "MediaHandler",
-  "summary": "Menyimpan informasi pesan media ke database.",
-  "description": "Handler ini dipanggil oleh `MessageHandler` ketika sebuah pesan berisi media (foto, video, atau dokumen). Tugas utamanya adalah mengekstrak metadata media (`file_id`, `file_unique_id`, `media_group_id`, dll.) dan menyimpannya ke tabel `media_files` untuk referensi di masa depan, seperti saat menggunakan perintah `/sell`.",
-  "dependencies": ["MediaFileRepository"],
+  "implements": "HandlerInterface",
+  "summary": "Menyimpan metadata media dan menyalinnya ke channel penyimpanan.",
+  "description": "Handler ini dipanggil untuk setiap pesan media. Tugasnya adalah menyimpan semua metadata media ke tabel `media_files`, kemudian mencoba menyalin media tersebut ke channel penyimpanan (backup) yang ditentukan, dan terakhir memperbarui record di `media_files` dengan lokasi penyimpanan yang baru.",
+  "dependencies": [
+    "MediaFileRepository",
+    "BotChannelUsageRepository"
+  ],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi handler dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "handle",
-      "description": "Mengekstrak metadata media dan menyimpannya.",
-      "parameters": [{"name": "message", "type": "array", "description": "Data pesan dari Telegram yang berisi media."}],
+      "description": "Mengekstrak metadata, menyimpan, menyalin ke penyimpanan, dan memperbarui lokasi.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "message",
+          "type": "array",
+          "description": "Data pesan dari Telegram yang berisi media."
+        }
+      ],
       "logic_flow": [
-        "1. Mengidentifikasi tipe media (foto, video, dokumen).",
-        "2. Mengambil `file_id`, `file_unique_id`, `media_group_id`, dan `caption` dari objek pesan.",
-        "3. Memanggil `MediaFileRepository::create()` untuk menyimpan data ini ke dalam tabel `media_files`.",
-        "4. Proses ini biasanya terjadi di latar belakang tanpa mengirim respons langsung ke pengguna."
+        "1. Mengidentifikasi tipe media (foto, video, dll.) dari pesan.",
+        "2. Mengumpulkan semua parameter metadata yang relevan.",
+        "3. Memanggil `MediaFileRepository::saveMediaFile()` untuk membuat catatan awal di database.",
+        "4. Memanggil `BotChannelUsageRepository::getNextChannelForBot()` untuk mendapatkan channel penyimpanan berikutnya (round-robin).",
+        "5. Jika channel penyimpanan ditemukan, panggil `TelegramAPI::copyMessage()` untuk menyalin media ke sana.",
+        "6. Jika penyalinan berhasil, panggil `MediaFileRepository::updateStorageInfo()` untuk memperbarui record media dengan `storage_channel_id` dan `storage_message_id` yang baru.",
+        "7. Mencatat semua langkah dan potensi kegagalan ke log."
       ]
     }
   ]

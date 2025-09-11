@@ -1,29 +1,38 @@
 {
   "class_name": "RetractPostCallback",
   "implements": "CallbackCommandInterface",
-  "summary": "Menarik kembali (menghapus) sebuah post dari channel penjualan.",
-  "description": "Callback ini memungkinkan penjual untuk menghapus post konten mereka dari channel publik. Ini biasanya dipicu dari sebuah tombol pada pesan manajemen konten.",
+  "summary": "Menarik kembali (menghapus) sebuah post dari channel publik.",
+  "description": "Callback ini memungkinkan penjual untuk menghapus post konten mereka dari channel. Ini akan menghapus pesan dari Telegram dan mengubah status paket menjadi 'deleted'.",
+  "dependencies": [
+    "MediaPackageRepository",
+    "ChannelPostPackageRepository"
+  ],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi callback dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "execute",
-      "description": "Menjalankan logika penarikan post.",
+      "description": "Menjalankan logika penarikan post dalam sebuah transaksi database.",
       "parameters": [
-        {"name": "callback_query", "type": "array", "description": "Data callback query asli."}, 
-        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['retract', 'package_id', 'channel_id', 'message_id']`."}
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string"
+        }
       ],
       "logic_flow": [
-        "1. Jawab `callback_query`.",
-        "2. Ambil `package_id`, `channel_id`, dan `message_id` dari `$parts`.",
-        "3. Validasi bahwa pengguna adalah pemilik paket.",
-        "4. Panggil `TelegramAPI::deleteMessage()` dengan `channel_id` dan `message_id` untuk menghapus post.",
-        "5. Perbarui status paket di tabel `media_packages` menjadi 'retracted' (opsional).",
-        "6. Hapus catatan post dari database (misalnya, dari tabel `channel_posts`).",
-        "7. Edit pesan manajemen untuk mengonfirmasi bahwa post telah ditarik."
+        "1. Memulai transaksi database.",
+        "2. Validasi kepemilikan post.",
+        "3. Cari data post di `channel_post_packages` untuk mendapatkan `channel_id` dan `message_id`.",
+        "4. Panggil `TelegramAPI::deleteMessage()` untuk menghapus post dari channel.",
+        "5. Panggil `MediaPackageRepository::updateStatus()` untuk mengubah status paket menjadi 'deleted'.",
+        "6. Edit pesan asli untuk mengonfirmasi bahwa post telah ditarik.",
+        "7. Commit transaksi."
       ]
     }
   ]

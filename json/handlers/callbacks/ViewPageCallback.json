@@ -1,30 +1,38 @@
 {
   "class_name": "ViewPageCallback",
   "implements": "CallbackCommandInterface",
-  "summary": "Menampilkan konten dari sebuah paket yang sudah dibeli.",
-  "description": "Callback ini dipicu saat pengguna menekan tombol \"Lihat Konten\" atau \"Lihat Selengkapnya\". Ia akan mengirimkan media (foto/video) dari paket yang diminta ke pengguna, lengkap dengan navigasi halaman jika media lebih dari satu.",
+  "summary": "Menampilkan konten dari sebuah paket yang sudah dibeli atau dimiliki.",
+  "description": "Callback ini dipicu saat pengguna menekan tombol \"Lihat Konten\". Ia akan mengirimkan media dari paket yang diminta ke pengguna, lengkap dengan navigasi halaman jika media lebih dari satu.",
+  "dependencies": [
+    "MediaPackageRepository",
+    "SaleRepository"
+  ],
   "methods": [
-    {
-      "name": "__construct",
-      "description": "Menginisialisasi callback dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
     {
       "name": "execute",
       "description": "Mengirimkan media dari paket dengan paginasi.",
       "parameters": [
-        {"name": "callback_query", "type": "array", "description": "Data callback query asli."},
-        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['view_page', 'page_number', 'package_id']`."}
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "params",
+          "type": "string",
+          "description": "Parameter berisi `public_id` dan `page_index`."
+        }
       ],
       "logic_flow": [
-        "1. Jawab `callback_query`.",
-        "2. Ambil `page_number` dan `package_id` dari `$parts`.",
-        "3. Validasi hak akses: periksa apakah pengguna adalah pemilik paket atau sudah membelinya (cek tabel `sales`). Jika tidak, batalkan.",
-        "4. Gunakan `MediaFileRepository` untuk mengambil semua media yang terkait dengan `package_id`, diurutkan berdasarkan urutan.",
-        "5. Ambil media pada indeks `page_number` dari hasil query.",
-        "6. Buat tombol navigasi: 'Sebelumnya' (jika `page_number > 0`) dan 'Selanjutnya' (jika `page_number` bukan media terakhir). Callback untuk tombol ini akan memanggil `view_page` lagi dengan nomor halaman yang diperbarui.",
-        "7. Kirim media yang dipilih ke pengguna menggunakan `TelegramAPI::copyMessage` atau `sendPhoto`/`sendVideo`.",
-        "8. Edit pesan asli tempat tombol \"Lihat Konten\" ditekan, atau kirim pesan baru dengan media dan tombol navigasi."
+        "1. Validasi hak akses: periksa apakah pengguna adalah penjual atau sudah membeli.",
+        "2. Panggil `MediaPackageRepository::getGroupedPackageContent()` untuk mendapatkan konten yang sudah dikelompokkan per halaman.",
+        "3. Buat keyboard navigasi halaman jika ada lebih dari satu halaman.",
+        "4. Hapus pesan asli yang berisi tombol.",
+        "5. Jika halaman berisi satu media, panggil `copyMessage`.",
+        "6. Jika halaman berisi grup media, panggil `copyMessages` dan kirim deskripsi/navigasi di pesan terpisah."
       ]
     }
   ]

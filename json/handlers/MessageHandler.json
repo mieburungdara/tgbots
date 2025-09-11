@@ -1,24 +1,38 @@
 {
   "class_name": "MessageHandler",
-  "summary": "Memproses semua pesan masuk yang bukan merupakan editan atau post channel.",
-  "description": "Ini adalah salah satu handler utama yang berfungsi sebagai router sekunder untuk pesan. Berdasarkan konten pesan dan state pengguna, ia akan mendelegasikan tugas ke handler atau router yang lebih spesifik.",
-  "dependencies": ["CommandRouter", "StateHandler", "MediaHandler", "AutomaticForwardHandler"],
+  "implements": "HandlerInterface",
+  "summary": "Router utama untuk semua pesan masuk.",
+  "description": "Ini adalah handler utama untuk pesan teks dan media. Ia mendelegasikan tugas ke handler atau router yang lebih spesifik berdasarkan urutan prioritas.",
+  "dependencies": [
+    "CommandRouter",
+    "StateHandler",
+    "AutomaticForwardHandler"
+  ],
   "methods": [
     {
       "name": "__construct",
-      "description": "Menginisialisasi handler dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
+      "description": "Menginisialisasi semua router dan handler bawahan.",
+      "parameters": []
     },
     {
       "name": "handle",
       "description": "Menganalisis pesan dan mendelegasikannya berdasarkan prioritas.",
-      "parameters": [{"name": "message", "type": "array", "description": "Data pesan dari Telegram."}],
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "message",
+          "type": "array",
+          "description": "Data pesan dari Telegram."
+        }
+      ],
       "logic_flow": [
-        "1. Periksa apakah teks pesan dimulai dengan `/`. Jika ya, panggil `CommandRouter->route()`.",
-        "2. Jika bukan perintah, periksa apakah pengguna memiliki state aktif (misalnya, `awaiting_price`). Jika ya, panggil `StateHandler->handle()`.",
-        "3. Jika tidak, periksa apakah pesan berisi media (foto, video, dll). Jika ya, panggil `MediaHandler->handle()`.",
-        "4. Jika tidak, periksa apakah pesan berasal dari chat yang dikonfigurasi untuk penerusan otomatis. Jika ya, panggil `AutomaticForwardHandler->handle()`.",
-        "5. Jika tidak ada kondisi di atas yang terpenuhi, pesan akan diabaikan."
+        "1. **Prioritas 1: Forward Otomatis**: Jika pesan adalah `is_automatic_forward`, panggil `AutomaticForwardHandler` dan berhenti.",
+        "2. **Prioritas 2: Perintah**: Jika teks pesan dimulai dengan `/`, panggil `CommandRouter` untuk menemukan dan mengeksekusi perintah yang sesuai, lalu berhenti.",
+        "3. **Prioritas 3: Pesan Stateful**: Jika pengguna memiliki state aktif (misalnya, `awaiting_price`) dan pesan adalah teks, panggil `StateHandler` dan berhenti.",
+        "4. Jika tidak ada kondisi di atas yang terpenuhi, pesan akan diabaikan."
       ]
     }
   ]

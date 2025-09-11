@@ -2,28 +2,34 @@
   "class_name": "ShowChannelSelectionCallback",
   "implements": "CallbackCommandInterface",
   "summary": "Menampilkan daftar channel penjualan kepada penjual.",
-  "description": "Callback ini dipicu ketika penjual menekan tombol \"Post ke Channel\". Ia akan mengambil daftar channel yang tersedia untuk fitur penjualan dan menampilkannya sebagai serangkaian tombol inline.",
+  "description": "Callback ini dipicu ketika penjual menekan tombol \"Post ke Channel\". Ia akan mengambil daftar channel yang tersedia untuk fitur penjualan dan menampilkannya sebagai serangkaian tombol inline. Jika hanya ada satu channel, ia akan langsung memposting.",
+  "dependencies": [
+    "FeatureChannelRepository"
+  ],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi callback dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "execute",
-      "description": "Mengambil dan menampilkan daftar channel.",
+      "description": "Mengambil dan menampilkan daftar channel, atau langsung memposting jika hanya ada satu.",
       "parameters": [
-        {"name": "callback_query", "type": "array", "description": "Data callback query asli."},
-        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['show_channel_selection', 'package_id']`."}
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string"
+        }
       ],
       "logic_flow": [
-        "1. Jawab `callback_query`.",
-        "2. Ambil `package_id` dari `$parts[1]`.",
-        "3. Validasi bahwa pengguna adalah pemilik paket.",
-        "4. Gunakan `FeatureChannelRepository` untuk mengambil semua channel yang terkait dengan fitur 'sell'.",
-        "5. Jika tidak ada channel yang ditemukan, kirim pesan error.",
-        "6. Buat satu tombol inline untuk setiap channel yang ditemukan. `callback_data` untuk setiap tombol akan menjadi `post_to_channel:{package_id}:{channel_id}`.",
-        "7. Edit pesan asli, ganti kontennya dengan teks \"Pilih channel tujuan:\" dan tampilkan keyboard inline dengan daftar channel."
+        "1. Panggil `FeatureChannelRepository::findAllByOwnerAndFeature()` untuk mendapatkan semua channel penjualan milik pengguna.",
+        "2. Jika tidak ada channel, kirim pesan error.",
+        "3. Jika hanya ada satu channel, langsung panggil `PostToChannelCallback->execute()`.",
+        "4. Jika ada banyak channel, buat keyboard inline dengan satu tombol untuk setiap channel.",
+        "5. Kirim pesan \"Pilih channel tujuan:\" dengan keyboard yang telah dibuat."
       ]
     }
   ]

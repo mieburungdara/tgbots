@@ -1,25 +1,32 @@
 {
   "class_name": "InlineQueryHandler",
-  "summary": "Menangani permintaan `inline_query` dari pengguna.",
-  "description": "Handler ini dipanggil oleh `UpdateHandler` ketika seorang pengguna mengetik username bot di kolom chat manapun (mode inline). Handler ini bertanggung jawab untuk memberikan hasil yang relevan berdasarkan query pengguna, yang kemudian ditampilkan sebagai daftar yang bisa dipilih.",
+  "implements": "HandlerInterface",
+  "summary": "Menangani permintaan `inline_query` untuk berbagi konten.",
+  "description": "Handler ini dipanggil oleh `UpdateDispatcher` ketika pengguna mengetik username bot di kolom chat. Ia akan mencari paket media berdasarkan ID publik yang diketik pengguna dan mengembalikan hasil yang dapat dibagikan.",
+  "dependencies": [
+    "MediaPackageRepository"
+  ],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi handler dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "handle",
-      "description": "Memproses query inline dan mengirimkan hasilnya.",
-      "parameters": [{"name": "inline_query", "type": "array", "description": "Data `inline_query` dari Telegram."}],
+      "description": "Memproses query inline, mencari paket, dan mengirimkan hasilnya.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "inline_query",
+          "type": "array",
+          "description": "Data `inline_query` dari Telegram."
+        }
+      ],
       "logic_flow": [
-        "1. (Placeholder) Logika untuk menangani inline query akan ditempatkan di sini.",
-        "2. Contoh: Pengguna mengetik `@YourBotName some_search_term`.",
-        "3. Handler akan mengambil `some_search_term` dari `inline_query['query']`.",
-        "4. Mencari konten (misalnya, paket media) yang cocok dengan istilah pencarian.",
-        "5. Memformat hasilnya ke dalam format `InlineQueryResult` (misalnya, `InlineQueryResultArticle`).",
-        "6. Memanggil `TelegramAPI::answerInlineQuery()` dengan hasil yang sudah diformat.",
-        "7. Saat ini, kemungkinan besar handler ini tidak memiliki implementasi yang signifikan."
+        "1. Mengambil teks query dari `inline_query['query']`.",
+        "2. Jika teks query cukup panjang, panggil `MediaPackageRepository::findByPublicId()`.",
+        "3. Jika paket ditemukan, format hasilnya menjadi `InlineQueryResultArticle`.",
+        "4. Hasilnya mencakup judul, deskripsi (harga), dan `reply_markup` dengan tombol 'Beli Sekarang' yang berisi URL deep link ke bot.",
+        "5. Memanggil `TelegramAPI::answerInlineQuery()` dengan hasil yang sudah diformat."
       ]
     }
   ]

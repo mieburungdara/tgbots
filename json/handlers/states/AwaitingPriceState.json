@@ -2,33 +2,46 @@
   "class_name": "AwaitingPriceState",
   "implements": "StateInterface",
   "summary": "Menangani input harga dari pengguna setelah perintah `/sell`.",
-  "description": "Kelas ini dieksekusi oleh `StateRouter` ketika pengguna mengirim pesan saat statusnya adalah `awaiting_price`. Ia memvalidasi harga, membuat paket media, mengasosiasikan media, dan menyelesaikan alur penjualan.",
+  "description": "Kelas ini dieksekusi oleh `StateRouter` ketika pengguna mengirim pesan saat statusnya adalah `awaiting_price`. Ia memvalidasi harga, membuat paket media, mengasosiasikan media, menyalinnya ke penyimpanan, dan menyelesaikan alur penjualan.",
+  "dependencies": [
+    "UserRepository",
+    "MediaPackageRepository",
+    "BotChannelUsageRepository",
+    "MediaFileRepository"
+  ],
   "methods": [
-    {
-      "name": "__construct",
-      "description": "Menginisialisasi state handler dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
     {
       "name": "handle",
       "description": "Memproses input harga dari pengguna.",
       "parameters": [
-        {"name": "message", "type": "array", "description": "Data pesan yang berisi harga."}, 
-        {"name": "state_context", "type": "array", "description": "Konteks dari alur `/sell`, berisi `message_id` dari media yang akan dijual."}
+        {
+          "name": "message",
+          "type": "array",
+          "description": "Data pesan yang berisi harga."
+        },
+        {
+          "name": "state_context",
+          "type": "array",
+          "description": "Konteks dari alur `/sell`, berisi detail media yang akan dijual."
+        }
       ],
       "logic_flow": [
-        "1. Periksa apakah pesan adalah `/cancel`. Jika ya, reset state pengguna dan kirim pesan pembatalan.",
-        "2. Validasi bahwa teks pesan adalah angka integer positif. Jika tidak, kirim pesan error dan minta input lagi.",
-        "3. Ambil `message_id` dari media asli dari `$state_context`.",
-        "4. Gunakan `MediaFileRepository` untuk mendapatkan detail media (terutama `media_group_id` dan `thumbnail_media_id`) dari `message_id` tersebut.",
-        "5. Mulai transaksi database.",
-        "6. Buat record baru di tabel `media_packages` dengan harga yang diberikan, `thumbnail_media_id`, dan data penjual.",
-        "7. Dapatkan `package_id` yang baru dibuat.",
-        "8. Perbarui semua record di `media_files` yang memiliki `media_group_id` yang sama (atau `file_id` tunggal) dengan `package_id` yang baru.",
-        "9. Reset state pengguna menjadi `null` menggunakan `UserRepository`.",
-        "10. Commit transaksi database.",
-        "11. (Opsional) Lakukan backup media ke private channel.",
-        "12. Kirim pesan konfirmasi ke pengguna yang berisi ID paket publik dan harga yang telah ditetapkan."
+        "1. Validasi bahwa input adalah angka integer positif.",
+        "2. Panggil metode privat `createMediaPackage` untuk membuat entri di `media_packages` dan menautkan `media_files`.",
+        "3. Reset state pengguna menjadi `null`.",
+        "4. Panggil `BotChannelUsageRepository::getNextChannelForBot()` untuk mendapatkan channel backup.",
+        "5. Jika channel backup ada, panggil metode privat `backupMedia`.",
+        "6. Kirim pesan konfirmasi ke pengguna dengan ID paket yang baru."
+      ]
+    },
+    {
+      "name": "backupMedia",
+      "description": "Menyalin semua file media dari paket ke channel penyimpanan yang ditentukan.",
+      "logic_flow": [
+        "1. Ambil semua file media untuk paket tersebut.",
+        "2. Kelompokkan file berdasarkan `chat_id` aslinya.",
+        "3. Untuk setiap kelompok, salin pesannya ke channel backup menggunakan `copyMessage` atau `copyMessages`.",
+        "4. Setelah setiap penyalinan berhasil, panggil `MediaFileRepository::updateStorageInfo()` untuk mencatat lokasi penyimpanan yang baru."
       ]
     }
   ]

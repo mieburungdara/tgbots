@@ -1,21 +1,27 @@
 {
   "class_name": "EditedMessageHandler",
-  "summary": "Menangani update ketika sebuah pesan diedit oleh pengguna.",
-  "description": "Handler ini dipanggil oleh `UpdateHandler` ketika sebuah pesan yang ada di-edit. Fungsionalitasnya saat ini kemungkinan terbatas, tetapi bisa dikembangkan untuk, misalnya, memperbarui data di database yang terkait dengan pesan asli.",
+  "implements": "HandlerInterface",
+  "summary": "Menangani pembaruan caption pada pesan media.",
+  "description": "Handler ini dipanggil oleh `UpdateDispatcher` ketika sebuah pesan diedit. Logikanya secara spesifik mencari pembaruan pada `caption` sebuah pesan media dan menyinkronkan perubahan tersebut ke database.",
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi handler dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "handle",
-      "description": "Menjalankan logika untuk pesan yang diedit.",
-      "parameters": [{"name": "edited_message", "type": "array", "description": "Data `edited_message` dari Telegram."}],
+      "description": "Memeriksa apakah ada caption baru dan memperbarui tabel `media_files`.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "edited_message",
+          "type": "array",
+          "description": "Data `edited_message` dari Telegram."
+        }
+      ],
       "logic_flow": [
-        "1. (Placeholder) Logika untuk menangani pesan yang diedit akan ditempatkan di sini.",
-        "2. Contoh: Memeriksa apakah pesan asli tersimpan di database dan memperbarui kontennya.",
-        "3. Saat ini, kemungkinan besar handler ini tidak memiliki implementasi yang signifikan."
+        "1. Hanya melanjutkan jika `edited_message` berisi `caption`.",
+        "2. Menjalankan kueri `UPDATE media_files` untuk memperbarui `caption` pada baris yang cocok dengan `message_id` dan `chat_id` dari pesan yang diedit.",
+        "3. Mencatat keberhasilan atau kegagalan ke log aplikasi."
       ]
     }
   ]

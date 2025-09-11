@@ -1,25 +1,52 @@
 {
   "class_name": "UpdateHandler",
-  "summary": "Handler tingkat atas yang mendelegasikan update ke handler spesifik.",
-  "description": "Bertindak sebagai router utama setelah `UpdateDispatcher`. Kelas ini menerima update yang sudah divalidasi, kemudian memeriksa tipe update (pesan baru, editan, callback, dll.) dan meneruskannya ke handler yang lebih spesifik seperti `MessageHandler` atau `CallbackQueryHandler`.",
-  "dependencies": ["MessageHandler", "EditedMessageHandler", "ChannelPostHandler", "InlineQueryHandler", "CallbackQueryHandler"],
+  "summary": "Menganalisis tipe update dan menyediakan konteks pesan.",
+  "description": "Kelas ini tidak lagi berfungsi sebagai router utama, melainkan sebagai utilitas untuk `UpdateDispatcher`. Tugasnya adalah menentukan jenis update (misalnya, 'message', 'callback_query') berdasarkan pengaturan bot, dan mengekstrak konteks pesan yang konsisten dari berbagai jenis update.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Menginisialisasi handler dengan instance `App` untuk akses ke dependensi lain.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
+      "description": "Menginisialisasi handler dengan pengaturan bot saat ini.",
+      "parameters": [
+        {
+          "name": "bot_settings",
+          "type": "array"
+        }
+      ]
     },
     {
-      "name": "handle",
-      "description": "Menganalisis tipe update dan memanggil metode `handle` dari handler yang sesuai.",
-      "parameters": [{"name": "update", "type": "array", "description": "Data update dari Telegram."}],
-      "logic_flow": [
-        "1. Periksa `isset($update['message'])` -> panggil `MessageHandler`.",
-        "2. Periksa `isset($update['edited_message'])` -> panggil `EditedMessageHandler`.",
-        "3. Periksa `isset($update['channel_post'])` -> panggil `ChannelPostHandler`.",
-        "4. Periksa `isset($update['inline_query'])` -> panggil `InlineQueryHandler`.",
-        "5. Periksa `isset($update['callback_query'])` -> panggil `CallbackQueryHandler`."
-      ]
+      "name": "getUpdateType",
+      "description": "Mengidentifikasi tipe update dan memeriksa apakah pemrosesannya diaktifkan di pengaturan bot.",
+      "parameters": [
+        {
+          "name": "update",
+          "type": "array"
+        }
+      ],
+      "returns": "?string",
+      "return_description": "Nama tipe update jika valid dan diizinkan, jika tidak `null`."
+    },
+    {
+      "name": "getMessageContext",
+      "description": "Mengekstrak array pesan yang konsisten dari berbagai jenis update (`message`, `edited_message`, `callback_query`, `channel_post`).",
+      "parameters": [
+        {
+          "name": "update",
+          "type": "array"
+        }
+      ],
+      "returns": "?array",
+      "return_description": "Array pesan yang dinormalisasi, atau `null`."
+    },
+    {
+      "name": "isMediaMessage",
+      "description": "Memeriksa apakah sebuah pesan berisi salah satu dari jenis media yang didukung.",
+      "parameters": [
+        {
+          "name": "message",
+          "type": "array"
+        }
+      ],
+      "returns": "bool"
     }
   ]
 }

@@ -1,86 +1,34 @@
 {
   "flow_name": "/sell",
   "summary": "Memulai alur penjualan sebuah media atau grup media.",
-  "description": "Dipicu dengan membalas (reply) sebuah media dengan perintah `/sell`. Alur ini memandu pengguna melalui proses pendaftaran (jika perlu), dan kemudian meminta penetapan harga untuk membuat sebuah paket konten yang dapat dijual.",
+  "description": "Dipicu dengan me-reply sebuah media dengan perintah `/sell`. Alur ini memvalidasi prasyarat, lalu meminta penetapan harga untuk membuat paket konten.",
   "initial_checks": [
     {
-      "name": "Pengecekan Fitur Bot",
-      "condition": "Fitur bot (`$app->bot['assigned_feature']`) bukan 'sell'.",
-      "action_if_true": "Kirim pesan error bahwa perintah tidak tersedia dan sarankan bot yang benar. Alur berhenti."
-    },
-    {
-      "name": "Pengecekan Pesan Balasan (Reply)",
-      "condition": "Perintah tidak membalas pesan lain (`!isset($message['reply_to_message'])`).",
-      "action_if_true": "Kirim pesan instruksi untuk me-reply media yang ingin dijual. Alur berhenti."
-    },
-    {
-      "name": "Pengecekan Pendaftaran Penjual",
-      "condition": "Pengguna belum terdaftar sebagai penjual (`empty($app->user['public_seller_id'])`).",
-      "action_if_true": "Tawarkan pendaftaran dengan tombol inline 'Ya, Daftar Sekarang' (callback `register_seller`). Alur berhenti dan menunggu input callback."
+      "name": "Validasi Prasyarat",
+      "description": "Memanggil metode `validatePrerequisites` untuk melakukan serangkaian pemeriksaan:",
+      "checks": [
+        "Memastikan fitur bot adalah 'sell'.",
+        "Memastikan perintah me-reply sebuah pesan media.",
+        "Memastikan pengguna sudah terdaftar sebagai penjual. Jika belum, kirim prompt pendaftaran dengan tombol callback `register_seller` dan hentikan alur."
+      ]
     },
     {
       "name": "Validasi Media Tersimpan",
-      "description": "Memeriksa apakah media yang dibalas sudah ada di tabel `media_files`. Ini memastikan bot sudah memproses dan menyimpan `file_id` media tersebut.",
-      "condition": "Media tidak ditemukan di database.",
-      "action_if_true": "Kirim pesan error 'Gagal. Pastikan Anda me-reply pesan media... yang sudah tersimpan di bot.'. Alur berhenti."
+      "description": "Memanggil `getValidatedMediaInfo` untuk memastikan media yang di-reply sudah tersimpan di database dan untuk mengambil `media_group_id` serta `caption`-nya."
     }
   ],
   "main_flow": [
     {
       "step_number": 1,
-      "name": "Pengambilan Informasi Media",
-      "description": "Mengambil detail penting dari media yang dibalas dari tabel `media_files`, seperti `media_group_id` dan `caption`.",
-      "details": "Jika media adalah bagian dari grup, caption dari salah satu media dalam grup tersebut akan digunakan sebagai deskripsi default untuk paket."
-    },
-    {
-      "step_number": 2,
       "name": "Pengaturan State Pengguna",
-      "description": "Mengubah state pengguna menjadi 'awaiting_price' dan menyimpan konteks (`message_id` dan `chat_id` dari media) ke database. Ini menandakan bahwa input teks berikutnya dari pengguna akan diinterpretasikan sebagai harga.",
+      "description": "Mengubah state pengguna menjadi 'awaiting_price' dan menyimpan konteks media yang akan dijual.",
       "action": "`UserRepository::setUserState()`"
     },
     {
-      "step_number": 3,
+      "step_number": 2,
       "name": "Permintaan Input Harga",
-      "description": "Mengirim pesan kepada pengguna yang meminta mereka untuk memasukkan harga jual untuk paket tersebut. Pesan ini juga menyertakan instruksi untuk membatalkan dengan perintah `/cancel`."
+      "description": "Mengirim pesan kepada pengguna yang meminta mereka untuk memasukkan harga, lengkap dengan deskripsi media dan instruksi pembatalan."
     }
   ],
-  "state_handling": {
-    "state_name": "awaiting_price",
-    "description": "Alur yang dieksekusi oleh `StateHandler` ketika menerima pesan dari pengguna yang berada dalam state 'awaiting_price'.",
-    "branches": [
-      {
-        "condition": "Pesan pengguna adalah '/cancel'.",
-        "action": "State pengguna direset ke `null`. Operasi dibatalkan. Pengguna diberi notifikasi pembatalan."
-      },
-      {
-        "condition": "Pesan pengguna adalah harga (numerik).",
-        "steps": [
-          {
-            "name": "Validasi Harga",
-            "description": "Memastikan input adalah angka integer positif."
-          },
-          {
-            "name": "Pembuatan Paket Media",
-            "description": "Membuat record baru di tabel `media_packages` dengan `post_type` = 'sell', harga yang dimasukkan, dan `thumbnail_media_id` dari media yang dibalas."
-          },
-          {
-            "name": "Asosiasi Media dengan Paket",
-            "description": "Memperbarui kolom `package_id` di tabel `media_files` untuk semua media yang terkait (berdasarkan `media_group_id` jika ada, atau `file_id` tunggal)."
-          },
-          {
-            "name": "Reset State Pengguna",
-            "description": "Mengembalikan state pengguna ke `null` setelah harga berhasil diproses."
-          },
-          {
-            "name": "Backup Media (Opsional)",
-            "description": "Menyalin media dari paket ke channel backup privat yang telah dikonfigurasi, jika ada."
-          },
-          {
-            "name": "Konfirmasi Penjualan",
-            "description": "Mengirim pesan konfirmasi kepada pengguna yang berisi ID publik paket yang baru dibuat dan harganya."
-          }
-        ]
-      }
-    ]
-  }
+  "next_flow": "Input harga selanjutnya akan ditangani oleh `AwaitingPriceState`."
 }

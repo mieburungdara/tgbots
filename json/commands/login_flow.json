@@ -1,38 +1,30 @@
 {
   "flow_name": "/login",
   "summary": "Menghasilkan tautan login sekali pakai untuk panel web.",
-  "description": "Membuat token login yang aman dan unik, menyimpannya di database, dan mengirimkannya kepada pengguna dalam bentuk tautan URL yang dapat diklik untuk otentikasi ke panel member berbasis web.",
+  "description": "Membuat token login yang aman dan unik, menyimpannya di database, dan mengirimkannya kepada pengguna dalam bentuk tombol URL yang dapat diklik untuk otentikasi ke panel member.",
   "initial_checks": [
     {
-      "name": "Pengecekan Konfigurasi `BASE_URL`",
-      "description": "Memeriksa apakah konstanta `BASE_URL` telah didefinisikan di file konfigurasi (misalnya, `config.php`). `BASE_URL` penting untuk membangun tautan login yang benar.",
-      "condition": "`BASE_URL` tidak ada atau kosong.",
-      "action_if_true": "Kirim pesan error: 'Maaf, terjadi kesalahan teknis (ERR:CFG01).'. Alur berhenti.",
-      "note": "ERR:CFG01 adalah kode error kustom yang menandakan masalah konfigurasi dasar."
+      "name": "Pengecekan `BASE_URL`",
+      "description": "Memeriksa apakah konstanta `BASE_URL` telah didefinisikan.",
+      "action_if_true": "Kirim pesan error teknis (ERR:CFG01)."
     }
   ],
   "steps": [
     {
       "step_number": 1,
       "name": "Pembuatan dan Penyimpanan Token",
-      "description": "Menghasilkan token login acak yang sulit ditebak. Kemudian, memperbarui record pengguna di tabel `users` dengan token baru ini, serta mencatat waktu pembuatan (`token_created_at`) dan mengatur ulang status penggunaan (`token_used` menjadi 0).",
-      "database_action": "UPDATE users SET login_token = ?, token_created_at = NOW(), token_used = 0 WHERE id = ?",
-      "output": "String token login."
+      "description": "Menghasilkan token acak, lalu memperbarui record pengguna di tabel `users` dengan token baru dan timestamp-nya.",
+      "database_action": "UPDATE users SET login_token = ?, token_created_at = NOW(), token_used = 0 WHERE id = ?"
     },
     {
       "step_number": 2,
       "name": "Penyusunan Tautan Login",
-      "description": "Menggabungkan `BASE_URL` dengan path otentikasi dan token yang baru dibuat untuk membentuk URL login lengkap.",
-      "example": "https://yourdomain.com/auth/verify?token={token}",
-      "input": "String token login dari langkah 1.",
-      "output": "String URL login lengkap."
+      "description": "Menggabungkan `BASE_URL` dengan path `/member/token-login` dan token untuk membentuk URL lengkap."
     },
     {
       "step_number": 3,
-      "name": "Pengiriman Pesan dengan Tombol Login",
-      "description": "Membuat pesan yang menjelaskan bahwa tautan hanya berlaku sekali. Kemudian, membuat tombol inline (InlineKeyboardButton) dengan teks seperti \"Login ke Panel\" yang mengarah ke URL login yang telah dibuat. Pesan ini dikirim ke pengguna.",
-      "input": "String URL login lengkap.",
-      "output": "Pesan dengan tombol inline terkirim ke pengguna."
+      "name": "Pengiriman Pesan",
+      "description": "Mengirim pesan kepada pengguna dengan tombol inline 'Login ke Panel' yang mengarah ke URL yang telah dibuat."
     }
   ]
 }

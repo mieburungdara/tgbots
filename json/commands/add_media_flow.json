@@ -1,105 +1,51 @@
 {
   "flow_name": "/addmedia",
-  "summary": "Menambahkan file media ke dalam sebuah paket konten.",
-  "description": "Memproses penambahan media (foto/video) ke paket yang sudah ada (jika ID paket diberikan) atau ke paket baru yang sedang dalam proses pembuatan (terkait dengan perintah /sell).",
-  "aliases": [],
+  "summary": "Menambahkan file media ke paket konten.",
+  "description": "Memproses penambahan media ke paket yang sudah ada (jika ID paket diberikan) atau ke paket baru yang sedang dibuat. Fungsionalitas ini belum terimplementasi sepenuhnya dalam kode sumber.",
   "main_flow": {
-    "name": "Pengecekan Parameter Awal",
-    "description": "Memeriksa apakah perintah `/addmedia` diikuti oleh sebuah parameter, yang diasumsikan sebagai ID publik dari sebuah paket (`public_package_id`).",
+    "name": "Pengecekan Parameter",
+    "description": "Memeriksa apakah perintah diikuti oleh ID paket.",
     "branching": {
-      "condition": "Parameter `public_package_id` ada setelah `/addmedia`.",
+      "condition": "Parameter `public_package_id` ada.",
       "if_true": {
-        "flow": "addMediaToExistingPackage",
-        "description": "Alur untuk menambahkan media ke paket yang sudah ada."
+        "flow": "addMediaToExistingPackage"
       },
       "if_false": {
-        "flow": "addMediaToNewPackage",
-        "description": "Alur untuk menambahkan media ke paket baru yang terkait dengan state `awaiting_price`."
+        "flow": "addMediaToNewPackage"
       }
     }
   },
   "sub_flows": [
     {
       "name": "addMediaToNewPackage",
-      "description": "Menangani penambahan media ke paket baru yang sedang dibuat oleh pengguna (dalam state `awaiting_price`).",
+      "description": "Menangani penambahan media ke paket baru (dalam state `awaiting_price`).",
+      "status": "Belum Diimplementasikan",
       "initial_checks": [
         {
-          "name": "Pengecekan State Pengguna",
-          "condition": "State pengguna bukan `awaiting_price`.",
-          "action_if_true": "Kirim pesan error: '⚠️ Perintah ini hanya bisa digunakan saat Anda sedang dalam proses menjual item.' Alur berhenti."
+          "name": "Pengecekan State",
+          "action": "Memastikan state pengguna adalah `awaiting_price`."
         },
         {
-          "name": "Pengecekan Pesan Balasan (Reply)",
-          "condition": "Perintah tidak membalas (reply) pesan lain.",
-          "action_if_true": "Kirim pesan error: 'Untuk menambah media, silakan reply media yang ingin Anda tambahkan.' Alur berhenti."
-        },
-        {
-          "name": "Validasi Tipe Media",
-          "condition": "Pesan yang dibalas bukan merupakan foto atau video.",
-          "action_if_true": "Kirim pesan error: '⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video).' Alur berhenti."
+          "name": "Pengecekan Reply",
+          "action": "Memastikan perintah me-reply sebuah pesan media."
         }
-      ],
-      "proposed_steps": [
-        {
-          "step_number": 1,
-          "name": "Ekstrak Informasi Media",
-          "description": "Mengambil `file_id` dan `media_group_id` (jika ada) dari pesan media yang dibalas."
-        },
-        {
-          "step_number": 2,
-          "name": "Simpan File Media",
-          "description": "Menyimpan informasi media ke dalam tabel `media_files` di database, mengaitkannya dengan pengguna tetapi belum dengan paket."
-        },
-        {
-          "step_number": 3,
-          "name": "Konfirmasi Penambahan",
-          "description": "Memberi tahu pengguna bahwa media telah berhasil ditambahkan dan akan disertakan saat mereka menetapkan harga."
-        }
-      ],
-      "notes": "Fungsionalitas ini tidak terimplementasi sepenuhnya di kode sumber asli. Langkah-langkah di atas adalah alur yang diusulkan."
+      ]
     },
     {
       "name": "addMediaToExistingPackage",
-      "description": "Menangani penambahan media ke paket yang sudah ada berdasarkan `public_package_id`.",
+      "description": "Menangani penambahan media ke paket yang sudah ada.",
+      "status": "Belum Diimplementasikan",
       "initial_checks": [
         {
-          "name": "Pengecekan Pesan Balasan (Reply)",
-          "condition": "Perintah tidak membalas (reply) pesan lain.",
-          "action_if_true": "Kirim pesan error: 'Untuk menambah media, silakan reply media yang ingin Anda tambahkan.' Alur berhenti."
+          "name": "Pengecekan Reply",
+          "action": "Memastikan perintah me-reply sebuah pesan media."
         },
         {
-          "name": "Validasi Tipe Media",
-          "condition": "Pesan yang dibalas bukan merupakan foto atau video.",
-          "action_if_true": "Kirim pesan error: '⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video).' Alur berhenti."
+          "name": "Validasi Kepemilikan",
+          "action": "Memastikan pengguna adalah pemilik paket yang dituju."
         }
-      ],
-      "steps": [
-        {
-          "step_number": 1,
-          "name": "Ambil dan Validasi Paket",
-          "description": "Menggunakan `MediaPackageRepository` untuk mencari paket berdasarkan `public_package_id` yang diberikan.",
-          "condition": "Paket tidak ditemukan atau `telegram_user_id` paket tidak cocok dengan ID pengguna saat ini.",
-          "action_if_true": "Kirim pesan error: '⚠️ Anda tidak memiliki izin untuk mengubah paket ini.' Alur berhenti."
-        }
-      ],
-      "proposed_steps": [
-        {
-          "step_number": 2,
-          "name": "Ekstrak dan Simpan Media Baru",
-          "description": "Mengambil `file_id` dari pesan yang dibalas, menyimpannya ke tabel `media_files`, dan langsung mengaitkannya dengan `package_id` dari paket yang ditemukan."
-        },
-        {
-          "step_number": 3,
-          "name": "Perbarui Thumbnail (Jika Perlu)",
-          "description": "Jika paket belum memiliki thumbnail, media pertama yang ditambahkan dapat ditetapkan sebagai `thumbnail_media_id`."
-        },
-        {
-          "step_number": 4,
-          "name": "Konfirmasi",
-          "description": "Mengirim pesan konfirmasi kepada pengguna bahwa media telah berhasil ditambahkan ke paket."
-        }
-      ],
-      "notes": "Fungsionalitas ini tidak terimplementasi sepenuhnya di kode sumber asli. Langkah-langkah di atas adalah alur yang diusulkan."
+      ]
     }
-  ]
+  ],
+  "notes": "Kode sumber untuk kedua alur ini ada tetapi tidak memiliki logika implementasi yang fungsional."
 }

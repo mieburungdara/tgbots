@@ -2,29 +2,41 @@
   "class_name": "PostToChannelCallback",
   "implements": "CallbackCommandInterface",
   "summary": "Memposting sebuah paket konten ke channel penjualan yang dipilih.",
-  "description": "Callback ini dipicu setelah penjual memilih channel dari daftar yang ditampilkan oleh `ShowChannelSelectionCallback`. Ia akan menyalin media dari paket dan mengirimkannya sebagai post baru di channel yang dipilih.",
+  "description": "Callback ini dipicu setelah penjual memilih channel. Ia akan mengambil data bot pengelola channel, membuat caption, dan menyalin media thumbnail ke channel publik.",
+  "dependencies": [
+    "MediaPackageRepository",
+    "ChannelPostPackageRepository",
+    "FeatureChannelRepository",
+    "BotRepository"
+  ],
   "methods": [
-    {
-      "name": "__construct",
-      "description": "Menginisialisasi callback dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
     {
       "name": "execute",
       "description": "Menjalankan logika posting ke channel.",
       "parameters": [
-        {"name": "callback_query", "type": "array", "description": "Data callback query asli."}, 
-        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['post_to_channel', 'package_id', 'channel_id']`."}
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "params",
+          "type": "string",
+          "description": "Parameter berisi `public_id` dan `feature_channel_id`."
+        }
       ],
       "logic_flow": [
-        "1. Jawab `callback_query`.",
-        "2. Ambil `package_id` dan `channel_id` dari `$parts`.",
-        "3. Validasi bahwa pengguna adalah pemilik paket.",
-        "4. Ambil semua media yang terkait dengan `package_id` dari `MediaFileRepository`.",
-        "5. Buat caption untuk post, biasanya berisi deskripsi, harga, dan tombol inline dengan link ke bot (misalnya, `https://t.me/YourBot?start=package_public_id`).",
-        "6. Jika paket berisi satu media, panggil `TelegramAPI::copyMessage()`.",
-        "7. Jika paket berisi banyak media (grup), panggil `TelegramAPI::sendMediaGroup()`.",
-        "8. Edit pesan asli untuk mengonfirmasi bahwa konten telah berhasil diposting."
+        "1. Validasi kepemilikan paket dan channel.",
+        "2. Ambil data bot pengelola dari `managing_bot_id` di `feature_channels`.",
+        "3. Buat instance `TelegramAPI` baru dengan token bot pengelola.",
+        "4. Ambil thumbnail paket yang valid.",
+        "5. Buat caption dengan deskripsi dan harga.",
+        "6. Panggil `copyMessage` menggunakan API bot pengelola untuk memposting ke channel publik.",
+        "7. Jika berhasil, buat catatan di `channel_post_packages`.",
+        "8. Edit pesan asli untuk memberi konfirmasi."
       ]
     }
   ]

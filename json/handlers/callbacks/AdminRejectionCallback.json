@@ -1,28 +1,37 @@
 {
   "class_name": "AdminRejectionCallback",
   "implements": "CallbackCommandInterface",
-  "summary": "Menangani aksi saat admin menolak sebuah kiriman.",
-  "description": "Callback ini dipicu ketika seorang admin menekan tombol \"Tolak\" pada pesan moderasi. Ini akan memberi notifikasi kepada pengguna bahwa kiriman mereka ditolak dan memperbarui statusnya di database.",
+  "summary": "Menangani aksi saat admin menolak sebuah kiriman moderasi.",
+  "description": "Callback ini akan mengubah status post menjadi 'rejected', memberi notifikasi kepada pengguna, dan memperbarui pesan moderasi.",
+  "dependencies": [
+    "MediaPackageRepository"
+  ],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi callback dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "execute",
-      "description": "Menjalankan logika penolakan.",
+      "description": "Menjalankan logika penolakan dalam sebuah transaksi database.",
       "parameters": [
-        {"name": "callback_query", "type": "array", "description": "Data callback query asli."},
-        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['reject', 'submission_id']`."}
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "params",
+          "type": "string",
+          "description": "Parameter berisi `public_id` dan `reason` (opsional)."
+        }
       ],
       "logic_flow": [
-        "1. Jawab `callback_query` untuk menghilangkan status loading pada tombol.",
-        "2. Ambil ID kiriman dari `$parts[1]`.",
-        "3. Ambil detail kiriman dari database untuk mendapatkan ID pengguna asli.",
-        "4. Kirim notifikasi ke pengguna asli bahwa kiriman mereka telah ditolak.",
-        "5. Edit pesan moderasi asli untuk menunjukkan bahwa kiriman telah ditolak.",
-        "6. Perbarui status kiriman di database menjadi 'rejected'."
+        "1. Memulai transaksi database.",
+        "2. Cari post berdasarkan `public_id` dan validasi statusnya adalah 'pending'.",
+        "3. Ubah status post menjadi 'rejected' di `media_packages`.",
+        "4. Kirim notifikasi ke pengguna asli yang berisi alasan penolakan.",
+        "5. Edit pesan moderasi asli untuk menandai bahwa post telah ditolak.",
+        "6. Commit transaksi."
       ]
     }
   ]

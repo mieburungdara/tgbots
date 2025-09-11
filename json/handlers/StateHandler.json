@@ -1,21 +1,36 @@
 {
   "class_name": "StateHandler",
-  "summary": "Handler perantara yang menangani pesan dari pengguna dalam state tertentu.",
-  "description": "Handler ini dipanggil oleh `MessageHandler` jika pengguna yang mengirim pesan memiliki state percakapan yang aktif (misalnya, sedang menunggu input harga). Tugas utamanya adalah mengambil detail state pengguna dan mendelegasikannya ke `StateRouter`.",
-  "dependencies": ["StateRouter"],
+  "summary": "Menangani pesan dari pengguna dalam state tertentu, dengan penanganan `/cancel` secara global.",
+  "description": "Handler ini dipanggil oleh `MessageHandler` jika pengguna memiliki state percakapan aktif. Tugasnya adalah menangani perintah `/cancel` secara universal, dan jika bukan, mendelegasikan pesan ke `StateRouter` untuk diproses oleh handler state yang spesifik.",
+  "dependencies": [
+    "StateRouter",
+    "UserRepository"
+  ],
   "methods": [
     {
       "name": "__construct",
-      "description": "Menginisialisasi handler dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
+      "description": "Menginisialisasi `StateRouter` internal.",
+      "parameters": []
     },
     {
       "name": "handle",
-      "description": "Mengambil state pengguna dan meneruskan pesan ke `StateRouter`.",
-      "parameters": [{"name": "message", "type": "array", "description": "Data pesan dari Telegram."}],
+      "description": "Menangani `/cancel` atau meneruskan pesan ke `StateRouter`.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "message",
+          "type": "array",
+          "description": "Data pesan dari Telegram."
+        }
+      ],
       "logic_flow": [
-        "1. Mengambil `state` dan `state_context` dari objek pengguna (`$this->app->user`).",
-        "2. Memanggil `StateRouter->route(message, state, state_context)` untuk pemrosesan lebih lanjut."
+        "1. Jika teks pesan adalah `/cancel`, panggil `UserRepository::setUserState(null)` untuk membersihkan state dan kirim pesan pembatalan.",
+        "2. Jika tidak, ambil nama state dari data pengguna.",
+        "3. Panggil `StateRouter->getState()` untuk mendapatkan handler yang sesuai.",
+        "4. Jika handler ditemukan, panggil metode `handle()`-nya dengan konteks state yang relevan."
       ]
     }
   ]

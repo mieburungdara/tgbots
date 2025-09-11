@@ -2,32 +2,35 @@
   "class_name": "BuyCallback",
   "implements": "CallbackCommandInterface",
   "summary": "Memproses transaksi pembelian sebuah paket konten.",
-  "description": "Callback ini dipicu saat pengguna menekan tombol \"Beli\". Ia akan memvalidasi saldo pengguna, memproses transaksi, mencatat penjualan, dan memberikan akses ke konten jika berhasil.",
+  "description": "Callback ini dipicu saat pengguna menekan tombol \"Beli\". Ia akan memvalidasi saldo, memproses transaksi (mengubah saldo dan mencatat penjualan), mengubah status paket, dan kemudian mendelegasikan ke `ViewPageCallback` untuk menampilkan konten.",
+  "dependencies": [
+    "MediaPackageRepository",
+    "SaleRepository"
+  ],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi callback dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "execute",
-      "description": "Menjalankan logika pembelian.",
+      "description": "Menjalankan logika pembelian. Melempar Exception jika gagal, yang akan ditangkap oleh `UpdateDispatcher` untuk me-rollback transaksi.",
       "parameters": [
-        {"name": "callback_query", "type": "array", "description": "Data callback query asli."}, 
-        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['buy', 'public_package_id']`."}
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string"
+        }
       ],
       "logic_flow": [
-        "1. Jawab `callback_query` untuk memberitahu pengguna bahwa proses sedang berjalan.",
-        "2. Ambil `public_package_id` dari `$parts[1]`.",
-        "3. Gunakan `MediaPackageRepository` untuk mengambil detail paket, termasuk harga dan ID penjual.",
-        "4. Periksa apakah pengguna sudah memiliki item ini atau jika pengguna adalah penjualnya sendiri. Jika ya, batalkan.",
-        "5. Periksa apakah saldo pengguna (`$this->app->user['balance']`) mencukupi. Jika tidak, kirim pesan error dan batalkan.",
-        "6. Mulai transaksi database.",
-        "7. Kurangi saldo pembeli dan tambahkan saldo ke penjual (setelah dipotong biaya admin jika ada). Update di tabel `users`.",
-        "8. Buat catatan baru di tabel `sales` yang mengaitkan pembeli, penjual, dan paket.",
-        "9. Commit transaksi database.",
-        "10. Edit pesan asli untuk menghilangkan tombol Beli dan ganti dengan pesan konfirmasi pembelian.",
-        "11. Beri pengguna akses atau tombol untuk melihat konten yang baru dibeli (`view_page` callback)."
+        "1. Validasi bahwa paket tersedia dan saldo pengguna mencukupi.",
+        "2. Panggil `SaleRepository::createSale()` untuk memperbarui saldo dan membuat catatan penjualan.",
+        "3. Panggil `MediaPackageRepository::markAsSold()` untuk mengubah status paket.",
+        "4. Kirim pesan konfirmasi pembelian.",
+        "5. Panggil `ViewPageCallback->execute()` untuk langsung menampilkan konten yang baru dibeli."
       ]
     }
   ]

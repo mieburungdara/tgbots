@@ -1,70 +1,37 @@
 {
   "flow_name": "/konten",
   "summary": "Menampilkan detail dan opsi untuk sebuah paket konten.",
-  "description": "Dipanggil dengan format `/konten <ID_KONTEN>`, perintah ini mencari paket konten berdasarkan ID publiknya, menampilkan thumbnail dan deskripsi, serta menyediakan tombol aksi (seperti membeli atau melihat) tergantung pada status kepemilikan pengguna.",
+  "description": "Dipanggil dengan format `/konten <ID_PUBLIK>`, perintah ini menampilkan informasi yang berbeda tergantung pada peran pengguna (penjual, pembeli, atau pengunjung).",
   "initial_checks": [
     {
       "name": "Validasi Format Perintah",
-      "condition": "Perintah tidak memiliki parameter kedua (`<ID_KONTEN>`).",
-      "action_if_true": "Kirim pesan error: 'Format perintah salah. Gunakan: /konten <ID Konten>'. Alur berhenti."
+      "action": "Memastikan perintah memiliki parameter kedua (`<ID_PUBLIK>`)."
+    },
+    {
+      "name": "Pencarian Paket",
+      "action": "Mencari paket di database menggunakan `MediaPackageRepository::findByPublicId()`."
     }
   ],
-  "steps": [
-    {
-      "step_number": 1,
-      "name": "Inisialisasi Repositori",
-      "description": "Membuat instance dari `MediaPackageRepository`, `SaleRepository`, dan `FeatureChannelRepository` untuk interaksi database."
-    },
-    {
-      "step_number": 2,
-      "name": "Pencarian Paket Konten",
-      "description": "Mengambil `public_id` dari parameter perintah dan memanggil `MediaPackageRepository::findByPublicId()`.",
-      "input": "`public_id` dari teks perintah.",
-      "error_condition": "Paket tidak ditemukan di tabel `media_packages`.",
-      "action_on_error": "Kirim pesan: 'Konten dengan ID {public_id} tidak ditemukan.'. Alur berhenti."
-    },
-    {
-      "step_number": 3,
-      "name": "Pengambilan Media Thumbnail",
-      "description": "Mengambil data file thumbnail paket dari tabel `media_files` berdasarkan `thumbnail_media_id` pada paket.",
-      "error_condition": "Thumbnail tidak ditemukan atau data `file_id` rusak.",
-      "action_on_error": "Kirim pesan: 'Konten ini tidak memiliki media yang dapat ditampilkan...'. Mencatat error ke log. Alur berhenti."
-    },
-    {
-      "step_number": 4,
-      "name": "Penentuan Hak Akses Pengguna",
-      "description": "Memeriksa beberapa kondisi untuk menentukan tombol apa yang akan ditampilkan kepada pengguna:",
-      "checks": [
-        "`isAdmin`: Apakah `$app->user['role']` adalah 'Admin'?",
-        "`isSeller`: Apakah `telegram_user_id` pada paket sama dengan ID pengguna saat ini?",
-        "`hasPurchased`: Apakah ada entri di tabel `sales` untuk pengguna ini dan paket ini?"
-      ],
-      "output": "Boolean flags (`hasAccess`, `isSeller`)."
-    },
-    {
-      "step_number": 5,
-      "name": "Penyusunan Tombol Inline (Keyboard)",
-      "description": "Membuat array keyboard inline berdasarkan hak akses pengguna dan status paket.",
-      "logic": [
-        {
-          "condition": "Pengguna memiliki akses (`hasAccess` atau `isSeller` atau `isAdmin`).",
-          "buttons": "'Lihat Selengkapnya' (callback `view_page:0:{package_id}`)."
-        },
-        {
-          "condition": "Pengguna adalah penjual (`isSeller`).",
-          "buttons": "'Post ke Channel' (callback `show_channel_selection:{package_id}`)."
-        },
-        {
-          "condition": "Pengguna tidak punya akses DAN paket berstatus `available`.",
-          "buttons": "'Beli Konten Ini (harga)' (callback `buy:{public_id}`)."
-        }
-      ],
-      "output": "Array keyboard untuk Telegram API."
-    },
-    {
-      "step_number": 6,
-      "name": "Pengiriman Respons",
-      "description": "Mengirim media thumbnail ke pengguna menggunakan metode `sendPhoto` atau `sendVideo`, dengan deskripsi paket sebagai `caption` dan tombol-tombol yang sudah disusun sebagai `reply_markup`."
-    }
-  ]
+  "main_flow": {
+    "name": "Logika Tampilan Berdasarkan Peran",
+    "description": "Menentukan informasi apa yang akan ditampilkan berdasarkan hubungan pengguna dengan paket.",
+    "scenarios": [
+      {
+        "scenario_name": "Pengguna adalah Penjual",
+        "action": "Menampilkan laporan penjualan lengkap untuk konten tersebut, termasuk statistik pendapatan, dan tombol aksi seperti 'Lihat Selengkapnya' dan 'Post ke Channel'."
+      },
+      {
+        "scenario_name": "Pengguna Sudah Membeli atau Admin",
+        "action": "Menampilkan deskripsi dan tombol 'Lihat Selengkapnya' untuk mengakses konten."
+      },
+      {
+        "scenario_name": "Pengunjung Biasa",
+        "action": "Menampilkan deskripsi dan tombol 'Beli' jika paket berstatus 'available'."
+      }
+    ]
+  },
+  "final_step": {
+    "name": "Pengiriman Respons",
+    "description": "Mengambil media thumbnail yang valid menggunakan `getThumbnailFile()` dan mengirimkannya ke pengguna dengan caption dan tombol yang relevan. Jika thumbnail tidak valid, kirim pesan error."
+  }
 }

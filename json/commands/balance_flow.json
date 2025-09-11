@@ -6,24 +6,17 @@
     {
       "step_number": 1,
       "name": "Pengambilan Data Saldo",
-      "description": "Mengakses properti `balance` dari objek pengguna saat ini (`$app->user['balance']`), yang datanya diambil dari kolom `balance` di tabel `users`.",
-      "input": "Objek `$app->user`.",
-      "output": "Nilai numerik saldo."
+      "description": "Mengakses properti `balance` dari objek pengguna saat ini (`$app->user['balance']`)."
     },
     {
       "step_number": 2,
       "name": "Pemformatan Mata Uang",
-      "description": "Menggunakan fungsi `toRupiah` (kemungkinan dari `helpers.php`) untuk mengubah nilai numerik saldo menjadi format string mata uang Rupiah (contoh: 'Rp 10.000,00').",
-      "input": "Nilai numerik saldo.",
-      "output": "String saldo yang diformat."
+      "description": "Menggunakan `number_format` untuk mengubah nilai numerik saldo menjadi format string mata uang Rupiah."
     },
     {
       "step_number": 3,
-      "name": "Penyusunan dan Pengiriman Pesan",
-      "description": "Membuat string pesan yang menyertakan teks 'Saldo Anda saat ini:' diikuti dengan saldo yang sudah diformat, lalu mengirimkannya ke pengguna melalui Telegram API.",
-      "input": "String saldo yang diformat.",
-      "output": "Pesan terkirim di chat pengguna."
+      "name": "Pengiriman Pesan",
+      "description": "Mengirim pesan yang berisi saldo yang sudah diformat ke pengguna."
     }
-  ],
-  "error_handling": []
+  ]
 }

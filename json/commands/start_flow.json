@@ -1,19 +1,17 @@
 {
   "flow_name": "/start",
-  "summary": "Titik masuk utama bagi pengguna, bisa untuk sambutan atau melihat konten.",
-  "description": "Menangani perintah `/start`. Jika dipanggil tanpa parameter, akan mengirim pesan selamat datang. Jika dipanggil dengan parameter khusus (payload), seperti `/start package_XYZ`, akan langsung menampilkan detail paket konten tersebut.",
+  "summary": "Titik masuk utama bagi pengguna, bisa untuk sambutan atau melihat konten via deep link.",
+  "description": "Menangani perintah `/start`. Jika dipanggil tanpa parameter, akan mengirim pesan selamat datang. Jika dipanggil dengan payload `package_...`, akan langsung menampilkan detail paket konten tersebut.",
   "main_flow": {
     "name": "Pengecekan Payload",
-    "description": "Memeriksa apakah teks perintah mengandung payload yang diawali dengan `package_`.",
+    "description": "Memeriksa apakah perintah mengandung payload yang diawali dengan `package_`.",
     "branching": {
       "condition": "Payload `package_` ditemukan.",
       "if_true": {
-        "flow": "handleStartWithPayload",
-        "description": "Memicu alur untuk menampilkan detail paket konten."
+        "flow": "handleStartWithPayload"
       },
       "if_false": {
-        "flow": "handleStartWithoutPayload",
-        "description": "Memicu alur untuk mengirim pesan selamat datang standar."
+        "flow": "handleStartWithoutPayload"
       }
     }
   },
@@ -24,49 +22,22 @@
       "steps": [
         {
           "step_number": 1,
-          "action": "Kirim pesan yang berisi: 'Selamat datang! Untuk melihat daftar perintah yang tersedia, silakan ketik /help.'"
+          "action": "Kirim pesan selamat datang standar dan anjuran untuk menggunakan /help."
         }
       ]
     },
     {
       "name": "handleStartWithPayload",
-      "description": "Menampilkan detail paket konten berdasarkan ID publik yang ada di payload.",
-      "steps": [
-        {
-          "step_number": 1,
-          "name": "Ekstraksi ID dan Pencarian Paket",
-          "action": "Mengambil `public_id` dari payload, lalu menggunakan `MediaPackageRepository` untuk mencari paket.",
-          "error_condition": "Paket tidak ditemukan.",
-          "action_on_error": "Kirim pesan: 'Maaf, item ini tidak ditemukan.'. Alur berhenti."
-        }
-      ],
-      "package_display_logic": {
-        "name": "Logika Tampilan Berdasarkan Status Pengguna",
-        "description": "Setelah paket ditemukan, alur akan memeriksa hubungan pengguna dengan paket tersebut dan menampilkan informasi yang sesuai.",
-        "scenarios": [
-          {
-            "scenario_name": "Pengguna adalah Penjual",
-            "condition": "`telegram_user_id` pada paket cocok dengan ID pengguna saat ini.",
-            "action": "Menampilkan detail lengkap untuk penjual, termasuk statistik penjualan (jumlah terjual, total profit) dan tombol aksi seperti 'Lihat Selengkapnya' dan 'Post ke Channel'."
-          },
-          {
-            "scenario_name": "Pengguna Sudah Membeli",
-            "condition": "Ada catatan pembelian di tabel `sales` untuk pengguna dan paket ini.",
-            "action": "Memberi tahu pengguna bahwa mereka sudah memiliki item dan menyediakan tombol 'Lihat Konten' untuk mengaksesnya."
-          },
-          {
-            "scenario_name": "Paket Tersedia untuk Dibeli",
-            "condition": "Status paket adalah `available` dan pengguna bukan penjual/pembeli.",
-            "action": "Menampilkan detail publik paket (deskripsi, harga) dan tombol 'Beli Sekarang'. Saldo pengguna juga ditampilkan untuk perbandingan."
-          },
-          {
-            "scenario_name": "Paket Tidak Tersedia",
-            "condition": "Status paket bukan `available` (misalnya, `sold` atau `retracted`).",
-            "action": "Mengirim pesan sederhana: 'Maaf, item ini sudah tidak tersedia.'"
-          }
-        ],
-        "common_action": "Semua skenario (kecuali jika error) akan mencoba mengirim thumbnail paket dengan caption dan tombol yang relevan. Jika thumbnail gagal dimuat, hanya pesan teks yang akan dikirim."
-      }
+      "description": "Menampilkan detail paket konten berdasarkan ID publik dari payload.",
+      "logic_flow": [
+        "1. Ekstrak `public_id` dari payload.",
+        "2. Cari paket menggunakan `MediaPackageRepository::findByPublicId()`.",
+        "3. Tentukan peran pengguna (penjual, pembeli, atau pengunjung).",
+        "4. **Untuk Penjual**: Tampilkan laporan penjualan lengkap dengan statistik dan tombol aksi (Lihat, Post).",
+        "5. **Untuk Pembeli**: Tampilkan pesan bahwa item sudah dimiliki dengan tombol untuk melihat konten.",
+        "6. **Untuk Pengunjung**: Tampilkan deskripsi, harga, dan tombol 'Beli Sekarang'.",
+        "7. Ambil thumbnail yang valid dan kirim media dengan caption dan tombol yang sesuai."
+      ]
     }
   ]
 }

@@ -2,27 +2,33 @@
   "class_name": "RegisterSellerCallback",
   "implements": "CallbackCommandInterface",
   "summary": "Mendaftarkan pengguna sebagai penjual.",
-  "description": "Callback ini dipicu saat pengguna menekan tombol \"Ya, Daftar Sekarang\" setelah mencoba menggunakan perintah `/sell` tanpa terdaftar. Ini akan membuat ID penjual publik untuk pengguna dan menyimpannya.",
+  "description": "Callback ini dipicu saat pengguna menekan tombol \"Ya, Daftar Sekarang\". Ini akan membuat ID penjual publik yang unik untuk pengguna dan menyimpannya.",
+  "dependencies": [
+    "UserRepository"
+  ],
   "methods": [
-    {
-      "name": "__construct",
-      "description": "Menginisialisasi callback dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
     {
       "name": "execute",
       "description": "Menjalankan logika pendaftaran penjual.",
       "parameters": [
-        {"name": "callback_query", "type": "array", "description": "Data callback query asli."},
-        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['register_seller']`."}
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "params",
+          "type": "string"
+        }
       ],
       "logic_flow": [
-        "1. Jawab `callback_query`.",
-        "2. Periksa apakah pengguna sudah memiliki `public_seller_id`. Jika sudah, batalkan.",
-        "3. Buat `public_seller_id` yang unik (misalnya, string acak atau berdasarkan ID pengguna).",
-        "4. Gunakan `UserRepository` untuk memperbarui record pengguna dengan `public_seller_id` yang baru.",
-        "5. Edit pesan asli untuk mengonfirmasi bahwa pendaftaran berhasil.",
-        "6. Beri tahu pengguna untuk mencoba kembali perintah `/sell` mereka sebelumnya."
+        "1. Validasi bahwa pengguna belum terdaftar.",
+        "2. Panggil `UserRepository::setPublicId()` untuk membuat dan menyimpan ID penjual yang unik.",
+        "3. Kirim pesan konfirmasi pendaftaran berhasil kepada pengguna.",
+        "4. Hapus pesan prompt pendaftaran asli."
       ]
     }
   ]

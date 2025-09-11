@@ -1,28 +1,25 @@
 {
   "class_name": "CommandRouter",
   "summary": "Merutekan pesan perintah ke kelas Command yang spesifik.",
-  "description": "Setelah `MessageHandler` mengidentifikasi sebuah pesan sebagai perintah (dimulai dengan '/'), router ini mengambil alih. Ia memetakan nama perintah (misalnya, `/start`, `/help`) ke kelas `Command` yang sesuai (misalnya, `StartCommand`, `HelpCommand`), lalu mengeksekusinya.",
+  "description": "Router ini memetakan nama perintah (misalnya, `/start`, `/help`) ke kelas `CommandInterface` yang sesuai. Ia menggunakan sebuah array `commands` sebagai peta routing.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Menginisialisasi router dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
+      "description": "Menginisialisasi router dengan mendefinisikan semua rute perintah yang tersedia, termasuk perintah admin.",
+      "parameters": []
     },
     {
-      "name": "route",
-      "description": "Mencari dan mengeksekusi kelas `Command` yang sesuai.",
+      "name": "getCommand",
+      "description": "Mencari dan mengembalikan instance handler perintah yang cocok dari peta routing.",
       "parameters": [
-        {"name": "message", "type": "array", "description": "Objek pesan asli."}, 
-        {"name": "parts", "type": "array", "description": "Pesan yang dipecah berdasarkan spasi. `parts[0]` adalah nama perintah."}
+        {
+          "name": "command_name",
+          "type": "string",
+          "description": "Nama perintah yang akan dirutekan (misalnya, '/start')."
+        }
       ],
-      "logic_flow": [
-        "1. Mengambil nama perintah dari `parts[0]` (misalnya, `/start`).",
-        "2. Mengonversi nama perintah menjadi nama kelas (misalnya, `/start` -> `StartCommand`).",
-        "3. Memeriksa apakah file dan kelas untuk command tersebut ada di direktori `core/handlers/Commands/`.",
-        "4. Jika ada, membuat instance dari kelas command tersebut (misalnya, `new StartCommand($this->app)`).",
-        "5. Memanggil metode `handle($message, $parts)` pada instance command tersebut.",
-        "6. Jika kelas tidak ditemukan, perintah diabaikan."
-      ]
+      "returns": "?CommandInterface",
+      "return_description": "Instance dari handler perintah jika ditemukan, jika tidak `null`."
     }
   ]
 }

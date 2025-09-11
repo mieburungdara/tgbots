@@ -2,30 +2,24 @@
   "class_name": "TanyaCallback",
   "implements": "CallbackCommandInterface",
   "summary": "Menyelesaikan proses pengajuan pertanyaan setelah kategori dipilih.",
-  "description": "Callback ini dipicu setelah pengguna memilih kategori (misal: \"Mutualan\", \"Tanya\") dari tombol inline yang dikirim oleh perintah /tanya. Ia akan menyimpan kiriman pertanyaan ke database dan mengirimkannya ke channel moderasi untuk ditinjau admin.",
+  "description": "Callback ini saat ini hanya merupakan placeholder. Logika untuk menyimpan pertanyaan dan mengirimkannya ke moderasi belum diimplementasikan.",
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi callback dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "execute",
-      "description": "Menjalankan logika penyimpanan dan pengiriman pertanyaan.",
+      "description": "Hanya menjawab callback query dengan pesan placeholder.",
       "parameters": [
-        {"name": "callback_query", "type": "array", "description": "Data callback query asli."},
-        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['tanya', 'category']`."}
-      ],
-      "logic_flow": [
-        "1. Jawab `callback_query`.",
-        "2. Ambil `category` dari `$parts[1]`.",
-        "3. Ambil konteks yang disimpan dari state pengguna (berisi `message_id`, `chat_id`, dan teks pertanyaan).",
-        "4. Reset state pengguna menjadi `null`.",
-        "5. Simpan informasi pertanyaan (user_id, text, category, status='pending') ke tabel `tanya_submissions`.",
-        "6. Ambil ID channel moderasi dari konfigurasi.",
-        "7. Format dan kirim pesan pertanyaan ke channel moderasi.",
-        "8. Tambahkan caption pada pesan di channel moderasi yang berisi info kategori dan tombol aksi untuk admin (Setujui, Tolak, Ban).",
-        "9. Edit pesan asli di chat pengguna untuk memberi konfirmasi bahwa pertanyaan mereka sedang dimoderasi."
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "params",
+          "type": "string"
+        }
       ]
     }
   ]

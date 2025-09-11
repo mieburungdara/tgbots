@@ -1,49 +1,41 @@
 {
   "flow_name": "/rate",
   "summary": "Memulai alur pemberian rating untuk sebuah media.",
-  "description": "Dipicu dengan membalas (reply) sebuah pesan media (foto/video) dengan perintah /rate. Perintah ini akan memulai proses interaktif di mana pengguna diminta untuk memilih kategori rating untuk media tersebut.",
+  "description": "Dipicu dengan me-reply sebuah media dengan perintah /rate. Memulai proses interaktif di mana pengguna diminta memilih kategori rating.",
   "initial_checks": [
     {
       "name": "Pengecekan Fitur Bot",
-      "condition": "Fitur yang ditetapkan untuk bot (`$app->bot['assigned_feature']`) bukan 'rate'.",
-      "action_if_true": "Kirim pesan error yang menyarankan bot lain yang memiliki fitur 'rate' (jika ada). Alur berhenti."
+      "action": "Memastikan fitur bot adalah 'rate'. Jika tidak, sarankan bot yang benar."
     },
     {
       "name": "Pengecekan Kiriman Tertunda",
-      "description": "Memeriksa apakah pengguna sudah memiliki kiriman lain yang statusnya masih dalam moderasi.",
-      "condition": "Ada entri moderasi yang aktif untuk pengguna.",
-      "action_if_true": "Kirim pesan: 'Anda masih memiliki kiriman yang sedang dalam proses moderasi...'. Alur berhenti."
+      "action": "Memanggil `MediaPackageRepository::hasPendingPost()` untuk memeriksa apakah pengguna sudah memiliki kiriman yang menunggu moderasi."
     },
     {
       "name": "Pengecekan Pesan Balasan (Reply)",
-      "condition": "Perintah tidak membalas pesan lain.",
-      "action_if_true": "Kirim pesan: 'Untuk memberi rate, silakan reply media yang ingin Anda beri rate...'. Alur berhenti."
+      "action": "Memastikan perintah me-reply pesan lain."
     },
     {
       "name": "Validasi Tipe Media",
-      "condition": "Pesan yang dibalas bukan foto atau video.",
-      "action_if_true": "Kirim pesan error: '⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video).'. Alur berhenti."
+      "action": "Memastikan pesan yang dibalas adalah foto atau video."
     },
     {
       "name": "Validasi Kepemilikan Media",
-      "description": "Memastikan pengguna tidak mencoba memberi rating pada media yang dikirim oleh orang lain.",
-      "condition": "`from_id` dari pesan yang dibalas tidak sama dengan ID pengguna saat ini.",
-      "action_if_true": "Kirim pesan error: '⚠️ Gagal. Anda hanya bisa memberi rate pada media milik Anda sendiri.'. Alur berhenti."
+      "action": "Memastikan pengguna tidak memberi rating pada media milik orang lain."
     }
   ],
   "main_flow": [
     {
       "step_number": 1,
       "name": "Pengaturan State Pengguna",
-      "description": "Menyimpan state pengguna saat ini ke `awaiting_rate_category` di database (tabel `users`). Konteks yang disimpan mencakup detail pesan yang dibalas (`message_id`, `chat_id`, `from_id`) untuk digunakan pada langkah selanjutnya.",
+      "description": "Menyimpan state pengguna ke `awaiting_rate_category` dan menyimpan konteks pesan yang dibalas.",
       "action": "`UserRepository::setUserState()`"
     },
     {
       "step_number": 2,
       "name": "Permintaan Pemilihan Kategori",
-      "description": "Mengirim pesan kepada pengguna dengan teks \"Silakan pilih kategori:\" dan menyertakan keyboard inline dengan pilihan kategori (misalnya, 'Cewek' dan 'Cowok'). Pesan ini dikirim sebagai balasan ke media yang akan di-rate.",
-      "output": "Pesan dengan keyboard inline terkirim ke pengguna."
+      "description": "Mengirim pesan \"Silakan pilih kategori:\" dengan keyboard inline berisi pilihan kategori."
     }
   ],
-  "next_flow": "Alur selanjutnya ditangani oleh `CallbackQueryHandler` ketika pengguna menekan salah satu tombol kategori. Ini akan memicu `RateCallback`."
+  "next_flow": "Alur selanjutnya ditangani oleh `CallbackQueryHandler` yang akan memicu `RateCallback`."
 }

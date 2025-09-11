@@ -1,27 +1,38 @@
 {
   "class_name": "AdminBanCallback",
   "implements": "CallbackCommandInterface",
-  "summary": "Menangani aksi saat admin memblokir seorang pengguna.",
-  "description": "Callback ini dipicu ketika admin menekan tombol \"Ban\" pada pesan moderasi. Ini akan mengubah status pengguna di database menjadi 'banned', mencegah interaksi lebih lanjut dengan bot, dan memberi notifikasi kepada admin.",
+  "summary": "Menangani aksi saat admin memblokir seorang pengguna dari pesan moderasi.",
+  "description": "Callback ini akan mengubah status pengguna menjadi 'blocked', menolak post terkait (jika ada), dan memberi notifikasi kepada semua pihak.",
+  "dependencies": [
+    "UserRepository",
+    "MediaPackageRepository"
+  ],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Menginisialisasi callback dengan instance `App`.",
-      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
-    },
-    {
       "name": "execute",
-      "description": "Menjalankan logika pemblokiran pengguna.",
+      "description": "Menjalankan logika pemblokiran dalam sebuah transaksi database.",
       "parameters": [
-        {"name": "callback_query", "type": "array", "description": "Data callback query asli."}, 
-        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['ban', 'user_id']`."}
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "params",
+          "type": "string",
+          "description": "Parameter berisi `user_id`, `public_id` (opsional), dan `reason` (opsional)."
+        }
       ],
       "logic_flow": [
-        "1. Jawab `callback_query`.",
-        "2. Ambil ID pengguna yang akan diblokir dari `$parts[1]`.",
-        "3. Gunakan `UserRepository` untuk memperbarui status pengguna di tabel `users` menjadi 'banned'.",
-        "4. Edit pesan moderasi asli untuk mengonfirmasi bahwa pengguna telah diblokir.",
-        "5. (Opsional) Catat aksi pemblokiran di log admin."
+        "1. Memulai transaksi database.",
+        "2. Panggil `UserRepository::updateUserStatusByTelegramId()` untuk mengubah status pengguna menjadi 'blocked'.",
+        "3. Jika ada `public_id`, ubah status post terkait menjadi 'rejected'.",
+        "4. Kirim notifikasi ke pengguna yang diblokir.",
+        "5. Edit pesan moderasi asli untuk menandai bahwa pengguna telah diblokir.",
+        "6. Commit transaksi."
       ]
     }
   ]
