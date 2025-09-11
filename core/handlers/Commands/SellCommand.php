@@ -5,14 +5,32 @@ namespace TGBot\Handlers\Commands;
 use TGBot\App;
 use TGBot\Database\BotRepository;
 use TGBot\Database\UserRepository;
-use TGBot\Handlers\States\AwaitingPriceState;
+use TGBot\Handlers\States\SellingProcessState;
 use PDO;
 
 class SellCommand implements CommandInterface
 {
+    private static $processed_media_groups = [];
+
     public function execute(App $app, array $message, array $parts): void
     {
-        $prerequisite_error = $this->validatePrerequisites($app, $message);
+        // 1. Cek duplikasi untuk media group
+        if (isset($message['media_group_id'])) {
+            if (in_array($message['media_group_id'], self::$processed_media_groups)) {
+                return; // Sudah diproses oleh pesan pertama di grup
+            }
+            self::$processed_media_groups[] = $message['media_group_id'];
+        }
+
+        // 2. Dapatkan media yang relevan (dari reply atau dari pesan itu sendiri)
+        $relevant_message = $this->getRelevantMediaMessage($message);
+        if (!$relevant_message) {
+            $app->telegram_api->sendMessage($app->chat_id, "Untuk menjual, silakan reply sebuah media, atau kirim media dengan caption /sell.");
+            return;
+        }
+
+        // 3. Validasi prasyarat
+        $prerequisite_error = $this->validatePrerequisites($app, $relevant_message);
         if ($prerequisite_error === "register_seller_prompt") {
             return;
         } elseif ($prerequisite_error !== null) {
@@ -20,106 +38,60 @@ class SellCommand implements CommandInterface
             return;
         }
 
-        $replied_message = $message['reply_to_message'];
-        $media_info = $this->getValidatedMediaInfo($app, $replied_message);
-
-        if ($media_info === null) {
-            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.");
+        // 4. Kumpulkan semua media awal
+        $initial_media = $this->getInitialMedia($app, $relevant_message);
+        if (empty($initial_media)) {
+            $app->telegram_api->sendMessage($app->chat_id, "⚠️ Gagal. Pastikan media sudah tersimpan di bot sebelum dijual.");
             return;
         }
 
-        $state_context = [
-            'media_messages' => [['message_id' => $replied_message['message_id'], 'chat_id' => $replied_message['chat']['id']]]
-        ];
+        // 5. Atur state awal
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
+        $state_context = ['media_messages' => $initial_media];
+        $user_repo->setUserState($app->user['id'], 'selling_process', $state_context);
 
-        // Cek apakah harga diberikan sebagai parameter
-        if (isset($parts[1]) && is_numeric($parts[1]) && $parts[1] > 0) {
-            $price = (int)$parts[1];
-            // Langsung kirim konfirmasi, lewati state awaiting_price
-            AwaitingPriceState::sendConfirmationMessage($app, $price, $state_context);
-        } else {
-            // Alur normal, masuk ke state awaiting_price
-            $user_repo = new UserRepository($app->pdo, $app->bot['id']);
-            $user_repo->setUserState($app->user['id'], 'awaiting_price', $state_context);
+        // 6. Kirim prompt awal
+        $media_count = count($initial_media);
+        $message_text = "✅ {$media_count} media awal telah diterima.\n\n";
+        $message_text .= "Anda sekarang dapat:\n";
+        $message_text .= "- Mengirim lebih banyak media (foto/video) untuk ditambahkan ke paket.\n";
+        $message_text .= "- Mengirimkan harga (contoh: `50000`) untuk menyelesaikan.";
 
-            $description = $media_info['description'];
-            $message_text = "✅ Media telah siap untuk dijual.\n\n";
-            if (!empty($description)) {
-                $message_text .= "Deskripsi: *\"" . $app->telegram_api->escapeMarkdown($description) . "\"*\n";
-            }
-            $message_text .= "Sekarang, silakan masukkan harga untuk paket ini (contoh: 50000).\n\n";
-            $message_text .= "_Ketik /cancel untuk membatalkan._";
+        $app->telegram_api->sendMessage($app->chat_id, $message_text);
+    }
 
-            $app->telegram_api->sendMessage($app->chat_id, $message_text, 'Markdown');
+    private function getRelevantMediaMessage(array $message): ?array
+    {
+        if (isset($message['reply_to_message'])) {
+            return $message['reply_to_message'];
+        }
+        if (isset($message['photo']) || isset($message['video'])) {
+            return $message;
+        }
+        return null;
+    }
+
+    private function getInitialMedia(App $app, array $relevant_message): array
+    {
+        $media_group_id = $relevant_message['media_group_id'] ?? null;
+        if ($media_group_id) {
+            $stmt = $app->pdo->prepare("SELECT message_id, chat_id FROM media_files WHERE media_group_id = ?");
+            $stmt->execute([$media_group_id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        }
+        else {
+            return [['message_id' => $relevant_message['message_id'], 'chat_id' => $relevant_message['chat']['id']]];
         }
     }
 
     private function validatePrerequisites(App $app, array $message): ?string
     {
-        if (isset($app->bot['assigned_feature']) && $app->bot['assigned_feature'] !== 'sell') {
-            $bot_repo = new BotRepository($app->pdo);
-            $correct_bots = $bot_repo->findAllBotsByFeature('sell');
-            $suggestion = "";
-            if (!empty($correct_bots)) {
-                $suggestion = "\n\nFitur ini tersedia di bot berikut:\n";
-                foreach ($correct_bots as $bot) {
-                    $suggestion .= "- @" . $bot['username'] . "\n";
-                }
-            }
-            return "Perintah /sell tidak tersedia di bot ini." . $suggestion;
-        }
-
-        if (!isset($message['reply_to_message'])) {
-            return "Untuk menjual, silakan reply media yang ingin Anda jual dengan perintah /sell.";
-        }
-
-        $replied = $message['reply_to_message'];
-        if (
-            !isset($replied['photo']) &&
-            !isset($replied['video']) &&
-            !isset($replied['document']) &&
-            !isset($replied['audio'])
-        ) {
-            return "Pesan yang Anda reply tidak berisi media. Silakan reply pesan dengan foto, video, atau dokumen untuk dijual.";
-        }
-
         if (empty($app->user['public_seller_id'])) {
-            $text = "Anda belum terdaftar sebagai penjual. Apakah Anda ingin mendaftar sekarang?\n\nDengan mendaftar, Anda akan mendapatkan ID Penjual unik.";
+            $text = "Anda belum terdaftar sebagai penjual. Apakah Anda ingin mendaftar sekarang?";
             $keyboard = ['inline_keyboard' => [[['text' => "Ya, Daftar Sekarang", 'callback_data' => "register_seller"]]]];
-            $app->telegram_api->sendMessage($app->chat_id, $text, null, json_encode($keyboard));
+            $app->telegram_api->sendMessage($message['chat']['id'], $text, null, json_encode($keyboard));
             return "register_seller_prompt";
         }
-
-        return null; // All prerequisites passed
-    }
-
-    private function getValidatedMediaInfo(App $app, array $replied_message): ?array
-    {
-        $stmt_check_media = $app->pdo->prepare("SELECT COUNT(*) FROM media_files WHERE message_id = ? AND chat_id = ?");
-        $stmt_check_media->execute([$replied_message['message_id'], $replied_message['chat']['id']]);
-        if ($stmt_check_media->fetchColumn() == 0) {
-             return null; // Media not found
-        }
-
-        $stmt_media_info = $app->pdo->prepare("SELECT media_group_id, caption FROM media_files WHERE message_id = ? AND chat_id = ?");
-        $stmt_media_info->execute([$replied_message['message_id'], $replied_message['chat']['id']]);
-        $media_info = $stmt_media_info->fetch(PDO::FETCH_ASSOC);
-
-        $media_group_id = $media_info['media_group_id'] ?? null;
-        $description = $media_info['caption'] ?? '';
-
-        if ($media_group_id) {
-            $stmt_caption = $app->pdo->prepare("SELECT caption FROM media_files WHERE media_group_id = ? AND caption IS NOT NULL AND caption != '' LIMIT 1");
-            $stmt_caption->execute([$media_group_id]);
-            $group_caption = $stmt_caption->fetchColumn();
-            if ($group_caption) {
-                $description = $group_caption;
-            }
-        }
-
-        return [
-            'media_group_id' => $media_group_id,
-            'description' => $description
-        ];
+        return null;
     }
 }

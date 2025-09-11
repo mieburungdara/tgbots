@@ -1,65 +1,58 @@
 {
   "flow_name": "/sell",
-  "summary": "Memulai dan menyelesaikan alur penjualan dengan konfirmasi.",
-  "description": "Alur ini memandu pengguna melalui validasi, penetapan harga (langsung atau via prompt), konfirmasi, pembuatan paket, dan backup media. Alur ini menggunakan state `awaiting_price` hanya jika harga tidak diberikan di awal.",
+  "summary": "Memulai alur penjualan interaktif untuk satu atau banyak media.",
+  "description": "Alur ini memungkinkan pengguna memulai penjualan dengan me-reply media atau mengirim media dengan caption /sell. Pengguna kemudian dapat menambahkan lebih banyak media sebelum akhirnya menetapkan harga dan mengonfirmasi penjualan.",
   "phases": [
     {
       "phase_number": 1,
-      "phase_name": "Inisiasi dan Validasi Perintah",
-      "trigger": "Pengguna me-reply media dengan `/sell` atau `/sell <harga>`.",
+      "phase_name": "Inisiasi Penjualan",
+      "trigger": "Pengguna mengirim media dengan caption `/sell` ATAU me-reply media dengan `/sell`.",
       "handler": "`SellCommand.php`",
       "steps": [
         {
           "step": 1.1,
-          "name": "Validasi Prasyarat",
-          "description": "Memvalidasi bahwa fitur aktif, ini adalah reply ke media, dan pengguna adalah penjual terdaftar (jika tidak, memicu sub-alur pendaftaran)."
+          "name": "Deteksi & Deduplikasi Media Grup",
+          "description": "Jika pemicu adalah bagian dari media grup, ID grup dicatat untuk mencegah alur terpicu berulang kali oleh pesan lain dari grup yang sama."
         },
         {
           "step": 1.2,
-          "name": "Pengecekan Parameter Harga",
-          "description": "Memeriksa apakah perintah menyertakan parameter harga yang valid (`/sell <harga>`).",
-          "branching": {
-            "condition": "Harga valid ada.",
-            "if_true": {
-              "action": "Langsung lompat ke **Fase 3** (Pengiriman Pesan Konfirmasi).",
-              "description": "Melewati state `awaiting_price`."
-            },
-            "if_false": {
-              "action": "Lanjut ke langkah berikutnya (masuk ke state `awaiting_price`)."
-            }
-          }
+          "name": "Validasi Prasyarat",
+          "description": "Memvalidasi bahwa pengguna adalah penjual terdaftar (jika tidak, memicu sub-alur pendaftaran)."
         },
         {
           "step": 1.3,
-          "name": "Transisi State (Alur Normal)",
-          "description": "Jika tidak ada harga, `UserRepository::setUserState()` dipanggil untuk mengubah state pengguna menjadi `awaiting_price` dan bot meminta input harga."
+          "name": "Pengumpulan Media Awal",
+          "description": "Mengumpulkan semua media yang relevan (satu media atau semua media dalam grup) dari database."
+        },
+        {
+          "step": 1.4,
+          "name": "Transisi ke State Penjualan",
+          "description": "State pengguna diubah menjadi `selling_process` dengan konteks yang berisi daftar media awal. Pengguna kemudian diberi prompt untuk menambahkan lebih banyak media atau menetapkan harga."
         }
       ]
     },
     {
       "phase_number": 2,
-      "phase_name": "Penanganan Input Harga (Stateful)",
-      "trigger": "Pengguna (dalam state `awaiting_price`) mengirim pesan harga.",
-      "handler": "`AwaitingPriceState.php`",
-      "steps": [
+      "phase_name": "Proses Penjualan (Stateful)",
+      "trigger": "Pengguna (dalam state `selling_process`) mengirim pesan baru.",
+      "handler": "`SellingProcessState.php`",
+      "scenarios": [
         {
-          "step": 2.1,
-          "name": "Validasi Input Harga",
-          "description": "Memeriksa apakah pesan adalah angka integer positif."
+          "scenario_name": "Pengguna Mengirim Media Baru",
+          "action": "Media baru ditambahkan ke daftar dalam `state_context`, dan prompt untuk menambah media/harga dikirim ulang."
         },
         {
-          "step": 2.2,
-          "name": "Reset State & Lanjut ke Konfirmasi",
-          "description": "State pengguna direset ke `null`, kemudian alur dilanjutkan ke **Fase 3**."
+          "scenario_name": "Pengguna Mengirim Teks (Harga)",
+          "action": "Teks divalidasi sebagai harga. Jika valid, harga ditambahkan ke `state_context`, state diubah menjadi `awaiting_sell_confirmation`, dan alur berlanjut ke Fase 3."
         }
       ]
     },
     {
       "phase_number": 3,
-      "phase_name": "Pengiriman Pesan Konfirmasi",
-      "trigger": "Setelah harga divalidasi (baik dari Fase 1 atau 2).",
-      "handler": "`AwaitingPriceState::sendConfirmationMessage()`",
-      "action": "Sebuah pesan ringkasan dikirim ke pengguna, berisi harga dan tombol `✅ Konfirmasi & Jual` serta `❌ Batal`. Tombol konfirmasi berisi callback `sell_confirm_` dengan data terenkode (harga, message_id, chat_id)."
+      "phase_name": "Konfirmasi Penjualan",
+      "trigger": "Setelah harga yang valid dimasukkan pada Fase 2.",
+      "handler": "`SellingProcessState.php`",
+      "action": "Bot mengirim pesan ringkasan yang berisi jumlah media dan harga, dengan tombol `✅ Konfirmasi & Jual` dan `❌ Batal`. State pengguna sekarang `awaiting_sell_confirmation`."
     },
     {
       "phase_number": 4,
@@ -70,24 +63,27 @@
         {
           "step": 4.1,
           "name": "Eksekusi Inti (dalam Transaksi)",
-          "description": "Semua operasi database berat dijalankan di sini:",
-          "database_actions": [
-            "`MediaPackageRepository::createPackageWithPublicId()`: Membuat paket dan ID publik.",
-            "`MediaPackageRepository::updatePrice()`: Menetapkan harga.",
-            "`UPDATE media_files`: Menautkan file media ke paket."
-          ]
+          "description": "Mengambil konteks (daftar media & harga) dari state pengguna, lalu membuat paket, menetapkan harga, dan menautkan semua file media ke paket tersebut."
         },
         {
           "step": 4.2,
           "name": "Backup Media",
-          "description": "Menyalin semua file media ke channel penyimpanan dan memperbarui lokasinya di `media_files`."
+          "description": "Menyalin semua file media ke channel penyimpanan dan memperbarui lokasinya di database."
         },
         {
           "step": 4.3,
-          "name": "Konfirmasi Akhir",
-          "description": "Pesan konfirmasi asli diedit menjadi pesan sukses yang berisi ID paket yang baru dibuat."
+          "name": "Pembersihan & Konfirmasi Akhir",
+          "description": "State pengguna direset ke `null`. Pesan konfirmasi diedit menjadi pesan sukses akhir yang berisi ID paket baru."
         }
       ]
+    }
+  ],
+  "sub_flows": [
+    {
+      "name": "Pembatalan Penjualan",
+      "trigger": "Pengguna menekan tombol `❌ Batal` pada pesan konfirmasi.",
+      "handler": "`CancelSellCallback.php`",
+      "action": "Pesan konfirmasi dihapus dan operasi dibatalkan."
     }
   ]
 }

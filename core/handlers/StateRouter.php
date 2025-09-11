@@ -3,7 +3,7 @@
 namespace TGBot\Handlers;
 
 use TGBot\Handlers\States\StateInterface;
-use TGBot\Handlers\States\AwaitingPriceState;
+use TGBot\Handlers\States\SellingProcessState;
 
 class StateRouter
 {
@@ -12,7 +12,7 @@ class StateRouter
     public function __construct()
     {
         $this->states = [
-            'awaiting_price' => new AwaitingPriceState(),
+            'selling_process' => new SellingProcessState(),
             // Add other states here as they are created
         ];
     }

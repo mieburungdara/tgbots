@@ -15,21 +15,23 @@ class SellConfirmCallback implements CallbackCommandInterface
     {
         $app->telegram_api->answerCallbackQuery($callback_query['id'], '✅ Konfirmasi diterima. Memproses paket Anda...');
 
-        $parts = explode('_', $params);
-        if (count($parts) < 3) {
-            $app->telegram_api->editMessageText($app->chat_id, $callback_query['message']['message_id'], '⚠️ Terjadi kesalahan: Konteks penjualan tidak lengkap.');
+        // Konteks sekarang diambil dari state pengguna
+        $state_context = json_decode($app->user['state_context'] ?? '[]', true);
+        $price = $state_context['price'] ?? null;
+        $media_messages = $state_context['media_messages'] ?? [];
+
+        if (empty($price) || empty($media_messages)) {
+            $app->telegram_api->editMessageText($app->chat_id, $callback_query['message']['message_id'], '⚠️ Terjadi kesalahan: Konteks penjualan tidak valid atau kedaluwarsa.');
             return;
         }
 
-        $price = (int)$parts[0];
-        $original_message_id = (int)$parts[1];
-        $original_chat_id = (int)$parts[2];
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
 
         try {
             $app->pdo->beginTransaction();
 
             $post_repo = new MediaPackageRepository($app->pdo);
-            $package_data = $this->createMediaPackage($app, $original_message_id, $original_chat_id, $price, $post_repo);
+            $package_data = $this->createMediaPackage($app, $media_messages, $price, $post_repo);
             $package_id = $package_data['package_id'];
             $public_id = $package_data['public_id'];
 
@@ -39,6 +41,9 @@ class SellConfirmCallback implements CallbackCommandInterface
             if ($backup_channel_info) {
                 $this->backupMedia($app, $package_id, $backup_channel_info['channel_id']);
             }
+
+            // Hapus state setelah semua selesai
+            $user_repo->setUserState($app->user['id'], null, null);
 
             $app->pdo->commit();
 
@@ -52,39 +57,44 @@ class SellConfirmCallback implements CallbackCommandInterface
             if ($app->pdo->inTransaction()) {
                 $app->pdo->rollBack();
             }
+            // Hapus state jika terjadi error
+            $user_repo->setUserState($app->user['id'], null, null);
             $error_message = "⚠️ Gagal memproses paket: " . $e->getMessage();
             $app->telegram_api->editMessageText($app->chat_id, $callback_query['message']['message_id'], $error_message);
             app_log("Gagal menangani konfirmasi penjualan: " . $e->getMessage(), 'error');
         }
     }
 
-    private function createMediaPackage(App $app, int $message_id, int $chat_id, int $price, MediaPackageRepository $post_repo): array
+    private function createMediaPackage(App $app, array $media_messages, int $price, MediaPackageRepository $post_repo): array
     {
+        // Gunakan media pertama sebagai thumbnail dan untuk deskripsi
+        $first_media_context = $media_messages[0];
         $stmt = $app->pdo->prepare("SELECT * FROM media_files WHERE message_id = ? AND chat_id = ?");
-        $stmt->execute([$message_id, $chat_id]);
-        $media_file = $stmt->fetch();
+        $stmt->execute([$first_media_context['message_id'], $first_media_context['chat_id']]);
+        $thumbnail_media_file = $stmt->fetch();
 
-        if (!$media_file) {
-            throw new Exception("File media asli tidak ditemukan di database.");
+        if (!$thumbnail_media_file) {
+            throw new Exception("File media utama tidak ditemukan di database.");
         }
 
         $package_id = $post_repo->createPackageWithPublicId(
             $app->user['id'],
             $app->bot['id'],
-            $media_file['caption'] ?? '',
-            $media_file['id'],
+            $thumbnail_media_file['caption'] ?? '',
+            $thumbnail_media_file['id'],
             'sell'
         );
 
         $post_repo->updatePrice($package_id, $price);
 
-        if ($media_file['media_group_id']) {
-            $stmt_update = $app->pdo->prepare("UPDATE media_files SET package_id = ? WHERE media_group_id = ?");
-            $stmt_update->execute([$package_id, $media_file['media_group_id']]);
-        } else {
-            $stmt_update = $app->pdo->prepare("UPDATE media_files SET package_id = ? WHERE id = ?");
-            $stmt_update->execute([$package_id, $media_file['id']]);
+        // Tautkan semua media ke paket yang baru dibuat
+        $media_ids_to_link = [];
+        foreach ($media_messages as $media) {
+            $media_ids_to_link[] = $media['message_id'];
         }
+        $placeholders = rtrim(str_repeat('?,', count($media_ids_to_link)), ',');
+        $stmt_update = $app->pdo->prepare("UPDATE media_files SET package_id = ? WHERE message_id IN ({$placeholders})");
+        $stmt_update->execute(array_merge([$package_id], $media_ids_to_link));
 
         $post = $post_repo->find($package_id);
         return ['package_id' => $package_id, 'public_id' => $post['public_id']];
