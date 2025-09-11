@@ -1,0 +1,33 @@
+{
+  "class_name": "CancelGiftCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Membatalkan proses pengiriman hadiah.",
+  "description": "Callback ini dipicu saat pengirim hadiah menekan tombol 'Batalkan Hadiah'. Ia akan menghapus state pengguna yang terkait dengan proses hadiah dan memberi notifikasi pembatalan.",
+  "dependencies": [
+    "UserRepository"
+  ],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Menjalankan logika pembatalan hadiah. Menghapus state pengguna dan mengirim pesan konfirmasi.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string"
+        }
+      ],
+      "logic_flow": [
+        "1. Hapus state pengguna yang terkait dengan proses hadiah.",
+        "2. Kirim pesan konfirmasi pembatalan kepada pengguna."
+      ]
+    }
+  ]
+}

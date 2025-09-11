@@ -52,7 +52,7 @@ class BuyCallback implements CallbackCommandInterface
             throw new Exception('Saldo Anda tidak cukup.');
         }
 
-        $sale_repo->createSale($package['id'], $package['seller_user_id'], $app->user['id'], $package['price']);
+        $sale_repo->createSale($package['id'], $package['seller_user_id'], $app->user['id'], $app->user['id'], $package['price']);
         $package_repo->markAsSold($package['id']);
 
         // Kirim notifikasi ke penjual

@@ -36,7 +36,7 @@
     },
     {
       "name": "createSale",
-      "description": "Membuat catatan penjualan baru dan memperbarui saldo pembeli/penjual. Harus dijalankan di dalam transaksi.",
+      "description": "Membuat catatan penjualan baru dan memperbarui saldo pembeli/penjual. Harus dijalankan di dalam transaksi. Dapat menyertakan tanggal kadaluarsa untuk hadiah.",
       "parameters": [
         {
           "name": "package_id",
@@ -54,9 +54,20 @@
           "description": "ID pengguna pembeli."
         },
         {
+          "name": "granted_to_user_id",
+          "type": "int",
+          "description": "ID pengguna yang menerima akses konten (jika berbeda dari pembeli, misal untuk hadiah)."
+        },
+        {
           "name": "price",
           "type": "float",
           "description": "Harga pada saat penjualan."
+        },
+        {
+          "name": "expires_at",
+          "type": "string",
+          "description": "Tanggal dan waktu kadaluarsa hadiah (opsional, format Y-m-d H:i:s).",
+          "nullable": true
         }
       ],
       "logic": "Melakukan UPDATE pada saldo penjual dan pembeli, lalu INSERT ke tabel sales.",
@@ -108,8 +119,98 @@
       "return": {
         "type": "bool"
       }
+    },
+    {
+      "name": "getSaleDetails",
+      "description": "Mendapatkan detail penjualan berdasarkan package_id dan granted_to_user_id. Digunakan untuk memeriksa status hadiah.",
+      "parameters": [
+        {
+          "name": "package_id",
+          "type": "int",
+          "description": "ID internal paket."
+        },
+        {
+          "name": "granted_to_user_id",
+          "type": "int",
+          "description": "ID pengguna yang diberikan akses."
+        }
+      ],
+      "returns": "array|false"
+    },
+    {
+      "name": "markSaleAsClaimed",
+      "description": "Menandai hadiah sebagai sudah diklaim.",
+      "parameters": [
+        {
+          "name": "sale_id",
+          "type": "int",
+          "description": "ID penjualan."
+        }
+      ],
+      "returns": "bool"
+    },
+    {
+      "name": "findExpiringUnclaimedGifts",
+      "description": "Menemukan hadiah yang akan kadaluarsa dan belum diklaim.",
+      "parameters": [
+        {
+          "name": "hours_until_expiration",
+          "type": "int",
+          "description": "Batas waktu dalam jam."
+        }
+      ],
+      "returns": "array"
+    },
+    {
+      "name": "cancelGiftSale",
+      "description": "Membatalkan penjualan hadiah dan mengembalikan saldo pembeli.",
+      "parameters": [
+        {
+          "name": "sale_id",
+          "type": "int",
+          "description": "ID penjualan hadiah."
+        },
+        {
+          "name": "buyer_user_id",
+          "type": "int",
+          "description": "ID pembeli (pengirim hadiah)."
+        },
+        {
+          "name": "price",
+          "type": "float",
+          "description": "Harga hadiah yang akan dikembalikan."
+        }
+      ],
+      "returns": "bool"
+    },
+    {
+      "name": "getSaleDetailsById",
+      "description": "Mendapatkan detail penjualan berdasarkan ID penjualan.",
+      "parameters": [
+        {
+          "name": "sale_id",
+          "type": "int",
+          "description": "ID penjualan."
+        }
+      ],
+      "returns": "array|false"
+    },
+    {
+      "name": "reGiftSale",
+      "description": "Menghadiahkan ulang sebuah penjualan hadiah kepada pengguna baru.",
+      "parameters": [
+        {
+          "name": "sale_id",
+          "type": "int",
+          "description": "ID penjualan hadiah yang akan dihadiahkan ulang."
+        },
+        {
+          "name": "new_granted_to_user_id",
+          "type": "int",
+          "description": "ID pengguna baru yang akan menerima hadiah."
+        }
+      ],
+      "returns": "bool"
     }
-  ]
-}
   ]
 }

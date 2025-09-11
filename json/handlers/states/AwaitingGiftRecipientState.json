@@ -1,0 +1,40 @@
+{
+  "class_name": "AwaitingGiftRecipientState",
+  "implements": "StateInterface",
+  "summary": "Menangani status saat bot menunggu username penerima hadiah.",
+  "description": "State ini aktif setelah pengguna memilih untuk menghadiahkan sebuah paket. Bot akan memvalidasi username yang diberikan, memproses transaksi hadiah, dan memberi notifikasi kepada pengirim dan penerima.",
+  "dependencies": [
+    "UserRepository",
+    "MediaPackageRepository",
+    "SaleRepository"
+  ],
+  "methods": [
+    {
+      "name": "handle",
+      "description": "Memproses pesan yang diterima saat dalam status `awaiting_gift_recipient`. Memvalidasi penerima, memproses transaksi, dan mengirim notifikasi.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "message",
+          "type": "array"
+        },
+        {
+          "name": "state_context",
+          "type": "array"
+        }
+      ],
+      "logic_flow": [
+        "1. Cari penerima berdasarkan username yang diberikan.",
+        "2. Validasi bahwa penerima telah berinteraksi dengan bot.",
+        "3. Periksa saldo pengirim hadiah.",
+        "4. Proses penjualan/hadiah (buat entri penjualan) dengan menetapkan batas waktu klaim.",,
+        "5. Beri notifikasi kepada penerima hadiah, termasuk deskripsi paket dan tombol untuk melihat hadiah.",
+        "6. Beri notifikasi kepada pengirim hadiah dan bersihkan status.",
+        "7. Tangani error jika terjadi."
+      ]
+    }
+  ]
+}

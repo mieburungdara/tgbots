@@ -82,9 +82,12 @@
         {"name": "package_id", "type": "INT", "fk": "media_packages.id", "nullable": false},
         {"name": "seller_user_id", "type": "INT", "fk": "users.id", "comment": "Penjual yang menerima pembayaran.", "nullable": false},
         {"name": "buyer_user_id", "type": "INT", "fk": "users.id", "comment": "Pembeli yang melakukan pembayaran.", "nullable": false},
+        {"name": "granted_to_user_id", "type": "BIGINT", "fk": "users.id", "comment": "ID pengguna yang menerima akses konten, jika berbeda dari pembeli (untuk hadiah).", "nullable": true},
         {"name": "price", "type": "DECIMAL(15, 2)", "comment": "Harga pada saat transaksi.", "nullable": false},
         {"name": "commission", "type": "DECIMAL(15, 2)", "comment": "Jumlah komisi yang diambil dari penjualan.", "nullable": true},
-        {"name": "sale_date", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"}
+        {"name": "sale_date", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"},
+        {"name": "claimed_at", "type": "TIMESTAMP", "comment": "Waktu hadiah diklaim oleh penerima.", "nullable": true},
+        {"name": "expires_at", "type": "TIMESTAMP", "comment": "Waktu hadiah kadaluarsa jika tidak diklaim.", "nullable": true}
       ]
     },
     {

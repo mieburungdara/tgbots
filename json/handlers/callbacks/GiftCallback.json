@@ -1,0 +1,37 @@
+{
+  "class_name": "GiftCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Memproses permintaan hadiah untuk sebuah paket konten.",
+  "description": "Callback ini dipicu saat pengguna menekan tombol \"Hadiah\". Ia akan mengatur status pengguna ke 'awaiting_gift_recipient' dan meminta username penerima hadiah.",
+  "dependencies": [
+    "UserRepository",
+    "MediaPackageRepository"
+  ],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Menjalankan logika untuk memulai proses hadiah. Mengatur status pengguna dan meminta input username penerima.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string"
+        }
+      ],
+      "logic_flow": [
+        "1. Cari paket berdasarkan `public_id`.",
+        "2. Jika paket tidak ditemukan, kirim pesan error.",
+        "3. Atur status pengguna ke `awaiting_gift_recipient` dengan `package_id` sebagai konteks.",
+        "4. Kirim pesan ke pengguna untuk meminta username penerima, disertai tombol 'Batalkan Hadiah'.",
+        "5. Jawab `callback_query`."
+      ]
+    }
+  ]
+}

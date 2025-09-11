@@ -21,6 +21,11 @@ use TGBot\Handlers\Callbacks\AcceptOfferCallback;
 use TGBot\Handlers\Callbacks\RejectOfferCallback;
 use TGBot\Handlers\Callbacks\BuyOfferCallback;
 use TGBot\Handlers\Callbacks\SubscribeCallback;
+use TGBot\Handlers\Callbacks\GiftCallback;
+use TGBot\Handlers\Callbacks\ClaimGiftCallback;
+use TGBot\Handlers\Callbacks\CancelGiftCallback;
+use TGBot\Handlers\Callbacks\ReGiftCallback;
+use TGBot\Handlers\Callbacks\CancelRegiftCallback;
 
 class CallbackRouter
 {
@@ -47,6 +52,11 @@ class CallbackRouter
             'reject_offer_' => new RejectOfferCallback(),
             'buy_offer_' => new BuyOfferCallback(),
             'subscribe_' => new SubscribeCallback(),
+            'gift_' => new GiftCallback(),
+            'claim_gift_' => new ClaimGiftCallback(),
+            'cancel_gift_' => new CancelGiftCallback(),
+            're_gift_' => new ReGiftCallback(),
+            'cancel_regift_' => new CancelRegiftCallback(),
         ];
     }
 

@@ -27,12 +27,13 @@
         }
       ],
       "logic_flow": [
-        "1. Validasi hak akses: periksa apakah pengguna adalah penjual atau sudah membeli.",
-        "2. Panggil `MediaPackageRepository::getGroupedPackageContent()` untuk mendapatkan konten yang sudah dikelompokkan per halaman.",
-        "3. Buat keyboard navigasi halaman jika ada lebih dari satu halaman.",
-        "4. Hapus pesan asli yang berisi tombol.",
-        "5. Jika halaman berisi satu media, panggil `copyMessage`.",
-        "6. Jika halaman berisi grup media, panggil `copyMessages` dan kirim deskripsi/navigasi di pesan terpisah."
+        "1. Validasi hak akses: periksa apakah pengguna adalah penjual, sudah membeli, atau penerima hadiah yang belum mengklaim/kadaluarsa.",
+        "2. Jika hadiah belum diklaim atau sudah kadaluarsa, tampilkan pesan dan tombol klaim/kadaluarsa/hadiah ulang.",
+        "3. Panggil `MediaPackageRepository::getGroupedPackageContent()` untuk mendapatkan konten yang sudah dikelompokkan per halaman.",
+        "4. Buat keyboard navigasi halaman jika ada lebih dari satu halaman.",
+        "5. Hapus pesan asli yang berisi tombol.",
+        "6. Jika halaman berisi satu media, panggil `copyMessage`.",
+        "7. Jika halaman berisi grup media, panggil `copyMessages` dan kirim deskripsi/navigasi di pesan terpisah."
       ]
     }
   ]

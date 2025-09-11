@@ -1,0 +1,38 @@
+{
+  "class_name": "ReGiftCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Memulai proses hadiah ulang untuk sebuah paket konten.",
+  "description": "Callback ini dipicu saat penerima hadiah menekan tombol 'Hadiah Ulang'. Ia akan memvalidasi status hadiah, mengatur state pengguna ke 'awaiting_regift_recipient', dan meminta username penerima hadiah ulang.",
+  "dependencies": [
+    "MediaPackageRepository",
+    "SaleRepository",
+    "UserRepository"
+  ],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Menjalankan logika untuk memulai proses hadiah ulang. Mengatur status pengguna dan meminta input username penerima hadiah ulang.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string"
+        }
+      ],
+      "logic_flow": [
+        "1. Cari paket berdasarkan `public_id`.",
+        "2. Dapatkan detail penjualan hadiah untuk pengguna saat ini.",
+        "3. Validasi apakah pengguna berhak menghadiahkan ulang hadiah ini (belum diklaim dan belum kadaluarsa).",
+        "4. Atur state pengguna ke `awaiting_regift_recipient` dengan `package_id` dan `sale_id` sebagai konteks.",
+        "5. Kirim pesan ke pengguna untuk meminta username penerima hadiah ulang, disertai tombol 'Batalkan Hadiah Ulang'."
+      ]
+    }
+  ]
+}

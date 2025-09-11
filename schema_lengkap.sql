@@ -124,17 +124,22 @@ CREATE TABLE `sales` (
   `package_id` int(11) NOT NULL,
   `seller_user_id` int(11) NOT NULL COMMENT 'Penjual yang menerima pembayaran.',
   `buyer_user_id` int(11) NOT NULL COMMENT 'Pembeli yang melakukan pembayaran.',
+  `granted_to_user_id` BIGINT NULL DEFAULT NULL COMMENT 'ID pengguna yang menerima akses konten, jika berbeda dari pembeli (untuk hadiah).',
   `price` decimal(15,2) NOT NULL COMMENT 'Harga pada saat transaksi.',
   `commission` decimal(15,2) DEFAULT NULL COMMENT 'Jumlah komisi yang diambil dari penjualan.',
   `sale_type` enum('one_time','subscription') NOT NULL DEFAULT 'one_time',
   `sale_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `claimed_at` timestamp NULL DEFAULT NULL COMMENT 'Waktu hadiah diklaim oleh penerima.',
+  `expires_at` timestamp NULL DEFAULT NULL COMMENT 'Waktu hadiah kadaluarsa jika tidak diklaim.',
   PRIMARY KEY (`id`),
   KEY `package_id` (`package_id`),
   KEY `seller_user_id` (`seller_user_id`),
   KEY `buyer_user_id` (`buyer_user_id`),
+  KEY `idx_granted_to_user_id` (`granted_to_user_id`),
   CONSTRAINT `sales_ibfk_1` FOREIGN KEY (`package_id`) REFERENCES `media_packages` (`id`) ON DELETE CASCADE,
   CONSTRAINT `sales_ibfk_2` FOREIGN KEY (`seller_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `sales_ibfk_3` FOREIGN KEY (`buyer_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+  CONSTRAINT `sales_ibfk_3` FOREIGN KEY (`buyer_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_sales_granted_to` FOREIGN KEY (`granted_to_user_id`) REFERENCES `users`(`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 

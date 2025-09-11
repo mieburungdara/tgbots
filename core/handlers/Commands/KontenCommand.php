@@ -108,6 +108,7 @@ class KontenCommand implements CommandInterface
                 // Add one-time purchase button
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
                 $keyboard['inline_keyboard'][0][] = ['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"];
+                $keyboard['inline_keyboard'][0][] = ['text' => '🎁 Hadiahkan', 'callback_data' => "gift_{$package['public_id']}"];
 
                 // Add subscription button if seller offers it
                 $seller = $user_repo->findUserByTelegramId($package['seller_user_id']);

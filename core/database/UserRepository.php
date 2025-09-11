@@ -200,5 +200,20 @@ class UserRepository
         $stmt = $this->pdo->prepare("UPDATE users SET subscription_price = ? WHERE id = ?");
         return $stmt->execute([$price, $user_id]);
     }
+
+    public function findUserByUsername(string $username)
+    {
+        $stmt = $this->pdo->prepare("SELECT * FROM users WHERE username = ?");
+        $stmt->execute([$username]);
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    public function hasUserInteractedWithBot(int $user_id, int $bot_id): bool
+    {
+        $stmt = $this->pdo->prepare("SELECT 1 FROM rel_user_bot WHERE user_id = ? AND bot_id = ?");
+        $stmt->execute([$user_id, $bot_id]);
+        return $stmt->fetchColumn() !== false;
+    }
+}
 }
 }

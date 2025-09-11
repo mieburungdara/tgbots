@@ -1,0 +1,38 @@
+{
+  "class_name": "ClaimGiftCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Memproses klaim hadiah oleh penerima.",
+  "description": "Callback ini dipicu saat penerima hadiah menekan tombol 'Klaim Hadiah'. Ia akan memvalidasi hadiah, menandainya sebagai diklaim, dan kemudian menampilkan konten hadiah.",
+  "dependencies": [
+    "MediaPackageRepository",
+    "SaleRepository"
+  ],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Menjalankan logika klaim hadiah. Memvalidasi hadiah, menandainya sebagai diklaim, dan menampilkan konten.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string"
+        }
+      ],
+      "logic_flow": [
+        "1. Cari paket berdasarkan `public_id`.",
+        "2. Dapatkan detail penjualan hadiah untuk pengguna saat ini.",
+        "3. Validasi apakah pengguna berhak mengklaim hadiah ini.",
+        "4. Periksa apakah hadiah sudah diklaim atau kadaluarsa.",
+        "5. Tandai hadiah sebagai diklaim di database.",
+        "6. Beri notifikasi kepada pengguna dan tampilkan konten hadiah."
+      ]
+    }
+  ]
+}

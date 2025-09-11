@@ -30,6 +30,35 @@ class ViewPageCallback implements CallbackCommandInterface
 
         $is_seller = ($package['seller_user_id'] == $app->user['id']);
         $has_purchased = $sale_repo->hasUserPurchased($package['id'], $app->user['id']);
+        $sale_details = $sale_repo->getSaleDetails($package['id'], $app->user['id']);
+
+        // Check if it's a gift and needs claiming
+        if ($sale_details && $sale_details['granted_to_user_id'] == $app->user['id'] && $sale_details['buyer_user_id'] != $app->user['id']) {
+            // It's a gift
+            if ($sale_details['claimed_at'] === null) {
+                // Gift not yet claimed
+                if ($sale_details['expires_at'] !== null && strtotime($sale_details['expires_at']) < time()) {
+                    // Gift expired
+                    $app->telegram_api->answerCallbackQuery($callback_query['id'], '⚠️ Hadiah ini sudah kadaluarsa dan tidak dapat diklaim.', true);
+                    return;
+                } else {
+                    // Gift can be claimed
+                    $app->telegram_api->answerCallbackQuery($callback_query['id'], '🎁 Hadiah belum diklaim. Klik "Klaim Hadiah" atau "Hadiah Ulang".', true);
+                    $keyboard = [
+                        ['text' => 'Klaim Hadiah 🎁', 'callback_data' => "claim_gift_{$package['public_id']}"],
+                        ['text' => 'Hadiah Ulang 🔄', 'callback_data' => "re_gift_{$package['public_id']}"]
+                    ];
+                    $app->telegram_api->editMessageText(
+                        $app->chat_id,
+                        $callback_query['message']['message_id'],
+                        "Anda menerima hadiah konten `{$package['public_id']}`. Silakan klaim hadiah Anda atau hadiah ulang kepada teman.",
+                        'Markdown',
+                        json_encode(['inline_keyboard' => [$keyboard]])
+                    );
+                    return;
+                }
+            }
+        }
 
         if (!$is_seller && !$has_purchased) {
             $app->telegram_api->answerCallbackQuery($callback_query['id'], '⚠️ Anda tidak memiliki akses ke konten ini.', true);

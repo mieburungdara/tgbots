@@ -1,0 +1,40 @@
+{
+  "class_name": "AwaitingRegiftRecipientState",
+  "implements": "StateInterface",
+  "summary": "Menangani status saat bot menunggu username penerima hadiah ulang.",
+  "description": "State ini aktif setelah pengguna memilih untuk menghadiahkan ulang sebuah paket. Bot akan memvalidasi username yang diberikan, memperbarui catatan hadiah, dan memberi notifikasi kepada pengirim dan penerima baru.",
+  "dependencies": [
+    "UserRepository",
+    "MediaPackageRepository",
+    "SaleRepository"
+  ],
+  "methods": [
+    {
+      "name": "handle",
+      "description": "Memproses pesan yang diterima saat dalam status `awaiting_regift_recipient`. Memvalidasi penerima, memperbarui hadiah, dan mengirim notifikasi.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "message",
+          "type": "array"
+        },
+        {
+          "name": "state_context",
+          "type": "array"
+        }
+      ],
+      "logic_flow": [
+        "1. Cari penerima berdasarkan username yang diberikan.",
+        "2. Validasi bahwa penerima telah berinteraksi dengan bot.",
+        "3. Dapatkan detail penjualan asli dan validasi kelayakan hadiah ulang.",
+        "4. Perbarui catatan hadiah di database (ubah `granted_to_user_id`, reset `claimed_at` dan `expires_at`).",
+        "5. Beri notifikasi kepada penerima hadiah baru.",
+        "6. Beri notifikasi kepada pengirim hadiah ulang dan bersihkan state.",
+        "7. Tangani error jika terjadi."
+      ]
+    }
+  ]
+}
