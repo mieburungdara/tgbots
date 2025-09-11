@@ -30,7 +30,8 @@
         "2. Panggil `SaleRepository::createSale()` untuk memperbarui saldo dan membuat catatan penjualan.",
         "3. Panggil `MediaPackageRepository::markAsSold()` untuk mengubah status paket.",
         "4. Kirim pesan konfirmasi pembelian.",
-        "5. Panggil `ViewPageCallback->execute()` untuk langsung menampilkan konten yang baru dibeli."
+        "5. Panggil `ViewPageCallback->execute()` untuk langsung menampilkan konten yang baru dibeli.",
+        "6. Menampilkan tombol `Beri Ulasan Penjual` setelah pembelian berhasil."
       ]
     }
   ]

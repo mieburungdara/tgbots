@@ -1,0 +1,35 @@
+{
+  "class_name": "AskSellerCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Memulai alur pertanyaan kepada penjual.",
+  "description": "Callback ini dipicu saat calon pembeli menekan tombol 'Tanya Penjual'. Ia akan mengatur state pengguna ke 'awaiting_question' dan meminta pengguna untuk mengetik pertanyaan mereka.",
+  "dependencies": [
+    "UserRepository"
+  ],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Menjalankan logika untuk memulai proses bertanya kepada penjual. Mengatur state pengguna dan meminta input pertanyaan.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "params",
+          "type": "string",
+          "description": "Parameter berisi `public_id` dan `seller_user_id`."
+        }
+      ],
+      "logic_flow": [
+        "1. Parse `public_id` dan `seller_user_id` dari `params`.",
+        "2. Atur state pengguna ke `awaiting_question` dengan `package_public_id`, `seller_user_id`, dan `buyer_user_id` sebagai konteks.",
+        "3. Jawab `callback_query` dan kirim pesan ke pengguna untuk mengetik pertanyaan, disertai tombol 'Batalkan'."
+      ]
+    }
+  ]
+}

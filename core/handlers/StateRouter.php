@@ -7,6 +7,7 @@ use TGBot\Handlers\States\SellingProcessState;
 use TGBot\Handlers\States\AwaitingGiftRecipientState;
 use TGBot\Handlers\States\AwaitingOfferPriceState;
 use TGBot\Handlers\States\AwaitingGiftTypeSelectionState;
+use TGBot\Handlers\States\AwaitingQuestionState;
 
 class StateRouter
 {
@@ -19,6 +20,7 @@ class StateRouter
             'awaiting_gift_recipient' => new AwaitingGiftRecipientState(),
             'awaiting_offer_price' => new AwaitingOfferPriceState(),
             'awaiting_gift_type_selection' => new AwaitingGiftTypeSelectionState(),
+            'awaiting_question' => new AwaitingQuestionState(),
             // Add other states here as they are created
         ];
     }

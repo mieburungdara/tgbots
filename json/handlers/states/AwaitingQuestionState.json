@@ -1,0 +1,39 @@
+{
+  "class_name": "AwaitingQuestionState",
+  "implements": "StateInterface",
+  "summary": "Menangani status saat bot menunggu pertanyaan dari pembeli.",
+  "description": "State ini aktif setelah pembeli menekan tombol 'Tanya Penjual'. Bot akan menangkap pesan berikutnya sebagai pertanyaan dan meneruskannya ke penjual.",
+  "dependencies": [
+    "UserRepository",
+    "MediaPackageRepository"
+  ],
+  "methods": [
+    {
+      "name": "handle",
+      "description": "Memproses pesan yang diterima sebagai pertanyaan, meneruskannya ke penjual, dan membersihkan state.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "message",
+          "type": "array"
+        },
+        {
+          "name": "state_context",
+          "type": "array"
+        }
+      ],
+      "logic_flow": [
+        "1. Ambil teks pertanyaan dari pesan.",
+        "2. Validasi pertanyaan tidak kosong.",
+        "3. Dapatkan detail paket dan penjual dari database.",
+        "4. Buat pesan untuk diteruskan ke penjual, termasuk informasi pembeli dan konten.",
+        "5. Kirim pesan pertanyaan ke penjual dengan tombol 'Balas Pembeli'.",
+        "6. Beri notifikasi kepada pembeli bahwa pertanyaan telah terkirim dan bersihkan state pembeli.",
+        "7. Tangani error jika terjadi."
+      ]
+    }
+  ]
+}

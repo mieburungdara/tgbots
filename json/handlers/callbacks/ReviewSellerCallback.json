@@ -1,0 +1,31 @@
+{
+  "class_name": "ReviewSellerCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Memulai alur ulasan penjual.",
+  "description": "Callback ini dipicu saat pembeli menekan tombol 'Beri Ulasan Penjual'. Ini adalah placeholder untuk fitur ulasan yang akan datang.",
+  "dependencies": [],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Memberi tahu pengguna bahwa fitur ulasan penjual sedang dalam pengembangan.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "seller_user_id",
+          "type": "string"
+        }
+      ],
+      "logic_flow": [
+        "1. Jawab `callback_query` dengan pesan sementara.",
+        "2. Kirim pesan ke pengguna yang menginformasikan bahwa fitur sedang dalam pengembangan."
+      ]
+    }
+  ]
+}

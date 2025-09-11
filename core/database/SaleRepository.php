@@ -287,3 +287,25 @@ class SaleRepository
             throw $e;
         }
     }
+
+    /**
+     * Mendapatkan data analitik gabungan untuk sebuah paket (penjualan, tampilan, penawaran).
+     *
+     * @param int $package_id ID paket.
+     * @return array Data analitik.
+     */
+    public function getAnalyticsForPackage(int $package_id): array
+    {
+        $sql = "
+            SELECT
+                (SELECT COUNT(*) FROM sales WHERE package_id = :package_id_sales) AS sales_count,
+                (SELECT COUNT(*) FROM package_views WHERE package_id = :package_id_views) AS views_count,
+                (SELECT COUNT(*) FROM offers WHERE package_id = :package_id_offers) AS offers_count
+        ";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindParam(':package_id_sales', $package_id, PDO::PARAM_INT);
+        $stmt->bindParam(':package_id_views', $package_id, PDO::PARAM_INT);
+        $stmt->bindParam(':package_id_offers', $package_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    }

@@ -1,0 +1,31 @@
+{
+  "class_name": "PromoteContentCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Memulai alur promosi konten.",
+  "description": "Callback ini dipicu saat penjual menekan tombol 'Promosikan Konten'. Ini adalah placeholder untuk fitur promosi yang akan datang.",
+  "dependencies": [],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Memberi tahu pengguna bahwa fitur promosi sedang dalam pengembangan.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string"
+        }
+      ],
+      "logic_flow": [
+        "1. Jawab `callback_query` dengan pesan sementara.",
+        "2. Kirim pesan ke pengguna yang menginformasikan bahwa fitur sedang dalam pengembangan."
+      ]
+    }
+  ]
+}

@@ -211,6 +211,18 @@
         }
       ],
       "returns": "bool"
+    },
+    {
+      "name": "getAnalyticsForPackage",
+      "description": "Mendapatkan data analitik gabungan untuk sebuah paket (penjualan, tampilan, penawaran).",
+      "parameters": [
+        {
+          "name": "package_id",
+          "type": "int",
+          "description": "ID paket."
+        }
+      ],
+      "returns": "array"
     }
   ]
 }

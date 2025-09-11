@@ -36,6 +36,15 @@ class BuyCallback implements CallbackCommandInterface
             $viewPageCallback = new ViewPageCallback();
             $viewPageCallback->execute($app, $callback_query, "{$public_id}_0");
 
+            // Add "Review Seller" button
+            $review_keyboard = [['text' => '⭐ Beri Ulasan Penjual', 'callback_data' => "review_seller_{$package['seller_user_id']}"]];
+            $app->telegram_api->sendMessage(
+                $app->chat_id,
+                "Bagaimana pengalaman Anda dengan penjual ini?",
+                'Markdown',
+                json_encode(['inline_keyboard' => $review_keyboard])
+            );
+
         } catch (Exception $e) {
             // Rollback will be handled by UpdateDispatcher
             $error_message = "⚠️ Gagal: " . $e->getMessage();

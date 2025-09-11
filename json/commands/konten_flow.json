@@ -30,11 +30,8 @@
         {
           "scenario_name": "Pengguna adalah Penjual",
           "actions": [
-            "Memanggil `SaleRepository::countSalesForPackage()` untuk mendapatkan jumlah penjualan.",
-            "Menghitung total pendapatan.",
-            "Membuat caption `Laporan Konten` lengkap yang berisi ID, deskripsi, harga, status, tanggal dibuat, dan statistik penjualan.",
-            "Memeriksa `FeatureChannelRepository::findAllByOwnerAndFeature()` untuk menentukan apakah tombol `Post ke Channel` harus ditampilkan.",
-            "Menyiapkan tombol `Lihat Selengkapnya` dan (jika ada) `Post ke Channel`."
+            "Memanggil metode privat `generateSellerReport()` untuk membuat laporan konten dan tombol terkait, termasuk tombol `Promosikan Konten`.",
+            "Jika terjadi kesalahan dalam pembuatan laporan, hentikan eksekusi."
           ]
         },
         {
@@ -47,8 +44,10 @@
         {
           "scenario_name": "Pengunjung Biasa",
           "actions": [
-            "Memeriksa apakah status paket adalah `available`.",
-            "Menyiapkan tombol `Beli` dengan harga, dan tombol `Tawar Harga` untuk memulai alur penawaran."
+            "Jika status paket adalah `available`:",
+            "  Menyiapkan tombol `Beli` dengan harga, `Hadiahkan`, `Tanya Penjual`, dan (jika ada) `Langganan`.",
+            "Jika status paket bukan `available` (misal: `sold`, `retracted`, `pending`, `deleted`):",
+            "  Mengirim pesan informatif kepada pengguna tentang status konten dan menghentikan eksekusi."
           ]
         }
       ]

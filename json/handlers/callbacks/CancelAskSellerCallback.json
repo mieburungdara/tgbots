@@ -1,0 +1,33 @@
+{
+  "class_name": "CancelAskSellerCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Membatalkan proses pertanyaan kepada penjual.",
+  "description": "Callback ini dipicu saat pembeli menekan tombol 'Batalkan' saat dalam alur pertanyaan. Ia akan menghapus state pengguna dan memberi notifikasi pembatalan.",
+  "dependencies": [
+    "UserRepository"
+  ],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Menjalankan logika pembatalan pertanyaan. Menghapus state pengguna dan mengirim pesan konfirmasi.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string"
+        }
+      ],
+      "logic_flow": [
+        "1. Hapus state pengguna yang terkait dengan proses pertanyaan.",
+        "2. Kirim pesan konfirmasi pembatalan kepada pengguna."
+      ]
+    }
+  ]
+}

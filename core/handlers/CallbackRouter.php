@@ -26,6 +26,10 @@ use TGBot\Handlers\Callbacks\ClaimGiftCallback;
 use TGBot\Handlers\Callbacks\CancelGiftCallback;
 use TGBot\Handlers\Callbacks\ReGiftCallback;
 use TGBot\Handlers\Callbacks\CancelRegiftCallback;
+use TGBot\Handlers\Callbacks\PromoteContentCallback;
+use TGBot\Handlers\Callbacks\ReviewSellerCallback;
+use TGBot\Handlers\Callbacks\AskSellerCallback;
+use TGBot\Handlers\Callbacks\CancelAskSellerCallback;
 
 class CallbackRouter
 {
@@ -57,6 +61,10 @@ class CallbackRouter
             'cancel_gift_' => new CancelGiftCallback(),
             're_gift_' => new ReGiftCallback(),
             'cancel_regift_' => new CancelRegiftCallback(),
+            'promote_content_' => new PromoteContentCallback(),
+            'review_seller_' => new ReviewSellerCallback(),
+            'ask_seller_' => new AskSellerCallback(),
+            'cancel_ask_seller_' => new CancelAskSellerCallback(),
         ];
     }
 

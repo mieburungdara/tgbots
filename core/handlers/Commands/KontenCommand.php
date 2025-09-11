@@ -9,6 +9,7 @@ use TGBot\Database\SubscriptionRepository;
 use TGBot\Database\FeatureChannelRepository;
 use TGBot\Database\UserRepository;
 use TGBot\Database\PackageViewRepository;
+use Exception;
 
 class KontenCommand implements CommandInterface
 {
@@ -49,48 +50,9 @@ class KontenCommand implements CommandInterface
         $keyboard = [];
 
         if ($is_seller) {
-            try {
-                // Existing report data
-                $sales_count = $sale_repo->countSalesForPackage($package_id);
-                $total_earnings = $sales_count * $package['price'];
-                $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
-                $total_earnings_formatted = "Rp " . number_format($total_earnings, 0, ',', '.');
-                $created_at = date('d M Y H:i', strtotime($package['created_at']));
-
-                // New Analytics Data
-                $views_count = $view_repo->countViews($package_id);
-                $offers_count = $package_repo->countOffers($package_id);
-                $conversion_rate = ($views_count > 0) ? round(($sales_count / $views_count) * 100, 2) : 0;
-
-                $report = "✨ *Laporan Konten*\n\n" .
-                    "ID Konten: `{$package['public_id']}`\n" .
-                    "Deskripsi: {$description}\n" .
-                    "Harga: {$price_formatted}\n" .
-                    "Status: {$package['status']}\n" .
-                    "Tanggal Dibuat: {$created_at}\n\n" .
-                    "📈 *Statistik Penjualan*\n" .
-                    "Jumlah Terjual: {$sales_count} kali\n" .
-                    "Total Pendapatan: {$total_earnings_formatted}\n\n" .
-                    "📊 *Analitik Pengguna*\n" .
-                    "Dilihat oleh: {$views_count} pengguna unik\n" .
-                    "Upaya tawar: {$offers_count} kali\n" .
-                    "Tingkat Konversi: {$conversion_rate}%";
-
-                $caption = $report;
-
-                $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
-                $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($app->user['id'], 'sell');
-                if (!empty($sales_channels)) {
-                    $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
-                } else {
-                    $caption .= "\n\n*Anda belum mendaftarkan channel pribadi, silahkan daftarkan channel pribadi anda untuk berjualan di panel member pada /login*";
-                }
-                $keyboard = ['inline_keyboard' => $keyboard_buttons];
-
-            } catch (
-                app_log("Gagal membuat laporan konten untuk seller: " . $e->getMessage(), 'error', ['package_id' => $package_id]);
-                $app->telegram_api->sendMessage($app->chat_id, "Terjadi kesalahan saat mengambil data laporan. Silakan coba lagi nanti.");
-                return; // Stop execution if report fails
+            list($caption, $keyboard) = $this->generateSellerReport($app, $package, $description);
+            if ($caption === null) { // Indicates an error occurred in report generation
+                return;
             }
         } else {
             $caption = $description;
@@ -110,12 +72,37 @@ class KontenCommand implements CommandInterface
                 $keyboard['inline_keyboard'][0][] = ['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"];
                 $keyboard['inline_keyboard'][0][] = ['text' => '🎁 Hadiahkan', 'callback_data' => "gift_{$package['public_id']}"];
 
-                // Add subscription button if seller offers it
+                // Add subscription button if seller offers it and user is not already subscribed
                 $seller = $user_repo->findUserByTelegramId($package['seller_user_id']);
-                if ($seller && !empty($seller['subscription_price'])) {
+                if ($seller && !empty($seller['subscription_price']) && !$has_subscribed) {
                     $sub_price_formatted = "Rp " . number_format($seller['subscription_price'], 0, ',', '.');
                     $keyboard['inline_keyboard'][0][] = ['text' => "Langganan ({$sub_price_formatted}/bln) ⭐", 'callback_data' => "subscribe_{$package['seller_user_id']}"];
                 }
+                // Add "Tanya Penjual" button
+                $keyboard['inline_keyboard'][] = [['text' => '💬 Tanya Penjual', 'callback_data' => "ask_seller_{$package['public_id']}_{$package['seller_user_id']}"]];
+
+            } else {
+                // Handle other package statuses for visitors
+                $status_message = '';
+                switch ($package['status']) {
+                    case 'sold':
+                        $status_message = "Konten ini sudah terjual.";
+                        break;
+                    case 'retracted':
+                        $status_message = "Konten ini telah ditarik oleh penjual.";
+                        break;
+                    case 'pending':
+                        $status_message = "Konten ini masih dalam proses moderasi.";
+                        break;
+                    case 'deleted':
+                        $status_message = "Konten ini telah dihapus.";
+                        break;
+                    default:
+                        $status_message = "Konten ini tidak tersedia.";
+                        break;
+                }
+                $app->telegram_api->sendMessage($app->chat_id, "⚠️ {$status_message}");
+                return; // Stop execution
             }
         }
 
@@ -165,5 +152,81 @@ class KontenCommand implements CommandInterface
 
         $size_in_mb = round($total_size / 1024 / 1024, 2);
         return '[' . implode('', $summary_parts) . ' ' . $size_in_mb . 'MB]';
+    }
+
+    private function generateSellerReport(App $app, array $package, string $description): array
+    {
+        $cache_dir = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'tgbots_cache';
+        if (!is_dir($cache_dir)) {
+            mkdir($cache_dir, 0777, true);
+        }
+        $cache_key = 'seller_report_' . $package['id'];
+        $cache_file = $cache_dir . DIRECTORY_SEPARATOR . $cache_key . '.json';
+        $cache_duration = 300; // 5 minutes
+
+        // Try to load from cache
+        if (file_exists($cache_file) && (time() - filemtime($cache_file) < $cache_duration)) {
+            $cached_data = json_decode(file_get_contents($cache_file), true);
+            if ($cached_data) {
+                return $cached_data;
+            }
+        }
+
+        $package_repo = new MediaPackageRepository($app->pdo);
+        $sale_repo = new SaleRepository($app->pdo);
+        $feature_channel_repo = new FeatureChannelRepository($app->pdo);
+        $view_repo = new PackageViewRepository($app->pdo);
+
+        try {
+            // Existing report data
+            $analytics = $sale_repo->getAnalyticsForPackage($package['id']);
+            $sales_count = $analytics['sales_count'];
+            $views_count = $analytics['views_count'];
+            $offers_count = $analytics['offers_count'];
+
+            $total_earnings = $sales_count * $package['price'];
+            $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+            $total_earnings_formatted = "Rp " . number_format($total_earnings, 0, ',', '.');
+            $created_at = date('d M Y H:i', strtotime($package['created_at']));
+
+            $conversion_rate = ($views_count > 0) ? round(($sales_count / $views_count) * 100, 2) : 0;
+
+            $report = "✨ *Laporan Konten*\n\n" .
+                "ID Konten: `{$package['public_id']}`\n" .
+                "Deskripsi: {$description}\n" .
+                "Harga: {$price_formatted}\n" .
+                "Status: {$package['status']}\n" .
+                "Tanggal Dibuat: {$created_at}\n\n" .
+                "📈 *Statistik Penjualan*\n" .
+                "Jumlah Terjual: {$sales_count} kali\n" .
+                "Total Pendapatan: {$total_earnings_formatted}\n\n" .
+                "📊 *Analitik Pengguna*\n" .
+                "Dilihat oleh: {$views_count} pengguna unik\n" .
+                "Upaya tawar: {$offers_count} kali\n" .
+                "Tingkat Konversi: {$conversion_rate}%";
+
+            $caption = $report;
+
+            $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
+            $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($app->user['id'], 'sell');
+            if (!empty($sales_channels)) {
+                $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
+            } else {
+                $caption .= "\n\n*Anda belum mendaftarkan channel pribadi, silahkan daftarkan channel pribadi anda untuk berjualan di panel member pada /login*";
+            }
+            // Add "Promosikan Konten" button
+            $keyboard_buttons[] = [['text' => '🚀 Promosikan Konten', 'callback_data' => "promote_content_{$package['public_id']}"]];
+
+            $keyboard = ['inline_keyboard' => $keyboard_buttons];
+
+            $data_to_cache = [$caption, $keyboard];
+            file_put_contents($cache_file, json_encode($data_to_cache));
+
+            return $data_to_cache;
+        } catch (Exception $e) {
+            app_log("Gagal membuat laporan konten untuk seller: " . $e->getMessage(), 'error', ['package_id' => $package['id']]);
+            $app->telegram_api->sendMessage($app->chat_id, "Terjadi kesalahan saat mengambil data laporan. Silakan coba lagi nanti.");
+            return [null, null]; // Indicate error
+        }
     }
 }
