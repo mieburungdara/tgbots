@@ -41,7 +41,7 @@ class SellingProcessState implements StateInterface
 
     private function sendConfirmationMessage(App $app, int $price, array $state_context): void
     {
-        $media_count = count($state_context['media_messages']);
+        $media_count = count($state_context['media_messages'] ?? $state_context['initial_media']);
         $price_formatted = "Rp " . number_format($price, 0, ',', '.');
         
         $message_text = "✨ *Konfirmasi Penjualan* ✨\n\n";

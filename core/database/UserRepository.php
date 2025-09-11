@@ -194,4 +194,11 @@ class UserRepository
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$status, $telegram_user_id]);
     }
+
+    public function setSubscriptionPrice(int $user_id, ?int $price): bool
+    {
+        $stmt = $this->pdo->prepare("UPDATE users SET subscription_price = ? WHERE id = ?");
+        return $stmt->execute([$price, $user_id]);
+    }
+}
 }

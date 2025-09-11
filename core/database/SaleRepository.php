@@ -83,7 +83,7 @@ class SaleRepository
             }
 
             // 5. Catat penjualan
-            $stmt_sale = $this->pdo->prepare("INSERT INTO sales (package_id, seller_user_id, buyer_user_id, price, commission) VALUES (?, ?, ?, ?, ?)");
+            $stmt_sale = $this->pdo->prepare("INSERT INTO sales (package_id, seller_user_id, buyer_user_id, price, commission, sale_type) VALUES (?, ?, ?, ?, ?, 'one_time')");
             $stmt_sale->execute([$package_id, $seller_user_id, $buyer_user_id, $price, $commission_amount]);
 
             return true;
@@ -120,4 +120,31 @@ class SaleRepository
         $stmt->execute([$package_id]);
         return (int)$stmt->fetchColumn();
     }
+
+    public function createSubscriptionSale(int $seller_user_id, int $buyer_user_id, float $price): bool
+    {
+        // Logika komisi yang sama dapat diterapkan di sini jika diperlukan
+        $commission_rate = 0.10; // Contoh komisi tetap 10% untuk langganan
+        $commission_amount = floor($price * $commission_rate);
+        $seller_earning = $price - $commission_amount;
+
+        // Kurangi saldo pembeli
+        $stmt_buyer = $this->pdo->prepare("UPDATE users SET balance = balance - ? WHERE id = ?");
+        $stmt_buyer->execute([$price, $buyer_user_id]);
+
+        // Tambah saldo penjual
+        $stmt_seller = $this->pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
+        $stmt_seller->execute([$seller_earning, $seller_user_id]);
+
+        // Tambah saldo komisi ke akun sistem
+        if ($commission_amount > 0 && defined('SYSTEM_INCOME_USER_ID')) {
+            $stmt_admin = $this->pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
+            $stmt_admin->execute([$commission_amount, SYSTEM_INCOME_USER_ID]);
+        }
+
+        // Catat penjualan langganan (package_id adalah NULL)
+        $stmt_sale = $this->pdo->prepare("INSERT INTO sales (package_id, seller_user_id, buyer_user_id, price, commission, sale_type) VALUES (NULL, ?, ?, ?, ?, 'subscription')");
+        return $stmt_sale->execute([$seller_user_id, $buyer_user_id, $price, $commission_amount]);
+    }
+}
 }

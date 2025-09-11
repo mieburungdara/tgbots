@@ -82,10 +82,11 @@ class SellConfirmCallback implements CallbackCommandInterface
             $app->bot['id'],
             $thumbnail_media_file['caption'] ?? '',
             $thumbnail_media_file['id'],
+            $package_type, // new parameter
             'sell'
         );
 
-        $post_repo->updatePrice($package_id, $price);
+        $post_repo->updatePackagePricing($package_id, $package_type, $price);
 
         // Tautkan semua media ke paket yang baru dibuat
         $media_ids_to_link = [];

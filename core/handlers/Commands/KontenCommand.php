@@ -5,7 +5,9 @@ namespace TGBot\Handlers\Commands;
 use TGBot\App;
 use TGBot\Database\MediaPackageRepository;
 use TGBot\Database\SaleRepository;
+use TGBot\Database\SubscriptionRepository;
 use TGBot\Database\FeatureChannelRepository;
+use TGBot\Database\UserRepository;
 
 class KontenCommand implements CommandInterface
 {
@@ -13,7 +15,9 @@ class KontenCommand implements CommandInterface
     {
         $package_repo = new MediaPackageRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);
+        $subscription_repo = new SubscriptionRepository($app->pdo);
         $feature_channel_repo = new FeatureChannelRepository($app->pdo);
+        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
 
         if (count($parts) !== 2) {
             $app->telegram_api->sendMessage($app->chat_id, "Format perintah salah. Gunakan: /konten <ID Konten>");
@@ -79,22 +83,26 @@ class KontenCommand implements CommandInterface
         } else {
             $caption = $description;
             $is_admin = ($app->user['role'] === 'Admin');
-            $has_purchased = $sale_repo->hasUserPurchased($package_id, $app->user['id']);
-            $has_access = $is_admin || $has_purchased;
+            $has_purchased = $sale_repo->hasUserPurchased($package['id'], $app->user['id']);
+            $has_subscribed = $subscription_repo->hasActiveSubscription($app->user['id'], $package['seller_user_id']);
+            $has_access = $is_admin || $has_purchased || $has_subscribed;
 
             if ($has_access) {
                 $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
                 $keyboard = ['inline_keyboard' => $keyboard_buttons];
             } elseif ($package['status'] === 'available') {
+                $keyboard = ['inline_keyboard' => [[]]]; // Initialize empty row
+
+                // Add one-time purchase button
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
-                $keyboard = [
-                    'inline_keyboard' => [
-                        [
-                            ['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"],
-                            ['text' => 'Tawar Harga 💬', 'callback_data' => "offer_{$package['public_id']}"]
-                        ]
-                    ]
-                ];
+                $keyboard['inline_keyboard'][0][] = ['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"];
+
+                // Add subscription button if seller offers it
+                $seller = $user_repo->findUserByTelegramId($package['seller_user_id']);
+                if ($seller && !empty($seller['subscription_price'])) {
+                    $sub_price_formatted = "Rp " . number_format($seller['subscription_price'], 0, ',', '.');
+                    $keyboard['inline_keyboard'][0][] = ['text' => "Langganan ({$sub_price_formatted}/bln) ⭐", 'callback_data' => "subscribe_{$package['seller_user_id']}"];
+                }
             }
         }
 

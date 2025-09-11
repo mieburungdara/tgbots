@@ -331,6 +331,7 @@ CREATE TABLE `sales`  (
   `buyer_user_id` bigint NOT NULL COMMENT 'Referensi ke users.id (pembeli)',
   `price` decimal(15, 2) NOT NULL COMMENT 'Harga saat penjualan terjadi.',
   `purchased_at` timestamp NOT NULL DEFAULT current_timestamp COMMENT 'Waktu pembelian.',
+  `sale_type` enum('one_time','subscription') NOT NULL DEFAULT 'one_time',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `package_id`(`package_id` ASC) USING BTREE,
   INDEX `seller_user_id`(`seller_user_id` ASC) USING BTREE,
@@ -390,8 +391,28 @@ CREATE TABLE `users`  (
   `token_created_at` timestamp NULL DEFAULT NULL COMMENT 'Waktu pembuatan token login.',
   `token_used` tinyint(1) NOT NULL DEFAULT 0 COMMENT 'Apakah token login sudah digunakan.',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp COMMENT 'Waktu pembuatan record pengguna.',
+  `subscription_price` decimal(15,2) DEFAULT NULL COMMENT 'Harga langganan bulanan yang ditetapkan oleh penjual.',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `public_seller_id`(`public_seller_id` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'Menyimpan data pengguna bot.' ROW_FORMAT = DYNAMIC;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for subscriptions
+-- ----------------------------
+DROP TABLE IF EXISTS `subscriptions`;
+CREATE TABLE `subscriptions`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `subscriber_user_id` bigint(20) NOT NULL,
+  `seller_id` bigint(20) NOT NULL,
+  `start_date` datetime NOT NULL,
+  `end_date` datetime NOT NULL,
+  `status` enum('active','expired','cancelled') CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp ON UPDATE current_timestamp,
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `subscriber_user_id`(`subscriber_user_id` ASC) USING BTREE,
+  INDEX `seller_id`(`seller_id` ASC) USING BTREE,
+  INDEX `end_date`(`end_date` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'Mencatat langganan pengguna ke penjual.' ROW_FORMAT = DYNAMIC;

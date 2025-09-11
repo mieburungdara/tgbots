@@ -20,6 +20,7 @@ use TGBot\Handlers\Callbacks\OfferCallback;
 use TGBot\Handlers\Callbacks\AcceptOfferCallback;
 use TGBot\Handlers\Callbacks\RejectOfferCallback;
 use TGBot\Handlers\Callbacks\BuyOfferCallback;
+use TGBot\Handlers\Callbacks\SubscribeCallback;
 
 class CallbackRouter
 {
@@ -45,6 +46,7 @@ class CallbackRouter
             'accept_offer_' => new AcceptOfferCallback(),
             'reject_offer_' => new RejectOfferCallback(),
             'buy_offer_' => new BuyOfferCallback(),
+            'subscribe_' => new SubscribeCallback(),
         ];
     }
 

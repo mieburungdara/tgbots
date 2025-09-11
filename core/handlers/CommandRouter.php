@@ -4,6 +4,7 @@ namespace TGBot\Handlers;
 
 use TGBot\Handlers\Commands\CommandInterface;
 use TGBot\Handlers\Commands\StartCommand;
+use TGBot\Handlers\Commands\SetPriceCommand;
 use TGBot\Handlers\Commands\SellCommand;
 use TGBot\Handlers\Commands\RateCommand;
 use TGBot\Handlers\Commands\TanyaCommand;
@@ -25,6 +26,7 @@ class CommandRouter
         $this->commands = [
             '/start' => new StartCommand(),
             '/sell' => new SellCommand(),
+            '/setprice' => new SetPriceCommand(),
             '/rate' => new RateCommand(),
             '/tanya' => new TanyaCommand(),
             '/addmedia' => new AddMediaCommand(),

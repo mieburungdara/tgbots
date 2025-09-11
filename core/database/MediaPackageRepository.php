@@ -340,7 +340,7 @@ class MediaPackageRepository
      * @return int
      * @throws Exception
      */
-    public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id, string $post_type = 'sell', ?string $category = null): int
+    public function createPackageWithPublicId(int $seller_user_id, int $bot_id, string $description, int $thumbnail_media_id, string $package_type, string $post_type = 'sell', ?string $category = null): int
     {
         try {
             // 1. Ambil dan kunci baris pengguna untuk mendapatkan urutan & ID publik
@@ -366,9 +366,9 @@ class MediaPackageRepository
 
             // 5. Masukkan paket baru
             $stmt_package = $this->pdo->prepare(
-                "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id, post_type, category)\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                "INSERT INTO media_packages (seller_user_id, bot_id, description, thumbnail_media_id, status, public_id, post_type, category, package_type)\n                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
             );
-            $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $initial_status, $public_id, $post_type, $category]);
+            $stmt_package->execute([$seller_user_id, $bot_id, $description, $thumbnail_media_id, $initial_status, $public_id, $post_type, $category, $package_type]);
             $package_id = $this->pdo->lastInsertId();
 
             return (int)$package_id;
@@ -445,15 +445,20 @@ class MediaPackageRepository
     }
 
     /**
-     * Update the price of a package.
+     * Update the pricing of a package based on its type.
      *
      * @param int $package_id
+     * @param string $package_type
      * @param int $price
      * @return bool
      */
-    public function updatePrice(int $package_id, int $price): bool
+    public function updatePackagePricing(int $package_id, string $package_type, int $price): bool
     {
-        $stmt = $this->pdo->prepare("UPDATE media_packages SET price = ? WHERE id = ?");
+        if ($package_type === 'subscription') {
+            $stmt = $this->pdo->prepare("UPDATE media_packages SET monthly_price = ? WHERE id = ?");
+        } else {
+            $stmt = $this->pdo->prepare("UPDATE media_packages SET price = ? WHERE id = ?");
+        }
         return $stmt->execute([$price, $package_id]);
     }
 }

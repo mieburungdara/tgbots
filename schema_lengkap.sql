@@ -44,6 +44,7 @@ CREATE TABLE `users` (
   `token_created_at` timestamp NULL DEFAULT NULL,
   `token_used` tinyint(1) NOT NULL DEFAULT '0',
   `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `subscription_price` decimal(15,2) DEFAULT NULL COMMENT 'Harga langganan bulanan yang ditetapkan oleh penjual.',
   PRIMARY KEY (`id`),
   UNIQUE KEY `telegram_id` (`telegram_id`),
   UNIQUE KEY `public_seller_id` (`public_seller_id`),
@@ -125,6 +126,7 @@ CREATE TABLE `sales` (
   `buyer_user_id` int(11) NOT NULL COMMENT 'Pembeli yang melakukan pembayaran.',
   `price` decimal(15,2) NOT NULL COMMENT 'Harga pada saat transaksi.',
   `commission` decimal(15,2) DEFAULT NULL COMMENT 'Jumlah komisi yang diambil dari penjualan.',
+  `sale_type` enum('one_time','subscription') NOT NULL DEFAULT 'one_time',
   `sale_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `package_id` (`package_id`),
@@ -222,3 +224,23 @@ CREATE TABLE `telegram_error_logs` (
 
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- 
+-- Struktur untuk tabel `subscriptions`
+-- 
+DROP TABLE IF EXISTS `subscriptions`;
+CREATE TABLE `subscriptions` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `subscriber_user_id` int(11) NOT NULL,
+  `seller_id` int(11) NOT NULL,
+  `start_date` datetime NOT NULL,
+  `end_date` datetime NOT NULL,
+  `status` enum('active','expired','cancelled') NOT NULL DEFAULT 'active',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `subscriber_user_id` (`subscriber_user_id`),
+  KEY `seller_id` (`seller_id`),
+  CONSTRAINT `subscriptions_ibfk_1` FOREIGN KEY (`subscriber_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `subscriptions_ibfk_2` FOREIGN KEY (`seller_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
