@@ -124,6 +124,7 @@ CREATE TABLE `sales` (
   `seller_user_id` int(11) NOT NULL COMMENT 'Penjual yang menerima pembayaran.',
   `buyer_user_id` int(11) NOT NULL COMMENT 'Pembeli yang melakukan pembayaran.',
   `price` decimal(15,2) NOT NULL COMMENT 'Harga pada saat transaksi.',
+  `commission` decimal(15,2) DEFAULT NULL COMMENT 'Jumlah komisi yang diambil dari penjualan.',
   `sale_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
   KEY `package_id` (`package_id`),
@@ -132,6 +133,25 @@ CREATE TABLE `sales` (
   CONSTRAINT `sales_ibfk_1` FOREIGN KEY (`package_id`) REFERENCES `media_packages` (`id`) ON DELETE CASCADE,
   CONSTRAINT `sales_ibfk_2` FOREIGN KEY (`seller_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE,
   CONSTRAINT `sales_ibfk_3` FOREIGN KEY (`buyer_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- 
+-- Struktur untuk tabel `offers`
+-- 
+DROP TABLE IF EXISTS `offers`;
+CREATE TABLE `offers` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `package_id` int(11) NOT NULL,
+  `buyer_user_id` int(11) NOT NULL,
+  `seller_user_id` int(11) NOT NULL,
+  `offer_price` decimal(15,2) NOT NULL,
+  `status` enum('pending','accepted','rejected','expired','completed') NOT NULL DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `package_id` (`package_id`),
+  KEY `buyer_user_id` (`buyer_user_id`),
+  KEY `seller_user_id` (`seller_user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 -- 
