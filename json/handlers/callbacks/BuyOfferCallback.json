@@ -1,0 +1,38 @@
+{
+  "class_name": "BuyOfferCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Memproses pembelian final dengan harga penawaran yang disetujui.",
+  "description": "Callback ini dipicu oleh link pembelian khusus yang diterima pembeli setelah penawaran mereka disetujui. Ini menjalankan logika penjualan dengan harga yang lebih rendah.",
+  "dependencies": [
+    "SaleRepository",
+    "MediaPackageRepository"
+  ],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Menjalankan logika pembelian dengan harga penawaran.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "offer_id",
+          "type": "string"
+        }
+      ],
+      "logic_flow": [
+        "1. Validasi bahwa penawaran ada, ditujukan untuk pengguna saat ini, dan statusnya `accepted`.",
+        "2. Validasi bahwa saldo pengguna mencukupi untuk `offer_price`.",
+        "3. Panggil `SaleRepository::createSale()` dengan `offer_price` (logika komisi akan berlaku di sini).",
+        "4. Panggil `MediaPackageRepository::markAsSold()`.",
+        "5. Ubah status penawaran di tabel `offers` menjadi `completed` untuk mencegah penggunaan berulang.",
+        "6. Delegasikan ke `ViewPageCallback` untuk menampilkan konten kepada pengguna."
+      ]
+    }
+  ]
+}

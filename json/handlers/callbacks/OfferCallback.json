@@ -1,0 +1,35 @@
+{
+  "class_name": "OfferCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Memulai alur tawar-menawar harga.",
+  "description": "Callback ini dipicu saat pengguna menekan tombol 'Tawar Harga'. Tugasnya adalah mengubah state pengguna menjadi `awaiting_offer_price` dan meminta mereka untuk memasukkan harga penawaran.",
+  "dependencies": [
+    "UserRepository"
+  ],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Mengubah state pengguna dan mengirim prompt.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "public_id",
+          "type": "string",
+          "description": "ID publik dari paket yang ditawar."
+        }
+      ],
+      "logic_flow": [
+        "1. Menyimpan `public_id` ke dalam `state_context`.",
+        "2. Memanggil `UserRepository::setUserState()` untuk mengatur state menjadi `awaiting_offer_price`.",
+        "3. Mengirim pesan ke pengguna yang meminta mereka memasukkan harga penawaran."
+      ]
+    }
+  ]
+}

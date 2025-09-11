@@ -29,6 +29,11 @@ class BuyCallback implements CallbackCommandInterface
             $sale_repo->createSale($package['id'], $package['seller_user_id'], $app->user['id'], $package['price']);
             $package_repo->markAsSold($package['id']);
 
+            // Kirim notifikasi ke penjual
+            $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+            $seller_message = "🎉 Selamat! Item Anda `{$package['public_id']}` telah terjual seharga *{$price_formatted}*. Saldo Anda telah diperbarui.";
+            $app->telegram_api->sendMessage($package['seller_user_id'], $seller_message, 'Markdown');
+
             $app->telegram_api->sendMessage($app->chat_id, '✅ Pembelian berhasil! Menampilkan konten Anda...');
 
             // Delegate to ViewPageCallback to show the content

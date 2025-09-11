@@ -33,6 +33,12 @@ class BuyOfferCallback implements CallbackCommandInterface
             $sale_repo->createSale($offer['package_id'], $offer['seller_user_id'], $offer['buyer_user_id'], $offer['offer_price']);
             $package_repo->markAsSold($offer['package_id']);
 
+            // Kirim notifikasi ke penjual
+            $package = $package_repo->find($offer['package_id']);
+            $price_formatted = "Rp " . number_format($offer['offer_price'], 0, ',', '.');
+            $seller_message = "🎉 Selamat! Item Anda `{$package['public_id']}` telah terjual melalui penawaran seharga *{$price_formatted}*. Saldo Anda telah diperbarui.";
+            $app->telegram_api->sendMessage($offer['seller_user_id'], $seller_message, 'Markdown');
+
             // Tandai penawaran sebagai selesai
             $app->pdo->prepare("UPDATE offers SET status = 'completed' WHERE id = ?")->execute([$offer_id]);
 

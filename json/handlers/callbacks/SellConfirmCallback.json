@@ -1,0 +1,42 @@
+{
+  "class_name": "SellConfirmCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Memfinalisasi proses penjualan setelah konfirmasi dari penjual.",
+  "description": "Callback ini dipicu saat penjual menekan tombol 'Konfirmasi & Jual'. Ia mengambil konteks penjualan dari state pengguna, membuat paket, mem-backup media, dan mengirim konfirmasi akhir.",
+  "dependencies": [
+    "UserRepository",
+    "MediaPackageRepository",
+    "BotChannelUsageRepository",
+    "MediaFileRepository"
+  ],
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Menjalankan logika finalisasi penjualan dalam sebuah transaksi database.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "params",
+          "type": "string",
+          "description": "Parameter ini tidak digunakan; konteks diambil dari state."
+        }
+      ],
+      "logic_flow": [
+        "1. Mengambil konteks (daftar media & harga) dari state pengguna `awaiting_sell_confirmation`.",
+        "2. Memulai transaksi database.",
+        "3. Memanggil metode privat `createMediaPackage` untuk membuat entri di `media_packages` dan menautkan semua `media_files`.",
+        "4. Memanggil metode privat `backupMedia` untuk menyalin semua file ke channel penyimpanan.",
+        "5. Membersihkan state pengguna setelah semua operasi berhasil.",
+        "6. Commit transaksi.",
+        "7. Mengedit pesan konfirmasi menjadi pesan sukses akhir."
+      ]
+    }
+  ]
+}

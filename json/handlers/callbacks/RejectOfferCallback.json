@@ -1,0 +1,32 @@
+{
+  "class_name": "RejectOfferCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Menangani logika saat penjual menolak penawaran.",
+  "description": "Callback ini mengubah status penawaran menjadi 'rejected' dan mengirim notifikasi kepada calon pembeli.",
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Memvalidasi, memperbarui status, dan memberi notifikasi.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "offer_id",
+          "type": "string"
+        }
+      ],
+      "logic_flow": [
+        "1. Validasi bahwa penawaran ada, dimiliki oleh penjual, dan statusnya `pending`.",
+        "2. Ubah status penawaran di tabel `offers` menjadi `rejected`.",
+        "3. Kirim pesan ke calon pembeli bahwa penawaran mereka ditolak.",
+        "4. Edit pesan notifikasi asli di chat penjual untuk menandai bahwa penawaran telah ditolak."
+      ]
+    }
+  ]
+}

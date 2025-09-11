@@ -1,0 +1,37 @@
+{
+  "class_name": "AwaitingOfferPriceState",
+  "implements": "StateInterface",
+  "summary": "Memproses harga penawaran yang dikirim oleh pengguna.",
+  "description": "Handler state ini memvalidasi harga penawaran, menyimpannya ke database, dan mengirim notifikasi ke penjual.",
+  "dependencies": [
+    "UserRepository",
+    "MediaPackageRepository"
+  ],
+  "methods": [
+    {
+      "name": "handle",
+      "description": "Memvalidasi harga, menyimpan penawaran, dan memberi notifikasi.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "message",
+          "type": "array"
+        },
+        {
+          "name": "state_context",
+          "type": "array"
+        }
+      ],
+      "logic_flow": [
+        "1. Validasi harga penawaran agar lebih rendah dari harga asli.",
+        "2. Simpan data penawaran baru ke tabel `offers` dengan status `pending`.",
+        "3. Reset state pengguna penawar kembali ke `null`.",
+        "4. Kirim notifikasi ke penjual yang berisi detail penawaran dan tombol `Setuju`/`Tolak`.",
+        "5. Kirim pesan konfirmasi ke pengguna penawar bahwa penawaran mereka telah terkirim."
+      ]
+    }
+  ]
+}

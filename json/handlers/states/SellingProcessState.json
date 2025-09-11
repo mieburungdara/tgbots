@@ -1,0 +1,34 @@
+{
+  "class_name": "SellingProcessState",
+  "implements": "StateInterface",
+  "summary": "Menangani alur interaktif untuk membuat paket penjualan.",
+  "description": "State ini aktif setelah perintah /sell. Ia memungkinkan pengguna untuk menambahkan beberapa media secara berurutan, dan kemudian menerima input harga untuk melanjutkan ke langkah konfirmasi.",
+  "dependencies": [
+    "UserRepository"
+  ],
+  "methods": [
+    {
+      "name": "handle",
+      "description": "Merutekan input pengguna ke penambahan media atau penetapan harga.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "message",
+          "type": "array"
+        },
+        {
+          "name": "state_context",
+          "type": "array"
+        }
+      ],
+      "logic_flow": [
+        "1. **Jika input adalah media**: Tambahkan media baru ke `state_context` dan kirim pesan konfirmasi penambahan.",
+        "2. **Jika input adalah teks**: Anggap sebagai harga, validasi. Jika valid, tambahkan harga ke `state_context`, ubah state pengguna menjadi `awaiting_sell_confirmation`, dan panggil `sendConfirmationMessage`.",
+        "3. **Jika input tidak valid**: Kirim pesan error yang meminta media atau harga."
+      ]
+    }
+  ]
+}

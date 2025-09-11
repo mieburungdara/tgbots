@@ -1,0 +1,26 @@
+{
+  "class_name": "CancelSellCallback",
+  "implements": "CallbackCommandInterface",
+  "summary": "Menangani pembatalan dari pesan konfirmasi penjualan.",
+  "description": "Callback ini dipicu saat penjual menekan tombol 'Batal' pada pesan konfirmasi penjualan. Tugasnya hanya menghapus pesan tersebut untuk membersihkan chat.",
+  "methods": [
+    {
+      "name": "execute",
+      "description": "Menghapus pesan konfirmasi dan menjawab callback query.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "callback_query",
+          "type": "array"
+        },
+        {
+          "name": "params",
+          "type": "string"
+        }
+      ]
+    }
+  ]
+}
