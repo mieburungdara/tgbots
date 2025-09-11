@@ -1,0 +1,33 @@
+{
+  "class_name": "AwaitingPriceState",
+  "purpose": "Menangani state ketika bot sedang menunggu input harga dari pengguna.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi state dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "handle",
+      "description": "Metode utama untuk menangani pesan ketika bot dalam state awaiting_price.",
+      "parameters": [
+        {
+          "name": "message",
+          "type": "array",
+          "description": "Data pesan Telegram."
+        },
+        {
+          "name": "state_context",
+          "type": "array",
+          "description": "Konteks state pengguna."
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "class_name": "LoginController",
+  "purpose": "Controller untuk mengelola login member.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "index",
+      "description": "Menampilkan halaman login member."
+    },
+    {
+      "name": "tokenLogin",
+      "description": "Melakukan login menggunakan token."
+    },
+    {
+      "name": "logout",
+      "description": "Melakukan logout member."
+    }
+  ]
+}

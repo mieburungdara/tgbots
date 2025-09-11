@@ -1,0 +1,46 @@
+{
+  "flow_name": "/rate",
+  "description": "Memulai proses pemberian rating pada media oleh pengguna.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Pengecekan Fitur Bot",
+      "condition": "Fitur bot yang ditetapkan bukan 'rate'",
+      "action_if_true": "Cari bot lain yang memiliki fitur 'rate'. Kirim pesan: 'Perintah /rate tidak tersedia di bot ini.' dan sarankan bot yang benar jika ditemukan. Selesai."
+    },
+    {
+      "step_number": 2,
+      "name": "Pengecekan Kiriman Tertunda",
+      "condition": "Pengguna memiliki kiriman yang sedang dalam proses moderasi",
+      "action_if_true": "Kirim pesan: 'Anda masih memiliki kiriman yang sedang dalam proses moderasi. Harap tunggu hingga selesai sebelum mengirim yang baru.' Selesai."
+    },
+    {
+      "step_number": 3,
+      "name": "Pengecekan Reply Message",
+      "condition": "Perintah tidak di-reply ke sebuah pesan",
+      "action_if_true": "Kirim pesan: 'Untuk memberi rate, silakan reply media yang ingin Anda beri rate dengan perintah /rate.' Selesai."
+    },
+    {
+      "step_number": 4,
+      "name": "Validasi Media yang Dibalas",
+      "condition": "Pesan yang dibalas bukan foto atau video",
+      "action_if_true": "Kirim pesan: '⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video).' Selesai."
+    },
+    {
+      "step_number": 5,
+      "name": "Validasi Kepemilikan Media",
+      "condition": "Pengguna mencoba memberi rate pada media yang bukan miliknya",
+      "action_if_true": "Kirim pesan: '⚠️ Gagal. Anda hanya bisa memberi rate pada media milik Anda sendiri.' Selesai."
+    },
+    {
+      "step_number": 6,
+      "name": "Atur State Pengguna",
+      "description": "Atur state pengguna menjadi awaiting_rate_category dengan konteks yang berisi message_id, chat_id, dan from_id dari pesan yang dibalas."
+    },
+    {
+      "step_number": 7,
+      "name": "Minta Pemilihan Kategori",
+      "description": "Buat keyboard inline dengan pilihan kategori \"Cewek\" dan \"Cowok\". Kirim pesan: \"Silakan pilih kategori:\" dengan keyboard tersebut, me-reply pesan media asli."
+    }
+  ]
+}

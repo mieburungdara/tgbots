@@ -1,0 +1,25 @@
+{
+  "class_name": "ChatController",
+  "purpose": "Controller untuk mengelola chat di panel admin.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "index",
+      "description": "Menampilkan halaman indeks chat."
+    },
+    {
+      "name": "channel",
+      "description": "Menampilkan halaman channel chat."
+    }
+  ]
+}

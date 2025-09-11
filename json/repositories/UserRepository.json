@@ -1,0 +1,117 @@
+{
+  "class_name": "UserRepository",
+  "purpose": "Repositori untuk mengelola data pengguna (users, rel_user_bot). Menangani pembuatan pengguna, pencarian, pengelolaan state, dan peran.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Membuat instance UserRepository.",
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        },
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID Telegram bot yang sedang berinteraksi dengan pengguna."
+        }
+      ]
+    },
+    {
+      "name": "findOrCreateUser",
+      "description": "Mencari pengguna berdasarkan ID Telegram mereka. Jika tidak ditemukan, pengguna baru akan dibuat. Metode ini juga memastikan relasi user-bot dan entri member ada, serta menetapkan peran 'admin' jika ID pengguna cocok dengan SUPER_ADMIN_TELEGRAM_ID.",
+      "parameters": [
+        {
+          "name": "telegram_user_id",
+          "type": "int",
+          "description": "ID Telegram pengguna."
+        },
+        {
+          "name": "first_name",
+          "type": "string",
+          "description": "Nama depan pengguna."
+        },
+        {
+          "name": "username",
+          "type": "?string",
+          "description": "Username Telegram pengguna (jika ada)."
+        }
+      ],
+      "returns": "array|false",
+      "return_description": "Data pengguna yang lengkap dan terbaru, atau false jika gagal."
+    },
+    {
+      "name": "findUserByTelegramId",
+      "description": "Mencari data lengkap pengguna berdasarkan ID Telegram mereka, termasuk data spesifik bot seperti state percakapan.",
+      "parameters": [
+        {
+          "name": "telegram_user_id",
+          "type": "int",
+          "description": "ID Telegram pengguna."
+        }
+      ],
+      "returns": "array|false",
+      "return_description": "Data pengguna sebagai array asosiatif, atau false jika tidak ditemukan."
+    },
+    {
+      "name": "setUserState",
+      "description": "Mengatur state percakapan untuk seorang pengguna dalam konteks bot saat ini. Berguna untuk alur percakapan multi-langkah, seperti proses penjualan.",
+      "parameters": [
+        {
+          "name": "telegram_user_id",
+          "type": "int",
+          "description": "ID Telegram pengguna."
+        },
+        {
+          "name": "state",
+          "type": "?string",
+          "description": "State baru (misal: 'awaiting_price') atau null untuk menghapus state."
+        },
+        {
+          "name": "context",
+          "type": "?array",
+          "description": "Data kontekstual tambahan yang akan disimpan sebagai JSON."
+        }
+      ]
+    },
+    {
+      "name": "getBotId",
+      "description": "Mendapatkan ID Telegram bot yang terkait dengan instance repositori ini.",
+      "returns": "int",
+      "return_description": "ID Telegram bot."
+    },
+    {
+      "name": "setPublicId",
+      "description": "Menetapkan ID publik yang unik untuk seorang pengguna, efektif mendaftarkannya sebagai penjual. Terus mencoba menghasilkan ID unik jika terjadi tabrakan.",
+      "parameters": [
+        {
+          "name": "telegram_user_id",
+          "type": "int",
+          "description": "ID Telegram pengguna."
+        }
+      ],
+      "returns": "string",
+      "return_description": "ID publik yang baru dibuat dan disimpan.",
+      "throws": "Exception Jika gagal membuat ID unik setelah beberapa kali percobaan."
+    },
+    {
+      "name": "updateUserStatusByTelegramId",
+      "description": "Memperbarui status pengguna (misalnya, menjadi 'blocked') berdasarkan ID Telegram mereka. Berguna ketika bot mendeteksi diblokir oleh pengguna.",
+      "parameters": [
+        {
+          "name": "telegram_user_id",
+          "type": "int",
+          "description": "ID Telegram pengguna."
+        },
+        {
+          "name": "status",
+          "type": "string",
+          "description": "Status baru, harus 'active' atau 'blocked'."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal atau status tidak valid."
+    }
+  ]
+}

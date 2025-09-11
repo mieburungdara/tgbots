@@ -1,0 +1,58 @@
+{
+  "class_name": "Router",
+  "purpose": "Mengelola routing permintaan HTTP ke controller yang sesuai.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi router."
+    },
+    {
+      "name": "get",
+      "description": "Mendaftarkan rute GET.",
+      "parameters": [
+        {
+          "name": "uri",
+          "type": "string",
+          "description": "URI yang akan dicocokkan."
+        },
+        {
+          "name": "controller",
+          "type": "string",
+          "description": "Controller yang akan dipanggil."
+        }
+      ]
+    },
+    {
+      "name": "post",
+      "description": "Mendaftarkan rute POST.",
+      "parameters": [
+        {
+          "name": "uri",
+          "type": "string",
+          "description": "URI yang akan dicocokkan."
+        },
+        {
+          "name": "controller",
+          "type": "string",
+          "description": "Controller yang akan dipanggil."
+        }
+      ]
+    },
+    {
+      "name": "dispatch",
+      "description": "Mendispatch permintaan ke controller yang sesuai.",
+      "parameters": [
+        {
+          "name": "uri",
+          "type": "string",
+          "description": "URI permintaan."
+        },
+        {
+          "name": "method",
+          "type": "string",
+          "description": "Metode HTTP permintaan."
+        }
+      ]
+    }
+  ]
+}

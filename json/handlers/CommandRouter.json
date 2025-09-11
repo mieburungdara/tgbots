@@ -1,0 +1,33 @@
+{
+  "class_name": "CommandRouter",
+  "purpose": "Meneruskan perintah ke handler perintah yang sesuai.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi router dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "route",
+      "description": "Metode utama untuk merutekan perintah.",
+      "parameters": [
+        {
+          "name": "message",
+          "type": "array",
+          "description": "Data pesan Telegram."
+        },
+        {
+          "name": "parts",
+          "type": "array",
+          "description": "Bagian-bagian perintah (misalnya, ['/start', 'payload'])."
+        }
+      ]
+    }
+  ]
+}

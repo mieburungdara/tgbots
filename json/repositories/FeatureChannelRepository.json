@@ -1,0 +1,111 @@
+{
+  "class_name": "FeatureChannelRepository",
+  "purpose": "Mengelola konfigurasi channel fitur.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi repositori dengan objek PDO.",
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "find",
+      "description": "Mencari konfigurasi channel fitur berdasarkan ID-nya.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int",
+          "description": "ID konfigurasi channel fitur."
+        }
+      ],
+      "returns": "array|false",
+      "return_description": "Data konfigurasi channel fitur sebagai array asosiatif, atau false jika tidak ditemukan."
+    },
+    {
+      "name": "findAll",
+      "description": "Mendapatkan semua konfigurasi channel fitur.",
+      "returns": "array",
+      "return_description": "Array asosiatif dari semua konfigurasi channel fitur."
+    },
+    {
+      "name": "create",
+      "description": "Membuat konfigurasi channel fitur baru.",
+      "parameters": [
+        {
+          "name": "data",
+          "type": "array",
+          "description": "Data konfigurasi channel fitur."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "update",
+      "description": "Memperbarui konfigurasi channel fitur yang sudah ada.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int",
+          "description": "ID konfigurasi channel fitur yang akan diperbarui."
+        },
+        {
+          "name": "data",
+          "type": "array",
+          "description": "Data konfigurasi channel fitur yang diperbarui."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "delete",
+      "description": "Menghapus konfigurasi channel fitur.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int",
+          "description": "ID konfigurasi channel fitur yang akan dihapus."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "findAllByOwnerAndFeature",
+      "description": "Mendapatkan semua konfigurasi channel fitur berdasarkan pemilik dan jenis fitur.",
+      "parameters": [
+        {
+          "name": "owner_user_id",
+          "type": "int",
+          "description": "ID pengguna pemilik."
+        },
+        {
+          "name": "feature_type",
+          "type": "string",
+          "description": "Jenis fitur."
+        }
+      ],
+      "returns": "array",
+      "return_description": "Array asosiatif dari konfigurasi channel fitur."
+    },
+    {
+      "name": "findSystemChannelByFeature",
+      "description": "Mencari konfigurasi channel fitur sistem (tanpa pemilik) berdasarkan jenis fitur.",
+      "parameters": [
+        {
+          "name": "feature_type",
+          "type": "string",
+          "description": "Jenis fitur."
+        }
+      ],
+      "returns": "array|false",
+      "return_description": "Data konfigurasi channel fitur sebagai array asosiatif, atau false jika tidak ditemukan."
+    }
+  ]
+}

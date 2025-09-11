@@ -1,0 +1,28 @@
+{
+  "class_name": "UpdateDispatcher",
+  "purpose": "Menerima dan mendispatch pembaruan dari Telegram ke handler yang sesuai.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi dispatcher dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "dispatch",
+      "description": "Metode utama untuk mendispatch pembaruan Telegram.",
+      "parameters": [
+        {
+          "name": "update",
+          "type": "array",
+          "description": "Data pembaruan Telegram."
+        }
+      ]
+    }
+  ]
+}

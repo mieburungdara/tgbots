@@ -1,0 +1,49 @@
+{
+  "class_name": "StorageChannelController",
+  "purpose": "Controller untuk mengelola channel penyimpanan di panel admin.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "index",
+      "description": "Menampilkan halaman indeks channel penyimpanan."
+    },
+    {
+      "name": "add",
+      "description": "Menambahkan channel penyimpanan baru."
+    },
+    {
+      "name": "delete",
+      "description": "Menghapus channel penyimpanan."
+    },
+    {
+      "name": "edit",
+      "description": "Menampilkan halaman edit channel penyimpanan."
+    },
+    {
+      "name": "update",
+      "description": "Memperbarui channel penyimpanan."
+    },
+    {
+      "name": "addBot",
+      "description": "Menambahkan bot ke channel penyimpanan."
+    },
+    {
+      "name": "removeBot",
+      "description": "Menghapus bot dari channel penyimpanan."
+    },
+    {
+      "name": "verifyBot",
+      "description": "Memverifikasi bot di channel penyimpanan."
+    }
+  ]
+}

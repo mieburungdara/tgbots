@@ -1,0 +1,28 @@
+{
+  "class_name": "AutomaticForwardHandler",
+  "purpose": "Menangani penerusan pesan secara otomatis.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi handler dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "handle",
+      "description": "Metode utama untuk menangani pesan.",
+      "parameters": [
+        {
+          "name": "message",
+          "type": "array",
+          "description": "Data pesan Telegram."
+        }
+      ]
+    }
+  ]
+}

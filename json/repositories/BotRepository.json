@@ -1,0 +1,88 @@
+{
+  "class_name": "BotRepository",
+  "purpose": "Mengelola data bot.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi repositori dengan objek PDO.",
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "getAllBots",
+      "description": "Mendapatkan semua bot.",
+      "returns": "array",
+      "return_description": "Array asosiatif dari semua bot."
+    },
+    {
+      "name": "findBotByTelegramId",
+      "description": "Mencari bot berdasarkan ID Telegram-nya.",
+      "parameters": [
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID Telegram bot."
+        }
+      ],
+      "returns": "array|false",
+      "return_description": "Data bot sebagai array asosiatif, atau false jika tidak ditemukan."
+    },
+    {
+      "name": "getBotSettings",
+      "description": "Mendapatkan pengaturan bot.",
+      "parameters": [
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID bot."
+        }
+      ],
+      "returns": "array",
+      "return_description": "Array asosiatif dari pengaturan bot."
+    },
+    {
+      "name": "findBotByFeature",
+      "description": "Mencari bot berdasarkan fitur yang ditetapkan.",
+      "parameters": [
+        {
+          "name": "feature",
+          "type": "string",
+          "description": "Fitur bot."
+        }
+      ],
+      "returns": "array|false",
+      "return_description": "Data bot sebagai array asosiatif, atau false jika tidak ditemukan."
+    },
+    {
+      "name": "findAllBotsByFeature",
+      "description": "Mendapatkan semua bot berdasarkan fitur yang ditetapkan.",
+      "parameters": [
+        {
+          "name": "feature",
+          "type": "string",
+          "description": "Fitur bot."
+        }
+      ],
+      "returns": "array",
+      "return_description": "Array asosiatif dari semua bot dengan fitur tersebut."
+    },
+    {
+      "name": "findByUsername",
+      "description": "Mencari bot berdasarkan username-nya.",
+      "parameters": [
+        {
+          "name": "username",
+          "type": "string",
+          "description": "Username bot."
+        }
+      ],
+      "returns": "array|false",
+      "return_description": "Data bot sebagai array asosiatif, atau false jika tidak ditemukan."
+    }
+  ]
+}

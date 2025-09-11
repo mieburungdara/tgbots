@@ -1,0 +1,37 @@
+{
+  "class_name": "ContentController",
+  "purpose": "Controller untuk mengelola konten member.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "channels",
+      "description": "Menampilkan halaman channel konten."
+    },
+    {
+      "name": "edit",
+      "description": "Menampilkan halaman edit konten."
+    },
+    {
+      "name": "update",
+      "description": "Memperbarui konten."
+    },
+    {
+      "name": "retract",
+      "description": "Menarik kembali konten."
+    },
+    {
+      "name": "toggleProtection",
+      "description": "Mengubah status perlindungan konten."
+    }
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "class_name": "PrivateChannelRepository",
+  "purpose": "Repositori untuk mengelola channel pribadi yang digunakan sebagai penyimpanan media.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Membuat instance PrivateChannelRepository.",
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "addChannel",
+      "description": "Menambahkan channel baru ke database.",
+      "parameters": [
+        {
+          "name": "channel_id",
+          "type": "int",
+          "description": "ID unik dari channel Telegram."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Nama deskriptif untuk channel."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "deleteChannel",
+      "description": "Menghapus channel dari database berdasarkan ID internalnya.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int",
+          "description": "ID internal (primary key) dari channel."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "deleteByTelegramId",
+      "description": "Menghapus channel dari database berdasarkan ID Telegram-nya.",
+      "parameters": [
+        {
+          "name": "telegram_id",
+          "type": "int",
+          "description": "ID unik dari channel Telegram."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "getAllChannels",
+      "description": "Mendapatkan semua channel pribadi dari database, beserta bot yang terhubung.",
+      "returns": "array",
+      "return_description": "Daftar semua channel dengan informasi bot terkait."
+    },
+    {
+      "name": "findById",
+      "description": "Mendapatkan satu channel berdasarkan ID internalnya.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int",
+          "description": "ID internal."
+        }
+      ],
+      "returns": "array|false",
+      "return_description": "Data channel sebagai array asosiatif, atau false jika tidak ditemukan."
+    },
+    {
+      "name": "findByTelegramId",
+      "description": "Mendapatkan satu channel berdasarkan ID Telegram-nya.",
+      "parameters": [
+        {
+          "name": "telegram_id",
+          "type": "int",
+          "description": "ID Telegram."
+        }
+      ],
+      "returns": "array|false",
+      "return_description": "Data channel sebagai array asosiatif, atau false jika tidak ditemukan."
+    },
+    {
+      "name": "updateChannel",
+      "description": "Memperbarui data channel yang ada.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int",
+          "description": "ID internal channel yang akan diperbarui."
+        },
+        {
+          "name": "newName",
+          "type": "string",
+          "description": "Nama baru untuk channel."
+        },
+        {
+          "name": "newChannelId",
+          "type": "int",
+          "description": "ID Telegram baru untuk channel."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "setDefaultChannel",
+      "description": "Mengatur channel tertentu sebagai default. (Catatan: Fitur ini sudah deprecated).",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int",
+          "description": "ID internal channel yang akan dijadikan default."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true (karena deprecated dan tidak melakukan apa-apa)."
+    },
+    {
+      "name": "updateNameByTelegramId",
+      "description": "Memperbarui nama channel berdasarkan ID Telegram-nya.",
+      "parameters": [
+        {
+          "name": "telegram_id",
+          "type": "int",
+          "description": "ID unik dari channel Telegram."
+        },
+        {
+          "name": "new_name",
+          "type": "string",
+          "description": "Nama baru untuk channel."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    }
+  ]
+}

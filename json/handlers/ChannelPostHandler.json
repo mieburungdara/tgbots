@@ -1,0 +1,28 @@
+{
+  "class_name": "ChannelPostHandler",
+  "purpose": "Menangani postingan channel baru.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi handler dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "handle",
+      "description": "Metode utama untuk menangani postingan channel.",
+      "parameters": [
+        {
+          "name": "channel_post",
+          "type": "array",
+          "description": "Data postingan channel Telegram."
+        }
+      ]
+    }
+  ]
+}

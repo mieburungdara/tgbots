@@ -1,0 +1,30 @@
+{
+  "class_name": "BotChannelUsageRepository",
+  "purpose": "Mengelola penggunaan channel oleh bot, khususnya untuk menentukan channel berikutnya dalam skema round-robin.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi repositori dengan objek PDO dan PrivateChannelRepository.",
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "getNextChannelForBot",
+      "description": "Mendapatkan channel berikutnya yang akan digunakan oleh bot berdasarkan skema round-robin. Memperbarui catatan penggunaan channel.",
+      "parameters": [
+        {
+          "name": "botId",
+          "type": "int",
+          "description": "ID bot."
+        }
+      ],
+      "returns": "?array",
+      "return_description": "Array asosiatif dari channel berikutnya, atau null jika tidak ada channel yang terdaftar."
+    }
+  ]
+}

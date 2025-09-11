@@ -1,0 +1,31 @@
+{
+  "flow_name": "/admin",
+  "description": "Menangani perintah /admin dan sub-perintah terkait admin. Fungsionalitas sub-perintah belum diimplementasikan.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Pengecekan Peran Pengguna",
+      "description": "Memeriksa apakah pengguna memiliki peran 'Admin'.",
+      "condition": "Peran pengguna bukan 'Admin'",
+      "action_if_true": "Tidak melakukan apa-apa (perintah diabaikan). Selesai.",
+      "action_if_false": "Lanjutkan ke penanganan sub-perintah."
+    },
+    {
+      "step_number": 2,
+      "name": "Penanganan Sub-Perintah (Tidak Lengkap)",
+      "description": "Kode ini memiliki struktur switch untuk menangani sub-perintah, tetapi implementasinya belum ada.",
+      "identified_sub_commands": [
+        {
+          "command": "/dev_addsaldo",
+          "status": "Belum diimplementasikan",
+          "intended_functionality": "Logika untuk menambahkan saldo."
+        },
+        {
+          "command": "/feature",
+          "status": "Belum diimplementasikan",
+          "intended_functionality": "Logika untuk menampilkan paket."
+        }
+      ]
+    }
+  ]
+}

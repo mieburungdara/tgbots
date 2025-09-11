@@ -1,0 +1,28 @@
+{
+  "class_name": "CallbackRouter",
+  "purpose": "Meneruskan callback query ke handler callback yang sesuai.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi router dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "route",
+      "description": "Metode utama untuk merutekan callback query.",
+      "parameters": [
+        {
+          "name": "callback_query",
+          "type": "array",
+          "description": "Data callback query Telegram."
+        }
+      ]
+    }
+  ]
+}

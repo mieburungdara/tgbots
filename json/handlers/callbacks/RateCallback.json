@@ -1,0 +1,33 @@
+{
+  "class_name": "RateCallback",
+  "purpose": "Menangani callback untuk pemberian rating.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi callback dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "execute",
+      "description": "Metode utama untuk mengeksekusi callback pemberian rating.",
+      "parameters": [
+        {
+          "name": "callback_query",
+          "type": "array",
+          "description": "Data callback query Telegram."
+        },
+        {
+          "name": "parts",
+          "type": "array",
+          "description": "Bagian-bagian data callback."
+        }
+      ]
+    }
+  ]
+}

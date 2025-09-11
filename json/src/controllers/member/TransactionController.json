@@ -1,0 +1,21 @@
+{
+  "class_name": "TransactionController",
+  "purpose": "Controller untuk mengelola transaksi member.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "index",
+      "description": "Menampilkan halaman indeks transaksi."
+    }
+  ]
+}

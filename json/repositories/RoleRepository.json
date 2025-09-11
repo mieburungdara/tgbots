@@ -1,0 +1,49 @@
+{
+  "class_name": "RoleRepository",
+  "purpose": "Mengelola peran pengguna.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi repositori dengan objek PDO.",
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "getAllRoles",
+      "description": "Mendapatkan semua peran yang tersedia.",
+      "returns": "array",
+      "return_description": "Array asosiatif dari semua peran."
+    },
+    {
+      "name": "addRole",
+      "description": "Menambahkan peran baru ke database. Jika peran sudah ada, tidak melakukan apa-apa.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Nama peran."
+        }
+      ],
+      "returns": "int",
+      "return_description": "Jumlah baris yang terpengaruh (0 jika sudah ada, 1 jika baru ditambahkan), atau -1 jika terjadi error."
+    },
+    {
+      "name": "deleteRole",
+      "description": "Menghapus peran dari database berdasarkan ID-nya.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int",
+          "description": "ID peran."
+        }
+      ],
+      "returns": "int",
+      "return_description": "Jumlah baris yang terpengaruh (1 jika berhasil dihapus), atau -1 jika terjadi error."
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "class_name": "App",
+  "purpose": "Kelas inti aplikasi yang mengelola dependensi dan menyediakan akses ke berbagai komponen.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi aplikasi dengan konfigurasi yang diberikan.",
+      "parameters": [
+        {
+          "name": "config",
+          "type": "array",
+          "description": "Array konfigurasi aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "__get",
+      "description": "Magic method untuk mendapatkan properti yang tidak dapat diakses secara langsung. Digunakan untuk lazy loading komponen.",
+      "parameters": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Nama properti yang diminta."
+        }
+      ],
+      "returns": "mixed",
+      "return_description": "Nilai properti yang diminta."
+    }
+  ]
+}

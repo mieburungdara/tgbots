@@ -1,0 +1,41 @@
+{
+  "class_name": "FeatureChannelController",
+  "purpose": "Controller untuk mengelola channel fitur di panel admin.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "index",
+      "description": "Menampilkan halaman indeks channel fitur."
+    },
+    {
+      "name": "create",
+      "description": "Menampilkan formulir pembuatan channel fitur baru."
+    },
+    {
+      "name": "store",
+      "description": "Menyimpan channel fitur baru."
+    },
+    {
+      "name": "edit",
+      "description": "Menampilkan formulir edit channel fitur."
+    },
+    {
+      "name": "update",
+      "description": "Memperbarui channel fitur."
+    },
+    {
+      "name": "delete",
+      "description": "Menghapus channel fitur."
+    }
+  ]
+}

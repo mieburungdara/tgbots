@@ -1,0 +1,21 @@
+{
+  "class_name": "MediaPackageController",
+  "purpose": "Controller untuk mengelola paket media di panel admin.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "index",
+      "description": "Menampilkan halaman indeks paket media."
+    }
+  ]
+}

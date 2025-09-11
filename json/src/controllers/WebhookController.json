@@ -1,0 +1,10 @@
+{
+  "class_name": "WebhookController",
+  "purpose": "Controller untuk menangani webhook dari Telegram.",
+  "methods": [
+    {
+      "name": "index",
+      "description": "Metode indeks untuk menangani permintaan webhook."
+    }
+  ]
+}

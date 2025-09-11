@@ -1,0 +1,56 @@
+{
+  "flow_name": "/addmedia",
+  "description": "Menambahkan media ke paket yang sudah ada atau memulai proses penambahan media untuk paket baru. Perlu dicatat bahwa implementasi fungsionalitas ini tampak tidak lengkap di kode sumber.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Pengecekan Parameter",
+      "description": "Memeriksa apakah perintah /addmedia diikuti dengan parameter (diasumsikan sebagai public_package_id).",
+      "condition": "Ada parameter setelah /addmedia",
+      "action_if_true": "Lanjutkan ke addMediaToExistingPackage.",
+      "action_if_false": "Lanjutkan ke addMediaToNewPackage."
+    }
+  ],
+  "sub_flows": [
+    {
+      "name": "addMediaToNewPackage (Menambahkan Media ke Paket Baru)",
+      "description": "Memulai proses penambahan media untuk paket baru.",
+      "steps": [
+        {
+          "name": "Pengecekan State Pengguna",
+          "condition": "Pengguna tidak dalam state 'awaiting_price'",
+          "action_if_true": "Kirim pesan: '⚠️ Perintah ini hanya bisa digunakan saat Anda sedang dalam proses menjual item.' Selesai."
+        },
+        {
+          "name": "Pengecekan Reply Message",
+          "condition": "Perintah tidak di-reply ke sebuah pesan",
+          "action_if_true": "Kirim pesan: 'Untuk menambah media, silakan reply media yang ingin Anda tambahkan.' Selesai."
+        },
+        {
+          "name": "Logika Selanjutnya",
+          "description": "Fungsionalitas ini tampak tidak lengkap di kode sumber asli."
+        }
+      ]
+    },
+    {
+      "name": "addMediaToExistingPackage (Menambahkan Media ke Paket yang Sudah Ada)",
+      "description": "Menambahkan media ke paket yang sudah ada berdasarkan public_package_id.",
+      "steps": [
+        {
+          "name": "Pengecekan Reply Message",
+          "condition": "Perintah tidak di-reply ke sebuah pesan",
+          "action_if_true": "Kirim pesan: 'Untuk menambah media, silakan reply media yang ingin Anda tambahkan.' Selesai."
+        },
+        {
+          "name": "Validasi Paket dan Izin",
+          "condition": "Paket tidak ditemukan atau pengguna bukan pemilik paket",
+          "action_if_true": "Kirim pesan: '⚠️ Anda tidak memiliki izin untuk mengubah paket ini.' Selesai."
+        },
+        {
+          "name": "Logika Selanjutnya",
+          "description": "Fungsionalitas ini tampak tidak lengkap di kode sumber asli."
+        }
+      ]
+    }
+  ]
+}

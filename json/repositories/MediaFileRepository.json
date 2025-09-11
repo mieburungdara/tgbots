@@ -1,0 +1,53 @@
+{
+  "class_name": "MediaFileRepository",
+  "purpose": "Mengelola data file media.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi repositori dengan objek PDO.",
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "saveMediaFile",
+      "description": "Menyimpan file media baru ke database.",
+      "parameters": [
+        {
+          "name": "params",
+          "type": "array",
+          "description": "Array asosiatif yang berisi detail file media."
+        }
+      ],
+      "returns": "string",
+      "return_description": "ID terakhir yang dimasukkan (ID file media)."
+    },
+    {
+      "name": "updateStorageInfo",
+      "description": "Memperbarui informasi penyimpanan (channel dan ID pesan) untuk file media.",
+      "parameters": [
+        {
+          "name": "mediaFileId",
+          "type": "int",
+          "description": "ID file media."
+        },
+        {
+          "name": "storageChannelId",
+          "type": "string",
+          "description": "ID channel penyimpanan."
+        },
+        {
+          "name": "storageMessageId",
+          "type": "int",
+          "description": "ID pesan penyimpanan."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    }
+  ]
+}

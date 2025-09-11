@@ -1,0 +1,27 @@
+{
+  "flow_name": "/login",
+  "description": "Menghasilkan tautan login satu kali untuk pengguna agar dapat mengakses panel member web.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Pengecekan Konfigurasi BASE_URL",
+      "condition": "BASE_URL tidak didefinisikan atau kosong",
+      "action_if_true": "Kirim pesan: 'Maaf, terjadi kesalahan teknis (ERR:CFG01).'. Selesai."
+    },
+    {
+      "step_number": 2,
+      "name": "Buat dan Simpan Token Login",
+      "description": "Hasilkan login_token acak. Perbarui tabel users untuk pengguna saat ini dengan login_token yang baru, token_created_at (waktu saat ini), dan set token_used menjadi 0."
+    },
+    {
+      "step_number": 3,
+      "name": "Buat Tautan Login",
+      "description": "Bangun login_link menggunakan BASE_URL dan login_token yang baru dibuat."
+    },
+    {
+      "step_number": 4,
+      "name": "Kirim Pesan dengan Tombol Login",
+      "description": "Buat pesan yang menginformasikan pengguna untuk mengklik tombol untuk masuk ke panel, dan bahwa tombol hanya dapat digunakan satu kali. Buat tombol inline \"Login ke Panel\" dengan login_link sebagai URL. Kirim pesan ke pengguna dengan tombol login."
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "class_name": "BaseController",
+  "purpose": "Kelas dasar untuk semua controller, menyediakan fungsionalitas umum.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dasar dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "render",
+      "description": "Merender tampilan dengan data yang diberikan.",
+      "parameters": [
+        {
+          "name": "view",
+          "type": "string",
+          "description": "Nama tampilan."
+        },
+        {
+          "name": "data",
+          "type": "array",
+          "description": "Data yang akan diteruskan ke tampilan."
+        }
+      ]
+    },
+    {
+      "name": "redirect",
+      "description": "Mengarahkan ke URL yang diberikan.",
+      "parameters": [
+        {
+          "name": "url",
+          "type": "string",
+          "description": "URL tujuan."
+        }
+      ]
+    }
+  ]
+}

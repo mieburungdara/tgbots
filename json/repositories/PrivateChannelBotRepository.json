@@ -1,0 +1,102 @@
+{
+  "class_name": "PrivateChannelBotRepository",
+  "purpose": "Repositori untuk mengelola hubungan antara channel pribadi dan bot. Mengelola tabel pivot private_channel_bots.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi repositori dengan objek PDO.",
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "addBotToChannel",
+      "description": "Menambahkan hubungan antara bot dan channel.",
+      "parameters": [
+        {
+          "name": "private_channel_id",
+          "type": "int",
+          "description": "ID channel pribadi."
+        },
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID bot."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "verifyBotInChannel",
+      "description": "Memverifikasi bot dalam sebuah channel dengan menandai timestamp verifikasi.",
+      "parameters": [
+        {
+          "name": "private_channel_id",
+          "type": "int",
+          "description": "ID channel pribadi."
+        },
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID bot."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "getBotsForChannel",
+      "description": "Mendapatkan semua bot yang terhubung dengan sebuah channel.",
+      "parameters": [
+        {
+          "name": "private_channel_id",
+          "type": "int",
+          "description": "ID channel pribadi."
+        }
+      ],
+      "returns": "array",
+      "return_description": "Array asosiatif dari bot-bot yang terhubung."
+    },
+    {
+      "name": "removeBotFromChannel",
+      "description": "Menghapus hubungan antara bot dan channel.",
+      "parameters": [
+        {
+          "name": "private_channel_id",
+          "type": "int",
+          "description": "ID channel pribadi."
+        },
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID bot."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "isBotInChannel",
+      "description": "Memeriksa apakah bot sudah terhubung dengan channel.",
+      "parameters": [
+        {
+          "name": "private_channel_id",
+          "type": "int",
+          "description": "ID channel pribadi."
+        },
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID bot."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika terhubung, false jika tidak."
+    }
+  ]
+}

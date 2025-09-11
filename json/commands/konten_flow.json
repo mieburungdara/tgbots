@@ -1,0 +1,50 @@
+{
+  "flow_name": "/konten",
+  "description": "Menampilkan detail sebuah paket konten berdasarkan ID publiknya, serta menyediakan opsi untuk melihat atau membeli konten.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Inisialisasi Repositori",
+      "description": "Inisialisasi MediaPackageRepository, SaleRepository, FeatureChannelRepository."
+    },
+    {
+      "step_number": 2,
+      "name": "Validasi Format Perintah",
+      "condition": "Format perintah tidak /konten <ID Konten>",
+      "action_if_true": "Kirim pesan: 'Format perintah salah. Gunakan: /konten <ID Konten>'. Selesai."
+    },
+    {
+      "step_number": 3,
+      "name": "Cari Paket Konten",
+      "description": "Ambil public_id dari perintah dan cari paket berdasarkan public_id.",
+      "condition": "Paket tidak ditemukan",
+      "action_if_true": "Kirim pesan: 'Konten dengan ID {public_id} tidak ditemukan.'. Selesai."
+    },
+    {
+      "step_number": 4,
+      "name": "Ambil Thumbnail Paket",
+      "description": "Ambil file thumbnail untuk paket tersebut.",
+      "condition": "Thumbnail tidak ditemukan atau rusak",
+      "action_if_true": "Kirim pesan: 'Konten ini tidak memiliki media yang dapat ditampilkan atau semua media di dalamnya rusak. Silakan hubungi admin.' Log error. Selesai."
+    },
+    {
+      "step_number": 5,
+      "name": "Tentukan Akses Pengguna",
+      "description": "Cek apakah pengguna adalah admin, penjual paket, atau sudah membeli paket untuk menentukan akses."
+    },
+    {
+      "step_number": 6,
+      "name": "Buat Keyboard (Tombol Inline)",
+      "description": "Buat tombol inline berdasarkan akses pengguna dan status paket.",
+      "conditions": [
+        "Jika pengguna memiliki akses (admin, penjual, atau sudah membeli): Tambahkan tombol 'Lihat Selengkapnya'. Jika penjual, tambahkan 'Post ke Channel'.",
+        "Jika pengguna tidak memiliki akses DAN paket tersedia: Tambahkan tombol 'Beli Konten Ini' dengan harga."
+      ]
+    },
+    {
+      "step_number": 7,
+      "name": "Kirim Pesan dengan Thumbnail dan Keyboard",
+      "description": "Kirim pesan dengan menyalin thumbnail ke chat pengguna, menyertakan caption (deskripsi paket) dan keyboard yang telah dibuat."
+    }
+  ]
+}

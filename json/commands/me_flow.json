@@ -1,0 +1,31 @@
+{
+  "flow_name": "/me",
+  "description": "Menampilkan informasi profil pengguna, termasuk ID Telegram, ID Penjual, saldo saat ini, dan statistik penjualan.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Inisialisasi Repositori",
+      "description": "Inisialisasi AnalyticsRepository."
+    },
+    {
+      "step_number": 2,
+      "name": "Ambil Data Pengguna dan Statistik Penjualan",
+      "description": "Ambil user_id dari $app->user. Ambil statistik penjualan pengguna (total_sales, total_revenue) menggunakan AnalyticsRepository."
+    },
+    {
+      "step_number": 3,
+      "name": "Format Data untuk Tampilan",
+      "description": "Format nama pengguna. Format saldo pengguna ke dalam format mata uang Rupiah. Tentukan ID Penjual (jika ada, atau \"Belum terdaftar\"). Format total pendapatan ke dalam format mata uang Rupiah."
+    },
+    {
+      "step_number": 4,
+      "name": "Buat Pesan Respons",
+      "description": "Susun pesan respons yang berisi: Judul \"Profil Anda\". Telegram ID. ID Penjual. Bagian \"Keuangan\" dengan Saldo Saat Ini. Bagian \"Aktivitas Penjualan\" dengan Total Item Terjual dan Total Pendapatan."
+    },
+    {
+      "step_number": 5,
+      "name": "Kirim Pesan Respons",
+      "description": "Kirim pesan respons yang telah disusun ke pengguna."
+    }
+  ]
+}

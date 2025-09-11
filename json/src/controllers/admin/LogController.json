@@ -1,0 +1,33 @@
+{
+  "class_name": "LogController",
+  "purpose": "Controller untuk mengelola log di panel admin.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "app",
+      "description": "Menampilkan log aplikasi."
+    },
+    {
+      "name": "telegram",
+      "description": "Menampilkan log Telegram."
+    },
+    {
+      "name": "media",
+      "description": "Menampilkan log media."
+    },
+    {
+      "name": "publicError",
+      "description": "Menampilkan log error publik."
+    }
+  ]
+}

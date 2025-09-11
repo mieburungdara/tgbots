@@ -1,0 +1,29 @@
+{
+  "class_name": "LoginController",
+  "purpose": "Controller untuk mengelola login admin.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "index",
+      "description": "Menampilkan halaman login admin."
+    },
+    {
+      "name": "authenticate",
+      "description": "Mengautentikasi pengguna admin."
+    },
+    {
+      "name": "logout",
+      "description": "Melakukan logout admin."
+    }
+  ]
+}

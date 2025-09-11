@@ -1,0 +1,17 @@
+{
+  "class_name": "MemberBaseController",
+  "purpose": "Kelas dasar untuk semua controller member, menyediakan fungsionalitas umum dan memastikan otentikasi.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dasar member dengan objek App dan melakukan otentikasi.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    }
+  ]
+}

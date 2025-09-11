@@ -1,0 +1,16 @@
+{
+  "flow_name": "/about",
+  "description": "Mengirimkan pesan \"Tentang Bot Ini\" kepada pengguna.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Siapkan Teks \"Tentang\"",
+      "description": "Mendefinisikan teks informasi tentang bot, termasuk pengembang dan tautan kontak."
+    },
+    {
+      "step_number": 2,
+      "name": "Kirim Pesan",
+      "description": "Mengirim teks \"Tentang Bot Ini\" ke chat pengguna."
+    }
+  ]
+}

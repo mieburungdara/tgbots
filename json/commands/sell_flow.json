@@ -1,0 +1,100 @@
+{
+  "flow_name": "/sell",
+  "description": "Alur fitur /sell untuk menjual media melalui bot Telegram.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Pengecekan Fitur Bot",
+      "description": "Memeriksa apakah bot yang digunakan memiliki fitur 'sell' yang diizinkan.",
+      "condition": "$app->bot['assigned_feature'] !== 'sell'",
+      "action_if_true": "Bot memberitahu pengguna bahwa perintah /sell tidak tersedia dan menyarankan bot lain.",
+      "action_if_false": "Lanjutkan ke langkah berikutnya."
+    },
+    {
+      "step_number": 2,
+      "name": "Pengecekan Reply Media",
+      "description": "Memeriksa apakah perintah /sell digunakan sebagai balasan (reply) terhadap sebuah pesan.",
+      "condition": "!isset($message['reply_to_message'])",
+      "action_if_true": "Bot meminta pengguna untuk me-reply media yang ingin dijual.",
+      "action_if_false": "Lanjutkan ke langkah berikutnya."
+    },
+    {
+      "step_number": 3,
+      "name": "Pengecekan Pendaftaran Penjual",
+      "description": "Memeriksa apakah pengguna sudah terdaftar sebagai penjual.",
+      "condition": "empty($app->user['public_seller_id'])",
+      "action_if_true": "Bot menawarkan pendaftaran sebagai penjual dengan tombol 'Ya, Daftar Sekarang' (callback register_seller).",
+      "action_if_false": "Lanjutkan ke langkah berikutnya."
+    },
+    {
+      "step_number": 4,
+      "name": "Validasi Media yang Dibalas",
+      "description": "Memeriksa apakah pesan yang dibalas adalah pesan media yang sudah tersimpan di bot (media_files table).",
+      "condition": "Media tidak valid atau tidak tersimpan.",
+      "action_if_true": "Bot menampilkan pesan error 'Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.'",
+      "action_if_false": "Lanjutkan ke langkah berikutnya."
+    },
+    {
+      "step_number": 5,
+      "name": "Pengambilan Informasi Media",
+      "description": "Mengambil media_group_id dan caption dari pesan media yang dibalas dari tabel media_files.",
+      "details": "Jika media adalah bagian dari grup media, caption akan diambil dari salah satu media dalam grup tersebut."
+    },
+    {
+      "step_number": 6,
+      "name": "Pengaturan State Pengguna",
+      "description": "Mengatur state pengguna menjadi 'awaiting_price'.",
+      "action": "user_repo->setUserState($app->user['id'], 'awaiting_price', $state_context)",
+      "state_context": "message_id dan chat_id dari media yang dibalas."
+    },
+    {
+      "step_number": 7,
+      "name": "Permintaan Harga",
+      "description": "Bot mengirim pesan kepada pengguna yang menyatakan bahwa media siap dijual dan meminta pengguna untuk memasukkan harga untuk paket tersebut.",
+      "details": "Pengguna juga diinformasikan bahwa mereka bisa mengetik /cancel untuk membatalkan operasi."
+    }
+  ],
+  "state_handling": {
+    "state_name": "awaiting_price",
+    "description": "Logika ketika pengguna berada dalam state 'awaiting_price'.",
+    "actions": [
+      {
+        "condition": "Pengguna memasukkan '/cancel'",
+        "action": "State direset dan operasi dibatalkan."
+      },
+      {
+        "condition": "Pengguna memasukkan harga",
+        "sub_steps": [
+          {
+            "name": "Validasi Harga",
+            "description": "Harga divalidasi sebagai integer positif."
+          },
+          {
+            "name": "Pembuatan Paket Media Baru",
+            "description": "Paket baru dibuat di media_packages dengan post_type 'sell' dan thumbnail_media_id dari media yang dibalas."
+          },
+          {
+            "name": "Pembaruan Harga Paket",
+            "description": "Harga paket diperbarui."
+          },
+          {
+            "name": "Pembaruan package_id di media_files",
+            "description": "package_id di-update di tabel media_files untuk media yang terkait (baik tunggal maupun grup media)."
+          },
+          {
+            "name": "Reset State Pengguna",
+            "description": "State pengguna direset."
+          },
+          {
+            "name": "Backup Media ke Private Channel",
+            "description": "Media paket akan disalin ke private channel backup yang dikonfigurasi (menggunakan round-robin)."
+          },
+          {
+            "name": "Konfirmasi kepada Pengguna",
+            "description": "Bot mengirim pesan konfirmasi kepada pengguna dengan ID paket publik dan harga."
+          }
+        ]
+      }
+    ]
+  }
+}

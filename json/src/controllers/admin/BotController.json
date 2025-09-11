@@ -1,0 +1,29 @@
+{
+  "class_name": "BotController",
+  "purpose": "Controller untuk mengelola bot di panel admin.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "index",
+      "description": "Menampilkan halaman indeks bot."
+    },
+    {
+      "name": "edit",
+      "description": "Menampilkan halaman edit bot."
+    },
+    {
+      "name": "update",
+      "description": "Memperbarui data bot."
+    }
+  ]
+}

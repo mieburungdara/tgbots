@@ -1,0 +1,54 @@
+{
+  "class_name": "RawUpdateRepository",
+  "purpose": "Repositori untuk menyimpan dan mengambil data mentah (raw) pembaruan dari Telegram. Berguna untuk keperluan debugging dan analisis.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Membuat instance RawUpdateRepository.",
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "create",
+      "description": "Menyimpan payload pembaruan JSON mentah ke dalam database.",
+      "parameters": [
+        {
+          "name": "payload",
+          "type": "string",
+          "description": "String JSON yang diterima dari Telegram."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "findAll",
+      "description": "Mengambil semua data pembaruan mentah dengan paginasi, diurutkan dari yang terbaru.",
+      "parameters": [
+        {
+          "name": "limit",
+          "type": "int",
+          "description": "Jumlah maksimum catatan per halaman."
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Jumlah catatan yang akan dilewati (untuk paginasi)."
+        }
+      ],
+      "returns": "array",
+      "return_description": "Sebuah array berisi catatan pembaruan."
+    },
+    {
+      "name": "countAll",
+      "description": "Menghitung jumlah total semua catatan pembaruan mentah.",
+      "returns": "int",
+      "return_description": "Jumlah total catatan."
+    }
+  ]
+}

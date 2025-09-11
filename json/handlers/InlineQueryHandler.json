@@ -1,0 +1,28 @@
+{
+  "class_name": "InlineQueryHandler",
+  "purpose": "Menangani inline query.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi handler dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "handle",
+      "description": "Metode utama untuk menangani inline query.",
+      "parameters": [
+        {
+          "name": "inline_query",
+          "type": "array",
+          "description": "Data inline query Telegram."
+        }
+      ]
+    }
+  ]
+}

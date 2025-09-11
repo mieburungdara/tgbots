@@ -1,0 +1,10 @@
+{
+  "class_name": "HomeController",
+  "purpose": "Controller untuk halaman utama aplikasi.",
+  "methods": [
+    {
+      "name": "index",
+      "description": "Metode indeks untuk halaman utama."
+    }
+  ]
+}

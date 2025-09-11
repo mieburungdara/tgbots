@@ -1,0 +1,40 @@
+{
+  "flow_name": "/tanya",
+  "description": "Memulai proses bagi pengguna untuk mengajukan pertanyaan tentang sebuah pesan.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Pengecekan Fitur Bot",
+      "condition": "Fitur bot yang ditetapkan bukan 'tanya'",
+      "action_if_true": "Cari bot lain yang memiliki fitur 'tanya'. Kirim pesan: 'Perintah /tanya tidak tersedia di bot ini.' dan sarankan bot yang benar jika ditemukan. Selesai."
+    },
+    {
+      "step_number": 2,
+      "name": "Pengecekan Kiriman Tertunda",
+      "condition": "Pengguna memiliki kiriman yang sedang dalam proses moderasi",
+      "action_if_true": "Kirim pesan: 'Anda masih memiliki kiriman yang sedang dalam proses moderasi. Harap tunggu hingga selesai sebelum mengirim yang baru.' Selesai."
+    },
+    {
+      "step_number": 3,
+      "name": "Pengecekan Reply Message",
+      "condition": "Perintah tidak di-reply ke sebuah pesan",
+      "action_if_true": "Kirim pesan: 'Untuk bertanya, silakan reply pesan yang ingin Anda tanyakan dengan perintah /tanya.' Selesai."
+    },
+    {
+      "step_number": 4,
+      "name": "Validasi Kepemilikan Pesan",
+      "condition": "Pengguna mencoba bertanya pada pesan yang bukan miliknya",
+      "action_if_true": "Kirim pesan: '⚠️ Gagal. Anda hanya bisa bertanya pada pesan milik Anda sendiri.' Selesai."
+    },
+    {
+      "step_number": 5,
+      "name": "Atur State Pengguna",
+      "description": "Atur state pengguna menjadi awaiting_tanya_category dengan konteks yang berisi message_id, chat_id, from_id, dan text (atau caption) dari pesan yang dibalas."
+    },
+    {
+      "step_number": 6,
+      "name": "Minta Pemilihan Kategori",
+      "description": "Buat keyboard inline dengan pilihan kategori \"Mutualan\", \"Tanya\", dan \"Dll\". Kirim pesan: \"Silakan pilih kategori:\" dengan keyboard tersebut, me-reply pesan asli."
+    }
+  ]
+}

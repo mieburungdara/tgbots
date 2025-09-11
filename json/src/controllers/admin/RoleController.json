@@ -1,0 +1,29 @@
+{
+  "class_name": "RoleController",
+  "purpose": "Controller untuk mengelola peran pengguna di panel admin.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "index",
+      "description": "Menampilkan halaman indeks peran."
+    },
+    {
+      "name": "add",
+      "description": "Menambahkan peran baru."
+    },
+    {
+      "name": "delete",
+      "description": "Menghapus peran."
+    }
+  ]
+}

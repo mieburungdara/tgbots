@@ -1,0 +1,54 @@
+{
+  "class_name": "TelegramErrorLogRepository",
+  "purpose": "Repositori untuk mengelola log kesalahan yang spesifik dari interaksi dengan API Telegram. Ini membantu dalam melacak dan menganalisis kegagalan panggilan API.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Membuat instance TelegramErrorLogRepository.",
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "create",
+      "description": "Menyimpan log kesalahan API Telegram ke database.",
+      "parameters": [
+        {
+          "name": "data",
+          "type": "array",
+          "description": "Data log yang akan disimpan. Kunci yang diharapkan: method, request_data, http_code, error_code, description, status, retry_after, chat_id."
+        }
+      ],
+      "returns": "bool",
+      "return_description": "true jika berhasil, false jika gagal."
+    },
+    {
+      "name": "findAll",
+      "description": "Mengambil semua log kesalahan dari database.",
+      "parameters": [
+        {
+          "name": "limit",
+          "type": "int",
+          "description": "Jumlah log yang akan diambil (default 50)."
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Offset untuk paginasi (default 0)."
+        }
+      ],
+      "returns": "array",
+      "return_description": "Daftar log kesalahan."
+    },
+    {
+      "name": "countAll",
+      "description": "Menghitung jumlah total log kesalahan.",
+      "returns": "int",
+      "return_description": "Jumlah total log."
+    }
+  ]
+}

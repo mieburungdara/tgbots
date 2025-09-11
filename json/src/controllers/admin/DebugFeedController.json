@@ -1,0 +1,21 @@
+{
+  "class_name": "DebugFeedController",
+  "purpose": "Controller untuk mengelola feed debug di panel admin.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan objek App.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Objek aplikasi."
+        }
+      ]
+    },
+    {
+      "name": "index",
+      "description": "Menampilkan halaman indeks feed debug."
+    }
+  ]
+}

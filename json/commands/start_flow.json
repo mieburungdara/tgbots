@@ -1,0 +1,80 @@
+{
+  "flow_name": "/start",
+  "description": "Menangani perintah /start dari pengguna, baik tanpa payload (pesan selamat datang) maupun dengan payload (untuk menampilkan detail paket).",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Pengecekan Payload",
+      "description": "Memeriksa apakah perintah /start memiliki payload 'package_'.",
+      "condition": "Ada payload 'package_' (e.g., /start package_XYZ)",
+      "action_if_true": "Lanjutkan ke handleStartWithPayload.",
+      "action_if_false": "Kirim pesan selamat datang dan saran untuk menggunakan /help. Selesai."
+    },
+    {
+      "step_number": 2,
+      "name": "handleStartWithPayload (Jika Ada Payload)",
+      "description": "Mengambil public_id dari payload dan mencari detail paket.",
+      "actions": [
+        "Inisialisasi MediaPackageRepository, SaleRepository, FeatureChannelRepository.",
+        "Cari paket berdasarkan public_id."
+      ],
+      "sub_flow": [
+        {
+          "name": "Paket Tidak Ditemukan",
+          "condition": "Paket tidak ditemukan (!\$package)",
+          "action": "Kirim pesan 'Maaf, item ini tidak ditemukan.' Selesai."
+        },
+        {
+          "name": "Paket Ditemukan",
+          "condition": "Paket ditemukan",
+          "actions": [
+            "Ambil package_id dan telegram_user_id.",
+            "Cek apakah pengguna adalah penjual paket (\$is_seller).",
+            "Cek apakah pengguna sudah membeli paket (\$has_purchased)."
+          ],
+          "sub_flow": [
+            {
+              "name": "Pengguna Adalah Penjual",
+              "condition": "Pengguna adalah penjual (\$is_seller)",
+              "description": "Menampilkan detail konten milik penjual, termasuk jumlah penjualan dan total keuntungan.",
+              "actions": [
+                "Hitung sales_count dan total_profit.",
+                "Buat teks respons dengan detail konten (ID, deskripsi, harga, terjual, keuntungan).",
+                "Buat tombol 'Lihat Selengkapnya' dan 'Post ke Channel' (jika ada sales channel).",
+                "Coba kirim thumbnail paket dengan detail dan keyboard. Jika tidak ada thumbnail, kirim pesan teks saja. Selesai."
+              ]
+            },
+            {
+              "name": "Pengguna Sudah Membeli",
+              "condition": "Pengguna sudah membeli (\$has_purchased)",
+              "description": "Memberi tahu pengguna bahwa mereka sudah memiliki item dan menawarkan tombol untuk melihat konten.",
+              "actions": [
+                "Kirim pesan 'Anda sudah memiliki item ini. Klik tombol di bawah untuk melihatnya.'",
+                "Sertakan tombol 'Lihat Konten'. Selesai."
+              ]
+            },
+            {
+              "name": "Paket Tersedia",
+              "condition": "Paket tersedia (\$package['status'] === 'available')",
+              "description": "Menampilkan detail paket yang tersedia dan menawarkan tombol untuk membeli.",
+              "actions": [
+                "Format harga dan saldo pengguna.",
+                "Buat caption dengan deskripsi, harga, dan saldo saat ini.",
+                "Sertakan tombol 'Beli Sekarang'.",
+                "Coba kirim thumbnail paket dengan caption dan tombol. Jika tidak ada thumbnail, kirim pesan teks saja. Selesai."
+              ]
+            },
+            {
+              "name": "Paket Tidak Tersedia",
+              "condition": "Paket tidak tersedia (selain kondisi di atas)",
+              "description": "Memberi tahu pengguna bahwa item sudah tidak tersedia.",
+              "actions": [
+                "Kirim pesan 'Maaf, item ini sudah tidak tersedia.' Selesai."
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

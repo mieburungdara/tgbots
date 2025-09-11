@@ -1,0 +1,55 @@
+{
+  "flow_name": "/help",
+  "description": "Menampilkan daftar perintah yang tersedia kepada pengguna, disesuaikan berdasarkan fitur bot yang aktif dan peran pengguna.",
+  "steps": [
+    {
+      "step_number": 1,
+      "name": "Tentukan Fitur Bot",
+      "description": "Mengambil fitur yang ditetapkan untuk bot ($app->bot['assigned_feature']). Jika tidak ada, default ke 'general'."
+    },
+    {
+      "step_number": 2,
+      "name": "Inisialisasi Teks Bantuan Umum",
+      "description": "Membuat bagian perintah umum yang selalu ditampilkan, termasuk /me, /login, dan /about."
+    },
+    {
+      "step_number": 3,
+      "name": "Tambahkan Perintah Berdasarkan Fitur Bot",
+      "description": "Menggunakan switch statement untuk menambahkan perintah spesifik berdasarkan fitur bot.",
+      "features_handled": [
+        {
+          "feature": "sell",
+          "commands": ["/sell", "/addmedia", "/konten", "/balance"]
+        },
+        {
+          "feature": "rate",
+          "commands": ["/rate"]
+        },
+        {
+          "feature": "tanya",
+          "commands": ["/tanya"]
+        },
+        {
+          "feature": "default (General atau null)",
+          "commands": ["/balance"]
+        }
+      ]
+    },
+    {
+      "step_number": 4,
+      "name": "Gabungkan Teks Bantuan Umum",
+      "description": "Menambahkan teks perintah umum ke pesan bantuan."
+    },
+    {
+      "step_number": 5,
+      "name": "Tambahkan Perintah Khusus Admin (Jika Berlaku)",
+      "condition": "Peran pengguna adalah 'Admin' ($app->user['role'] === 'Admin')",
+      "action_if_true": "Menambahkan bagian \"KHUSUS ADMIN\" dengan perintah seperti /dev_addsaldo dan /feature."
+    },
+    {
+      "step_number": 6,
+      "name": "Kirim Pesan Bantuan",
+      "description": "Mengirim pesan bantuan yang telah disusun ke pengguna."
+    }
+  ]
+}
