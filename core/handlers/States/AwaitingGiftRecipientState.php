@@ -53,7 +53,10 @@ class AwaitingGiftRecipientState implements StateInterface
             );
 
             // 5. Notify recipient
-            $gift_message = "🎁 Selamat! Anda menerima hadiah konten `{$package['public_id']}` dari `{$app->user['first_name']}` (@{$app->user['username']}).\n\n";
+            $is_anonymous = $state_context['is_anonymous'] ?? false;
+            $sender_info = $is_anonymous ? 'seseorang yang tidak ingin disebutkan namanya' : "`{$app->user['first_name']}` (@{$app->user['username']})";
+
+            $gift_message = "🎁 Selamat! Anda menerima hadiah konten `{$package['public_id']}` dari {$sender_info}.\n\n";
             $gift_message .= "Deskripsi: *{$package['description']}*\n\n";
             $gift_message .= "Klik tombol di bawah untuk melihatnya.";
             $keyboard = ['inline_keyboard' => [[['text' => 'Lihat Hadiah 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]]];

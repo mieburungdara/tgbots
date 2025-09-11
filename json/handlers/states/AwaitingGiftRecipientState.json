@@ -31,7 +31,7 @@
         "2. Validasi bahwa penerima telah berinteraksi dengan bot.",
         "3. Periksa saldo pengirim hadiah.",
         "4. Proses penjualan/hadiah (buat entri penjualan) dengan menetapkan batas waktu klaim.",,
-        "5. Beri notifikasi kepada penerima hadiah, termasuk deskripsi paket dan tombol untuk melihat hadiah.",
+        "5. Beri notifikasi kepada penerima hadiah, termasuk deskripsi paket dan tombol untuk melihat hadiah, dengan mempertimbangkan opsi anonimitas.",
         "6. Beri notifikasi kepada pengirim hadiah dan bersihkan status.",
         "7. Tangani error jika terjadi."
       ]

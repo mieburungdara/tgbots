@@ -29,7 +29,7 @@
         "1. Cari paket berdasarkan `public_id`.",
         "2. Jika paket tidak ditemukan, kirim pesan error.",
         "3. Atur status pengguna ke `awaiting_gift_recipient` dengan `package_id` sebagai konteks.",
-        "4. Kirim pesan ke pengguna untuk meminta username penerima, disertai tombol 'Batalkan Hadiah'.",
+        "4. Kirim pesan ke pengguna untuk memilih tipe pengiriman hadiah (anonim/dengan nama), disertai tombol 'Batalkan Hadiah'.",
         "5. Jawab `callback_query`."
       ]
     }

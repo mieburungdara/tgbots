@@ -1,0 +1,36 @@
+{
+  "class_name": "AwaitingGiftTypeSelectionState",
+  "implements": "StateInterface",
+  "summary": "Menangani status saat bot menunggu pilihan tipe pengiriman hadiah (anonim/dengan nama).",
+  "description": "State ini aktif setelah pengguna memilih untuk menghadiahkan sebuah paket. Bot akan meminta pengguna untuk memilih apakah hadiah akan dikirim secara anonim atau dengan nama pengirim.",
+  "dependencies": [
+    "UserRepository",
+    "MediaPackageRepository"
+  ],
+  "methods": [
+    {
+      "name": "handle",
+      "description": "Memproses pilihan tipe pengiriman hadiah. Mengatur flag anonimitas di konteks state dan melanjutkan ke state `awaiting_gift_recipient`.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App"
+        },
+        {
+          "name": "message",
+          "type": "array"
+        },
+        {
+          "name": "state_context",
+          "type": "array"
+        }
+      ],
+      "logic_flow": [
+        "1. Validasi pilihan pengguna (anonim/dengan nama).",
+        "2. Simpan pilihan anonimitas ke `state_context`.",
+        "3. Ubah state pengguna ke `awaiting_gift_recipient`.",
+        "4. Kirim pesan ke pengguna untuk meminta username penerima."
+      ]
+    }
+  ]
+}
