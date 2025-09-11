@@ -1,27 +1,24 @@
 {
   "class_name": "UpdateHandler",
-  "purpose": "Menangani berbagai jenis pembaruan dari Telegram (pesan, callback query, inline query, dll.).",
+  "summary": "Handler tingkat atas yang mendelegasikan update ke handler spesifik.",
+  "description": "Bertindak sebagai router utama setelah `UpdateDispatcher`. Kelas ini menerima update yang sudah divalidasi, kemudian memeriksa tipe update (pesan baru, editan, callback, dll.) dan meneruskannya ke handler yang lebih spesifik seperti `MessageHandler` atau `CallbackQueryHandler`.",
+  "dependencies": ["MessageHandler", "EditedMessageHandler", "ChannelPostHandler", "InlineQueryHandler", "CallbackQueryHandler"],
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi handler dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi handler dengan instance `App` untuk akses ke dependensi lain.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "handle",
-      "description": "Metode utama untuk menangani pembaruan Telegram. Merutekan pembaruan ke handler yang sesuai.",
-      "parameters": [
-        {
-          "name": "update",
-          "type": "array",
-          "description": "Data pembaruan Telegram."
-        }
+      "description": "Menganalisis tipe update dan memanggil metode `handle` dari handler yang sesuai.",
+      "parameters": [{"name": "update", "type": "array", "description": "Data update dari Telegram."}],
+      "logic_flow": [
+        "1. Periksa `isset($update['message'])` -> panggil `MessageHandler`.",
+        "2. Periksa `isset($update['edited_message'])` -> panggil `EditedMessageHandler`.",
+        "3. Periksa `isset($update['channel_post'])` -> panggil `ChannelPostHandler`.",
+        "4. Periksa `isset($update['inline_query'])` -> panggil `InlineQueryHandler`.",
+        "5. Periksa `isset($update['callback_query'])` -> panggil `CallbackQueryHandler`."
       ]
     }
   ]

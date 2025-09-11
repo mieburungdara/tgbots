@@ -1,31 +1,69 @@
 {
   "flow_name": "/admin",
-  "description": "Menangani perintah /admin dan sub-perintah terkait admin. Fungsionalitas sub-perintah belum diimplementasikan.",
-  "steps": [
+  "summary": "Gerbang untuk perintah-perintah administratif.",
+  "description": "Menangani berbagai perintah yang hanya dapat diakses oleh pengguna dengan peran 'Admin'. Perintah utama berfungsi sebagai router untuk sub-perintah spesifik.",
+  "initial_checks": [
     {
-      "step_number": 1,
       "name": "Pengecekan Peran Pengguna",
-      "description": "Memeriksa apakah pengguna memiliki peran 'Admin'.",
-      "condition": "Peran pengguna bukan 'Admin'",
-      "action_if_true": "Tidak melakukan apa-apa (perintah diabaikan). Selesai.",
+      "description": "Memverifikasi apakah pengguna yang mengirim perintah memiliki peran 'Admin' yang tersimpan di tabel `users`.",
+      "condition": "`$app->user['role']` bukan 'Admin'",
+      "action_if_true": "Perintah diabaikan secara diam-diam. Tidak ada respons yang dikirim. Alur berhenti.",
       "action_if_false": "Lanjutkan ke penanganan sub-perintah."
-    },
-    {
-      "step_number": 2,
-      "name": "Penanganan Sub-Perintah (Tidak Lengkap)",
-      "description": "Kode ini memiliki struktur switch untuk menangani sub-perintah, tetapi implementasinya belum ada.",
-      "identified_sub_commands": [
-        {
-          "command": "/dev_addsaldo",
-          "status": "Belum diimplementasikan",
-          "intended_functionality": "Logika untuk menambahkan saldo."
-        },
-        {
-          "command": "/feature",
-          "status": "Belum diimplementasikan",
-          "intended_functionality": "Logika untuk menampilkan paket."
-        }
-      ]
     }
-  ]
+  ],
+  "main_flow": {
+    "name": "Penanganan Sub-Perintah",
+    "description": "Menganalisis parameter setelah `/admin` untuk menentukan sub-perintah mana yang akan dieksekusi. Implementasi aktual untuk sub-perintah ini sebagian besar belum ada di kode sumber.",
+    "sub_commands": [
+      {
+        "command": "/dev_addsaldo",
+        "status": "Belum Diimplementasikan",
+        "proposed_description": "Menambahkan sejumlah saldo ke akun pengguna tertentu. Berguna untuk tujuan pengembangan dan pengujian.",
+        "proposed_usage": "`/admin /dev_addsaldo <user_id> <jumlah>`",
+        "proposed_steps": [
+          {
+            "step": 1,
+            "action": "Validasi parameter: pastikan `user_id` dan `jumlah` ada dan valid."
+          },
+          {
+            "step": 2,
+            "action": "Ambil data pengguna dari `UserRepository` berdasarkan `user_id`."
+          },
+          {
+            "step": 3,
+            "action": "Tambahkan `jumlah` ke saldo pengguna saat ini."
+          },
+          {
+            "step": 4,
+            "action": "Simpan saldo baru ke database."
+          },
+          {
+            "step": 5,
+            "action": "Kirim pesan konfirmasi ke admin dan notifikasi ke pengguna (opsional)."
+          }
+        ]
+      },
+      {
+        "command": "/feature",
+        "status": "Belum Diimplementasikan",
+        "proposed_description": "Mengelola fitur yang terkait dengan bot atau channel. Bisa untuk menampilkan, mengaktifkan, atau menonaktifkan fitur.",
+        "proposed_usage": "`/admin /feature <nama_fitur> [opsi]`",
+        "proposed_steps": [
+          {
+            "step": 1,
+            "action": "Validasi parameter: pastikan `nama_fitur` ada."
+          },
+          {
+            "step": 2,
+            "action": "Gunakan `FeatureChannelRepository` untuk mengambil atau memodifikasi data fitur."
+          },
+          {
+            "step": 3,
+            "action": "Tampilkan status fitur saat ini atau konfirmasi perubahan."
+          }
+        ]
+      }
+    ]
+  },
+  "notes": "Struktur `switch` untuk sub-perintah ada di kode, tetapi `case` di dalamnya kosong. Alur yang diusulkan di atas adalah inferensi dari nama perintah."
 }

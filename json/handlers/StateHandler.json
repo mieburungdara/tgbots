@@ -1,27 +1,21 @@
 {
   "class_name": "StateHandler",
-  "purpose": "Menangani pesan berdasarkan state percakapan pengguna.",
+  "summary": "Handler perantara yang menangani pesan dari pengguna dalam state tertentu.",
+  "description": "Handler ini dipanggil oleh `MessageHandler` jika pengguna yang mengirim pesan memiliki state percakapan yang aktif (misalnya, sedang menunggu input harga). Tugas utamanya adalah mengambil detail state pengguna dan mendelegasikannya ke `StateRouter`.",
+  "dependencies": ["StateRouter"],
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi handler dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi handler dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "handle",
-      "description": "Metode utama untuk menangani pesan berdasarkan state pengguna.",
-      "parameters": [
-        {
-          "name": "message",
-          "type": "array",
-          "description": "Data pesan Telegram."
-        }
+      "description": "Mengambil state pengguna dan meneruskan pesan ke `StateRouter`.",
+      "parameters": [{"name": "message", "type": "array", "description": "Data pesan dari Telegram."}],
+      "logic_flow": [
+        "1. Mengambil `state` dan `state_context` dari objek pengguna (`$this->app->user`).",
+        "2. Memanggil `StateRouter->route(message, state, state_context)` untuk pemrosesan lebih lanjut."
       ]
     }
   ]

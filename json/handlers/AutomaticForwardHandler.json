@@ -1,27 +1,24 @@
 {
   "class_name": "AutomaticForwardHandler",
-  "purpose": "Menangani penerusan pesan secara otomatis.",
+  "summary": "Meneruskan pesan secara otomatis dari satu channel ke channel lain.",
+  "description": "Handler ini dipanggil oleh `MessageHandler` untuk pesan yang tidak ditangani oleh router lain. Ia memeriksa apakah chat asal pesan terdaftar sebagai sumber untuk penerusan otomatis. Jika ya, pesan tersebut akan disalin ke channel tujuan yang telah dikonfigurasi.",
+  "dependencies": ["BotChannelUsageRepository"],
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi handler dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi handler dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "handle",
-      "description": "Metode utama untuk menangani pesan.",
-      "parameters": [
-        {
-          "name": "message",
-          "type": "array",
-          "description": "Data pesan Telegram."
-        }
+      "description": "Memeriksa dan melakukan penerusan pesan.",
+      "parameters": [{"name": "message", "type": "array", "description": "Data pesan dari Telegram."}],
+      "logic_flow": [
+        "1. Mengambil ID chat dari pesan (`$message['chat']['id']`).",
+        "2. Menggunakan `BotChannelUsageRepository` untuk memeriksa apakah ada aturan penerusan yang aktif untuk chat ID ini.",
+        "3. Jika ada aturan, ambil ID channel tujuan.",
+        "4. Memanggil `TelegramAPI::copyMessage()` untuk menyalin pesan dari chat asal ke chat tujuan.",
+        "5. Jika tidak ada aturan, handler tidak melakukan apa-apa."
       ]
     }
   ]

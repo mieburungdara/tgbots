@@ -1,27 +1,21 @@
 {
   "class_name": "ChannelPostHandler",
-  "purpose": "Menangani postingan channel baru.",
+  "summary": "Menangani update ketika ada post baru di channel yang terhubung.",
+  "description": "Handler ini dipanggil oleh `UpdateHandler` untuk setiap post baru atau editan di channel di mana bot menjadi admin. Ini berguna untuk melacak pesan yang dikirim bot ke channel atau merespons post dari admin lain.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi handler dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi handler dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "handle",
-      "description": "Metode utama untuk menangani postingan channel.",
-      "parameters": [
-        {
-          "name": "channel_post",
-          "type": "array",
-          "description": "Data postingan channel Telegram."
-        }
+      "description": "Menjalankan logika untuk post channel.",
+      "parameters": [{"name": "channel_post", "type": "array", "description": "Data `channel_post` atau `edited_channel_post` dari Telegram."}],
+      "logic_flow": [
+        "1. (Placeholder) Logika untuk menangani post channel akan ditempatkan di sini.",
+        "2. Contoh: Jika bot memposting konten yang dijual, handler ini bisa mencatat `message_id` dari post di channel untuk referensi di masa depan (misalnya, untuk menarik kembali post).",
+        "3. Saat ini, kemungkinan besar handler ini tidak memiliki implementasi yang signifikan."
       ]
     }
   ]

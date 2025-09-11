@@ -1,32 +1,33 @@
 {
   "class_name": "BuyCallback",
-  "purpose": "Menangani callback untuk pembelian item.",
+  "implements": "CallbackCommandInterface",
+  "summary": "Memproses transaksi pembelian sebuah paket konten.",
+  "description": "Callback ini dipicu saat pengguna menekan tombol \"Beli\". Ia akan memvalidasi saldo pengguna, memproses transaksi, mencatat penjualan, dan memberikan akses ke konten jika berhasil.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi callback dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi callback dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "execute",
-      "description": "Metode utama untuk mengeksekusi callback pembelian.",
+      "description": "Menjalankan logika pembelian.",
       "parameters": [
-        {
-          "name": "callback_query",
-          "type": "array",
-          "description": "Data callback query Telegram."
-        },
-        {
-          "name": "parts",
-          "type": "array",
-          "description": "Bagian-bagian data callback."
-        }
+        {"name": "callback_query", "type": "array", "description": "Data callback query asli."}, 
+        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['buy', 'public_package_id']`."}
+      ],
+      "logic_flow": [
+        "1. Jawab `callback_query` untuk memberitahu pengguna bahwa proses sedang berjalan.",
+        "2. Ambil `public_package_id` dari `$parts[1]`.",
+        "3. Gunakan `MediaPackageRepository` untuk mengambil detail paket, termasuk harga dan ID penjual.",
+        "4. Periksa apakah pengguna sudah memiliki item ini atau jika pengguna adalah penjualnya sendiri. Jika ya, batalkan.",
+        "5. Periksa apakah saldo pengguna (`$this->app->user['balance']`) mencukupi. Jika tidak, kirim pesan error dan batalkan.",
+        "6. Mulai transaksi database.",
+        "7. Kurangi saldo pembeli dan tambahkan saldo ke penjual (setelah dipotong biaya admin jika ada). Update di tabel `users`.",
+        "8. Buat catatan baru di tabel `sales` yang mengaitkan pembeli, penjual, dan paket.",
+        "9. Commit transaksi database.",
+        "10. Edit pesan asli untuk menghilangkan tombol Beli dan ganti dengan pesan konfirmasi pembelian.",
+        "11. Beri pengguna akses atau tombol untuk melihat konten yang baru dibeli (`view_page` callback)."
       ]
     }
   ]

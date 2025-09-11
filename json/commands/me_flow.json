@@ -1,31 +1,50 @@
 {
   "flow_name": "/me",
-  "description": "Menampilkan informasi profil pengguna, termasuk ID Telegram, ID Penjual, saldo saat ini, dan statistik penjualan.",
+  "summary": "Menampilkan ringkasan profil dan statistik pengguna.",
+  "description": "Mengumpulkan dan menampilkan informasi terperinci tentang pengguna, termasuk data identitas (ID Telegram, ID Penjual), status keuangan (saldo), dan rekap aktivitas penjualan (jumlah item terjual dan total pendapatan).",
   "steps": [
     {
       "step_number": 1,
       "name": "Inisialisasi Repositori",
-      "description": "Inisialisasi AnalyticsRepository."
+      "description": "Membuat instance dari `AnalyticsRepository` untuk mengambil data statistik penjualan."
     },
     {
       "step_number": 2,
-      "name": "Ambil Data Pengguna dan Statistik Penjualan",
-      "description": "Ambil user_id dari $app->user. Ambil statistik penjualan pengguna (total_sales, total_revenue) menggunakan AnalyticsRepository."
+      "name": "Pengambilan Data",
+      "description": "Mengambil data dari beberapa sumber:",
+      "data_sources": [
+        {
+          "source": "Objek Aplikasi (`$app->user`)",
+          "data": "Informasi dasar pengguna seperti `telegram_id`, `first_name`, `last_name`, `public_seller_id`, dan `balance`."
+        },
+        {
+          "source": "`AnalyticsRepository::getSellerStats()`",
+          "data": "Statistik agregat penjualan seperti `total_sales` (jumlah transaksi) dan `total_revenue` (total pendapatan kotor).",
+          "input": "ID pengguna (`$app->user['id']`)."
+        }
+      ]
     },
     {
       "step_number": 3,
-      "name": "Format Data untuk Tampilan",
-      "description": "Format nama pengguna. Format saldo pengguna ke dalam format mata uang Rupiah. Tentukan ID Penjual (jika ada, atau \"Belum terdaftar\"). Format total pendapatan ke dalam format mata uang Rupiah."
+      "name": "Pemformatan Data",
+      "description": "Mengubah data mentah menjadi format yang lebih mudah dibaca oleh pengguna.",
+      "formatting_actions": [
+        "Menggabungkan `first_name` dan `last_name`.",
+        "Mengonversi nilai `balance` dan `total_revenue` ke format mata uang Rupiah (misal: `toRupiah()`).",
+        "Menampilkan `public_seller_id` jika ada, jika tidak, menampilkan 'Belum terdaftar'."
+      ]
     },
     {
       "step_number": 4,
-      "name": "Buat Pesan Respons",
-      "description": "Susun pesan respons yang berisi: Judul \"Profil Anda\". Telegram ID. ID Penjual. Bagian \"Keuangan\" dengan Saldo Saat Ini. Bagian \"Aktivitas Penjualan\" dengan Total Item Terjual dan Total Pendapatan."
+      "name": "Penyusunan Pesan Respons",
+      "description": "Membangun string pesan multi-baris yang terstruktur dengan baik, mengelompokkan informasi ke dalam beberapa bagian seperti \"Profil Anda\", \"Keuangan\", dan \"Aktivitas Penjualan\".",
+      "output": "String pesan yang siap dikirim."
     },
     {
       "step_number": 5,
-      "name": "Kirim Pesan Respons",
-      "description": "Kirim pesan respons yang telah disusun ke pengguna."
+      "name": "Pengiriman Pesan",
+      "description": "Mengirimkan pesan yang telah disusun ke chat pengguna.",
+      "input": "String pesan dari langkah 4."
     }
   ]
 }

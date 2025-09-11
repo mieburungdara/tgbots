@@ -1,97 +1,83 @@
 {
   "flow_name": "/sell",
-  "description": "Alur fitur /sell untuk menjual media melalui bot Telegram.",
-  "steps": [
+  "summary": "Memulai alur penjualan sebuah media atau grup media.",
+  "description": "Dipicu dengan membalas (reply) sebuah media dengan perintah `/sell`. Alur ini memandu pengguna melalui proses pendaftaran (jika perlu), dan kemudian meminta penetapan harga untuk membuat sebuah paket konten yang dapat dijual.",
+  "initial_checks": [
+    {
+      "name": "Pengecekan Fitur Bot",
+      "condition": "Fitur bot (`$app->bot['assigned_feature']`) bukan 'sell'.",
+      "action_if_true": "Kirim pesan error bahwa perintah tidak tersedia dan sarankan bot yang benar. Alur berhenti."
+    },
+    {
+      "name": "Pengecekan Pesan Balasan (Reply)",
+      "condition": "Perintah tidak membalas pesan lain (`!isset($message['reply_to_message'])`).",
+      "action_if_true": "Kirim pesan instruksi untuk me-reply media yang ingin dijual. Alur berhenti."
+    },
+    {
+      "name": "Pengecekan Pendaftaran Penjual",
+      "condition": "Pengguna belum terdaftar sebagai penjual (`empty($app->user['public_seller_id'])`).",
+      "action_if_true": "Tawarkan pendaftaran dengan tombol inline 'Ya, Daftar Sekarang' (callback `register_seller`). Alur berhenti dan menunggu input callback."
+    },
+    {
+      "name": "Validasi Media Tersimpan",
+      "description": "Memeriksa apakah media yang dibalas sudah ada di tabel `media_files`. Ini memastikan bot sudah memproses dan menyimpan `file_id` media tersebut.",
+      "condition": "Media tidak ditemukan di database.",
+      "action_if_true": "Kirim pesan error 'Gagal. Pastikan Anda me-reply pesan media... yang sudah tersimpan di bot.'. Alur berhenti."
+    }
+  ],
+  "main_flow": [
     {
       "step_number": 1,
-      "name": "Pengecekan Fitur Bot",
-      "description": "Memeriksa apakah bot yang digunakan memiliki fitur 'sell' yang diizinkan.",
-      "condition": "$app->bot['assigned_feature'] !== 'sell'",
-      "action_if_true": "Bot memberitahu pengguna bahwa perintah /sell tidak tersedia dan menyarankan bot lain.",
-      "action_if_false": "Lanjutkan ke langkah berikutnya."
+      "name": "Pengambilan Informasi Media",
+      "description": "Mengambil detail penting dari media yang dibalas dari tabel `media_files`, seperti `media_group_id` dan `caption`.",
+      "details": "Jika media adalah bagian dari grup, caption dari salah satu media dalam grup tersebut akan digunakan sebagai deskripsi default untuk paket."
     },
     {
       "step_number": 2,
-      "name": "Pengecekan Reply Media",
-      "description": "Memeriksa apakah perintah /sell digunakan sebagai balasan (reply) terhadap sebuah pesan.",
-      "condition": "!isset($message['reply_to_message'])",
-      "action_if_true": "Bot meminta pengguna untuk me-reply media yang ingin dijual.",
-      "action_if_false": "Lanjutkan ke langkah berikutnya."
+      "name": "Pengaturan State Pengguna",
+      "description": "Mengubah state pengguna menjadi 'awaiting_price' dan menyimpan konteks (`message_id` dan `chat_id` dari media) ke database. Ini menandakan bahwa input teks berikutnya dari pengguna akan diinterpretasikan sebagai harga.",
+      "action": "`UserRepository::setUserState()`"
     },
     {
       "step_number": 3,
-      "name": "Pengecekan Pendaftaran Penjual",
-      "description": "Memeriksa apakah pengguna sudah terdaftar sebagai penjual.",
-      "condition": "empty($app->user['public_seller_id'])",
-      "action_if_true": "Bot menawarkan pendaftaran sebagai penjual dengan tombol 'Ya, Daftar Sekarang' (callback register_seller).",
-      "action_if_false": "Lanjutkan ke langkah berikutnya."
-    },
-    {
-      "step_number": 4,
-      "name": "Validasi Media yang Dibalas",
-      "description": "Memeriksa apakah pesan yang dibalas adalah pesan media yang sudah tersimpan di bot (media_files table).",
-      "condition": "Media tidak valid atau tidak tersimpan.",
-      "action_if_true": "Bot menampilkan pesan error 'Gagal. Pastikan Anda me-reply pesan media (foto/video) yang sudah tersimpan di bot.'",
-      "action_if_false": "Lanjutkan ke langkah berikutnya."
-    },
-    {
-      "step_number": 5,
-      "name": "Pengambilan Informasi Media",
-      "description": "Mengambil media_group_id dan caption dari pesan media yang dibalas dari tabel media_files.",
-      "details": "Jika media adalah bagian dari grup media, caption akan diambil dari salah satu media dalam grup tersebut."
-    },
-    {
-      "step_number": 6,
-      "name": "Pengaturan State Pengguna",
-      "description": "Mengatur state pengguna menjadi 'awaiting_price'.",
-      "action": "user_repo->setUserState($app->user['id'], 'awaiting_price', $state_context)",
-      "state_context": "message_id dan chat_id dari media yang dibalas."
-    },
-    {
-      "step_number": 7,
-      "name": "Permintaan Harga",
-      "description": "Bot mengirim pesan kepada pengguna yang menyatakan bahwa media siap dijual dan meminta pengguna untuk memasukkan harga untuk paket tersebut.",
-      "details": "Pengguna juga diinformasikan bahwa mereka bisa mengetik /cancel untuk membatalkan operasi."
+      "name": "Permintaan Input Harga",
+      "description": "Mengirim pesan kepada pengguna yang meminta mereka untuk memasukkan harga jual untuk paket tersebut. Pesan ini juga menyertakan instruksi untuk membatalkan dengan perintah `/cancel`."
     }
   ],
   "state_handling": {
     "state_name": "awaiting_price",
-    "description": "Logika ketika pengguna berada dalam state 'awaiting_price'.",
-    "actions": [
+    "description": "Alur yang dieksekusi oleh `StateHandler` ketika menerima pesan dari pengguna yang berada dalam state 'awaiting_price'.",
+    "branches": [
       {
-        "condition": "Pengguna memasukkan '/cancel'",
-        "action": "State direset dan operasi dibatalkan."
+        "condition": "Pesan pengguna adalah '/cancel'.",
+        "action": "State pengguna direset ke `null`. Operasi dibatalkan. Pengguna diberi notifikasi pembatalan."
       },
       {
-        "condition": "Pengguna memasukkan harga",
-        "sub_steps": [
+        "condition": "Pesan pengguna adalah harga (numerik).",
+        "steps": [
           {
             "name": "Validasi Harga",
-            "description": "Harga divalidasi sebagai integer positif."
+            "description": "Memastikan input adalah angka integer positif."
           },
           {
-            "name": "Pembuatan Paket Media Baru",
-            "description": "Paket baru dibuat di media_packages dengan post_type 'sell' dan thumbnail_media_id dari media yang dibalas."
+            "name": "Pembuatan Paket Media",
+            "description": "Membuat record baru di tabel `media_packages` dengan `post_type` = 'sell', harga yang dimasukkan, dan `thumbnail_media_id` dari media yang dibalas."
           },
           {
-            "name": "Pembaruan Harga Paket",
-            "description": "Harga paket diperbarui."
-          },
-          {
-            "name": "Pembaruan package_id di media_files",
-            "description": "package_id di-update di tabel media_files untuk media yang terkait (baik tunggal maupun grup media)."
+            "name": "Asosiasi Media dengan Paket",
+            "description": "Memperbarui kolom `package_id` di tabel `media_files` untuk semua media yang terkait (berdasarkan `media_group_id` jika ada, atau `file_id` tunggal)."
           },
           {
             "name": "Reset State Pengguna",
-            "description": "State pengguna direset."
+            "description": "Mengembalikan state pengguna ke `null` setelah harga berhasil diproses."
           },
           {
-            "name": "Backup Media ke Private Channel",
-            "description": "Media paket akan disalin ke private channel backup yang dikonfigurasi (menggunakan round-robin)."
+            "name": "Backup Media (Opsional)",
+            "description": "Menyalin media dari paket ke channel backup privat yang telah dikonfigurasi, jika ada."
           },
           {
-            "name": "Konfirmasi kepada Pengguna",
-            "description": "Bot mengirim pesan konfirmasi kepada pengguna dengan ID paket publik dan harga."
+            "name": "Konfirmasi Penjualan",
+            "description": "Mengirim pesan konfirmasi kepada pengguna yang berisi ID publik paket yang baru dibuat dan harganya."
           }
         ]
       }

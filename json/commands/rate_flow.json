@@ -1,46 +1,49 @@
 {
   "flow_name": "/rate",
-  "description": "Memulai proses pemberian rating pada media oleh pengguna.",
-  "steps": [
+  "summary": "Memulai alur pemberian rating untuk sebuah media.",
+  "description": "Dipicu dengan membalas (reply) sebuah pesan media (foto/video) dengan perintah /rate. Perintah ini akan memulai proses interaktif di mana pengguna diminta untuk memilih kategori rating untuk media tersebut.",
+  "initial_checks": [
+    {
+      "name": "Pengecekan Fitur Bot",
+      "condition": "Fitur yang ditetapkan untuk bot (`$app->bot['assigned_feature']`) bukan 'rate'.",
+      "action_if_true": "Kirim pesan error yang menyarankan bot lain yang memiliki fitur 'rate' (jika ada). Alur berhenti."
+    },
+    {
+      "name": "Pengecekan Kiriman Tertunda",
+      "description": "Memeriksa apakah pengguna sudah memiliki kiriman lain yang statusnya masih dalam moderasi.",
+      "condition": "Ada entri moderasi yang aktif untuk pengguna.",
+      "action_if_true": "Kirim pesan: 'Anda masih memiliki kiriman yang sedang dalam proses moderasi...'. Alur berhenti."
+    },
+    {
+      "name": "Pengecekan Pesan Balasan (Reply)",
+      "condition": "Perintah tidak membalas pesan lain.",
+      "action_if_true": "Kirim pesan: 'Untuk memberi rate, silakan reply media yang ingin Anda beri rate...'. Alur berhenti."
+    },
+    {
+      "name": "Validasi Tipe Media",
+      "condition": "Pesan yang dibalas bukan foto atau video.",
+      "action_if_true": "Kirim pesan error: '⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video).'. Alur berhenti."
+    },
+    {
+      "name": "Validasi Kepemilikan Media",
+      "description": "Memastikan pengguna tidak mencoba memberi rating pada media yang dikirim oleh orang lain.",
+      "condition": "`from_id` dari pesan yang dibalas tidak sama dengan ID pengguna saat ini.",
+      "action_if_true": "Kirim pesan error: '⚠️ Gagal. Anda hanya bisa memberi rate pada media milik Anda sendiri.'. Alur berhenti."
+    }
+  ],
+  "main_flow": [
     {
       "step_number": 1,
-      "name": "Pengecekan Fitur Bot",
-      "condition": "Fitur bot yang ditetapkan bukan 'rate'",
-      "action_if_true": "Cari bot lain yang memiliki fitur 'rate'. Kirim pesan: 'Perintah /rate tidak tersedia di bot ini.' dan sarankan bot yang benar jika ditemukan. Selesai."
+      "name": "Pengaturan State Pengguna",
+      "description": "Menyimpan state pengguna saat ini ke `awaiting_rate_category` di database (tabel `users`). Konteks yang disimpan mencakup detail pesan yang dibalas (`message_id`, `chat_id`, `from_id`) untuk digunakan pada langkah selanjutnya.",
+      "action": "`UserRepository::setUserState()`"
     },
     {
       "step_number": 2,
-      "name": "Pengecekan Kiriman Tertunda",
-      "condition": "Pengguna memiliki kiriman yang sedang dalam proses moderasi",
-      "action_if_true": "Kirim pesan: 'Anda masih memiliki kiriman yang sedang dalam proses moderasi. Harap tunggu hingga selesai sebelum mengirim yang baru.' Selesai."
-    },
-    {
-      "step_number": 3,
-      "name": "Pengecekan Reply Message",
-      "condition": "Perintah tidak di-reply ke sebuah pesan",
-      "action_if_true": "Kirim pesan: 'Untuk memberi rate, silakan reply media yang ingin Anda beri rate dengan perintah /rate.' Selesai."
-    },
-    {
-      "step_number": 4,
-      "name": "Validasi Media yang Dibalas",
-      "condition": "Pesan yang dibalas bukan foto atau video",
-      "action_if_true": "Kirim pesan: '⚠️ Gagal. Pastikan Anda me-reply pesan media (foto/video).' Selesai."
-    },
-    {
-      "step_number": 5,
-      "name": "Validasi Kepemilikan Media",
-      "condition": "Pengguna mencoba memberi rate pada media yang bukan miliknya",
-      "action_if_true": "Kirim pesan: '⚠️ Gagal. Anda hanya bisa memberi rate pada media milik Anda sendiri.' Selesai."
-    },
-    {
-      "step_number": 6,
-      "name": "Atur State Pengguna",
-      "description": "Atur state pengguna menjadi awaiting_rate_category dengan konteks yang berisi message_id, chat_id, dan from_id dari pesan yang dibalas."
-    },
-    {
-      "step_number": 7,
-      "name": "Minta Pemilihan Kategori",
-      "description": "Buat keyboard inline dengan pilihan kategori \"Cewek\" dan \"Cowok\". Kirim pesan: \"Silakan pilih kategori:\" dengan keyboard tersebut, me-reply pesan media asli."
+      "name": "Permintaan Pemilihan Kategori",
+      "description": "Mengirim pesan kepada pengguna dengan teks \"Silakan pilih kategori:\" dan menyertakan keyboard inline dengan pilihan kategori (misalnya, 'Cewek' dan 'Cowok'). Pesan ini dikirim sebagai balasan ke media yang akan di-rate.",
+      "output": "Pesan dengan keyboard inline terkirim ke pengguna."
     }
-  ]
+  ],
+  "next_flow": "Alur selanjutnya ditangani oleh `CallbackQueryHandler` ketika pengguna menekan salah satu tombol kategori. Ini akan memicu `RateCallback`."
 }

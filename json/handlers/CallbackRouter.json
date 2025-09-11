@@ -1,27 +1,25 @@
 {
   "class_name": "CallbackRouter",
-  "purpose": "Meneruskan callback query ke handler callback yang sesuai.",
+  "summary": "Merutekan `callback_query` ke kelas Callback yang spesifik.",
+  "description": "Setelah menerima `callback_query` dari `CallbackQueryHandler`, router ini menganalisis `callback_data`. Berdasarkan prefiks data (misalnya, `buy:`, `rate:`), ia memetakan ke kelas `Callback` yang sesuai (misalnya, `BuyCallback`, `RateCallback`), lalu mengeksekusinya.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi router dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi router dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "route",
-      "description": "Metode utama untuk merutekan callback query.",
-      "parameters": [
-        {
-          "name": "callback_query",
-          "type": "array",
-          "description": "Data callback query Telegram."
-        }
+      "description": "Mencari dan mengeksekusi kelas `Callback` yang sesuai.",
+      "parameters": [{"name": "callback_query", "type": "array", "description": "Objek callback query asli."}],
+      "logic_flow": [
+        "1. Mengambil `callback_data` dari `callback_query`.",
+        "2. Memecah data berdasarkan `:` menjadi beberapa bagian (`$parts`). Bagian pertama (`$parts[0]`) adalah kunci routing.",
+        "3. Mengonversi kunci routing menjadi nama kelas (misalnya, `buy` -> `BuyCallback`).",
+        "4. Memeriksa apakah file dan kelas untuk callback tersebut ada di direktori `core/handlers/Callbacks/`.",
+        "5. Jika ada, membuat instance dari kelas callback tersebut (misalnya, `new BuyCallback($this->app)`).",
+        "6. Memanggil metode `execute($callback_query, $parts)` pada instance tersebut.",
+        "7. Jika kelas tidak ditemukan, query diabaikan."
       ]
     }
   ]

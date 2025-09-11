@@ -1,32 +1,28 @@
 {
   "class_name": "AdminRejectionCallback",
-  "purpose": "Menangani callback untuk penolakan admin.",
+  "implements": "CallbackCommandInterface",
+  "summary": "Menangani aksi saat admin menolak sebuah kiriman.",
+  "description": "Callback ini dipicu ketika seorang admin menekan tombol \"Tolak\" pada pesan moderasi. Ini akan memberi notifikasi kepada pengguna bahwa kiriman mereka ditolak dan memperbarui statusnya di database.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi callback dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi callback dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "execute",
-      "description": "Metode utama untuk mengeksekusi callback penolakan admin.",
+      "description": "Menjalankan logika penolakan.",
       "parameters": [
-        {
-          "name": "callback_query",
-          "type": "array",
-          "description": "Data callback query Telegram."
-        },
-        {
-          "name": "parts",
-          "type": "array",
-          "description": "Bagian-bagian data callback."
-        }
+        {"name": "callback_query", "type": "array", "description": "Data callback query asli."},
+        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['reject', 'submission_id']`."}
+      ],
+      "logic_flow": [
+        "1. Jawab `callback_query` untuk menghilangkan status loading pada tombol.",
+        "2. Ambil ID kiriman dari `$parts[1]`.",
+        "3. Ambil detail kiriman dari database untuk mendapatkan ID pengguna asli.",
+        "4. Kirim notifikasi ke pengguna asli bahwa kiriman mereka telah ditolak.",
+        "5. Edit pesan moderasi asli untuk menunjukkan bahwa kiriman telah ditolak.",
+        "6. Perbarui status kiriman di database menjadi 'rejected'."
       ]
     }
   ]

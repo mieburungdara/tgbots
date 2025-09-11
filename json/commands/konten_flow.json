@@ -1,50 +1,70 @@
 {
   "flow_name": "/konten",
-  "description": "Menampilkan detail sebuah paket konten berdasarkan ID publiknya, serta menyediakan opsi untuk melihat atau membeli konten.",
+  "summary": "Menampilkan detail dan opsi untuk sebuah paket konten.",
+  "description": "Dipanggil dengan format `/konten <ID_KONTEN>`, perintah ini mencari paket konten berdasarkan ID publiknya, menampilkan thumbnail dan deskripsi, serta menyediakan tombol aksi (seperti membeli atau melihat) tergantung pada status kepemilikan pengguna.",
+  "initial_checks": [
+    {
+      "name": "Validasi Format Perintah",
+      "condition": "Perintah tidak memiliki parameter kedua (`<ID_KONTEN>`).",
+      "action_if_true": "Kirim pesan error: 'Format perintah salah. Gunakan: /konten <ID Konten>'. Alur berhenti."
+    }
+  ],
   "steps": [
     {
       "step_number": 1,
       "name": "Inisialisasi Repositori",
-      "description": "Inisialisasi MediaPackageRepository, SaleRepository, FeatureChannelRepository."
+      "description": "Membuat instance dari `MediaPackageRepository`, `SaleRepository`, dan `FeatureChannelRepository` untuk interaksi database."
     },
     {
       "step_number": 2,
-      "name": "Validasi Format Perintah",
-      "condition": "Format perintah tidak /konten <ID Konten>",
-      "action_if_true": "Kirim pesan: 'Format perintah salah. Gunakan: /konten <ID Konten>'. Selesai."
+      "name": "Pencarian Paket Konten",
+      "description": "Mengambil `public_id` dari parameter perintah dan memanggil `MediaPackageRepository::findByPublicId()`.",
+      "input": "`public_id` dari teks perintah.",
+      "error_condition": "Paket tidak ditemukan di tabel `media_packages`.",
+      "action_on_error": "Kirim pesan: 'Konten dengan ID {public_id} tidak ditemukan.'. Alur berhenti."
     },
     {
       "step_number": 3,
-      "name": "Cari Paket Konten",
-      "description": "Ambil public_id dari perintah dan cari paket berdasarkan public_id.",
-      "condition": "Paket tidak ditemukan",
-      "action_if_true": "Kirim pesan: 'Konten dengan ID {public_id} tidak ditemukan.'. Selesai."
+      "name": "Pengambilan Media Thumbnail",
+      "description": "Mengambil data file thumbnail paket dari tabel `media_files` berdasarkan `thumbnail_media_id` pada paket.",
+      "error_condition": "Thumbnail tidak ditemukan atau data `file_id` rusak.",
+      "action_on_error": "Kirim pesan: 'Konten ini tidak memiliki media yang dapat ditampilkan...'. Mencatat error ke log. Alur berhenti."
     },
     {
       "step_number": 4,
-      "name": "Ambil Thumbnail Paket",
-      "description": "Ambil file thumbnail untuk paket tersebut.",
-      "condition": "Thumbnail tidak ditemukan atau rusak",
-      "action_if_true": "Kirim pesan: 'Konten ini tidak memiliki media yang dapat ditampilkan atau semua media di dalamnya rusak. Silakan hubungi admin.' Log error. Selesai."
+      "name": "Penentuan Hak Akses Pengguna",
+      "description": "Memeriksa beberapa kondisi untuk menentukan tombol apa yang akan ditampilkan kepada pengguna:",
+      "checks": [
+        "`isAdmin`: Apakah `$app->user['role']` adalah 'Admin'?",
+        "`isSeller`: Apakah `telegram_user_id` pada paket sama dengan ID pengguna saat ini?",
+        "`hasPurchased`: Apakah ada entri di tabel `sales` untuk pengguna ini dan paket ini?"
+      ],
+      "output": "Boolean flags (`hasAccess`, `isSeller`)."
     },
     {
       "step_number": 5,
-      "name": "Tentukan Akses Pengguna",
-      "description": "Cek apakah pengguna adalah admin, penjual paket, atau sudah membeli paket untuk menentukan akses."
+      "name": "Penyusunan Tombol Inline (Keyboard)",
+      "description": "Membuat array keyboard inline berdasarkan hak akses pengguna dan status paket.",
+      "logic": [
+        {
+          "condition": "Pengguna memiliki akses (`hasAccess` atau `isSeller` atau `isAdmin`).",
+          "buttons": "'Lihat Selengkapnya' (callback `view_page:0:{package_id}`)."
+        },
+        {
+          "condition": "Pengguna adalah penjual (`isSeller`).",
+          "buttons": "'Post ke Channel' (callback `show_channel_selection:{package_id}`)."
+        },
+        {
+          "condition": "Pengguna tidak punya akses DAN paket berstatus `available`.",
+          "buttons": "'Beli Konten Ini (harga)' (callback `buy:{public_id}`)."
+        }
+      ],
+      "output": "Array keyboard untuk Telegram API."
     },
     {
       "step_number": 6,
-      "name": "Buat Keyboard (Tombol Inline)",
-      "description": "Buat tombol inline berdasarkan akses pengguna dan status paket.",
-      "conditions": [
-        "Jika pengguna memiliki akses (admin, penjual, atau sudah membeli): Tambahkan tombol 'Lihat Selengkapnya'. Jika penjual, tambahkan 'Post ke Channel'.",
-        "Jika pengguna tidak memiliki akses DAN paket tersedia: Tambahkan tombol 'Beli Konten Ini' dengan harga."
-      ]
-    },
-    {
-      "step_number": 7,
-      "name": "Kirim Pesan dengan Thumbnail dan Keyboard",
-      "description": "Kirim pesan dengan menyalin thumbnail ke chat pengguna, menyertakan caption (deskripsi paket) dan keyboard yang telah dibuat."
+      "name": "Pengiriman Respons",
+      "description": "Mengirim media thumbnail ke pengguna menggunakan metode `sendPhoto` atau `sendVideo`, dengan deskripsi paket sebagai `caption` dan tombol-tombol yang sudah disusun sebagai `reply_markup`."
     }
   ]
 }

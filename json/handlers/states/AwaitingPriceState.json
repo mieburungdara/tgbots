@@ -1,32 +1,34 @@
 {
   "class_name": "AwaitingPriceState",
-  "purpose": "Menangani state ketika bot sedang menunggu input harga dari pengguna.",
+  "implements": "StateInterface",
+  "summary": "Menangani input harga dari pengguna setelah perintah `/sell`.",
+  "description": "Kelas ini dieksekusi oleh `StateRouter` ketika pengguna mengirim pesan saat statusnya adalah `awaiting_price`. Ia memvalidasi harga, membuat paket media, mengasosiasikan media, dan menyelesaikan alur penjualan.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi state dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi state handler dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "handle",
-      "description": "Metode utama untuk menangani pesan ketika bot dalam state awaiting_price.",
+      "description": "Memproses input harga dari pengguna.",
       "parameters": [
-        {
-          "name": "message",
-          "type": "array",
-          "description": "Data pesan Telegram."
-        },
-        {
-          "name": "state_context",
-          "type": "array",
-          "description": "Konteks state pengguna."
-        }
+        {"name": "message", "type": "array", "description": "Data pesan yang berisi harga."}, 
+        {"name": "state_context", "type": "array", "description": "Konteks dari alur `/sell`, berisi `message_id` dari media yang akan dijual."}
+      ],
+      "logic_flow": [
+        "1. Periksa apakah pesan adalah `/cancel`. Jika ya, reset state pengguna dan kirim pesan pembatalan.",
+        "2. Validasi bahwa teks pesan adalah angka integer positif. Jika tidak, kirim pesan error dan minta input lagi.",
+        "3. Ambil `message_id` dari media asli dari `$state_context`.",
+        "4. Gunakan `MediaFileRepository` untuk mendapatkan detail media (terutama `media_group_id` dan `thumbnail_media_id`) dari `message_id` tersebut.",
+        "5. Mulai transaksi database.",
+        "6. Buat record baru di tabel `media_packages` dengan harga yang diberikan, `thumbnail_media_id`, dan data penjual.",
+        "7. Dapatkan `package_id` yang baru dibuat.",
+        "8. Perbarui semua record di `media_files` yang memiliki `media_group_id` yang sama (atau `file_id` tunggal) dengan `package_id` yang baru.",
+        "9. Reset state pengguna menjadi `null` menggunakan `UserRepository`.",
+        "10. Commit transaksi database.",
+        "11. (Opsional) Lakukan backup media ke private channel.",
+        "12. Kirim pesan konfirmasi ke pengguna yang berisi ID paket publik dan harga yang telah ditetapkan."
       ]
     }
   ]

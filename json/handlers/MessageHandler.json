@@ -1,27 +1,24 @@
 {
   "class_name": "MessageHandler",
-  "purpose": "Menangani pesan teks biasa.",
+  "summary": "Memproses semua pesan masuk yang bukan merupakan editan atau post channel.",
+  "description": "Ini adalah salah satu handler utama yang berfungsi sebagai router sekunder untuk pesan. Berdasarkan konten pesan dan state pengguna, ia akan mendelegasikan tugas ke handler atau router yang lebih spesifik.",
+  "dependencies": ["CommandRouter", "StateHandler", "MediaHandler", "AutomaticForwardHandler"],
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi handler dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi handler dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "handle",
-      "description": "Metode utama untuk menangani pesan teks.",
-      "parameters": [
-        {
-          "name": "message",
-          "type": "array",
-          "description": "Data pesan Telegram."
-        }
+      "description": "Menganalisis pesan dan mendelegasikannya berdasarkan prioritas.",
+      "parameters": [{"name": "message", "type": "array", "description": "Data pesan dari Telegram."}],
+      "logic_flow": [
+        "1. Periksa apakah teks pesan dimulai dengan `/`. Jika ya, panggil `CommandRouter->route()`.",
+        "2. Jika bukan perintah, periksa apakah pengguna memiliki state aktif (misalnya, `awaiting_price`). Jika ya, panggil `StateHandler->handle()`.",
+        "3. Jika tidak, periksa apakah pesan berisi media (foto, video, dll). Jika ya, panggil `MediaHandler->handle()`.",
+        "4. Jika tidak, periksa apakah pesan berasal dari chat yang dikonfigurasi untuk penerusan otomatis. Jika ya, panggil `AutomaticForwardHandler->handle()`.",
+        "5. Jika tidak ada kondisi di atas yang terpenuhi, pesan akan diabaikan."
       ]
     }
   ]

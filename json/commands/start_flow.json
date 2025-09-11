@@ -1,80 +1,72 @@
 {
   "flow_name": "/start",
-  "description": "Menangani perintah /start dari pengguna, baik tanpa payload (pesan selamat datang) maupun dengan payload (untuk menampilkan detail paket).",
-  "steps": [
+  "summary": "Titik masuk utama bagi pengguna, bisa untuk sambutan atau melihat konten.",
+  "description": "Menangani perintah `/start`. Jika dipanggil tanpa parameter, akan mengirim pesan selamat datang. Jika dipanggil dengan parameter khusus (payload), seperti `/start package_XYZ`, akan langsung menampilkan detail paket konten tersebut.",
+  "main_flow": {
+    "name": "Pengecekan Payload",
+    "description": "Memeriksa apakah teks perintah mengandung payload yang diawali dengan `package_`.",
+    "branching": {
+      "condition": "Payload `package_` ditemukan.",
+      "if_true": {
+        "flow": "handleStartWithPayload",
+        "description": "Memicu alur untuk menampilkan detail paket konten."
+      },
+      "if_false": {
+        "flow": "handleStartWithoutPayload",
+        "description": "Memicu alur untuk mengirim pesan selamat datang standar."
+      }
+    }
+  },
+  "sub_flows": [
     {
-      "step_number": 1,
-      "name": "Pengecekan Payload",
-      "description": "Memeriksa apakah perintah /start memiliki payload 'package_'.",
-      "condition": "Ada payload 'package_' (e.g., /start package_XYZ)",
-      "action_if_true": "Lanjutkan ke handleStartWithPayload.",
-      "action_if_false": "Kirim pesan selamat datang dan saran untuk menggunakan /help. Selesai."
-    },
-    {
-      "step_number": 2,
-      "name": "handleStartWithPayload (Jika Ada Payload)",
-      "description": "Mengambil public_id dari payload dan mencari detail paket.",
-      "actions": [
-        "Inisialisasi MediaPackageRepository, SaleRepository, FeatureChannelRepository.",
-        "Cari paket berdasarkan public_id."
-      ],
-      "sub_flow": [
+      "name": "handleStartWithoutPayload",
+      "description": "Mengirim pesan sambutan generik kepada pengguna.",
+      "steps": [
         {
-          "name": "Paket Tidak Ditemukan",
-          "condition": "Paket tidak ditemukan (!\$package)",
-          "action": "Kirim pesan 'Maaf, item ini tidak ditemukan.' Selesai."
-        },
-        {
-          "name": "Paket Ditemukan",
-          "condition": "Paket ditemukan",
-          "actions": [
-            "Ambil package_id dan telegram_user_id.",
-            "Cek apakah pengguna adalah penjual paket (\$is_seller).",
-            "Cek apakah pengguna sudah membeli paket (\$has_purchased)."
-          ],
-          "sub_flow": [
-            {
-              "name": "Pengguna Adalah Penjual",
-              "condition": "Pengguna adalah penjual (\$is_seller)",
-              "description": "Menampilkan detail konten milik penjual, termasuk jumlah penjualan dan total keuntungan.",
-              "actions": [
-                "Hitung sales_count dan total_profit.",
-                "Buat teks respons dengan detail konten (ID, deskripsi, harga, terjual, keuntungan).",
-                "Buat tombol 'Lihat Selengkapnya' dan 'Post ke Channel' (jika ada sales channel).",
-                "Coba kirim thumbnail paket dengan detail dan keyboard. Jika tidak ada thumbnail, kirim pesan teks saja. Selesai."
-              ]
-            },
-            {
-              "name": "Pengguna Sudah Membeli",
-              "condition": "Pengguna sudah membeli (\$has_purchased)",
-              "description": "Memberi tahu pengguna bahwa mereka sudah memiliki item dan menawarkan tombol untuk melihat konten.",
-              "actions": [
-                "Kirim pesan 'Anda sudah memiliki item ini. Klik tombol di bawah untuk melihatnya.'",
-                "Sertakan tombol 'Lihat Konten'. Selesai."
-              ]
-            },
-            {
-              "name": "Paket Tersedia",
-              "condition": "Paket tersedia (\$package['status'] === 'available')",
-              "description": "Menampilkan detail paket yang tersedia dan menawarkan tombol untuk membeli.",
-              "actions": [
-                "Format harga dan saldo pengguna.",
-                "Buat caption dengan deskripsi, harga, dan saldo saat ini.",
-                "Sertakan tombol 'Beli Sekarang'.",
-                "Coba kirim thumbnail paket dengan caption dan tombol. Jika tidak ada thumbnail, kirim pesan teks saja. Selesai."
-              ]
-            },
-            {
-              "name": "Paket Tidak Tersedia",
-              "condition": "Paket tidak tersedia (selain kondisi di atas)",
-              "description": "Memberi tahu pengguna bahwa item sudah tidak tersedia.",
-              "actions": [
-                "Kirim pesan 'Maaf, item ini sudah tidak tersedia.' Selesai."
-              ]
-            }
-          ]
+          "step_number": 1,
+          "action": "Kirim pesan yang berisi: 'Selamat datang! Untuk melihat daftar perintah yang tersedia, silakan ketik /help.'"
         }
       ]
+    },
+    {
+      "name": "handleStartWithPayload",
+      "description": "Menampilkan detail paket konten berdasarkan ID publik yang ada di payload.",
+      "steps": [
+        {
+          "step_number": 1,
+          "name": "Ekstraksi ID dan Pencarian Paket",
+          "action": "Mengambil `public_id` dari payload, lalu menggunakan `MediaPackageRepository` untuk mencari paket.",
+          "error_condition": "Paket tidak ditemukan.",
+          "action_on_error": "Kirim pesan: 'Maaf, item ini tidak ditemukan.'. Alur berhenti."
+        }
+      ],
+      "package_display_logic": {
+        "name": "Logika Tampilan Berdasarkan Status Pengguna",
+        "description": "Setelah paket ditemukan, alur akan memeriksa hubungan pengguna dengan paket tersebut dan menampilkan informasi yang sesuai.",
+        "scenarios": [
+          {
+            "scenario_name": "Pengguna adalah Penjual",
+            "condition": "`telegram_user_id` pada paket cocok dengan ID pengguna saat ini.",
+            "action": "Menampilkan detail lengkap untuk penjual, termasuk statistik penjualan (jumlah terjual, total profit) dan tombol aksi seperti 'Lihat Selengkapnya' dan 'Post ke Channel'."
+          },
+          {
+            "scenario_name": "Pengguna Sudah Membeli",
+            "condition": "Ada catatan pembelian di tabel `sales` untuk pengguna dan paket ini.",
+            "action": "Memberi tahu pengguna bahwa mereka sudah memiliki item dan menyediakan tombol 'Lihat Konten' untuk mengaksesnya."
+          },
+          {
+            "scenario_name": "Paket Tersedia untuk Dibeli",
+            "condition": "Status paket adalah `available` dan pengguna bukan penjual/pembeli.",
+            "action": "Menampilkan detail publik paket (deskripsi, harga) dan tombol 'Beli Sekarang'. Saldo pengguna juga ditampilkan untuk perbandingan."
+          },
+          {
+            "scenario_name": "Paket Tidak Tersedia",
+            "condition": "Status paket bukan `available` (misalnya, `sold` atau `retracted`).",
+            "action": "Mengirim pesan sederhana: 'Maaf, item ini sudah tidak tersedia.'"
+          }
+        ],
+        "common_action": "Semua skenario (kecuali jika error) akan mencoba mengirim thumbnail paket dengan caption dan tombol yang relevan. Jika thumbnail gagal dimuat, hanya pesan teks yang akan dikirim."
+      }
     }
   ]
 }

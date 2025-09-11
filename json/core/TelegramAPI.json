@@ -1,332 +1,81 @@
 {
   "class_name": "TelegramAPI",
-  "purpose": "Berinteraksi dengan Telegram Bot API.",
+  "summary": "Kelas pembungkus (wrapper) untuk semua interaksi dengan Telegram Bot API.",
+  "description": "Kelas ini menyediakan serangkaian metode yang menyederhanakan proses pengiriman permintaan ke endpoint Telegram Bot API. Setiap metode merepresentasikan sebuah aksi spesifik, seperti mengirim pesan atau mengedit pesan. Kelas ini juga menangani logging error API ke database.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi API Telegram dengan token bot dan objek PDO.",
+      "description": "Menginisialisasi API dengan token bot yang diperlukan untuk otentikasi dan objek PDO untuk logging error.",
       "parameters": [
-        {
-          "name": "token",
-          "type": "string",
-          "description": "Token API bot Telegram."
-        },
-        {
-          "name": "pdo",
-          "type": "PDO",
-          "description": "Objek koneksi database."
-        }
+        {"name": "token", "type": "string", "description": "Token otentikasi bot dari BotFather."},
+        {"name": "pdo", "type": "PDO", "description": "Objek koneksi database untuk mencatat error.", "is_dependency": true}
       ]
     },
     {
       "name": "sendMessage",
-      "description": "Mengirim pesan teks ke chat.",
-      "parameters": [
-        {
-          "name": "chat_id",
-          "type": "int",
-          "description": "ID chat tujuan."
-        },
-        {
-          "name": "text",
-          "type": "string",
-          "description": "Teks pesan."
-        },
-        {
-          "name": "parse_mode",
-          "type": "?string",
-          "description": "Mode parsing (Markdown, HTML, dll.)."
-        },
-        {
-          "name": "reply_markup",
-          "type": "?string",
-          "description": "Markup balasan (keyboard inline, dll.)."
-        },
-        {
-          "name": "reply_to_message_id",
-          "type": "?int",
-          "description": "ID pesan yang akan dibalas."
-        },
-        {
-          "name": "disable_web_page_preview",
-          "type": "bool",
-          "description": "Nonaktifkan pratinjau halaman web."
-        },
-        {
-          "name": "disable_notification",
-          "type": "bool",
-          "description": "Nonaktifkan notifikasi."
-        },
-        {
-          "name": "protect_content",
-          "type": "bool",
-          "description": "Lindungi konten dari penerusan dan penyimpanan."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Respons dari Telegram API."
+      "description": "Mengirim pesan teks. Ini adalah salah satu metode yang paling sering digunakan.",
+      "returns": "Array. Berisi objek Message jika berhasil."
     },
     {
       "name": "sendLongMessage",
-      "description": "Mengirim pesan teks panjang, memecahnya jika melebihi batas karakter Telegram.",
-      "parameters": [
-        {
-          "name": "chat_id",
-          "type": "int",
-          "description": "ID chat tujuan."
-        },
-        {
-          "name": "text",
-          "type": "string",
-          "description": "Teks pesan."
-        },
-        {
-          "name": "parse_mode",
-          "type": "?string",
-          "description": "Mode parsing (Markdown, HTML, dll.)."
-        },
-        {
-          "name": "reply_markup",
-          "type": "?string",
-          "description": "Markup balasan (keyboard inline, dll.)."
-        },
-        {
-          "name": "reply_to_message_id",
-          "type": "?int",
-          "description": "ID pesan yang akan dibalas."
-        },
-        {
-          "name": "disable_web_page_preview",
-          "type": "bool",
-          "description": "Nonaktifkan pratinjau halaman web."
-        },
-        {
-          "name": "disable_notification",
-          "type": "bool",
-          "description": "Nonaktifkan notifikasi."
-        },
-        {
-          "name": "protect_content",
-          "type": "bool",
-          "description": "Lindungi konten dari penerusan dan penyimpanan."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Respons dari Telegram API."
+      "description": "Mengirim pesan teks yang panjang dengan memecahnya menjadi beberapa pesan jika melebihi batas 4096 karakter Telegram, dipecah berdasarkan baris baru.",
+      "returns": "Array. Berisi respons dari pesan terakhir yang dikirim."
     },
     {
       "name": "answerCallbackQuery",
-      "description": "Menjawab callback query.",
-      "parameters": [
-        {
-          "name": "callback_query_id",
-          "type": "string",
-          "description": "ID callback query."
-        },
-        {
-          "name": "text",
-          "type": "?string",
-          "description": "Teks notifikasi."
-        },
-        {
-          "name": "show_alert",
-          "type": "bool",
-          "description": "Tampilkan sebagai alert."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Respons dari Telegram API."
+      "description": "Mengirim respons untuk `callback_query` yang diterima (misalnya, setelah pengguna menekan tombol inline). Ini memberikan feedback visual kepada pengguna.",
+      "returns": "Array. Berisi `true` jika berhasil."
     },
     {
       "name": "editMessageText",
-      "description": "Mengedit pesan teks yang sudah ada.",
-      "parameters": [
-        {
-          "name": "chat_id",
-          "type": "int",
-          "description": "ID chat."
-        },
-        {
-          "name": "message_id",
-          "type": "int",
-          "description": "ID pesan."
-        },
-        {
-          "name": "text",
-          "type": "string",
-          "description": "Teks baru."
-        },
-        {
-          "name": "parse_mode",
-          "type": "?string",
-          "description": "Mode parsing."
-        },
-        {
-          "name": "reply_markup",
-          "type": "?string",
-          "description": "Markup balasan."
-        },
-        {
-          "name": "disable_web_page_preview",
-          "type": "bool",
-          "description": "Nonaktifkan pratinjau halaman web."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Respons dari Telegram API."
+      "description": "Mengubah konten teks dari pesan yang sudah ada. Berguna untuk memperbarui informasi tanpa mengirim pesan baru.",
+      "returns": "Array. Berisi objek Message yang telah diperbarui jika berhasil."
     },
     {
       "name": "editMessageReplyMarkup",
-      "description": "Mengedit markup balasan (keyboard inline) dari pesan yang sudah ada.",
-      "parameters": [
-        {
-          "name": "chat_id",
-          "type": "int",
-          "description": "ID chat."
-        },
-        {
-          "name": "message_id",
-          "type": "int",
-          "description": "ID pesan."
-        },
-        {
-          "name": "reply_markup",
-          "type": "?string",
-          "description": "Markup balasan baru."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Respons dari Telegram API."
+      "description": "Mengubah hanya bagian tombol (keyboard inline) dari pesan yang sudah ada, tanpa mengubah teksnya.",
+      "returns": "Array. Berisi objek Message yang telah diperbarui jika berhasil."
     },
     {
       "name": "copyMessage",
-      "description": "Menyalin pesan dari satu chat ke chat lain.",
-      "parameters": [
-        {
-          "name": "chat_id",
-          "type": "int",
-          "description": "ID chat tujuan."
-        },
-        {
-          "name": "from_chat_id",
-          "type": "int",
-          "description": "ID chat sumber."
-        },
-        {
-          "name": "message_id",
-          "type": "int",
-          "description": "ID pesan yang akan disalin."
-        },
-        {
-          "name": "caption",
-          "type": "?string",
-          "description": "Caption baru."
-        },
-        {
-          "name": "parse_mode",
-          "type": "?string",
-          "description": "Mode parsing caption."
-        },
-        {
-          "name": "reply_markup",
-          "type": "?string",
-          "description": "Markup balasan."
-        },
-        {
-          "name": "disable_notification",
-          "type": "bool",
-          "description": "Nonaktifkan notifikasi."
-        },
-        {
-          "name": "protect_content",
-          "type": "bool",
-          "description": "Lindungi konten."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Respons dari Telegram API."
+      "description": "Menyalin sebuah pesan dari satu chat ke chat lain. Berguna untuk mem-forward konten ke channel atau backup.",
+      "returns": "Array. Berisi `message_id` dari pesan yang baru dibuat jika berhasil."
     },
     {
       "name": "getChatMember",
-      "description": "Mendapatkan informasi tentang anggota chat.",
-      "parameters": [
-        {
-          "name": "chat_id",
-          "type": "int",
-          "description": "ID chat."
-        },
-        {
-          "name": "user_id",
-          "type": "int",
-          "description": "ID pengguna."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Informasi anggota chat."
+      "description": "Mendapatkan informasi tentang status seorang pengguna di dalam sebuah chat (misalnya, admin, anggota, atau diblokir).",
+      "returns": "Array. Berisi objek ChatMember."
     },
     {
       "name": "getChat",
-      "description": "Mendapatkan informasi tentang chat.",
-      "parameters": [
-        {
-          "name": "chat_id",
-          "type": "int",
-          "description": "ID chat."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Informasi chat."
+      "description": "Mendapatkan informasi detail tentang sebuah chat, seperti judul, tipe, atau jumlah anggota.",
+      "returns": "Array. Berisi objek Chat."
     },
     {
       "name": "getMe",
-      "description": "Mendapatkan informasi tentang bot itu sendiri.",
-      "returns": "array",
-      "return_description": "Informasi bot."
+      "description": "Menguji token bot dan mendapatkan informasi dasar tentang bot itu sendiri.",
+      "returns": "Array. Berisi objek User yang merepresentasikan bot."
     },
     {
       "name": "setWebhook",
-      "description": "Mengatur URL webhook untuk menerima pembaruan.",
-      "parameters": [
-        {
-          "name": "url",
-          "type": "string",
-          "description": "URL webhook."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Respons dari Telegram API."
+      "description": "Mendaftarkan URL endpoint di mana Telegram akan mengirimkan pembaruan (update) setiap kali ada interaksi dengan bot.",
+      "returns": "Array. Berisi `true` jika berhasil."
     },
     {
       "name": "deleteWebhook",
-      "description": "Menghapus webhook yang sudah diatur.",
-      "returns": "array",
-      "return_description": "Respons dari Telegram API."
+      "description": "Menghapus pendaftaran webhook, mengalihkan bot kembali ke mode `getUpdates` (polling).",
+      "returns": "Array. Berisi `true` jika berhasil."
     },
     {
       "name": "escapeMarkdown",
-      "description": "Meng-escape karakter khusus dalam teks untuk MarkdownV2.",
-      "parameters": [
-        {
-          "name": "text",
-          "type": "string",
-          "description": "Teks yang akan di-escape."
-        }
-      ],
-      "returns": "string",
-      "return_description": "Teks yang sudah di-escape."
+      "description": "Membersihkan string dari karakter-karakter yang memiliki arti khusus di `MarkdownV2` Telegram untuk mencegah error parsing.",
+      "returns": "String yang aman untuk digunakan dalam mode `MarkdownV2`."
     },
     {
       "name": "escapeHtml",
-      "description": "Meng-escape karakter khusus dalam teks untuk HTML.",
-      "parameters": [
-        {
-          "name": "text",
-          "type": "string",
-          "description": "Teks yang akan di-escape."
-        }
-      ],
-      "returns": "string",
-      "return_description": "Teks yang sudah di-escape."
+      "description": "Mengonversi karakter khusus HTML (seperti `<`, `>`, `&`) menjadi entitas HTML agar dapat ditampilkan sebagai teks biasa.",
+      "returns": "String yang aman untuk digunakan dalam mode `HTML`."
     }
-  ]
+  ],
+  "note": "Detail lengkap untuk parameter setiap metode dapat ditemukan di dokumentasi resmi Telegram Bot API. File ini hanya memberikan ringkasan."
 }

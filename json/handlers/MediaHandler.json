@@ -1,27 +1,23 @@
 {
   "class_name": "MediaHandler",
-  "purpose": "Menangani pesan media (foto, video, dll.).",
+  "summary": "Menyimpan informasi pesan media ke database.",
+  "description": "Handler ini dipanggil oleh `MessageHandler` ketika sebuah pesan berisi media (foto, video, atau dokumen). Tugas utamanya adalah mengekstrak metadata media (`file_id`, `file_unique_id`, `media_group_id`, dll.) dan menyimpannya ke tabel `media_files` untuk referensi di masa depan, seperti saat menggunakan perintah `/sell`.",
+  "dependencies": ["MediaFileRepository"],
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi handler dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi handler dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "handle",
-      "description": "Metode utama untuk menangani pesan media.",
-      "parameters": [
-        {
-          "name": "message",
-          "type": "array",
-          "description": "Data pesan Telegram."
-        }
+      "description": "Mengekstrak metadata media dan menyimpannya.",
+      "parameters": [{"name": "message", "type": "array", "description": "Data pesan dari Telegram yang berisi media."}],
+      "logic_flow": [
+        "1. Mengidentifikasi tipe media (foto, video, dokumen).",
+        "2. Mengambil `file_id`, `file_unique_id`, `media_group_id`, dan `caption` dari objek pesan.",
+        "3. Memanggil `MediaFileRepository::create()` untuk menyimpan data ini ke dalam tabel `media_files`.",
+        "4. Proses ini biasanya terjadi di latar belakang tanpa mengirim respons langsung ke pengguna."
       ]
     }
   ]

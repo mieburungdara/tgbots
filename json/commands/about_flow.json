@@ -1,16 +1,21 @@
 {
   "flow_name": "/about",
-  "description": "Mengirimkan pesan \"Tentang Bot Ini\" kepada pengguna.",
+  "summary": "Menampilkan informasi dasar tentang bot.",
+  "description": "Mengirimkan pesan informatif yang berisi detail tentang bot, termasuk nama pengembang dan informasi kontak yang relevan. Informasi ini diambil dari sumber statis dalam kode.",
   "steps": [
     {
       "step_number": 1,
-      "name": "Siapkan Teks \"Tentang\"",
-      "description": "Mendefinisikan teks informasi tentang bot, termasuk pengembang dan tautan kontak."
+      "name": "Persiapan Konten",
+      "description": "Mendefinisikan teks statis yang berisi informasi tentang bot. Teks ini mencakup atribusi kepada pengembang dan tautan yang berguna (misalnya, kontak atau repositori).",
+      "output": "String teks informasi."
     },
     {
       "step_number": 2,
-      "name": "Kirim Pesan",
-      "description": "Mengirim teks \"Tentang Bot Ini\" ke chat pengguna."
+      "name": "Pengiriman Pesan",
+      "description": "Menggunakan metode `sendMessage` dari Telegram API untuk mengirimkan teks informasi yang sudah disiapkan ke chat pengguna yang memulai perintah.",
+      "input": "Teks informasi dari langkah 1.",
+      "output": "Pesan terkirim di chat pengguna."
     }
-  ]
+  ],
+  "error_handling": []
 }

@@ -1,32 +1,27 @@
 {
   "class_name": "AdminBanCallback",
-  "purpose": "Menangani callback untuk memblokir pengguna oleh admin.",
+  "implements": "CallbackCommandInterface",
+  "summary": "Menangani aksi saat admin memblokir seorang pengguna.",
+  "description": "Callback ini dipicu ketika admin menekan tombol \"Ban\" pada pesan moderasi. Ini akan mengubah status pengguna di database menjadi 'banned', mencegah interaksi lebih lanjut dengan bot, dan memberi notifikasi kepada admin.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi callback dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi callback dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "execute",
-      "description": "Metode utama untuk mengeksekusi callback pemblokiran admin.",
+      "description": "Menjalankan logika pemblokiran pengguna.",
       "parameters": [
-        {
-          "name": "callback_query",
-          "type": "array",
-          "description": "Data callback query Telegram."
-        },
-        {
-          "name": "parts",
-          "type": "array",
-          "description": "Bagian-bagian data callback."
-        }
+        {"name": "callback_query", "type": "array", "description": "Data callback query asli."}, 
+        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['ban', 'user_id']`."}
+      ],
+      "logic_flow": [
+        "1. Jawab `callback_query`.",
+        "2. Ambil ID pengguna yang akan diblokir dari `$parts[1]`.",
+        "3. Gunakan `UserRepository` untuk memperbarui status pengguna di tabel `users` menjadi 'banned'.",
+        "4. Edit pesan moderasi asli untuk mengonfirmasi bahwa pengguna telah diblokir.",
+        "5. (Opsional) Catat aksi pemblokiran di log admin."
       ]
     }
   ]

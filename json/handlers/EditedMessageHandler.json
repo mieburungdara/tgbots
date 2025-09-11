@@ -1,27 +1,21 @@
 {
   "class_name": "EditedMessageHandler",
-  "purpose": "Menangani pesan yang diedit.",
+  "summary": "Menangani update ketika sebuah pesan diedit oleh pengguna.",
+  "description": "Handler ini dipanggil oleh `UpdateHandler` ketika sebuah pesan yang ada di-edit. Fungsionalitasnya saat ini kemungkinan terbatas, tetapi bisa dikembangkan untuk, misalnya, memperbarui data di database yang terkait dengan pesan asli.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi handler dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi handler dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "handle",
-      "description": "Metode utama untuk menangani pesan yang diedit.",
-      "parameters": [
-        {
-          "name": "edited_message",
-          "type": "array",
-          "description": "Data pesan yang diedit Telegram."
-        }
+      "description": "Menjalankan logika untuk pesan yang diedit.",
+      "parameters": [{"name": "edited_message", "type": "array", "description": "Data `edited_message` dari Telegram."}],
+      "logic_flow": [
+        "1. (Placeholder) Logika untuk menangani pesan yang diedit akan ditempatkan di sini.",
+        "2. Contoh: Memeriksa apakah pesan asli tersimpan di database dan memperbarui kontennya.",
+        "3. Saat ini, kemungkinan besar handler ini tidak memiliki implementasi yang signifikan."
       ]
     }
   ]

@@ -1,58 +1,75 @@
 {
   "class_name": "Router",
-  "purpose": "Mengelola routing permintaan HTTP ke controller yang sesuai.",
+  "summary": "Memetakan URI permintaan HTTP ke metode controller yang sesuai.",
+  "description": "Router ini bertanggung jawab untuk menangani permintaan HTTP yang masuk ke panel web aplikasi (bukan webhook bot). Ia mencocokkan metode HTTP (GET, POST) dan URI permintaan dengan daftar rute yang telah didefinisikan di `routes.php` untuk mengeksekusi logika bisnis yang benar.",
+  "properties": [
+    {
+      "name": "routes",
+      "type": "array",
+      "description": "Array asosiatif yang menyimpan semua rute yang terdaftar. Strukturnya biasanya `['GET' => ['/uri' => 'Controller@method'], 'POST' => [...]]`."
+    }
+  ],
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi router."
+      "description": "Constructor. Menginisialisasi properti `routes` sebagai array kosong."
     },
     {
       "name": "get",
-      "description": "Mendaftarkan rute GET.",
+      "description": "Mendaftarkan rute baru yang hanya akan merespons metode HTTP GET.",
       "parameters": [
         {
           "name": "uri",
           "type": "string",
-          "description": "URI yang akan dicocokkan."
+          "description": "URI yang akan dicocokkan (misalnya, '/dashboard')."
         },
         {
           "name": "controller",
           "type": "string",
-          "description": "Controller yang akan dipanggil."
+          "description": "Nama controller dan metode yang akan dipanggil, dipisahkan oleh '@' (misalnya, 'DashboardController@index')."
         }
       ]
     },
     {
       "name": "post",
-      "description": "Mendaftarkan rute POST.",
+      "description": "Mendaftarkan rute baru yang hanya akan merespons metode HTTP POST.",
       "parameters": [
         {
           "name": "uri",
           "type": "string",
-          "description": "URI yang akan dicocokkan."
+          "description": "URI yang akan dicocokkan (misalnya, '/login')."
         },
         {
           "name": "controller",
           "type": "string",
-          "description": "Controller yang akan dipanggil."
+          "description": "Nama controller dan metode yang akan dipanggil (misalnya, 'AuthController@login')."
         }
       ]
     },
     {
       "name": "dispatch",
-      "description": "Mendispatch permintaan ke controller yang sesuai.",
+      "description": "Mencari dan mengeksekusi controller yang cocok dengan URI dan metode permintaan saat ini. Jika tidak ada rute yang cocok, ia akan menampilkan halaman 404.",
       "parameters": [
         {
           "name": "uri",
           "type": "string",
-          "description": "URI permintaan."
+          "description": "URI dari permintaan HTTP yang masuk."
         },
         {
           "name": "method",
           "type": "string",
-          "description": "Metode HTTP permintaan."
+          "description": "Metode HTTP dari permintaan (misalnya, 'GET', 'POST')."
         }
-      ]
+      ],
+      "logic_flow": [
+        "1. Memeriksa apakah URI dan metode ada di dalam array `routes`.",
+        "2. Jika cocok, mem-parse string 'Controller@method'.",
+        "3. Membuat instance dari kelas Controller yang sesuai.",
+        "4. Memanggil metode yang ditentukan pada instance tersebut.",
+        "5. Jika tidak cocok, memanggil controller 404."
+      ],
+      "returns": "mixed",
+      "return_description": "Hasil dari pemanggilan metode controller, yang biasanya adalah output HTML halaman."
     }
   ]
 }

@@ -1,37 +1,27 @@
 {
   "class_name": "StateRouter",
-  "purpose": "Meneruskan pesan ke handler state yang sesuai berdasarkan state pengguna.",
+  "summary": "Merutekan pesan ke kelas State yang spesifik berdasarkan state pengguna.",
+  "description": "Setelah `StateHandler` meneruskan pesan, router ini memetakan nama state (misalnya, `awaiting_price`) ke kelas `State` yang sesuai (misalnya, `AwaitingPriceState`), lalu mengeksekusinya untuk menangani input pengguna.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi router dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi router dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "route",
-      "description": "Metode utama untuk merutekan pesan berdasarkan state pengguna.",
+      "description": "Mencari dan mengeksekusi kelas `State` yang sesuai.",
       "parameters": [
-        {
-          "name": "message",
-          "type": "array",
-          "description": "Data pesan Telegram."
-        },
-        {
-          "name": "state",
-          "type": "string",
-          "description": "State pengguna saat ini."
-        },
-        {
-          "name": "state_context",
-          "type": "?array",
-          "description": "Konteks state pengguna."
-        }
+        {"name": "message", "type": "array", "description": "Objek pesan asli."}, 
+        {"name": "state", "type": "string", "description": "Nama state pengguna saat ini."}, 
+        {"name": "state_context", "type": "?array", "description": "Data kontekstual yang disimpan bersama state."}
+      ],
+      "logic_flow": [
+        "1. Mengonversi nama state menjadi nama kelas (misalnya, `awaiting_price` -> `AwaitingPriceState`).",
+        "2. Memeriksa apakah file dan kelas untuk state tersebut ada di direktori `core/handlers/States/`.",
+        "3. Jika ada, membuat instance dari kelas state tersebut (misalnya, `new AwaitingPriceState($this->app)`).",
+        "4. Memanggil metode `handle($message, $state_context)` pada instance state tersebut.",
+        "5. Jika kelas tidak ditemukan, pesan diabaikan."
       ]
     }
   ]

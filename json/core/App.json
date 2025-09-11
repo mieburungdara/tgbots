@@ -1,30 +1,53 @@
 {
   "class_name": "App",
-  "purpose": "Kelas inti aplikasi yang mengelola dependensi dan menyediakan akses ke berbagai komponen.",
+  "summary": "Wadah dependensi dan service locator utama aplikasi.",
+  "description": "Kelas `App` berfungsi sebagai pusat kontrol aplikasi. Ia memegang konfigurasi, menginisialisasi koneksi database, dan menyediakan akses ke berbagai komponen sistem (seperti data bot, pengguna, dan API Telegram) melalui mekanisme lazy loading untuk efisiensi.",
+  "properties": [
+    {
+      "name": "config",
+      "description": "Menyimpan seluruh konfigurasi aplikasi yang dimuat dari `config.php`."
+    },
+    {
+      "name": "db",
+      "description": "Instance koneksi database (PDO) yang di-lazy load."
+    },
+    {
+      "name": "bot",
+      "description": "Data bot yang sedang aktif, di-lazy load dari `BotRepository` berdasarkan token yang diterima."
+    },
+    {
+      "name": "user",
+      "description": "Data pengguna yang berinteraksi dengan bot, di-lazy load dari `UserRepository`."
+    },
+    {
+      "name": "telegram",
+      "description": "Instance dari kelas `TelegramAPI` untuk berinteraksi dengan Telegram, di-lazy load."
+    }
+  ],
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi aplikasi dengan konfigurasi yang diberikan.",
+      "description": "Menginisialisasi aplikasi dengan menyimpan array konfigurasi. Tidak ada proses berat yang terjadi di sini; komponen lain akan dimuat saat dibutuhkan (lazy loading).",
       "parameters": [
         {
           "name": "config",
           "type": "array",
-          "description": "Array konfigurasi aplikasi."
+          "description": "Array asosiatif berisi konfigurasi aplikasi."
         }
       ]
     },
     {
       "name": "__get",
-      "description": "Magic method untuk mendapatkan properti yang tidak dapat diakses secara langsung. Digunakan untuk lazy loading komponen.",
+      "description": "Magic method yang menangani pemanggilan properti yang tidak terdefinisi. Ini digunakan untuk mengimplementasikan lazy loading: komponen seperti koneksi database atau data pengguna hanya akan diinisialisasi saat pertama kali diakses.",
       "parameters": [
         {
           "name": "name",
           "type": "string",
-          "description": "Nama properti yang diminta."
+          "description": "Nama komponen yang diminta (misalnya, 'db', 'user', 'bot')."
         }
       ],
       "returns": "mixed",
-      "return_description": "Nilai properti yang diminta."
+      "return_description": "Mengembalikan instance dari komponen yang diminta. Akan melempar Exception jika komponen tidak valid."
     }
   ]
 }

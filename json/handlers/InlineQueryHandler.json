@@ -1,27 +1,25 @@
 {
   "class_name": "InlineQueryHandler",
-  "purpose": "Menangani inline query.",
+  "summary": "Menangani permintaan `inline_query` dari pengguna.",
+  "description": "Handler ini dipanggil oleh `UpdateHandler` ketika seorang pengguna mengetik username bot di kolom chat manapun (mode inline). Handler ini bertanggung jawab untuk memberikan hasil yang relevan berdasarkan query pengguna, yang kemudian ditampilkan sebagai daftar yang bisa dipilih.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi handler dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi handler dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "handle",
-      "description": "Metode utama untuk menangani inline query.",
-      "parameters": [
-        {
-          "name": "inline_query",
-          "type": "array",
-          "description": "Data inline query Telegram."
-        }
+      "description": "Memproses query inline dan mengirimkan hasilnya.",
+      "parameters": [{"name": "inline_query", "type": "array", "description": "Data `inline_query` dari Telegram."}],
+      "logic_flow": [
+        "1. (Placeholder) Logika untuk menangani inline query akan ditempatkan di sini.",
+        "2. Contoh: Pengguna mengetik `@YourBotName some_search_term`.",
+        "3. Handler akan mengambil `some_search_term` dari `inline_query['query']`.",
+        "4. Mencari konten (misalnya, paket media) yang cocok dengan istilah pencarian.",
+        "5. Memformat hasilnya ke dalam format `InlineQueryResult` (misalnya, `InlineQueryResultArticle`).",
+        "6. Memanggil `TelegramAPI::answerInlineQuery()` dengan hasil yang sudah diformat.",
+        "7. Saat ini, kemungkinan besar handler ini tidak memiliki implementasi yang signifikan."
       ]
     }
   ]

@@ -1,32 +1,30 @@
 {
   "class_name": "ViewPageCallback",
-  "purpose": "Menangani callback untuk melihat halaman konten.",
+  "implements": "CallbackCommandInterface",
+  "summary": "Menampilkan konten dari sebuah paket yang sudah dibeli.",
+  "description": "Callback ini dipicu saat pengguna menekan tombol \"Lihat Konten\" atau \"Lihat Selengkapnya\". Ia akan mengirimkan media (foto/video) dari paket yang diminta ke pengguna, lengkap dengan navigasi halaman jika media lebih dari satu.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi callback dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Menginisialisasi callback dengan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "execute",
-      "description": "Metode utama untuk mengeksekusi callback melihat halaman.",
+      "description": "Mengirimkan media dari paket dengan paginasi.",
       "parameters": [
-        {
-          "name": "callback_query",
-          "type": "array",
-          "description": "Data callback query Telegram."
-        },
-        {
-          "name": "parts",
-          "type": "array",
-          "description": "Bagian-bagian data callback."
-        }
+        {"name": "callback_query", "type": "array", "description": "Data callback query asli."},
+        {"name": "parts", "type": "array", "description": "Data dari callback, misal: `['view_page', 'page_number', 'package_id']`."}
+      ],
+      "logic_flow": [
+        "1. Jawab `callback_query`.",
+        "2. Ambil `page_number` dan `package_id` dari `$parts`.",
+        "3. Validasi hak akses: periksa apakah pengguna adalah pemilik paket atau sudah membelinya (cek tabel `sales`). Jika tidak, batalkan.",
+        "4. Gunakan `MediaFileRepository` untuk mengambil semua media yang terkait dengan `package_id`, diurutkan berdasarkan urutan.",
+        "5. Ambil media pada indeks `page_number` dari hasil query.",
+        "6. Buat tombol navigasi: 'Sebelumnya' (jika `page_number > 0`) dan 'Selanjutnya' (jika `page_number` bukan media terakhir). Callback untuk tombol ini akan memanggil `view_page` lagi dengan nomor halaman yang diperbarui.",
+        "7. Kirim media yang dipilih ke pengguna menggunakan `TelegramAPI::copyMessage` atau `sendPhoto`/`sendVideo`.",
+        "8. Edit pesan asli tempat tombol \"Lihat Konten\" ditekan, atau kirim pesan baru dengan media dan tombol navigasi."
       ]
     }
   ]

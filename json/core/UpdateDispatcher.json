@@ -1,26 +1,54 @@
 {
   "class_name": "UpdateDispatcher",
-  "purpose": "Menerima dan mendispatch pembaruan dari Telegram ke handler yang sesuai.",
+  "summary": "Memproses dan mendelegasikan pembaruan masuk dari Telegram.",
+  "description": "Kelas ini adalah titik masuk utama untuk semua pembaruan yang diterima dari webhook Telegram. Tugasnya adalah mengidentifikasi jenis pembaruan (pesan baru, editan, callback, dll.), mencatatnya, dan kemudian meneruskannya ke kelas `Handler` yang sesuai untuk diproses lebih lanjut.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi dispatcher dengan objek App.",
+      "description": "Menginisialisasi dispatcher dengan instance `App`, yang memberikan akses ke semua komponen lain seperti database dan API.",
       "parameters": [
         {
           "name": "app",
           "type": "App",
-          "description": "Objek aplikasi."
+          "description": "Objek aplikasi inti.",
+          "is_dependency": true
         }
       ]
     },
     {
       "name": "dispatch",
-      "description": "Metode utama untuk mendispatch pembaruan Telegram.",
+      "description": "Metode utama yang menganalisis dan men-dispatch satu pembaruan Telegram.",
       "parameters": [
         {
           "name": "update",
           "type": "array",
-          "description": "Data pembaruan Telegram."
+          "description": "Array asosiatif yang berisi data pembaruan dari Telegram."
+        }
+      ],
+      "logic_flow": [
+        {
+          "step": 1,
+          "action": "Mencatat seluruh data pembaruan mentah ke dalam tabel `raw_updates` menggunakan `RawUpdateRepository`.",
+          "purpose": "Untuk debugging dan rekam jejak."
+        },
+        {
+          "step": 2,
+          "action": "Mengidentifikasi tipe utama dari pembaruan dengan memeriksa keberadaan kunci seperti `message`, `edited_message`, `callback_query`, `channel_post`, dll."
+        },
+        {
+          "step": 3,
+          "action": "Berdasarkan tipe pembaruan, membuat instance dari kelas `Handler` yang sesuai.",
+          "handler_mapping": {
+            "message": "MessageHandler",
+            "edited_message": "EditedMessageHandler",
+            "callback_query": "CallbackQueryHandler",
+            "inline_query": "InlineQueryHandler",
+            "channel_post": "ChannelPostHandler"
+          }
+        },
+        {
+          "step": 4,
+          "action": "Memanggil metode `handle()` pada instance `Handler` yang telah dibuat, yang akan menjalankan logika bisnis spesifik untuk tipe pembaruan tersebut."
         }
       ]
     }
