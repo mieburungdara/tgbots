@@ -5,7 +5,7 @@
 0. Buat kode lebih bersih, lebih mudah dibaca, dan sesuai dengan prinsip readability.
 1. Gunakan **bahasa pemrograman PHP**.
 2. Tulis semua instruksi dan jawaban dalam **bahasa Indonesia**.
-3. Selalu **perbarui `CHANGELOG.md`** setiap ada pembaruan, perubahan, atau perbaikan.
+3. Selalu **buat entri changelog baru** dalam format JSON di direktori `changelogs/` setiap ada pembaruan, perubahan, atau perbaikan.
 4. Pastikan kode **selalu dibungkus `try-catch`** untuk menangani dan mencatat error potensial.
 5. Sesuaikan solusi agar **cocok dengan lingkungan shared hosting**.
 6. Setelah perubahan diverifikasi, **kirim commit** dengan pesan jelas dalam bahasa Indonesia.
