@@ -1,0 +1,62 @@
+{
+  "class": "TGBot\\Database\\SubscriptionRepository",
+  "description": "Repositori untuk mengelola data langganan pengguna ke penjual.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Membuat instance SubscriptionRepository.",
+      "params": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "createSubscription",
+      "description": "Membuat catatan langganan baru.",
+      "params": [
+        {
+          "name": "user_id",
+          "type": "int",
+          "description": "ID pengguna yang berlangganan."
+        },
+        {
+          "name": "seller_id",
+          "type": "int",
+          "description": "ID penjual yang dilanggan."
+        },
+        {
+          "name": "endDate",
+          "type": "string",
+          "description": "Tanggal dan waktu langganan berakhir dalam format Y-m-d H:i:s."
+        }
+      ],
+      "return": {
+        "type": "bool",
+        "description": "True jika berhasil, false jika gagal."
+      }
+    },
+    {
+      "name": "hasActiveSubscription",
+      "description": "Memeriksa apakah seorang pengguna memiliki langganan aktif ke seorang penjual.",
+      "params": [
+        {
+          "name": "user_id",
+          "type": "int",
+          "description": "ID pengguna yang akan diperiksa."
+        },
+        {
+          "name": "seller_id",
+          "type": "int",
+          "description": "ID penjual yang akan diperiksa."
+        }
+      ],
+      "return": {
+        "type": "bool",
+        "description": "True jika langganan aktif ditemukan, false jika tidak."
+      }
+    }
+  ]
+}

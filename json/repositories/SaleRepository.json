@@ -77,14 +77,39 @@
     },
     {
       "name": "countSalesForPackage",
-      "description": "Menghitung berapa kali sebuah paket telah terjual.",
-      "parameters": [
+      "description": "Menghitung jumlah penjualan untuk sebuah paket spesifik.",
+      "params": [
         {
           "name": "package_id",
           "type": "int"
         }
       ],
-      "returns": "int"
+      "return": {
+        "type": "int"
+      }
+    },
+    {
+      "name": "createSubscriptionSale",
+      "description": "Membuat catatan transaksi untuk penjualan langganan, yang tidak terikat pada satu paket.",
+      "params": [
+        {
+          "name": "seller_user_id",
+          "type": "int"
+        },
+        {
+          "name": "buyer_user_id",
+          "type": "int"
+        },
+        {
+          "name": "price",
+          "type": "float"
+        }
+      ],
+      "return": {
+        "type": "bool"
+      }
     }
+  ]
+}
   ]
 }

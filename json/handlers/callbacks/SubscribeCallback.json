@@ -1,0 +1,36 @@
+{
+  "callback_prefix": "subscribe_",
+  "description": "Menangani logika saat pengguna menekan tombol untuk berlangganan ke seorang penjual.",
+  "class": "TGBot\\Handlers\\Callbacks\\SubscribeCallback",
+  "flow": [
+    {
+      "step": 1,
+      "action": "Pengguna menekan tombol 'Langganan' yang berisi callback_data 'subscribe_<seller_id>'.",
+      "handler": "TGBot\\Handlers\\CallbackRouter",
+      "details": "CallbackRouter mencocokkan prefix 'subscribe_' dan meneruskan permintaan ke SubscribeCallback."
+    },
+    {
+      "step": 2,
+      "action": "Metode execute di SubscribeCallback dijalankan.",
+      "details": "Memvalidasi beberapa kondisi: apakah penjual ada, apakah penjual menawarkan langganan, apakah saldo pengguna cukup, dan apakah pengguna sudah berlangganan."
+    },
+    {
+      "step": 3,
+      "action": "Membuat entri langganan baru di database.",
+      "class": "TGBot\\Database\\SubscriptionRepository",
+      "method": "createSubscription"
+    },
+    {
+      "step": 4,
+      "action": "Membuat catatan transaksi untuk tujuan pelacakan keuangan.",
+      "class": "TGBot\\Database\\SaleRepository",
+      "method": "createSubscriptionSale"
+    },
+    {
+      "step": 5,
+      "action": "Mengirim notifikasi ke penjual tentang pelanggan baru dan ke pembeli tentang langganan yang berhasil.",
+      "class": "TGBot\\TelegramAPI",
+      "method": "sendMessage"
+    }
+  ]
+}

@@ -107,20 +107,42 @@
     },
     {
       "name": "updateUserStatusByTelegramId",
-      "description": "Memperbarui status pengguna (misalnya, menjadi 'blocked').",
-      "parameters": [
+      "description": "Memperbarui status pengguna (misalnya, menjadi 'blocked') berdasarkan ID Telegram mereka.",
+      "params": [
         {
           "name": "telegram_user_id",
           "type": "int"
         },
         {
           "name": "status",
-          "type": "string",
-          "description": "Status baru ('active' atau 'blocked')."
+          "type": "string"
         }
       ],
-      "logic": "UPDATE users SET status = ? WHERE id = ?",
-      "returns": "bool"
+      "return": {
+        "type": "bool"
+      }
+    },
+    {
+      "name": "setSubscriptionPrice",
+      "description": "Mengatur atau menghapus harga langganan bulanan untuk seorang pengguna (penjual).",
+      "params": [
+        {
+          "name": "user_id",
+          "type": "int",
+          "description": "ID pengguna."
+        },
+        {
+          "name": "price",
+          "type": "int|null",
+          "description": "Harga bulanan, atau null untuk menonaktifkan."
+        }
+      ],
+      "return": {
+        "type": "bool",
+        "description": "True jika berhasil, false jika gagal."
+      }
     }
+  ]
+}
   ]
 }

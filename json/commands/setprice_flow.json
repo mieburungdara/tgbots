@@ -1,0 +1,28 @@
+{
+  "command": "/setprice",
+  "description": "Mengatur atau menonaktifkan harga langganan bulanan untuk seorang penjual.",
+  "flow": [
+    {
+      "step": 1,
+      "action": "Pengguna (penjual) mengirimkan perintah /setprice <harga>.",
+      "handler": "TGBot\\Handlers\\Commands\\SetPriceCommand",
+      "details": "Jika harga tidak diberikan, bot akan menampilkan informasi harga saat ini dan cara penggunaan. Jika harga adalah 0, fitur langganan akan dinonaktifkan."
+    },
+    {
+      "step": 2,
+      "action": "Metode execute di SetPriceCommand memvalidasi input harga.",
+      "details": "Memastikan harga adalah angka bulat non-negatif."
+    },
+    {
+      "step": 3,
+      "action": "Memanggil metode setSubscriptionPrice pada UserRepository untuk memperbarui kolom subscription_price di tabel users.",
+      "class": "TGBot\\Database\\UserRepository",
+      "method": "setSubscriptionPrice"
+    },
+    {
+      "step": 4,
+      "action": "Bot mengirimkan pesan konfirmasi bahwa harga telah berhasil diatur atau dinonaktifkan.",
+      "details": "Pesan mencakup harga yang diformat jika diaktifkan."
+    }
+  ]
+}
