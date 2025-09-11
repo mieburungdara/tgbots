@@ -4,11 +4,13 @@
 require_once __DIR__ . '/../core/autoloader.php';
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
+use TGBot\Logger;
 
 // Get a database connection
 $pdo = get_db_connection();
+$logger = new Logger('cron_check_subscriptions', __DIR__ . '/../logs/cron.log');
 
-app_log('Cron job: check_subscriptions started.', 'info');
+$logger->info('Cron job: check_subscriptions started.');
 
 $sql = "SELECT s.id, s.user_id, mp.public_id 
         FROM subscriptions s
@@ -19,8 +21,9 @@ $stmt = $pdo->query($sql);
 $expired_subscriptions = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 if (empty($expired_subscriptions)) {
-    echo "No expired subscriptions found.\n";
-    app_log('Cron job: No expired subscriptions found.', 'info');
+    echo "No expired subscriptions found.
+";
+    $logger->info('Cron job: No expired subscriptions found.');
     exit;
 }
 
@@ -45,11 +48,13 @@ foreach ($expired_subscriptions as $sub) {
             $telegram_api->sendMessage($sub['user_id'], $message, 'Markdown');
         }
 
-    } catch (\Exception $e) {
-        app_log("Cron job: Failed to update subscription ID {$sub['id']}. Error: " . $e->getMessage(), 'error');
+    } catch (
+Exception $e) {
+        $logger->error("Cron job: Failed to update subscription ID {$sub['id']}. Error: " . $e->getMessage());
     }
 }
 
-echo "Processed {$count} expired subscriptions.\n";
-app_log("Cron job: Processed {$count} expired subscriptions.", 'info');
+echo "Processed {$count} expired subscriptions.
+";
+$logger->info("Cron job: Processed {$count} expired subscriptions.");
 

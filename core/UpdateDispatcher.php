@@ -24,6 +24,7 @@ use TGBot\Handlers\MediaHandler;
 use TGBot\Handlers\UpdateHandler;
 use TGBot\Database\UserRepository;
 use TGBot\Database\BotRepository;
+use TGBot\Logger;
 
 /**
  * Class UpdateDispatcher
@@ -62,17 +63,23 @@ class UpdateDispatcher
     private array $bot_settings;
 
     /**
+     * @var Logger
+     */
+    private Logger $logger;
+
+    /**
      * UpdateDispatcher constructor.
      *
      * @param PDO $pdo
      * @param array $bot
      * @param array $update
      */
-    public function __construct(PDO $pdo, array $bot, array $update)
+    public function __construct(PDO $pdo, array $bot, array $update, Logger $logger)
     {
         $this->pdo = $pdo;
         $this->bot = $bot;
         $this->update = $update;
+        $this->logger = $logger;
 
         $bot_repo = new BotRepository($pdo);
         $this->bot_settings = $bot_repo->getBotSettings((int)$bot['id']);
@@ -159,7 +166,7 @@ class UpdateDispatcher
             // Log the error, but don't re-throw it. This prevents the webhook from failing
             // and causing Telegram to send the same update repeatedly.
             // The specific handler (e.g., BuyCallback) is responsible for notifying the user.
-            app_log("Dispatcher caught a throwable: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine(), 'error');
+            $this->logger->error("Dispatcher caught a throwable: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
         }
     }
 

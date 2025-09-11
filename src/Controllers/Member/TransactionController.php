@@ -30,7 +30,7 @@ class TransactionController extends MemberBaseController
     public function purchased(): void
     {
         try {
-            $pdo = \get_db_connection();
+            $pdo = \get_db_connection($this->logger);
             $saleRepo = new SaleRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
@@ -41,7 +41,7 @@ class TransactionController extends MemberBaseController
                 'purchased_packages' => $purchased_packages
             ], 'member_layout');
         } catch (Exception $e) {
-            \app_log('Error in TransactionController/purchased: ' . $e->getMessage(), 'error');
+            $this->logger->error('Error in TransactionController/purchased: ' . $e->getMessage());
             $this->view('member/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading your purchased content.'
@@ -57,7 +57,7 @@ class TransactionController extends MemberBaseController
     public function sold(): void
     {
         try {
-            $pdo = \get_db_connection();
+            $pdo = \get_db_connection($this->logger);
             $packageRepo = new MediaPackageRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
@@ -72,7 +72,7 @@ class TransactionController extends MemberBaseController
                 'message' => $message
             ], 'member_layout');
         } catch (Exception $e) {
-            \app_log('Error in TransactionController/sold: ' . $e->getMessage(), 'error');
+            $this->logger->error('Error in TransactionController/sold: ' . $e->getMessage());
             $this->view('member/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading your sold content.'
@@ -92,7 +92,7 @@ class TransactionController extends MemberBaseController
             exit();
         }
 
-        $pdo = \get_db_connection();
+        $pdo = \get_db_connection($this->logger);
         $packageRepo = new MediaPackageRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
         $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);

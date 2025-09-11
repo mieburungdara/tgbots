@@ -15,6 +15,7 @@ use Exception;
 use PDO;
 use TGBot\Database\TelegramErrorLogRepository;
 use TGBot\Database\UserRepository;
+use TGBot\Logger;
 
 /**
  * Class TelegramAPI
@@ -53,17 +54,23 @@ class TelegramAPI
     protected ?int $bot_id;
 
     /**
+     * @var Logger
+     */
+    protected Logger $logger;
+
+    /**
      * TelegramAPI constructor.
      *
      * @param string $token
      * @param PDO|null $pdo
      * @param int|null $internal_bot_id
      */
-    public function __construct(string $token, ?PDO $pdo = null, ?int $internal_bot_id = null)
+    public function __construct(string $token, ?PDO $pdo = null, ?int $internal_bot_id = null, ?Logger $logger = null)
     {
         $this->token = $token;
         $this->pdo = $pdo;
         $this->bot_id = $internal_bot_id;
+        $this->logger = $logger ?? new Logger('telegram_api', __DIR__ . '/../logs/telegram_api.log');
 
         if ($this->pdo) {
             $this->errorLogRepo = new TelegramErrorLogRepository($this->pdo);
@@ -146,7 +153,7 @@ class TelegramAPI
         $description = $e->getMessage();
         $chatId = $requestData['chat_id'] ?? null;
 
-        app_log("Telegram API Error: Code {$errorCode} - {$description} | Method: {$method} | ChatID: {$chatId}", 'bot');
+        $this->logger->info("Telegram API Error: Code {$errorCode} - {$description} | Method: {$method} | ChatID: {$chatId}");
 
         $logData = [
             'method' => $method,
@@ -162,29 +169,29 @@ class TelegramAPI
         switch ($errorCode) {
             case 400: // Bad Request
                 if (stripos($description, 'chat not found') !== false) {
-                    app_log("Penanganan: Chat ID {$chatId} tidak valid.", 'bot_error');
+                    $this->logger->error("Penanganan: Chat ID {$chatId} tidak valid.");
                 } elseif (stripos($description, 'message is not modified') !== false) {
-                    app_log("Info: Edit pesan dibatalkan, tidak ada perubahan.", 'bot_info');
+                    $this->logger->info("Info: Edit pesan dibatalkan, tidak ada perubahan.");
                     return; // Bukan error kritis, tidak perlu log ke DB.
                 } elseif (stripos($description, "can't parse entities") !== false) {
-                    app_log("Penanganan: Format Markdown/HTML pada pesan salah.", 'bot_error');
+                    $this->logger->error("Penanganan: Format Markdown/HTML pada pesan salah.");
                 }
                 break;
             case 403: // Forbidden
                 if (stripos($description, 'bot was blocked by the user') !== false) {
-                    app_log("Penanganan: Bot diblokir oleh pengguna {$chatId}. Memperbarui status pengguna.", 'bot_error');
+                    $this->logger->error("Penanganan: Bot diblokir oleh pengguna {$chatId}. Memperbarui status pengguna.");
                     if ($this->userRepo && $chatId) {
                         $this->userRepo->updateUserStatusByTelegramId((int)$chatId, 'blocked');
-                        app_log("Status pengguna {$chatId} diubah menjadi 'blocked' di database.", 'bot_db');
+                        $this->logger->info("Status pengguna {$chatId} diubah menjadi 'blocked' di database.");
                     }
                 } elseif (stripos($description, 'bot is not a member') !== false) {
-                     app_log("Penanganan: Bot bukan admin/member di grup/channel {$chatId}.", 'bot_error');
+                     $this->logger->error("Penanganan: Bot bukan admin/member di grup/channel {$chatId}.");
                 }
                 break;
             case 429: // Too Many Requests
                 if (preg_match('/retry after (\d+)/i', $description, $matches)) {
                     $retryAfter = (int)$matches[1];
-                    app_log("Info: Rate limit, coba lagi setelah {$retryAfter} detik.", 'bot_info');
+                    $this->logger->warning("Info: Rate limit, coba lagi setelah {$retryAfter} detik.");
                     $logData['status'] = 'pending_retry';
                     $logData['retry_after'] = $retryAfter;
                 }

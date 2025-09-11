@@ -27,17 +27,25 @@ echo "=============================================\n\n";
 try {
     // Sertakan file-file yang diperlukan
     require_once __DIR__ . '/core/autoloader.php';
+    require_once __DIR__ . '/core/database.php';
+    use TGBot\Logger;
 
-    echo "Menghubungkan ke database...\n";
-    $pdo = get_db_connection();
+    $logger = new Logger('migrations', __DIR__ . '/logs/migrations.log');
+
+    echo "Menghubungkan ke database...
+";
+    $pdo = get_db_connection($logger);
     if (!$pdo) {
         throw new Exception("Koneksi database gagal. Periksa config.php dan log error.");
     }
-    echo "Koneksi berhasil.\n\n";
+    echo "Koneksi berhasil.
+
+";
 
     // Pastikan tabel 'migrations' ada
-    ensure_migrations_table_exists($pdo);
-    echo "Tabel pelacak migrasi ('migrations') sudah siap.\n";
+    ensure_migrations_table_exists($pdo, $logger);
+    echo "Tabel pelacak migrasi ('migrations') sudah siap.
+";
 
     // Dapatkan daftar migrasi yang sudah dieksekusi
     $executed_migrations = $pdo->query("SELECT migration_file FROM migrations")->fetchAll(PDO::FETCH_COLUMN);

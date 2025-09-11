@@ -30,7 +30,7 @@ class DashboardController extends MemberBaseController
     {
         try {
             // The constructor of MemberBaseController already handles the session check.
-            $pdo = \get_db_connection();
+            $pdo = \get_db_connection($this->logger);
             $analyticsRepo = new AnalyticsRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
@@ -81,7 +81,7 @@ class DashboardController extends MemberBaseController
                 'top_selling_items' => $top_selling_items
             ], 'member_layout');
         } catch (Exception $e) {
-            \app_log('Error in Member/DashboardController/index: ' . $e->getMessage(), 'error');
+            $this->logger->error('Error in Member/DashboardController/index: ' . $e->getMessage());
             $this->view('member/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the dashboard.'

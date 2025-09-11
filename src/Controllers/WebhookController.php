@@ -7,10 +7,18 @@ use TGBot\Database\BotRepository;
 use TGBot\Database\RawUpdateRepository;
 use TGBot\UpdateDispatcher;
 use TGBot\TelegramAPI;
+use TGBot\Logger;
 use Throwable;
 
 class WebhookController
 {
+    private Logger $logger;
+
+    public function __construct(Logger $logger)
+    {
+        $this->logger = $logger;
+    }
+
     /**
      * Menangani permintaan webhook yang masuk dari Telegram.
      *
@@ -30,15 +38,15 @@ class WebhookController
             $bot_id = $params['id'] ?? null;
             if (!$bot_id || !filter_var($bot_id, FILTER_VALIDATE_INT)) {
                 http_response_code(400);
-                \app_log("Webhook Error: ID bot dari URL tidak valid atau tidak ada.", 'bot');
+                $this->logger->error("Webhook Error: ID bot dari URL tidak valid atau tidak ada.");
                 exit;
             }
             $bot_id = (int)$bot_id;
-            \app_log("Webhook dipanggil untuk bot ID: {$bot_id}", 'info');
+            $this->logger->info("Webhook dipanggil untuk bot ID: {$bot_id}");
 
-            $pdo = \get_db_connection();
+            $pdo = \get_db_connection($this->logger);
             if (!$pdo) {
-                \app_log("Webhook Error: Gagal terkoneksi ke database.", 'critical');
+                $this->logger->critical("Webhook Error: Gagal terkoneksi ke database.");
                 http_response_code(500);
                 exit;
             }
@@ -47,13 +55,13 @@ class WebhookController
             $bot = $bot_repo->findBotByTelegramId($bot_id);
             if (!$bot) {
                 http_response_code(404);
-                \app_log("Webhook Error: Bot dengan ID Telegram {$bot_id} tidak ditemukan.", 'bot');
+                $this->logger->error("Webhook Error: Bot dengan ID Telegram {$bot_id} tidak ditemukan.");
                 exit;
             }
-            \app_log("Bot ditemukan: " . json_encode($bot), 'info');
+            $this->logger->info("Bot ditemukan: " . json_encode($bot));
 
             
-            $api_for_globals = new TelegramAPI($bot['token'], $pdo, $bot_id);
+            $api_for_globals = new TelegramAPI($bot['token'], $pdo, $bot_id, $this->logger);
             $bot_info = $api_for_globals->getMe();
             if ($bot_info['ok'] && !defined('BOT_USERNAME')) {
                 define('BOT_USERNAME', $bot_info['result']['username'] ?? '');
@@ -64,28 +72,27 @@ class WebhookController
                 http_response_code(200);
                 exit;
             }
-            \app_log("Update mentah diterima: {$update_json}", 'info');
+            $this->logger->info("Update mentah diterima: {$update_json}");
 
             $raw_update_repo = new RawUpdateRepository($pdo);
             $raw_update_repo->create($update_json);
 
             $update = json_decode($update_json, true);
             if (!$update) {
-                \app_log("Webhook Error: Gagal mendekode JSON dari Telegram.", 'warning');
+                $this->logger->warning("Webhook Error: Gagal mendekode JSON dari Telegram.");
                 http_response_code(200);
                 exit;
             }
 
-            $dispatcher = new UpdateDispatcher($pdo, $bot, $update);
+            $dispatcher = new UpdateDispatcher($pdo, $bot, $update, $this->logger);
             $dispatcher->dispatch();
 
             http_response_code(200);
 
         } catch (Throwable $e) {
             $error_message = sprintf("Fatal Webhook Error: %s in %s on line %d", $e->getMessage(), $e->getFile(), $e->getLine());
-            \app_log($error_message, 'error');
+            $this->logger->error($error_message);
             http_response_code(500);
         }
         exit;
     }
-}

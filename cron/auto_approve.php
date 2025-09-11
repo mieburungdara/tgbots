@@ -6,10 +6,13 @@ require_once __DIR__ . '/../core/helpers.php';
 
 use TGBot\Database\MediaPackageRepository;
 use TGBot\TelegramAPI;
+use TGBot\Logger;
 
 $pdo = get_db_connection();
+$logger = new Logger('cron_auto_approve', __DIR__ . '/../logs/cron.log');
+
 if (!$pdo) {
-    app_log("Cronjob Error: Gagal terkoneksi ke database.", 'critical');
+    $logger->critical("Cronjob Error: Gagal terkoneksi ke database.");
     exit;
 }
 
@@ -79,6 +82,6 @@ foreach ($pending_posts as $post) {
 
     } catch (Exception $e) {
         $pdo->rollBack();
-        app_log("Cronjob Error: Gagal auto-approve post #" . $post['id'] . ". Error: " . $e->getMessage(), 'error');
+        $logger->error("Cronjob Error: Gagal auto-approve post #" . $post['id'] . ". Error: " . $e->getMessage());
     }
 }

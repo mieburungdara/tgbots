@@ -215,5 +215,3 @@ class UserRepository
         return $stmt->fetchColumn() !== false;
     }
 }
-}
-}

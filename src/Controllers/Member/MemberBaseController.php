@@ -13,6 +13,7 @@ namespace TGBot\Controllers\Member;
 
 use Exception;
 use TGBot\Controllers\AppController;
+use TGBot\Logger;
 
 /**
  * Class MemberBaseController
@@ -23,8 +24,9 @@ abstract class MemberBaseController extends AppController
     /**
      * MemberBaseController constructor.
      */
-    public function __construct()
+    public function __construct(Logger $logger)
     {
+        parent::__construct($logger);
         try {
             if (session_status() == PHP_SESSION_NONE) {
                 session_start();
@@ -38,7 +40,7 @@ abstract class MemberBaseController extends AppController
                 exit();
             }
         } catch (Exception $e) {
-            \app_log('Error in MemberBaseController/__construct: ' . $e->getMessage(), 'error');
+            $this->logger->error('Error in MemberBaseController/__construct: ' . $e->getMessage());
             // For a base controller, it might be best to show a generic error page
             // as we don't know the context of the request yet.
             $this->view('member/error', [

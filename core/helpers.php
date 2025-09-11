@@ -24,39 +24,7 @@ function check_tables_exist(PDO $pdo) {
     return true;
 }
 
-/**
- * Mencatat pesan ke database.
- *
- * @param string $message Pesan yang akan dicatat.
- * @param string $level Tipe log (misal: 'info', 'debug', 'error').
- * @param array|null $context Data kontekstual tambahan dalam bentuk array.
- * @return void
- */
-function app_log(string $message, string $level = 'info', ?array $context = null): void {
-    try {
-        $pdo = get_db_connection();
-        if (!$pdo) {
-            // Fallback to file logging if DB connection fails
-            error_log("DB_LOG_FALLBACK: [$level] $message");
-            return;
-        }
 
-        $sql = "INSERT INTO app_logs (level, message, context) VALUES (:level, :message, :context)";
-        $stmt = $pdo->prepare($sql);
-
-        $context_json = $context ? json_encode($context) : null;
-
-        $stmt->bindParam(':level', $level, PDO::PARAM_STR);
-        $stmt->bindParam(':message', $message, PDO::PARAM_STR);
-        $stmt->bindParam(':context', $context_json, PDO::PARAM_STR);
-
-        $stmt->execute();
-
-    } catch (Throwable $e) {
-        // Fallback to error_log if anything goes wrong with DB logging
-        error_log("Failed to write to DB log. Error: " . $e->getMessage() . ". Original log message: [$level] $message");
-    }
-}
 
 /**
  * Menghasilkan string acak dengan panjang tertentu dari karakter yang diberikan.

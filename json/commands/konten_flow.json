@@ -30,24 +30,22 @@
         {
           "scenario_name": "Pengguna adalah Penjual",
           "actions": [
-            "Memanggil metode privat `generateSellerReport()` untuk membuat laporan konten dan tombol terkait, termasuk tombol `Promosikan Konten`.",
+            "Memanggil `handleSellerView()` untuk membuat laporan konten dan tombol terkait, termasuk tombol `Promosikan Konten`.",
             "Jika terjadi kesalahan dalam pembuatan laporan, hentikan eksekusi."
           ]
         },
         {
           "scenario_name": "Pengguna Sudah Membeli atau adalah Admin",
           "actions": [
-            "Memeriksa `SaleRepository::hasUserPurchased()`.",
-            "Menyiapkan tombol `Lihat Selengkapnya` untuk mengakses konten."
+            "Memeriksa `SaleRepository::hasUserPurchased()`, `SubscriptionRepository::hasActiveSubscription()` dan peran pengguna.",
+            "Memanggil `handlePurchasedOrAdminView()` untuk menyiapkan tombol `Lihat Selengkapnya`."
           ]
         },
         {
           "scenario_name": "Pengunjung Biasa",
           "actions": [
-            "Jika status paket adalah `available`:",
-            "  Menyiapkan tombol `Beli` dengan harga, `Hadiahkan`, `Tanya Penjual`, dan (jika ada) `Langganan`.",
-            "Jika status paket bukan `available` (misal: `sold`, `retracted`, `pending`, `deleted`):",
-            "  Mengirim pesan informatif kepada pengguna tentang status konten dan menghentikan eksekusi."
+            "Memanggil `handleVisitorView()` untuk menyiapkan tombol `Beli`, `Hadiahkan`, `Tanya Penjual`, dan `Langganan` (jika tersedia).",
+            "Jika status paket tidak `available` (misal: `sold`, `retracted`, `pending`, `deleted`), mengirim pesan informatif kepada pengguna tentang status konten dan menghentikan eksekusi."
           ]
         }
       ]

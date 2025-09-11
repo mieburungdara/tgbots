@@ -1,0 +1,19 @@
+{
+  "changelog": [
+    {
+      "version": "N/A",
+      "date": "2025-09-11",
+      "changes": {
+        "Peningkatan": [
+          "Penyempurnaan pesan error untuk perintah `/konten` agar lebih informatif."
+        ],
+        "Refactoring": [
+          "Memisahkan logika tampilan perintah `/konten` ke dalam metode-metode terpisah (`handleSellerView`, `handlePurchasedOrAdminView`, `handleVisitorView`) untuk meningkatkan keterbacaan dan pemeliharaan kode."
+        ],
+        "Dokumentasi": [
+          "Memperbarui `json/commands/konten_flow.json` untuk mencerminkan perubahan refactoring pada perintah `/konten`."
+        ]
+      }
+    }
+  ]
+}

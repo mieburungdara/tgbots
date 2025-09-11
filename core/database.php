@@ -1,19 +1,13 @@
 <?php
 
-/**
- * Membuat koneksi ke database menggunakan PDO.
- * Fungsi ini akan membaca konfigurasi dari file config.php.
- *
- * @return PDO|null Objek PDO jika koneksi berhasil, null jika gagal.
- */
+use TGBot\Logger;
 
-
-function get_db_connection() {
+function get_db_connection(Logger $logger) {
     // Memerlukan file config yang akan dibuat oleh pengguna dari contoh.
     if (!file_exists(__DIR__ . '/../config.php')) {
         // Berhenti jika file konfigurasi tidak ditemukan.
         // Ini akan mencegah error lebih lanjut.
-        app_log("Error: config.php tidak ditemukan. Harap salin dari config.php.example dan isi kredensialnya.", 'error');
+        $logger->error("Error: config.php tidak ditemukan. Harap salin dari config.php.example dan isi kredensialnya.");
         return null;
     }
     
@@ -34,7 +28,7 @@ function get_db_connection() {
     } catch (PDOException $e) {
         // Catat error ke log server jika koneksi gagal.
         // Jangan tampilkan detail error ke pengguna.
-        app_log("Koneksi database gagal: " . $e->getMessage(), 'database');
+        $logger->critical("Koneksi database gagal: " . $e->getMessage());
         return null;
     }
 }
@@ -45,20 +39,20 @@ function get_db_connection() {
  * @param PDO $pdo Objek koneksi PDO.
  * @return bool True jika berhasil, false jika gagal.
  */
-function setup_database(PDO $pdo): bool {
+function setup_database(PDO $pdo, Logger $logger): bool {
     $sql_file = __DIR__ . '/../setup.sql';
     if (!file_exists($sql_file)) {
-        app_log("Error: file setup.sql tidak ditemukan.", 'error');
+        $logger->error("Error: file setup.sql tidak ditemukan.");
         return false;
     }
 
     try {
         $sql = file_get_contents($sql_file);
         $pdo->exec($sql);
-        app_log("Setup database dari setup.sql berhasil dijalankan.", 'database');
+        $logger->info("Setup database dari setup.sql berhasil dijalankan.");
         return true;
     } catch (PDOException $e) {
-        app_log("Gagal menjalankan setup database: " . $e->getMessage(), 'database');
+        $logger->error("Gagal menjalankan setup database: " . $e->getMessage());
         return false;
     }
 }
@@ -70,7 +64,7 @@ function setup_database(PDO $pdo): bool {
  * @param PDO $pdo Objek koneksi PDO.
  * @return void
  */
-function ensure_migrations_table_exists(PDO $pdo): void {
+function ensure_migrations_table_exists(PDO $pdo, Logger $logger): void {
     try {
         // Query untuk membuat tabel jika belum ada
         $sql = "
@@ -85,7 +79,7 @@ function ensure_migrations_table_exists(PDO $pdo): void {
         $pdo->exec($sql);
     } catch (PDOException $e) {
         // Jika terjadi error, catat dan hentikan eksekusi
-        app_log("Gagal membuat tabel migrasi: " . $e->getMessage(), 'database');
+        $logger->error("Gagal membuat tabel migrasi: " . $e->getMessage());
         die("Fatal Error: Tidak dapat membuat tabel migrasi. Periksa log server.");
     }
 }
@@ -97,7 +91,7 @@ function ensure_migrations_table_exists(PDO $pdo): void {
  * @return void
  * @throws Exception Jika terjadi error saat proses truncate.
  */
-function clean_transactional_data(PDO $pdo): void {
+function clean_transactional_data(PDO $pdo, Logger $logger): void {
     $tables_to_truncate = [
         'sales',
         'media_files',
@@ -117,10 +111,10 @@ function clean_transactional_data(PDO $pdo): void {
         }
         $pdo->exec('SET FOREIGN_KEY_CHECKS = 1;');
         $pdo->commit();
-        app_log("Semua data transaksional telah dibersihkan oleh admin.", 'app');
+        $logger->info("Semua data transaksional telah dibersihkan oleh admin.");
     } catch (Exception $e) {
         $pdo->rollBack();
-        app_log("Gagal membersihkan data transaksional: " . $e->getMessage(), 'error');
+        $logger->error("Gagal membersihkan data transaksional: " . $e->getMessage());
         throw $e; // Lemparkan kembali untuk ditangani oleh pemanggil
     }
 }

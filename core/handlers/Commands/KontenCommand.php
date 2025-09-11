@@ -9,18 +9,39 @@ use TGBot\Database\SubscriptionRepository;
 use TGBot\Database\FeatureChannelRepository;
 use TGBot\Database\UserRepository;
 use TGBot\Database\PackageViewRepository;
+use TGBot\Logger;
 use Exception;
 
 class KontenCommand implements CommandInterface
 {
+    private MediaPackageRepository $packageRepo;
+    private SaleRepository $saleRepo;
+    private SubscriptionRepository $subscriptionRepo;
+    private FeatureChannelRepository $featureChannelRepo;
+    private UserRepository $userRepo;
+    private PackageViewRepository $viewRepo;
+    private Logger $logger;
+
+    public function __construct(
+        MediaPackageRepository $packageRepo,
+        SaleRepository $saleRepo,
+        SubscriptionRepository $subscriptionRepo,
+        FeatureChannelRepository $featureChannelRepo,
+        UserRepository $userRepo,
+        PackageViewRepository $viewRepo,
+        Logger $logger
+    ) {
+        $this->packageRepo = $packageRepo;
+        $this->saleRepo = $saleRepo;
+        $this->subscriptionRepo = $subscriptionRepo;
+        $this->featureChannelRepo = $featureChannelRepo;
+        $this->userRepo = $userRepo;
+        $this->viewRepo = $viewRepo;
+        $this->logger = $logger;
+    }
+
     public function execute(App $app, array $message, array $parts): void
     {
-        $package_repo = new MediaPackageRepository($app->pdo);
-        $sale_repo = new SaleRepository($app->pdo);
-        $subscription_repo = new SubscriptionRepository($app->pdo);
-        $feature_channel_repo = new FeatureChannelRepository($app->pdo);
-        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
-        $view_repo = new PackageViewRepository($app->pdo);
 
         if (count($parts) !== 2) {
             $app->telegram_api->sendMessage($app->chat_id, "Format perintah salah. Gunakan: /konten <ID Konten>");
@@ -28,7 +49,7 @@ class KontenCommand implements CommandInterface
         }
 
         $public_id = $parts[1];
-        $package = $package_repo->findByPublicId($public_id);
+        $package = $this->packageRepo->findByPublicId($public_id);
 
         if (!$package) {
             $app->telegram_api->sendMessage($app->chat_id, "Konten dengan ID `{$public_id}` tidak ditemukan.", 'Markdown');
@@ -37,7 +58,7 @@ class KontenCommand implements CommandInterface
         $package_id = $package['id'];
 
         // 1. Generate media summary and create the base description
-        $media_files = $package_repo->getFilesByPackageId($package_id);
+        $media_files = $this->packageRepo->getFilesByPackageId($package_id);
         $media_summary_str = $this->generateMediaSummary($media_files);
         $description = $package['description'];
         if (!empty($media_summary_str)) {
@@ -49,72 +70,39 @@ class KontenCommand implements CommandInterface
         $caption = '';
         $keyboard = [];
 
-        if ($is_seller) {
-            list($caption, $keyboard) = $this->generateSellerReport($app, $package, $description);
-            if ($caption === null) { // Indicates an error occurred in report generation
-                return;
-            }
-        } else {
-            $caption = $description;
-            $is_admin = ($app->user['role'] === 'Admin');
-            $has_purchased = $sale_repo->hasUserPurchased($package['id'], $app->user['id']);
-            $has_subscribed = $subscription_repo->hasActiveSubscription($app->user['id'], $package['seller_user_id']);
-            $has_access = $is_admin || $has_purchased || $has_subscribed;
-
-            if ($has_access) {
-                $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
-                $keyboard = ['inline_keyboard' => $keyboard_buttons];
-            } elseif ($package['status'] === 'available') {
-                $keyboard = ['inline_keyboard' => [[]]]; // Initialize empty row
-
-                // Add one-time purchase button
-                $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
-                $keyboard['inline_keyboard'][0][] = ['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"];
-                $keyboard['inline_keyboard'][0][] = ['text' => '🎁 Hadiahkan', 'callback_data' => "gift_{$package['public_id']}"];
-
-                // Add subscription button if seller offers it and user is not already subscribed
-                $seller = $user_repo->findUserByTelegramId($package['seller_user_id']);
-                if ($seller && !empty($seller['subscription_price']) && !$has_subscribed) {
-                    $sub_price_formatted = "Rp " . number_format($seller['subscription_price'], 0, ',', '.');
-                    $keyboard['inline_keyboard'][0][] = ['text' => "Langganan ({$sub_price_formatted}/bln) ⭐", 'callback_data' => "subscribe_{$package['seller_user_id']}"];
-                }
-                // Add "Tanya Penjual" button
-                $keyboard['inline_keyboard'][] = [['text' => '💬 Tanya Penjual', 'callback_data' => "ask_seller_{$package['public_id']}_{$package['seller_user_id']}"]];
-
+        try {
+            if ($is_seller) {
+                list($caption, $keyboard) = $this->handleSellerView($app, $package, $description);
             } else {
-                // Handle other package statuses for visitors
-                $status_message = '';
-                switch ($package['status']) {
-                    case 'sold':
-                        $status_message = "Konten ini sudah terjual.";
-                        break;
-                    case 'retracted':
-                        $status_message = "Konten ini telah ditarik oleh penjual.";
-                        break;
-                    case 'pending':
-                        $status_message = "Konten ini masih dalam proses moderasi.";
-                        break;
-                    case 'deleted':
-                        $status_message = "Konten ini telah dihapus.";
-                        break;
-                    default:
-                        $status_message = "Konten ini tidak tersedia.";
-                        break;
+                $is_admin = ($app->user['role'] === 'Admin');
+                $has_purchased = $this->saleRepo->hasUserPurchased($package['id'], $app->user['id']);
+                $has_subscribed = $this->subscriptionRepo->hasActiveSubscription($app->user['id'], $package['seller_user_id']);
+                $has_access = $is_admin || $has_purchased || $has_subscribed;
+
+                if ($has_access) {
+                    list($caption, $keyboard) = $this->handlePurchasedOrAdminView($app, $package, $description);
+                } else {
+                    list($caption, $keyboard) = $this->handleVisitorView($app, $package, $description);
+                    if ($caption === null) { // Indicates that visitor view decided to stop execution
+                        return;
+                    }
                 }
-                $app->telegram_api->sendMessage($app->chat_id, "⚠️ {$status_message}");
-                return; // Stop execution
             }
+        } catch (Exception $e) {
+            $this->logger->error("Gagal memproses tampilan konten: " . $e->getMessage(), ['package_id' => $package['id'], 'user_id' => $app->user['id']]);
+            $app->telegram_api->sendMessage($app->chat_id, "Terjadi kesalahan saat menyiapkan tampilan konten. Silakan coba lagi nanti.");
+            return;
         }
 
         // Log the view event for analytics before showing the content
         if (!$is_seller) {
-            $view_repo->logView($package_id, $app->user['id']);
+            $this->viewRepo->logView($package_id, $app->user['id']);
         }
 
-        $thumbnail = $package_repo->getThumbnailFile($package_id);
+        $thumbnail = $this->packageRepo->getThumbnailFile($package_id);
         if (!$thumbnail) {
             $app->telegram_api->sendMessage($app->chat_id, "Konten ini tidak memiliki media yang dapat ditampilkan atau semua media di dalamnya rusak. Silakan hubungi admin.");
-            \app_log("Gagal menampilkan konten: Tidak ditemukan thumbnail yang valid untuk package_id: {$package_id}", 'warning', ['package' => $package]);
+            $this->logger->warning("Gagal menampilkan konten: Tidak ditemukan thumbnail yang valid untuk package_id: {$package_id}", ['package' => $package]);
             return;
         }
 
@@ -172,14 +160,11 @@ class KontenCommand implements CommandInterface
             }
         }
 
-        $package_repo = new MediaPackageRepository($app->pdo);
-        $sale_repo = new SaleRepository($app->pdo);
-        $feature_channel_repo = new FeatureChannelRepository($app->pdo);
-        $view_repo = new PackageViewRepository($app->pdo);
+        
 
         try {
             // Existing report data
-            $analytics = $sale_repo->getAnalyticsForPackage($package['id']);
+            $analytics = $this->saleRepo->getAnalyticsForPackage($package['id']);
             $sales_count = $analytics['sales_count'];
             $views_count = $analytics['views_count'];
             $offers_count = $analytics['offers_count'];
@@ -208,7 +193,7 @@ class KontenCommand implements CommandInterface
             $caption = $report;
 
             $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
-            $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($app->user['id'], 'sell');
+            $sales_channels = $this->featureChannelRepo->findAllByOwnerAndFeature($app->user['id'], 'sell');
             if (!empty($sales_channels)) {
                 $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$package['public_id']}"];
             } else {
@@ -224,9 +209,73 @@ class KontenCommand implements CommandInterface
 
             return $data_to_cache;
         } catch (Exception $e) {
-            app_log("Gagal membuat laporan konten untuk seller: " . $e->getMessage(), 'error', ['package_id' => $package['id']]);
+            $this->logger->error("Gagal membuat laporan konten untuk seller: " . $e->getMessage(), ['package_id' => $package['id']]);
             $app->telegram_api->sendMessage($app->chat_id, "Terjadi kesalahan saat mengambil data laporan. Silakan coba lagi nanti.");
             return [null, null]; // Indicate error
         }
+    }
+
+    private function handleSellerView(App $app, array $package, string $description): array
+    {
+        return $this->generateSellerReport($app, $package, $description);
+    }
+
+    private function handlePurchasedOrAdminView(App $app, array $package, string $description): array
+    {
+        $caption = $description;
+        $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$package['public_id']}_0"]]];
+        $keyboard = ['inline_keyboard' => $keyboard_buttons];
+        return [$caption, $keyboard];
+    }
+
+    private function handleVisitorView(App $app, array $package, string $description): array
+    {
+        
+
+        $caption = $description;
+        $keyboard = [];
+
+        if ($package['status'] === 'available') {
+            $keyboard = ['inline_keyboard' => [[]]]; // Initialize empty row
+
+            // Add one-time purchase button
+            $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
+            $keyboard['inline_keyboard'][0][] = ['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"];
+            $keyboard['inline_keyboard'][0][] = ['text' => '🎁 Hadiahkan', 'callback_data' => "gift_{$package['public_id']}"];
+
+            // Add subscription button if seller offers it and user is not already subscribed
+            $seller = $this->userRepo->findUserByTelegramId($package['seller_user_id']);
+            $has_subscribed = $this->subscriptionRepo->hasActiveSubscription($app->user['id'], $package['seller_user_id']);
+            if ($seller && !empty($seller['subscription_price']) && !$has_subscribed) {
+                $sub_price_formatted = "Rp " . number_format($seller['subscription_price'], 0, ',', '.');
+                $keyboard['inline_keyboard'][0][] = ['text' => "Langganan ({$sub_price_formatted}/bln) ⭐", 'callback_data' => "subscribe_{$package['seller_user_id']}"];
+            }
+            // Add "Tanya Penjual" button
+            $keyboard['inline_keyboard'][] = [['text' => '💬 Tanya Penjual', 'callback_data' => "ask_seller_{$package['public_id']}_{$package['seller_user_id']}"]];
+
+        } else {
+            // Handle other package statuses for visitors
+            $status_message = '';
+            switch ($package['status']) {
+                case 'sold':
+                    $status_message = "Konten ini sudah terjual.";
+                    break;
+                case 'retracted':
+                    $status_message = "Konten ini telah ditarik oleh penjual.";
+                    break;
+                case 'pending':
+                    $status_message = "Konten ini masih dalam proses moderasi.";
+                    break;
+                case 'deleted':
+                    $status_message = "Konten ini telah dihapus.";
+                    break;
+                default:
+                        $status_message = "Konten ini tidak tersedia.";
+                        break;
+                }
+                $app->telegram_api->sendMessage($app->chat_id, "⚠️ {$status_message}");
+                return [null, null]; // Indicate that execution should stop
+            }
+        return [$caption, $keyboard];
     }
 }

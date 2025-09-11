@@ -21,12 +21,7 @@ class HomeController extends AppController
             $this->view('maintenance', [], null);
         } catch (Exception $e) {
             // Catat error jika view tidak ditemukan atau ada masalah lain
-            // Gunakan app_log jika tersedia, jika tidak, gunakan error_log bawaan
-            if (function_exists('app_log')) {
-                \app_log('Error in HomeController: ' . $e->getMessage(), 'error');
-            } else {
-                error_log('Error in HomeController: ' . $e->getMessage());
-            }
+            $this->logger->error('Error in HomeController: ' . $e->getMessage());
 
             // Tampilkan pesan error sederhana sebagai fallback
             http_response_code(500);

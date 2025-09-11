@@ -1,0 +1,16 @@
+{
+    "autoload": {
+        "psr-4": {
+            "TGBot\\": "core/",
+            "TGBot\\Database\\": "core/database/",
+            "TGBot\\Handlers\\Commands\\": "core/handlers/Commands/"
+        }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^12.3"
+    },
+    "require": {
+        "psr/log": "^3.0",
+        "monolog/monolog": "^3.9"
+    }
+}

@@ -3,8 +3,16 @@
 namespace TGBot\Controllers;
 
 require_once __DIR__ . '/../../core/helpers.php';
+use TGBot\Logger;
 
 abstract class AppController {
+
+    protected Logger $logger;
+
+    public function __construct(Logger $logger)
+    {
+        $this->logger = $logger;
+    }
 
     /**
      * Renders a view file, optionally within a layout.
@@ -48,7 +56,7 @@ abstract class AppController {
                 echo $content;
             }
         } catch (Exception $e) {
-            \app_log('Error in view rendering: ' . $e->getMessage());
+            $this->logger->error('Error in view rendering: ' . $e->getMessage());
             // Optionally, show a generic error page
             http_response_code(500);
             echo "<h1>An error occurred</h1>";
