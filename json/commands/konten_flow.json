@@ -48,7 +48,7 @@
           "scenario_name": "Pengunjung Biasa",
           "actions": [
             "Memeriksa apakah status paket adalah `available`.",
-            "Menyiapkan tombol `Beli Konten Ini` dengan harga yang tertera."
+            "Menyiapkan tombol `Beli` dengan harga, dan tombol `Tawar Harga` untuk memulai alur penawaran."
           ]
         }
       ]
