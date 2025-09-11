@@ -5,6 +5,7 @@ namespace TGBot\Handlers\Commands;
 use TGBot\App;
 use TGBot\Database\BotRepository;
 use TGBot\Database\UserRepository;
+use TGBot\Handlers\States\AwaitingPriceState;
 use PDO;
 
 class SellCommand implements CommandInterface
@@ -13,10 +14,8 @@ class SellCommand implements CommandInterface
     {
         $prerequisite_error = $this->validatePrerequisites($app, $message);
         if ($prerequisite_error === "register_seller_prompt") {
-            // Pesan pendaftaran sudah dikirim di validatePrerequisites(), jadi cukup berhenti di sini
             return;
         } elseif ($prerequisite_error !== null) {
-            // Ini adalah pesan error lain, kirimkan ke pengguna
             $app->telegram_api->sendMessage($app->chat_id, $prerequisite_error);
             return;
         }
@@ -29,23 +28,30 @@ class SellCommand implements CommandInterface
             return;
         }
 
-        $media_group_id = $media_info['media_group_id'];
-        $description = $media_info['description'];
-
-        $user_repo = new UserRepository($app->pdo, $app->bot['id']);
         $state_context = [
             'media_messages' => [['message_id' => $replied_message['message_id'], 'chat_id' => $replied_message['chat']['id']]]
         ];
-        $user_repo->setUserState($app->user['id'], 'awaiting_price', $state_context);
 
-        $message_text = "✅ Media telah siap untuk dijual.\n\n";
-        if (!empty($description)) {
-            $message_text .= "Deskripsi: *\"" . $app->telegram_api->escapeMarkdown($description) . "\"*\n";
+        // Cek apakah harga diberikan sebagai parameter
+        if (isset($parts[1]) && is_numeric($parts[1]) && $parts[1] > 0) {
+            $price = (int)$parts[1];
+            // Langsung kirim konfirmasi, lewati state awaiting_price
+            AwaitingPriceState::sendConfirmationMessage($app, $price, $state_context);
+        } else {
+            // Alur normal, masuk ke state awaiting_price
+            $user_repo = new UserRepository($app->pdo, $app->bot['id']);
+            $user_repo->setUserState($app->user['id'], 'awaiting_price', $state_context);
+
+            $description = $media_info['description'];
+            $message_text = "✅ Media telah siap untuk dijual.\n\n";
+            if (!empty($description)) {
+                $message_text .= "Deskripsi: *\"" . $app->telegram_api->escapeMarkdown($description) . "\"*\n";
+            }
+            $message_text .= "Sekarang, silakan masukkan harga untuk paket ini (contoh: 50000).\n\n";
+            $message_text .= "_Ketik /cancel untuk membatalkan._";
+
+            $app->telegram_api->sendMessage($app->chat_id, $message_text, 'Markdown');
         }
-        $message_text .= "Sekarang, silakan masukkan harga untuk paket ini (contoh: 50000).\n\n";
-        $message_text .= "_Ketik /cancel untuk membatalkan._";
-
-        $app->telegram_api->sendMessage($app->chat_id, $message_text, 'Markdown');
     }
 
     private function validatePrerequisites(App $app, array $message): ?string
