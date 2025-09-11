@@ -461,4 +461,17 @@ class MediaPackageRepository
         }
         return $stmt->execute([$price, $package_id]);
     }
+
+    /**
+     * Menghitung jumlah penawaran untuk sebuah paket.
+     *
+     * @param int $package_id
+     * @return int
+     */
+    public function countOffers(int $package_id): int
+    {
+        $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM offers WHERE package_id = ?");
+        $stmt->execute([$package_id]);
+        return (int)$stmt->fetchColumn();
+    }
 }

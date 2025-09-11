@@ -8,6 +8,7 @@ use TGBot\Database\SaleRepository;
 use TGBot\Database\SubscriptionRepository;
 use TGBot\Database\FeatureChannelRepository;
 use TGBot\Database\UserRepository;
+use TGBot\Database\PackageViewRepository;
 
 class KontenCommand implements CommandInterface
 {
@@ -18,6 +19,7 @@ class KontenCommand implements CommandInterface
         $subscription_repo = new SubscriptionRepository($app->pdo);
         $feature_channel_repo = new FeatureChannelRepository($app->pdo);
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
+        $view_repo = new PackageViewRepository($app->pdo);
 
         if (count($parts) !== 2) {
             $app->telegram_api->sendMessage($app->chat_id, "Format perintah salah. Gunakan: /konten <ID Konten>");
@@ -48,11 +50,17 @@ class KontenCommand implements CommandInterface
 
         if ($is_seller) {
             try {
+                // Existing report data
                 $sales_count = $sale_repo->countSalesForPackage($package_id);
                 $total_earnings = $sales_count * $package['price'];
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
                 $total_earnings_formatted = "Rp " . number_format($total_earnings, 0, ',', '.');
                 $created_at = date('d M Y H:i', strtotime($package['created_at']));
+
+                // New Analytics Data
+                $views_count = $view_repo->countViews($package_id);
+                $offers_count = $package_repo->countOffers($package_id);
+                $conversion_rate = ($views_count > 0) ? round(($sales_count / $views_count) * 100, 2) : 0;
 
                 $report = "✨ *Laporan Konten*\n\n" .
                     "ID Konten: `{$package['public_id']}`\n" .
@@ -62,7 +70,11 @@ class KontenCommand implements CommandInterface
                     "Tanggal Dibuat: {$created_at}\n\n" .
                     "📈 *Statistik Penjualan*\n" .
                     "Jumlah Terjual: {$sales_count} kali\n" .
-                    "Total Pendapatan: {$total_earnings_formatted}";
+                    "Total Pendapatan: {$total_earnings_formatted}\n\n" .
+                    "📊 *Analitik Pengguna*\n" .
+                    "Dilihat oleh: {$views_count} pengguna unik\n" .
+                    "Upaya tawar: {$offers_count} kali\n" .
+                    "Tingkat Konversi: {$conversion_rate}%";
 
                 $caption = $report;
 
@@ -75,7 +87,7 @@ class KontenCommand implements CommandInterface
                 }
                 $keyboard = ['inline_keyboard' => $keyboard_buttons];
 
-            } catch (\Exception $e) {
+            } catch (
                 app_log("Gagal membuat laporan konten untuk seller: " . $e->getMessage(), 'error', ['package_id' => $package_id]);
                 $app->telegram_api->sendMessage($app->chat_id, "Terjadi kesalahan saat mengambil data laporan. Silakan coba lagi nanti.");
                 return; // Stop execution if report fails
@@ -104,6 +116,11 @@ class KontenCommand implements CommandInterface
                     $keyboard['inline_keyboard'][0][] = ['text' => "Langganan ({$sub_price_formatted}/bln) ⭐", 'callback_data' => "subscribe_{$package['seller_user_id']}"];
                 }
             }
+        }
+
+        // Log the view event for analytics before showing the content
+        if (!$is_seller) {
+            $view_repo->logView($package_id, $app->user['id']);
         }
 
         $thumbnail = $package_repo->getThumbnailFile($package_id);

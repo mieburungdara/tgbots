@@ -223,6 +223,25 @@ CREATE TABLE `telegram_error_logs` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
+ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+
+-- 
+-- Struktur untuk tabel `package_views`
+-- 
+DROP TABLE IF EXISTS `package_views`;
+CREATE TABLE `package_views` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `package_id` int(11) NOT NULL,
+  `viewer_user_id` int(11) NOT NULL,
+  `viewed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_view` (`package_id`,`viewer_user_id`),
+  KEY `package_id_idx` (`package_id`),
+  CONSTRAINT `package_views_ibfk_1` FOREIGN KEY (`package_id`) REFERENCES `media_packages` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `package_views_ibfk_2` FOREIGN KEY (`viewer_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- 

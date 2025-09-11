@@ -258,12 +258,16 @@
       "returns": "bool"
     },
     {
-      "name": "updatePrice",
-      "description": "Memperbarui harga untuk sebuah paket.",
+      "name": "updatePackagePricing",
+      "description": "Memperbarui harga untuk sebuah paket, baik harga sekali beli maupun harga langganan.",
       "parameters": [
         {
           "name": "package_id",
           "type": "int"
+        },
+        {
+          "name": "package_type",
+          "type": "string"
         },
         {
           "name": "price",
@@ -271,6 +275,17 @@
         }
       ],
       "returns": "bool"
+    },
+    {
+      "name": "countOffers",
+      "description": "Menghitung jumlah penawaran untuk sebuah paket.",
+      "parameters": [
+        {
+          "name": "package_id",
+          "type": "int"
+        }
+      ],
+      "returns": "int"
     }
   ]
 }

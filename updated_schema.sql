@@ -396,6 +396,24 @@ CREATE TABLE `users`  (
   UNIQUE INDEX `public_seller_id`(`public_seller_id` ASC) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = 'Menyimpan data pengguna bot.' ROW_FORMAT = DYNAMIC;
 
+ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
+-- Table structure for package_views
+-- ----------------------------
+DROP TABLE IF EXISTS `package_views`;
+CREATE TABLE `package_views`  (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `package_id` bigint(20) NOT NULL,
+  `viewer_user_id` bigint(20) NOT NULL,
+  `viewed_at` timestamp NOT NULL DEFAULT current_timestamp,
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `unique_view`(`package_id`, `viewer_user_id`) USING BTREE,
+  INDEX `package_id_idx`(`package_id`) USING BTREE,
+  CONSTRAINT `fk_view_package` FOREIGN KEY (`package_id`) REFERENCES `media_packages` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_view_viewer` FOREIGN KEY (`viewer_user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = 'Mencatat setiap tampilan unik per pengguna per paket untuk analitik.' ROW_FORMAT = DYNAMIC;
+
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ----------------------------

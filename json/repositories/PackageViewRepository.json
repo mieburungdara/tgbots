@@ -1,0 +1,47 @@
+{
+  "class": "TGBot\\Database\\PackageViewRepository",
+  "description": "Repositori untuk mengelola data analitik tampilan paket.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Membuat instance PackageViewRepository.",
+      "params": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "logView",
+      "description": "Mencatat tampilan unik dari seorang pengguna untuk sebuah paket.",
+      "params": [
+        {
+          "name": "package_id",
+          "type": "int"
+        },
+        {
+          "name": "viewer_user_id",
+          "type": "int"
+        }
+      ],
+      "return": {
+        "type": "void"
+      }
+    },
+    {
+      "name": "countViews",
+      "description": "Menghitung jumlah penonton unik untuk sebuah paket.",
+      "params": [
+        {
+          "name": "package_id",
+          "type": "int"
+        }
+      ],
+      "return": {
+        "type": "int"
+      }
+    }
+  ]
+}
