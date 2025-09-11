@@ -1,34 +1,122 @@
 {
   "flow_name": "/sell",
-  "summary": "Memulai alur penjualan sebuah media atau grup media.",
-  "description": "Dipicu dengan me-reply sebuah media dengan perintah `/sell`. Alur ini memvalidasi prasyarat, lalu meminta penetapan harga untuk membuat paket konten.",
-  "initial_checks": [
+  "summary": "Memulai dan menyelesaikan alur penjualan sebuah media atau grup media.",
+  "description": "Alur ini memandu pengguna melalui validasi, pendaftaran (jika perlu), penetapan harga, pembuatan paket, dan backup media. Alur ini melibatkan transisi state pengguna dari `null` menjadi `awaiting_price` dan kembali ke `null`.",
+  "phases": [
     {
-      "name": "Validasi Prasyarat",
-      "description": "Memanggil metode `validatePrerequisites` untuk melakukan serangkaian pemeriksaan:",
-      "checks": [
-        "Memastikan fitur bot adalah 'sell'.",
-        "Memastikan perintah me-reply sebuah pesan media.",
-        "Memastikan pengguna sudah terdaftar sebagai penjual. Jika belum, kirim prompt pendaftaran dengan tombol callback `register_seller` dan hentikan alur."
+      "phase_number": 1,
+      "phase_name": "Inisiasi dan Validasi Perintah",
+      "trigger": "Pengguna me-reply sebuah pesan media dengan perintah `/sell`.",
+      "handler": "`SellCommand.php`",
+      "steps": [
+        {
+          "step": 1.1,
+          "name": "Validasi Prasyarat",
+          "description": "Metode `validatePrerequisites` dipanggil untuk memeriksa beberapa kondisi secara berurutan:",
+          "checks": [
+            "**Fitur Bot**: Memastikan `assigned_feature` untuk bot saat ini adalah 'sell'. Jika tidak, kirim error dan berhenti.",
+            "**Pesan Balasan (Reply)**: Memastikan perintah ini adalah balasan untuk pesan lain. Jika tidak, kirim instruksi dan berhenti.",
+            "**Tipe Media**: Memastikan pesan yang dibalas berisi media yang didukung (foto, video, dll). Jika tidak, kirim error dan berhenti.",
+            "**Status Pendaftaran Penjual**: Memeriksa apakah `public_seller_id` pengguna ada. Jika tidak, alur utama berhenti dan memicu **Sub-Alur Pendaftaran Penjual** (lihat di bawah)."
+          ]
+        },
+        {
+          "step": 1.2,
+          "name": "Validasi dan Pengambilan Info Media",
+          "description": "Metode `getValidatedMediaInfo` dipanggil untuk:",
+          "actions": [
+            "Memastikan media yang dibalas sudah ada di tabel `media_files` (artinya sudah diproses oleh `MediaHandler`). Jika tidak, kirim error dan berhenti.",
+            "Mengambil `media_group_id` dan `caption` dari media tersebut. Jika media adalah bagian dari grup, ia akan mencari caption dari file mana pun dalam grup itu untuk digunakan sebagai deskripsi."
+          ]
+        },
+        {
+          "step": 1.3,
+          "name": "Transisi State dan Prompt Harga",
+          "description": "Setelah semua validasi berhasil, alur berlanjut:",
+          "actions": [
+            "`UserRepository::setUserState()` dipanggil untuk mengubah state pengguna menjadi `awaiting_price` dan menyimpan konteks media yang akan dijual.",
+            "Bot mengirim pesan ke pengguna yang berisi deskripsi media dan meminta mereka untuk memasukkan harga, dengan opsi untuk membatalkan via `/cancel`."
+          ]
+        }
       ]
     },
     {
-      "name": "Validasi Media Tersimpan",
-      "description": "Memanggil `getValidatedMediaInfo` untuk memastikan media yang di-reply sudah tersimpan di database dan untuk mengambil `media_group_id` serta `caption`-nya."
+      "phase_number": 2,
+      "phase_name": "Penanganan Input Harga (Stateful)",
+      "trigger": "Pengguna (dalam state `awaiting_price`) mengirim pesan baru.",
+      "handler": "`AwaitingPriceState.php` (via `StateHandler` dan `StateRouter`)",
+      "steps": [
+        {
+          "step": 2.1,
+          "name": "Validasi Input Harga",
+          "description": "Memeriksa apakah pesan dari pengguna adalah angka integer positif. Jika tidak, kirim pesan error dan pengguna tetap dalam state `awaiting_price`."
+        },
+        {
+          "step": 2.2,
+          "name": "Pembuatan Paket Media",
+          "description": "Metode privat `createMediaPackage` dipanggil untuk melakukan operasi database inti:",
+          "database_actions": [
+            "`MediaPackageRepository::createPackageWithPublicId()`: Membuat ID publik unik (misal: `ABCD_0001`) dengan menaikkan `seller_package_sequence` pengguna, lalu membuat record baru di `media_packages`.",
+            "`MediaPackageRepository::updatePrice()`: Menetapkan harga untuk paket yang baru dibuat.",
+            "`UPDATE media_files`: Menetapkan `package_id` yang baru ke semua file media yang relevan (baik satu file atau semua file dalam satu `media_group_id`)."
+          ]
+        },
+        {
+          "step": 2.3,
+          "name": "Reset State Pengguna",
+          "description": "`UserRepository::setUserState(null)` dipanggil untuk mengeluarkan pengguna dari state `awaiting_price`."
+        },
+        {
+          "step": 2.4,
+          "name": "Backup Media ke Penyimpanan",
+          "description": "Metode privat `backupMedia` dipanggil untuk mengarsipkan file:",
+          "actions": [
+            "`BotChannelUsageRepository::getNextChannelForBot()`: Mendapatkan channel backup berikutnya secara round-robin.",
+            "`TelegramAPI::copyMessage()` atau `copyMessages()`: Menyalin semua file media dari chat asli ke channel backup.",
+            "`MediaFileRepository::updateStorageInfo()`: Setelah setiap file berhasil disalin, record-nya di tabel `media_files` diperbarui dengan `storage_channel_id` dan `storage_message_id` yang baru. Ini krusial untuk pengiriman konten di masa depan."
+          ]
+        },
+        {
+          "step": 2.5,
+          "name": "Konfirmasi Akhir",
+          "description": "Bot mengirim pesan konfirmasi akhir kepada pengguna, yang berisi ID publik paket yang baru dibuat dan instruksi untuk melihatnya dengan `/konten`."
+        }
+      ]
     }
   ],
-  "main_flow": [
+  "sub_flows": [
     {
-      "step_number": 1,
-      "name": "Pengaturan State Pengguna",
-      "description": "Mengubah state pengguna menjadi 'awaiting_price' dan menyimpan konteks media yang akan dijual.",
-      "action": "`UserRepository::setUserState()`"
+      "name": "Sub-Alur Pendaftaran Penjual",
+      "trigger": "Pengguna yang belum terdaftar mencoba menggunakan `/sell`.",
+      "handler": "`RegisterSellerCallback.php`",
+      "steps": [
+        {
+          "step": "A",
+          "description": "`SellCommand` mengirim pesan \"Apakah Anda ingin mendaftar?\" dengan tombol inline."
+        },
+        {
+          "step": "B",
+          "description": "Pengguna menekan tombol, memicu `RegisterSellerCallback`."
+        },
+        {
+          "step": "C",
+          "description": "Callback memanggil `UserRepository::setPublicId()` untuk menghasilkan dan menyimpan ID penjual unik."
+        },
+        {
+          "step": "D",
+          "description": "Bot mengirim pesan konfirmasi pendaftaran dan menghapus prompt asli."
+        },
+        {
+          "step": "E",
+          "description": "Pengguna diinstruksikan untuk menjalankan kembali perintah `/sell` pada media yang diinginkan."
+        }
+      ]
     },
     {
-      "step_number": 2,
-      "name": "Permintaan Input Harga",
-      "description": "Mengirim pesan kepada pengguna yang meminta mereka untuk memasukkan harga, lengkap dengan deskripsi media dan instruksi pembatalan."
+      "name": "Sub-Alur Pembatalan",
+      "trigger": "Pengguna dalam state `awaiting_price` mengirim perintah `/cancel`.",
+      "handler": "`StateHandler.php`",
+      "action": "State pengguna direset ke `null` dan bot mengirim pesan konfirmasi pembatalan. Tidak ada data sisa yang tertinggal di database."
     }
-  ],
-  "next_flow": "Input harga selanjutnya akan ditangani oleh `AwaitingPriceState`."
+  ]
 }
