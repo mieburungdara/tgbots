@@ -1,41 +1,41 @@
 {
   "flow_name": "/rate",
   "summary": "Memulai alur pemberian rating untuk sebuah media.",
-  "description": "Dipicu dengan me-reply sebuah media dengan perintah /rate. Memulai proses interaktif di mana pengguna diminta memilih kategori rating.",
+  "description": "Dipicu dengan me-reply sebuah media dengan perintah \/rate. Perintah ini melakukan serangkaian validasi sebelum mengubah state pengguna untuk menunggu pemilihan kategori.",
+  "handler": "`RateCommand.php`",
   "initial_checks": [
     {
+      "check": 1,
       "name": "Pengecekan Fitur Bot",
-      "action": "Memastikan fitur bot adalah 'rate'. Jika tidak, sarankan bot yang benar."
+      "action": "Memastikan `assigned_feature` untuk bot adalah 'rate'. Jika tidak, panggil `BotRepository::findAllBotsByFeature()` untuk menyarankan bot yang benar dan berhenti."
     },
     {
+      "check": 2,
       "name": "Pengecekan Kiriman Tertunda",
-      "action": "Memanggil `MediaPackageRepository::hasPendingPost()` untuk memeriksa apakah pengguna sudah memiliki kiriman yang menunggu moderasi."
+      "action": "Memanggil `MediaPackageRepository::hasPendingPost()` untuk memeriksa apakah pengguna sudah memiliki kiriman yang menunggu moderasi. Jika ya, kirim pesan dan berhenti."
     },
     {
-      "name": "Pengecekan Pesan Balasan (Reply)",
-      "action": "Memastikan perintah me-reply pesan lain."
+      "check": 3,
+      "name": "Validasi Pesan Balasan (Reply)",
+      "action": "Memastikan perintah ini adalah balasan untuk pesan lain, dan pesan tersebut berisi foto atau video. Jika tidak, kirim error dan berhenti."
     },
     {
-      "name": "Validasi Tipe Media",
-      "action": "Memastikan pesan yang dibalas adalah foto atau video."
-    },
-    {
+      "check": 4,
       "name": "Validasi Kepemilikan Media",
-      "action": "Memastikan pengguna tidak memberi rating pada media milik orang lain."
+      "action": "Memastikan `from_id` dari pesan yang dibalas sama dengan ID pengguna saat ini. Jika tidak, kirim error dan berhenti."
     }
   ],
   "main_flow": [
     {
-      "step_number": 1,
+      "step": 1,
       "name": "Pengaturan State Pengguna",
-      "description": "Menyimpan state pengguna ke `awaiting_rate_category` dan menyimpan konteks pesan yang dibalas.",
-      "action": "`UserRepository::setUserState()`"
+      "description": "Setelah semua validasi berhasil, panggil `UserRepository::setUserState()` untuk mengubah state pengguna menjadi `awaiting_rate_category` dan menyimpan konteks pesan yang dibalas (`message_id`, `chat_id`, `from_id`)."
     },
     {
-      "step_number": 2,
+      "step": 2,
       "name": "Permintaan Pemilihan Kategori",
-      "description": "Mengirim pesan \"Silakan pilih kategori:\" dengan keyboard inline berisi pilihan kategori."
+      "description": "Mengirim pesan kepada pengguna dengan teks \"Silakan pilih kategori:\" dan menyertakan keyboard inline dengan pilihan kategori. Pesan ini dikirim sebagai balasan ke media yang akan di-rate."
     }
   ],
-  "next_flow": "Alur selanjutnya ditangani oleh `CallbackQueryHandler` yang akan memicu `RateCallback`."
+  "next_flow": "Alur selanjutnya ditangani oleh `CallbackQueryHandler` ketika pengguna menekan salah satu tombol kategori, yang akan memicu `RateCallback`."
 }

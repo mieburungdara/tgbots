@@ -1,37 +1,66 @@
 {
   "flow_name": "/konten",
-  "summary": "Menampilkan detail dan opsi untuk sebuah paket konten.",
-  "description": "Dipanggil dengan format `/konten <ID_PUBLIK>`, perintah ini menampilkan informasi yang berbeda tergantung pada peran pengguna (penjual, pembeli, atau pengunjung).",
-  "initial_checks": [
+  "summary": "Menampilkan detail, statistik, dan opsi untuk sebuah paket konten.",
+  "description": "Dipanggil dengan format `/konten <ID_PUBLIK>`, perintah ini menampilkan informasi yang sangat kontekstual tergantung pada peran pengguna (penjual, pembeli, atau pengunjung).",
+  "handler": "`KontenCommand.php`",
+  "steps": [
     {
-      "name": "Validasi Format Perintah",
-      "action": "Memastikan perintah memiliki parameter kedua (`<ID_PUBLIK>`)."
+      "step": 1,
+      "name": "Validasi & Inisialisasi",
+      "actions": [
+        "Memastikan perintah memiliki parameter kedua (`<ID_PUBLIK>`).",
+        "Menginisialisasi `MediaPackageRepository`, `SaleRepository`, dan `FeatureChannelRepository`.",
+        "Memanggil `MediaPackageRepository::findByPublicId()` untuk mengambil data paket. Jika tidak ditemukan, kirim error dan berhenti."
+      ]
     },
     {
-      "name": "Pencarian Paket",
-      "action": "Mencari paket di database menggunakan `MediaPackageRepository::findByPublicId()`."
+      "step": 2,
+      "name": "Pembuatan Ringkasan Media & Deskripsi",
+      "actions": [
+        "Memanggil `MediaPackageRepository::getFilesByPackageId()` untuk mendapatkan detail semua file media.",
+        "Memanggil metode privat `generateMediaSummary()` untuk membuat string ringkasan (misal: `[1P 2V 24.5MB]`).",
+        "Menggabungkan ringkasan media dengan deskripsi utama paket."
+      ]
+    },
+    {
+      "step": 3,
+      "name": "Logika Tampilan Berdasarkan Peran",
+      "description": "Menentukan caption dan tombol yang akan ditampilkan berdasarkan hubungan pengguna dengan paket.",
+      "scenarios": [
+        {
+          "scenario_name": "Pengguna adalah Penjual",
+          "actions": [
+            "Memanggil `SaleRepository::countSalesForPackage()` untuk mendapatkan jumlah penjualan.",
+            "Menghitung total pendapatan.",
+            "Membuat caption `Laporan Konten` lengkap yang berisi ID, deskripsi, harga, status, tanggal dibuat, dan statistik penjualan.",
+            "Memeriksa `FeatureChannelRepository::findAllByOwnerAndFeature()` untuk menentukan apakah tombol `Post ke Channel` harus ditampilkan.",
+            "Menyiapkan tombol `Lihat Selengkapnya` dan (jika ada) `Post ke Channel`."
+          ]
+        },
+        {
+          "scenario_name": "Pengguna Sudah Membeli atau adalah Admin",
+          "actions": [
+            "Memeriksa `SaleRepository::hasUserPurchased()`.",
+            "Menyiapkan tombol `Lihat Selengkapnya` untuk mengakses konten."
+          ]
+        },
+        {
+          "scenario_name": "Pengunjung Biasa",
+          "actions": [
+            "Memeriksa apakah status paket adalah `available`.",
+            "Menyiapkan tombol `Beli Konten Ini` dengan harga yang tertera."
+          ]
+        }
+      ]
+    },
+    {
+      "step": 4,
+      "name": "Pengiriman Respons Final",
+      "actions": [
+        "Memanggil `MediaPackageRepository::getThumbnailFile()` yang memiliki logika fallback (jika thumbnail utama tidak valid, cari file valid pertama).",
+        "Jika tidak ada thumbnail yang valid sama sekali, kirim pesan error dan catat di log.",
+        "Memanggil `TelegramAPI::copyMessage()` untuk mengirim thumbnail dengan caption dan tombol yang sudah disiapkan."
+      ]
     }
-  ],
-  "main_flow": {
-    "name": "Logika Tampilan Berdasarkan Peran",
-    "description": "Menentukan informasi apa yang akan ditampilkan berdasarkan hubungan pengguna dengan paket.",
-    "scenarios": [
-      {
-        "scenario_name": "Pengguna adalah Penjual",
-        "action": "Menampilkan laporan penjualan lengkap untuk konten tersebut, termasuk statistik pendapatan, dan tombol aksi seperti 'Lihat Selengkapnya' dan 'Post ke Channel'."
-      },
-      {
-        "scenario_name": "Pengguna Sudah Membeli atau Admin",
-        "action": "Menampilkan deskripsi dan tombol 'Lihat Selengkapnya' untuk mengakses konten."
-      },
-      {
-        "scenario_name": "Pengunjung Biasa",
-        "action": "Menampilkan deskripsi dan tombol 'Beli' jika paket berstatus 'available'."
-      }
-    ]
-  },
-  "final_step": {
-    "name": "Pengiriman Respons",
-    "description": "Mengambil media thumbnail yang valid menggunakan `getThumbnailFile()` dan mengirimkannya ke pengguna dengan caption dan tombol yang relevan. Jika thumbnail tidak valid, kirim pesan error."
-  }
+  ]
 }

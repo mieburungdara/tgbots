@@ -1,32 +1,34 @@
 {
   "flow_name": "/me",
-  "summary": "Menampilkan ringkasan profil dan statistik pengguna.",
-  "description": "Mengumpulkan dan menampilkan informasi terperinci tentang pengguna, termasuk data identitas, status keuangan, dan rekap aktivitas penjualan.",
+  "summary": "Menampilkan ringkasan profil, keuangan, dan statistik penjualan pengguna.",
+  "description": "Mengumpulkan dan menampilkan informasi terperinci tentang pengguna dari berbagai sumber data, lalu memformatnya menjadi satu pesan ringkasan yang informatif.",
+  "handler": "`MeCommand.php`",
   "steps": [
     {
-      "step_number": 1,
-      "name": "Pengambilan Data",
-      "description": "Mengambil data dari beberapa sumber:",
-      "data_sources": [
-        {
-          "source": "Objek Aplikasi (`$app->user`)",
-          "data": "Informasi dasar pengguna."
-        },
-        {
-          "source": "`AnalyticsRepository::getSellerSummary()`",
-          "data": "Statistik penjualan seperti `total_sales` dan `total_revenue`."
-        }
+      "step": 1,
+      "name": "Inisialisasi & Pengambilan Data",
+      "actions": [
+        "Inisialisasi `AnalyticsRepository`.",
+        "Panggil `AnalyticsRepository::getSellerSummary()` menggunakan ID pengguna saat ini untuk mendapatkan `total_sales` dan `total_revenue`.",
+        "Ambil data profil dasar (ID, nama, `public_seller_id`, `balance`) langsung dari objek `$app->user`."
       ]
     },
     {
-      "step_number": 2,
-      "name": "Pemformatan dan Penyusunan Pesan",
-      "description": "Membangun string pesan multi-baris dalam format Markdown, memformat angka sebagai mata uang, dan menangani kasus di mana pengguna belum menjadi penjual."
+      "step": 2,
+      "name": "Pemformatan Data",
+      "actions": [
+        "Melakukan escape Markdown pada nama pengguna untuk keamanan.",
+        "Memformat `balance` dan `total_revenue` menjadi format mata uang Rupiah.",
+        "Menyiapkan string untuk `public_seller_id`, atau menampilkan 'Belum terdaftar' jika tidak ada."
+      ]
     },
     {
-      "step_number": 3,
-      "name": "Pengiriman Pesan",
-      "description": "Mengirimkan pesan yang telah disusun ke chat pengguna dengan `parse_mode` Markdown."
+      "step": 3,
+      "name": "Penyusunan & Pengiriman Pesan",
+      "actions": [
+        "Membangun string pesan multi-baris dalam format Markdown yang terstruktur dalam beberapa bagian: 'Profil Anda', 'Keuangan', dan 'Aktivitas Penjualan'.",
+        "Mengirimkan pesan yang telah disusun ke pengguna menggunakan `parse_mode` Markdown."
+      ]
     }
   ]
 }

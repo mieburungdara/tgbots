@@ -1,37 +1,41 @@
 {
   "flow_name": "/tanya",
   "summary": "Memulai alur untuk mengajukan pertanyaan terkait sebuah pesan.",
-  "description": "Dipicu dengan me-reply sebuah pesan dengan perintah /tanya. Memulai proses interaktif di mana pengguna diminta memilih kategori pertanyaan.",
+  "description": "Dipicu dengan me-reply sebuah pesan dengan perintah /tanya. Perintah ini melakukan serangkaian validasi sebelum mengubah state pengguna untuk menunggu pemilihan kategori.",
+  "handler": "`TanyaCommand.php`",
   "initial_checks": [
     {
+      "check": 1,
       "name": "Pengecekan Fitur Bot",
-      "action": "Memastikan fitur bot adalah 'tanya'. Jika tidak, sarankan bot yang benar."
+      "action": "Memastikan `assigned_feature` untuk bot adalah 'tanya'. Jika tidak, panggil `BotRepository::findAllBotsByFeature()` untuk menyarankan bot yang benar dan berhenti."
     },
     {
+      "check": 2,
       "name": "Pengecekan Kiriman Tertunda",
-      "action": "Memanggil `MediaPackageRepository::hasPendingPost()` untuk memeriksa apakah pengguna sudah memiliki kiriman yang menunggu moderasi."
+      "action": "Memanggil `MediaPackageRepository::hasPendingPost()` untuk memeriksa apakah pengguna sudah memiliki kiriman yang menunggu moderasi. Jika ya, kirim pesan dan berhenti."
     },
     {
-      "name": "Pengecekan Pesan Balasan (Reply)",
-      "action": "Memastikan perintah me-reply pesan lain."
+      "check": 3,
+      "name": "Validasi Pesan Balasan (Reply)",
+      "action": "Memastikan perintah ini adalah balasan untuk pesan lain. Jika tidak, kirim error dan berhenti."
     },
     {
+      "check": 4,
       "name": "Validasi Kepemilikan Pesan",
-      "action": "Memastikan pengguna tidak bertanya pada pesan milik orang lain."
+      "action": "Memastikan `from_id` dari pesan yang dibalas sama dengan ID pengguna saat ini. Jika tidak, kirim error dan berhenti."
     }
   ],
   "main_flow": [
     {
-      "step_number": 1,
+      "step": 1,
       "name": "Pengaturan State Pengguna",
-      "description": "Menyimpan state pengguna ke `awaiting_tanya_category` dan menyimpan konteks pesan yang dibalas (termasuk teksnya).",
-      "action": "`UserRepository::setUserState()`"
+      "description": "Setelah semua validasi berhasil, panggil `UserRepository::setUserState()` untuk mengubah state pengguna menjadi `awaiting_tanya_category` dan menyimpan konteks pesan yang dibalas (termasuk teksnya)."
     },
     {
-      "step_number": 2,
+      "step": 2,
       "name": "Permintaan Pemilihan Kategori",
-      "description": "Mengirim pesan \"Silakan pilih kategori:\" dengan keyboard inline berisi pilihan kategori."
+      "description": "Mengirim pesan kepada pengguna dengan teks \"Silakan pilih kategori:\" dan menyertakan keyboard inline dengan pilihan kategori. Pesan ini dikirim sebagai balasan ke pesan yang ditanyakan."
     }
   ],
-  "next_flow": "Alur selanjutnya ditangani oleh `CallbackQueryHandler` yang akan memicu `TanyaCallback`."
+  "next_flow": "Alur selanjutnya ditangani oleh `CallbackQueryHandler` ketika pengguna menekan salah satu tombol kategori, yang akan memicu `TanyaCallback`."
 }

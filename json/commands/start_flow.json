@@ -1,7 +1,8 @@
 {
   "flow_name": "/start",
-  "summary": "Titik masuk utama bagi pengguna, bisa untuk sambutan atau melihat konten via deep link.",
-  "description": "Menangani perintah `/start`. Jika dipanggil tanpa parameter, akan mengirim pesan selamat datang. Jika dipanggil dengan payload `package_...`, akan langsung menampilkan detail paket konten tersebut.",
+  "summary": "Titik masuk utama, menangani sambutan dan deep link untuk melihat konten.",
+  "description": "Menangani perintah `/start`. Jika tanpa parameter, mengirim pesan selamat datang. Jika dengan payload `package_...`, langsung menampilkan detail paket konten dengan logika tampilan yang sangat kontekstual.",
+  "handler": "`StartCommand.php`",
   "main_flow": {
     "name": "Pengecekan Payload",
     "description": "Memeriksa apakah perintah mengandung payload yang diawali dengan `package_`.",
@@ -19,24 +20,66 @@
     {
       "name": "handleStartWithoutPayload",
       "description": "Mengirim pesan sambutan generik kepada pengguna.",
-      "steps": [
-        {
-          "step_number": 1,
-          "action": "Kirim pesan selamat datang standar dan anjuran untuk menggunakan /help."
-        }
-      ]
+      "action": "Kirim pesan selamat datang standar dan anjuran untuk menggunakan `/help`."
     },
     {
       "name": "handleStartWithPayload",
       "description": "Menampilkan detail paket konten berdasarkan ID publik dari payload.",
-      "logic_flow": [
-        "1. Ekstrak `public_id` dari payload.",
-        "2. Cari paket menggunakan `MediaPackageRepository::findByPublicId()`.",
-        "3. Tentukan peran pengguna (penjual, pembeli, atau pengunjung).",
-        "4. **Untuk Penjual**: Tampilkan laporan penjualan lengkap dengan statistik dan tombol aksi (Lihat, Post).",
-        "5. **Untuk Pembeli**: Tampilkan pesan bahwa item sudah dimiliki dengan tombol untuk melihat konten.",
-        "6. **Untuk Pengunjung**: Tampilkan deskripsi, harga, dan tombol 'Beli Sekarang'.",
-        "7. Ambil thumbnail yang valid dan kirim media dengan caption dan tombol yang sesuai."
+      "steps": [
+        {
+          "step": 1,
+          "name": "Validasi & Inisialisasi",
+          "actions": [
+            "Ekstrak `public_id` dari payload.",
+            "Inisialisasi `MediaPackageRepository`, `SaleRepository`, `FeatureChannelRepository`.",
+            "Cari paket menggunakan `MediaPackageRepository::findByPublicId()`. Jika tidak ada, kirim error dan berhenti."
+          ]
+        },
+        {
+          "step": 2,
+          "name": "Logika Tampilan Berdasarkan Peran",
+          "description": "Menentukan informasi apa yang akan ditampilkan berdasarkan hubungan pengguna dengan paket.",
+          "scenarios": [
+            {
+              "scenario_name": "Pengguna adalah Penjual",
+              "actions": [
+                "Memanggil `SaleRepository::countSalesForPackage()` untuk mendapatkan jumlah penjualan.",
+                "Menghitung total keuntungan.",
+                "Membuat caption HTML `Detail Konten Anda` yang berisi semua statistik penjualan.",
+                "Memeriksa `FeatureChannelRepository` untuk menentukan apakah tombol `Post ke Channel` harus ditampilkan.",
+                "Menyiapkan tombol `Lihat Selengkapnya` dan `Post ke Channel`."
+              ]
+            },
+            {
+              "scenario_name": "Pengguna Sudah Membeli",
+              "actions": [
+                "Memeriksa `SaleRepository::hasUserPurchased()`.",
+                "Mengirim pesan \"Anda sudah memiliki item ini\" dengan tombol `Lihat Konten`."
+              ]
+            },
+            {
+              "scenario_name": "Pengunjung Biasa",
+              "actions": [
+                "Memeriksa apakah status paket adalah `available`.",
+                "Membuat caption yang menampilkan deskripsi, harga, dan saldo pengguna saat ini.",
+                "Menyiapkan tombol `Beli Sekarang`."
+              ]
+            },
+            {
+              "scenario_name": "Paket Tidak Tersedia",
+              "action": "Mengirim pesan sederhana: 'Maaf, item ini sudah tidak tersedia.'"
+            }
+          ]
+        },
+        {
+          "step": 3,
+          "name": "Pengiriman Respons Final",
+          "actions": [
+            "Memanggil `MediaPackageRepository::getThumbnailFile()` untuk mendapatkan thumbnail yang valid.",
+            "Jika thumbnail ada, panggil `TelegramAPI::copyMessage()` untuk mengirimnya dengan caption dan tombol yang relevan.",
+            "Jika tidak, kirim pesan teks saja."
+          ]
+        }
       ]
     }
   ]
