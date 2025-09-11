@@ -15,6 +15,7 @@ use TGBot\Handlers\Callbacks\AdminBanCallback;
 use TGBot\Handlers\Callbacks\RateCallback;
 use TGBot\Handlers\Callbacks\TanyaCallback;
 use TGBot\Handlers\Callbacks\SellConfirmCallback;
+use TGBot\Handlers\Callbacks\CancelSellCallback;
 
 class CallbackRouter
 {
@@ -35,6 +36,7 @@ class CallbackRouter
             'rate_' => new RateCallback(),
             'tanya_' => new TanyaCallback(),
             'sell_confirm_' => new SellConfirmCallback(),
+            'cancel_sell' => new CancelSellCallback(),
         ];
     }
 
