@@ -1,41 +1,43 @@
 {
   "class_name": "FeatureChannelController",
-  "purpose": "Controller untuk mengelola channel fitur di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Mengelola channel yang ditugaskan untuk fitur spesifik.",
+  "description": "Controller ini menyediakan antarmuka CRUD untuk tabel `feature_channels`, memungkinkan admin untuk menetapkan channel mana yang akan digunakan untuk moderasi, penjualan, dll.",
+  "dependencies": ["FeatureChannelRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan daftar semua channel fitur yang terdaftar.",
+      "logic_flow": [
+        "1. Memanggil `FeatureChannelRepository::findAll()`.",
+        "2. Merender view `admin/feature_channels/index.php` dengan data tersebut."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks channel fitur."
-    },
-    {
       "name": "create",
-      "description": "Menampilkan formulir pembuatan channel fitur baru."
+      "description": "Menampilkan formulir untuk menambahkan channel fitur baru."
     },
     {
       "name": "store",
-      "description": "Menyimpan channel fitur baru."
+      "description": "Menyimpan data channel fitur baru dari formulir `create`.",
+      "logic_flow": [
+        "1. Mengambil data dari `$_POST`.",
+        "2. Memvalidasi input.",
+        "3. Memanggil `FeatureChannelRepository::create()`.",
+        "4. Mengalihkan ke halaman `index`."
+      ]
     },
     {
       "name": "edit",
-      "description": "Menampilkan formulir edit channel fitur."
+      "description": "Menampilkan formulir untuk mengedit channel fitur yang ada."
     },
     {
       "name": "update",
-      "description": "Memperbarui channel fitur."
+      "description": "Memperbarui data channel fitur dari formulir `edit`."
     },
     {
       "name": "delete",
-      "description": "Menghapus channel fitur."
+      "description": "Menghapus sebuah channel fitur."
     }
   ]
 }

@@ -1,29 +1,36 @@
 {
   "class_name": "RoleController",
-  "purpose": "Controller untuk mengelola peran pengguna di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Mengelola peran (roles) pengguna.",
+  "description": "Controller ini menyediakan antarmuka CRUD untuk mengelola peran yang tersedia di sistem, seperti 'Admin' atau 'Member'.",
+  "dependencies": ["RoleRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan daftar semua peran yang ada.",
+      "logic_flow": [
+        "1. Memanggil `RoleRepository::getAllRoles()`.",
+        "2. Merender view `admin/roles/index.php` dengan data peran."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks peran."
-    },
-    {
       "name": "add",
-      "description": "Menambahkan peran baru."
+      "description": "Memproses penambahan peran baru.",
+      "logic_flow": [
+        "1. Mengambil nama peran dari `$_POST`.",
+        "2. Memvalidasi input.",
+        "3. Memanggil `RoleRepository::addRole()`.",
+        "4. Mengalihkan kembali ke halaman daftar peran."
+      ]
     },
     {
       "name": "delete",
-      "description": "Menghapus peran."
+      "description": "Menghapus peran yang ada.",
+      "logic_flow": [
+        "1. Mengambil ID peran dari `$_POST` atau parameter URL.",
+        "2. Memanggil `RoleRepository::deleteRole()`.",
+        "3. Mengalihkan kembali ke halaman daftar peran."
+      ]
     }
   ]
 }

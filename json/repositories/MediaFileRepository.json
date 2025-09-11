@@ -1,53 +1,33 @@
 {
   "class_name": "MediaFileRepository",
-  "purpose": "Mengelola data file media.",
+  "table": "media_files",
+  "summary": "Mengelola catatan setiap file media yang dikirim ke bot.",
+  "description": "Setiap kali pengguna mengirim media (foto/video), repositori ini digunakan untuk menyimpan metadatanya, seperti `file_id`, `file_unique_id`, dan `media_group_id`. Catatan ini nantinya akan diasosiasikan dengan sebuah paket media jika pengguna memutuskan untuk menjualnya.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi repositori dengan objek PDO.",
-      "parameters": [
-        {
-          "name": "pdo",
-          "type": "PDO",
-          "description": "Objek koneksi database."
-        }
-      ]
+      "description": "Menginisialisasi repositori dengan koneksi PDO.",
+      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
     },
     {
       "name": "saveMediaFile",
-      "description": "Menyimpan file media baru ke database.",
-      "parameters": [
-        {
-          "name": "params",
-          "type": "array",
-          "description": "Array asosiatif yang berisi detail file media."
-        }
-      ],
+      "description": "Menyimpan metadata file media baru ke database.",
+      "parameters": [{"name": "params", "type": "array", "description": "Array asosiatif berisi data media seperti `telegram_user_id`, `bot_id`, `file_id`, `file_unique_id`, `media_group_id`, `type`, `caption`."}],
+      "logic": "`INSERT INTO media_files (...) VALUES (...)`",
       "returns": "string",
-      "return_description": "ID terakhir yang dimasukkan (ID file media)."
+      "return_description": "ID dari baris yang baru saja dimasukkan."
     },
     {
       "name": "updateStorageInfo",
-      "description": "Memperbarui informasi penyimpanan (channel dan ID pesan) untuk file media.",
+      "description": "Memperbarui catatan media dengan lokasi penyimpanannya di channel backup.",
       "parameters": [
-        {
-          "name": "mediaFileId",
-          "type": "int",
-          "description": "ID file media."
-        },
-        {
-          "name": "storageChannelId",
-          "type": "string",
-          "description": "ID channel penyimpanan."
-        },
-        {
-          "name": "storageMessageId",
-          "type": "int",
-          "description": "ID pesan penyimpanan."
-        }
+        {"name": "mediaFileId", "type": "int", "description": "ID internal file media."}, 
+        {"name": "storageChannelId", "type": "string", "description": "ID channel backup."}, 
+        {"name": "storageMessageId", "type": "int", "description": "ID pesan di dalam channel backup."}
       ],
+      "logic": "`UPDATE media_files SET storage_channel_id = ?, storage_message_id = ? WHERE id = ?`",
       "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal."
+      "return_description": "`true` jika berhasil, `false` jika gagal."
     }
   ]
 }

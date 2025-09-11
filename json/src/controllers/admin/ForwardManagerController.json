@@ -1,21 +1,27 @@
 {
   "class_name": "ForwardManagerController",
-  "purpose": "Controller untuk mengelola penerusan pesan di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Mengelola aturan penerusan pesan otomatis.",
+  "description": "Controller ini menyediakan antarmuka untuk mengatur dari chat mana pesan akan diteruskan secara otomatis dan ke mana tujuannya.",
+  "dependencies": ["BotChannelUsageRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan daftar aturan penerusan yang ada dan formulir untuk menambahkan yang baru.",
+      "logic_flow": [
+        "1. Mengambil semua aturan penerusan yang ada dari `bot_channel_usage` atau tabel serupa.",
+        "2. Merender view `admin/forward_manager/index.php` dengan data tersebut."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks manajer penerusan."
+      "name": "store",
+      "description": "Menyimpan aturan penerusan baru.",
+      "logic_flow": [
+        "1. Mengambil data (chat sumber, chat tujuan) dari `$_POST`.",
+        "2. Memvalidasi input.",
+        "3. Menyimpan aturan baru ke database.",
+        "4. Mengalihkan kembali ke halaman `index`."
+      ]
     }
   ]
 }

@@ -1,10 +1,21 @@
 {
   "class_name": "WebhookController",
-  "purpose": "Controller untuk menangani webhook dari Telegram.",
+  "extends": "BaseController",
+  "summary": "Titik masuk tunggal untuk semua update dari Telegram.",
+  "description": "Controller ini tidak mewarisi `AppController` karena ia harus dapat diakses bahkan sebelum aplikasi dikonfigurasi (untuk menangani setup). Tugasnya adalah menerima request POST dari webhook Telegram, memvalidasi token, dan meneruskan data update ke `UpdateDispatcher`.",
   "methods": [
     {
       "name": "index",
-      "description": "Metode indeks untuk menangani permintaan webhook."
+      "description": "Menangani permintaan webhook yang masuk.",
+      "logic_flow": [
+        "1. Mengambil token bot dari URI (misalnya, `/webhook/BOT_TOKEN`).",
+        "2. Memvalidasi token dengan yang ada di `config.php` (jika sudah terinstal).",
+        "3. Mengambil payload JSON mentah dari `php://input`.",
+        "4. Mendekode payload JSON menjadi array PHP.",
+        "5. Jika valid, membuat instance `UpdateDispatcher`.",
+        "6. Memanggil `UpdateDispatcher->dispatch(update)` untuk memulai pemrosesan update.",
+        "7. Mengirim respons HTTP 200 OK kembali ke Telegram untuk mengonfirmasi penerimaan."
+      ]
     }
   ]
 }

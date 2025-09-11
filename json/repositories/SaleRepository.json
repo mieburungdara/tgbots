@@ -1,90 +1,43 @@
 {
   "class_name": "SaleRepository",
-  "purpose": "Repositori untuk mengelola data penjualan (sales). Menyediakan metode untuk membuat catatan penjualan, memeriksa riwayat pembelian, dll.",
+  "table": "sales",
+  "summary": "Mengelola data transaksi penjualan.",
+  "description": "Repositori ini bertanggung jawab untuk mencatat setiap transaksi penjualan yang berhasil. Ia juga menyediakan metode untuk memeriksa riwayat pembelian seorang pengguna.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Membuat instance SaleRepository.",
-      "parameters": [
-        {
-          "name": "pdo",
-          "type": "PDO",
-          "description": "Objek koneksi database."
-        }
-      ]
-    },
-    {
-      "name": "hasUserPurchased",
-      "description": "Memeriksa apakah seorang pengguna telah membeli sebuah paket tertentu.",
-      "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID internal paket."
-        },
-        {
-          "name": "user_id",
-          "type": "int",
-          "description": "ID Telegram pengguna."
-        }
-      ],
-      "returns": "bool",
-      "return_description": "true jika pengguna sudah pernah membeli, false jika belum."
+      "description": "Menginisialisasi repositori dengan koneksi PDO.",
+      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
     },
     {
       "name": "createSale",
-      "description": "Membuat catatan penjualan baru, mengurangi saldo pembeli, dan menambah saldo penjual. Metode ini harus dijalankan di dalam sebuah transaksi yang dikelola oleh pemanggil.",
+      "description": "Membuat catatan penjualan baru. Metode ini adalah bagian dari transaksi yang lebih besar yang juga mencakup pembaruan saldo pengguna.",
       "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket yang dijual."
-        },
-        {
-          "name": "seller_user_id",
-          "type": "int",
-          "description": "ID Telegram penjual."
-        },
-        {
-          "name": "buyer_user_id",
-          "type": "int",
-          "description": "ID Telegram pembeli."
-        },
-        {
-          "name": "price",
-          "type": "float",
-          "description": "Harga penjualan."
-        }
+        {"name": "package_id", "type": "int", "description": "ID paket yang terjual."},
+        {"name": "seller_user_id", "type": "int", "description": "ID pengguna penjual."},
+        {"name": "buyer_user_id", "type": "int", "description": "ID pengguna pembeli."},
+        {"name": "price", "type": "float", "description": "Harga pada saat penjualan."}
       ],
+      "logic": "`INSERT INTO sales (package_id, seller_user_id, buyer_user_id, price) VALUES (?, ?, ?, ?)`",
+      "returns": "bool"
+    },
+    {
+      "name": "hasUserPurchased",
+      "description": "Memeriksa apakah seorang pengguna sudah pernah membeli sebuah paket.",
+      "parameters": [
+        {"name": "package_id", "type": "int", "description": "ID internal paket."}, 
+        {"name": "user_id", "type": "int", "description": "ID internal pengguna."}
+      ],
+      "logic": "`SELECT 1 FROM sales WHERE package_id = ? AND buyer_user_id = ? LIMIT 1`",
       "returns": "bool",
-      "return_description": "true jika operasi database berhasil.",
-      "throws": "Exception Jika terjadi kesalahan database."
+      "return_description": "`true` jika catatan penjualan ditemukan, jika tidak `false`."
     },
     {
       "name": "findPackagesByBuyerId",
       "description": "Menemukan semua paket yang telah dibeli oleh seorang pengguna.",
-      "parameters": [
-        {
-          "name": "buyer_user_id",
-          "type": "int",
-          "description": "ID Telegram pengguna (pembeli)."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Daftar paket yang dibeli, termasuk tanggal pembelian."
-    },
-    {
-      "name": "countSalesForPackage",
-      "description": "Menghitung jumlah penjualan untuk sebuah paket tertentu.",
-      "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket."
-        }
-      ],
-      "returns": "int",
-      "return_description": "Jumlah penjualan untuk paket tersebut."
+      "parameters": [{"name": "buyer_user_id", "type": "int", "description": "ID internal pengguna."}],
+      "logic": "`SELECT p.*, s.sale_date FROM media_packages p JOIN sales s ON p.id = s.package_id WHERE s.buyer_user_id = ?`",
+      "returns": "array"
     }
   ]
 }

@@ -1,29 +1,37 @@
 {
   "class_name": "LoginController",
-  "purpose": "Controller untuk mengelola login member.",
+  "extends": "AppController",
+  "summary": "Menangani proses otentikasi untuk panel member.",
+  "description": "Controller ini bertanggung jawab untuk proses login member, yang menggunakan sistem token sekali pakai yang dikirim melalui bot Telegram, bukan username/password tradisional.",
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan halaman yang memberitahu pengguna untuk mendapatkan link login dari bot.",
+      "logic_flow": [
+        "1. Jika member sudah login, alihkan ke dasbor member.",
+        "2. Jika tidak, render view `member/auth/login.php`."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman login member."
-    },
-    {
       "name": "tokenLogin",
-      "description": "Melakukan login menggunakan token."
+      "description": "Memvalidasi token login yang diterima dari parameter URL.",
+      "logic_flow": [
+        "1. Mengambil `token` dari `$_GET`.",
+        "2. Mencari pengguna di tabel `users` yang memiliki `login_token` yang cocok.",
+        "3. Memeriksa apakah token belum digunakan (`token_used == 0`) dan tidak kedaluwarsa (misalnya, dalam 5 menit terakhir).",
+        "4. Jika valid, buat sesi member (misalnya, `$_SESSION['member_logged_in'] = true`, `$_SESSION['user_id'] = ...`).",
+        "5. Tandai token sebagai sudah digunakan (`token_used = 1`).",
+        "6. Alihkan ke dasbor member.",
+        "7. Jika tidak valid, tampilkan pesan error."
+      ]
     },
     {
       "name": "logout",
-      "description": "Melakukan logout member."
+      "description": "Menghancurkan sesi member dan mengalihkan ke halaman login.",
+      "logic_flow": [
+        "1. Menghancurkan sesi PHP.",
+        "2. Mengalihkan ke halaman login member."
+      ]
     }
   ]
 }

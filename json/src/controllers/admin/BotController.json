@@ -1,29 +1,36 @@
 {
   "class_name": "BotController",
-  "purpose": "Controller untuk mengelola bot di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Mengelola konfigurasi bot yang terdaftar.",
+  "description": "Controller ini menyediakan antarmuka CRUD (Create, Read, Update, Delete) untuk mengelola bot yang terdaftar dalam sistem di tabel `bots`.",
+  "dependencies": ["BotRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan daftar semua bot yang terdaftar.",
+      "logic_flow": [
+        "1. Memanggil `BotRepository::getAllBots()`.",
+        "2. Merender view `admin/bots/index.php` dengan data bot."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks bot."
-    },
-    {
       "name": "edit",
-      "description": "Menampilkan halaman edit bot."
+      "description": "Menampilkan formulir untuk mengedit detail bot tertentu.",
+      "logic_flow": [
+        "1. Mengambil ID bot dari parameter URL.",
+        "2. Memanggil `BotRepository::find()` untuk mendapatkan data bot saat ini.",
+        "3. Merender view `admin/bots/edit.php` dengan data bot tersebut."
+      ]
     },
     {
       "name": "update",
-      "description": "Memperbarui data bot."
+      "description": "Memproses data dari formulir edit dan memperbarui catatan bot di database.",
+      "logic_flow": [
+        "1. Mengambil data bot dari `$_POST`.",
+        "2. Memvalidasi input.",
+        "3. Memanggil `BotRepository::update()`.",
+        "4. Mengalihkan kembali ke halaman daftar bot dengan pesan sukses."
+      ]
     }
   ]
 }

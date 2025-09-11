@@ -1,134 +1,33 @@
 {
   "class_name": "AnalyticsRepository",
-  "purpose": "Mengelola data analitik terkait penjualan dan aktivitas pengguna.",
+  "table": "sales",
+  "summary": "Menyediakan metode untuk agregasi dan analisis data penjualan.",
+  "description": "Repositori ini tidak mengelola entitas tunggal, melainkan melakukan kueri kompleks terhadap tabel `sales` dan `media_packages` untuk menghasilkan statistik dan ringkasan analitik, seperti total pendapatan, penjualan harian, dan produk terlaris.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi repositori dengan objek PDO.",
-      "parameters": [
-        {
-          "name": "pdo",
-          "type": "PDO",
-          "description": "Objek koneksi database."
-        }
-      ]
+      "description": "Menginisialisasi repositori dengan koneksi PDO.",
+      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
     },
     {
-      "name": "getGlobalSummary",
-      "description": "Mendapatkan ringkasan penjualan global (total penjualan dan total pendapatan).",
+      "name": "getSellerStats",
+      "description": "Menghitung total item terjual dan total pendapatan untuk seorang penjual.",
+      "parameters": [{"name": "seller_user_id", "type": "int", "description": "ID internal pengguna penjual."}],
+      "logic": "`SELECT COUNT(id) as total_sales, SUM(price) as total_revenue FROM sales WHERE seller_user_id = ?`",
       "returns": "array",
-      "return_description": "Array asosiatif dengan total_sales dan total_revenue."
-    },
-    {
-      "name": "getUserPurchaseStats",
-      "description": "Mendapatkan statistik pembelian pengguna (total pembelian dan total pengeluaran).",
-      "parameters": [
-        {
-          "name": "buyer_user_id",
-          "type": "int",
-          "description": "ID pengguna pembeli."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dengan total_purchases dan total_spent."
-    },
-    {
-      "name": "getSellerSummary",
-      "description": "Mendapatkan ringkasan penjualan untuk seorang penjual (total penjualan dan total pendapatan).",
-      "parameters": [
-        {
-          "name": "seller_user_id",
-          "type": "int",
-          "description": "ID pengguna penjual."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dengan total_sales dan total_revenue."
+      "return_description": "Array dengan kunci `total_sales` dan `total_revenue`."
     },
     {
       "name": "getSalesByDay",
-      "description": "Mendapatkan data penjualan harian atau bulanan.",
+      "description": "Mengambil data penjualan harian untuk grafik atau laporan.",
       "parameters": [
-        {
-          "name": "seller_user_id",
-          "type": "?int",
-          "description": "Opsional, ID penjual untuk memfilter penjualan."
-        },
-        {
-          "name": "days",
-          "type": "int",
-          "description": "Jumlah hari ke belakang untuk data (default 30)."
-        },
-        {
-          "name": "packageId",
-          "type": "?int",
-          "description": "Opsional, ID paket untuk memfilter penjualan."
-        }
+        {"name": "seller_user_id", "type": "?int", "description": "Filter berdasarkan ID penjual (opsional)."},
+        {"name": "days", "type": "int", "description": "Jumlah hari ke belakang (default 30)."}
       ],
+      "logic": "`SELECT DATE(sale_date) as sales_date, SUM(price) as daily_revenue FROM sales WHERE sale_date >= NOW() - INTERVAL ? DAY GROUP BY DATE(sale_date)`",
       "returns": "array",
-      "return_description": "Array asosiatif dengan sales_date dan daily_revenue."
-    },
-    {
-      "name": "getTopSellingPackages",
-      "description": "Mendapatkan daftar paket terlaris secara global.",
-      "parameters": [
-        {
-          "name": "limit",
-          "type": "int",
-          "description": "Batas jumlah paket yang dikembalikan (default 5)."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dari paket terlaris."
-    },
-    {
-      "name": "getTopSellingPackagesForSeller",
-      "description": "Mendapatkan daftar paket terlaris untuk seorang penjual.",
-      "parameters": [
-        {
-          "name": "seller_user_id",
-          "type": "int",
-          "description": "ID pengguna penjual."
-        },
-        {
-          "name": "limit",
-          "type": "int",
-          "description": "Batas jumlah paket yang dikembalikan (default 5)."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dari paket terlaris penjual."
-    },
-    {
-      "name": "getSummaryForPackage",
-      "description": "Mendapatkan ringkasan penjualan untuk sebuah paket tertentu.",
-      "parameters": [
-        {
-          "name": "packageId",
-          "type": "int",
-          "description": "ID paket."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dengan total_sales dan total_revenue untuk paket."
-    },
-    {
-      "name": "getRecentSalesForPackage",
-      "description": "Mendapatkan daftar penjualan terbaru untuk sebuah paket.",
-      "parameters": [
-        {
-          "name": "packageId",
-          "type": "int",
-          "description": "ID paket."
-        },
-        {
-          "name": "limit",
-          "type": "int",
-          "description": "Batas jumlah penjualan yang dikembalikan (default 10)."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dari penjualan terbaru."
+      "return_description": "Array dari objek yang berisi `sales_date` dan `daily_revenue`."
     }
-  ]
+  ],
+  "notes": "Metode lain seperti `getTopSellingPackages` dan `getSummaryForPackage` juga ada tetapi mengikuti pola kueri agregat serupa pada tabel `sales` dan `media_packages`."
 }

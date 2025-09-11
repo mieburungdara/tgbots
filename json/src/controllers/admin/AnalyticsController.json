@@ -1,21 +1,19 @@
 {
   "class_name": "AnalyticsController",
-  "purpose": "Controller untuk mengelola analitik di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Menampilkan data analitik dan laporan penjualan untuk admin.",
+  "description": "Controller ini mengambil data agregat dari `AnalyticsRepository` dan menampilkannya dalam bentuk grafik dan tabel di dasbor admin.",
+  "dependencies": ["AnalyticsRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
-    },
-    {
       "name": "index",
-      "description": "Menampilkan halaman indeks analitik."
+      "description": "Menampilkan halaman utama analitik.",
+      "logic_flow": [
+        "1. Mengambil data ringkasan global (total penjualan, total pendapatan) dari `AnalyticsRepository`.",
+        "2. Mengambil data penjualan harian untuk ditampilkan dalam grafik.",
+        "3. Mengambil daftar paket terlaris.",
+        "4. Merender view `admin/analytics/index.php` dengan semua data yang telah diambil."
+      ]
     }
   ]
 }

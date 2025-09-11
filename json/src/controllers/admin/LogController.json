@@ -1,33 +1,33 @@
 {
   "class_name": "LogController",
-  "purpose": "Controller untuk mengelola log di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Menampilkan berbagai jenis log dari database.",
+  "description": "Controller ini menyediakan beberapa metode untuk melihat log yang berbeda yang disimpan di database, seperti log error aplikasi, log error API Telegram, dan log update mentah.",
+  "dependencies": ["RawUpdateRepository", "TelegramErrorLogRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "app",
+      "description": "Menampilkan log error aplikasi umum (kemungkinan dari file log atau tabel database terpisah).",
+      "logic_flow": [
+        "1. Membaca file `logs/error.log` atau mengambil data dari tabel log aplikasi.",
+        "2. Merender view `admin/logs/app.php` dengan data log."
       ]
     },
     {
-      "name": "app",
-      "description": "Menampilkan log aplikasi."
-    },
-    {
       "name": "telegram",
-      "description": "Menampilkan log Telegram."
+      "description": "Menampilkan log error yang spesifik berasal dari `TelegramAPI`.",
+      "logic_flow": [
+        "1. Memanggil `TelegramErrorLogRepository::findAll()` dengan paginasi.",
+        "2. Merender view `admin/logs/telegram.php` dengan data log error."
+      ]
     },
     {
       "name": "media",
-      "description": "Menampilkan log media."
+      "description": "Menampilkan log yang terkait dengan pemrosesan media (kemungkinan tidak diimplementasikan sepenuhnya)."
     },
     {
       "name": "publicError",
-      "description": "Menampilkan log error publik."
+      "description": "Menampilkan log error yang ditujukan untuk dilihat publik (kemungkinan tidak diimplementasikan sepenuhnya)."
     }
   ]
 }

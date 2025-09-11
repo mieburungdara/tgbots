@@ -1,21 +1,19 @@
 {
   "class_name": "DashboardController",
-  "purpose": "Controller untuk mengelola dashboard member.",
+  "extends": "MemberBaseController",
+  "summary": "Menampilkan halaman utama dasbor member.",
+  "description": "Ini adalah halaman utama yang dilihat oleh member setelah berhasil login. Halaman ini menampilkan ringkasan statistik penjualan dan konten mereka.",
+  "dependencies": ["AnalyticsRepository", "MediaPackageRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
-    },
-    {
       "name": "index",
-      "description": "Menampilkan halaman indeks dashboard member."
+      "description": "Mengambil data ringkasan untuk member dan menampilkan halaman dasbor.",
+      "logic_flow": [
+        "1. Mengambil ID pengguna dari sesi.",
+        "2. Memanggil `AnalyticsRepository::getSellerStats()` untuk mendapatkan total penjualan dan pendapatan.",
+        "3. Memanggil `MediaPackageRepository::findAllBySellerId()` untuk mendapatkan daftar konten yang dijual.",
+        "4. Merender view `member/dashboard/index.php` dengan data ringkasan tersebut."
+      ]
     }
   ]
 }

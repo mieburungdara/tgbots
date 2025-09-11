@@ -1,16 +1,18 @@
 {
   "class_name": "MemberBaseController",
-  "purpose": "Kelas dasar untuk semua controller member, menyediakan fungsionalitas umum dan memastikan otentikasi.",
+  "extends": "AppController",
+  "is_abstract": true,
+  "summary": "Kelas dasar untuk semua controller di panel member.",
+  "description": "Kelas ini bertindak sebagai induk untuk semua controller di area member. Tanggung jawab utamanya adalah memastikan bahwa pengguna yang mengakses telah terotentikasi melalui sesi. Jika tidak, pengguna akan dialihkan ke halaman login.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dasar member dengan objek App dan melakukan otentikasi.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "description": "Memanggil constructor induk dan segera memeriksa sesi login member.",
+      "logic_flow": [
+        "1. Memanggil `parent::__construct($app)`.",
+        "2. Memeriksa apakah `$_SESSION['member_logged_in']` ada dan `true`.",
+        "3. Jika tidak, panggil `$this->redirect('/login')` untuk memaksa pengguna ke halaman login.",
+        "4. Jika ya, memuat data pengguna yang login ke dalam properti controller untuk digunakan oleh metode lain."
       ]
     }
   ]

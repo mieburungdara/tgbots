@@ -1,117 +1,59 @@
 {
   "class_name": "UserRepository",
-  "purpose": "Repositori untuk mengelola data pengguna (users, rel_user_bot). Menangani pembuatan pengguna, pencarian, pengelolaan state, dan peran.",
+  "tables": ["users", "rel_user_bot"],
+  "summary": "Mengelola data pengguna dan interaksinya dengan bot.",
+  "description": "Repositori ini adalah pusat untuk semua data yang berkaitan dengan pengguna. Ia menangani pembuatan pengguna baru saat interaksi pertama, mencari pengguna, serta mengelola data spesifik per-bot seperti state percakapan.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Membuat instance UserRepository.",
+      "description": "Menginisialisasi repositori dengan koneksi PDO dan ID bot saat ini.",
       "parameters": [
-        {
-          "name": "pdo",
-          "type": "PDO",
-          "description": "Objek koneksi database."
-        },
-        {
-          "name": "bot_id",
-          "type": "int",
-          "description": "ID Telegram bot yang sedang berinteraksi dengan pengguna."
-        }
+        {"name": "pdo", "type": "PDO", "description": "Objek koneksi database."},
+        {"name": "bot_id", "type": "int", "description": "ID internal bot yang sedang berinteraksi."}
       ]
     },
     {
       "name": "findOrCreateUser",
-      "description": "Mencari pengguna berdasarkan ID Telegram mereka. Jika tidak ditemukan, pengguna baru akan dibuat. Metode ini juga memastikan relasi user-bot dan entri member ada, serta menetapkan peran 'admin' jika ID pengguna cocok dengan SUPER_ADMIN_TELEGRAM_ID.",
+      "description": "Metode kunci yang menemukan pengguna berdasarkan ID Telegram, atau membuat pengguna baru jika belum ada. Juga memastikan relasi di `rel_user_bot` ada.",
       "parameters": [
-        {
-          "name": "telegram_user_id",
-          "type": "int",
-          "description": "ID Telegram pengguna."
-        },
-        {
-          "name": "first_name",
-          "type": "string",
-          "description": "Nama depan pengguna."
-        },
-        {
-          "name": "username",
-          "type": "?string",
-          "description": "Username Telegram pengguna (jika ada)."
-        }
+        {"name": "telegram_user_id", "type": "int"},
+        {"name": "first_name", "type": "string"},
+        {"name": "username", "type": "?string"}
       ],
-      "returns": "array|false",
-      "return_description": "Data pengguna yang lengkap dan terbaru, atau false jika gagal."
+      "logic_flow": [
+        "1. Coba `SELECT * FROM users WHERE telegram_id = ?`.",
+        "2. Jika tidak ada, `INSERT INTO users (...)`.",
+        "3. Jika pengguna adalah SUPER_ADMIN, pastikan perannya adalah 'Admin'.",
+        "4. Periksa relasi di `rel_user_bot`. Jika tidak ada, `INSERT INTO rel_user_bot (...)`.",
+        "5. Kembalikan data pengguna yang lengkap, termasuk state dari `rel_user_bot`."
+      ],
+      "returns": "array|false"
     },
     {
       "name": "findUserByTelegramId",
-      "description": "Mencari data lengkap pengguna berdasarkan ID Telegram mereka, termasuk data spesifik bot seperti state percakapan.",
-      "parameters": [
-        {
-          "name": "telegram_user_id",
-          "type": "int",
-          "description": "ID Telegram pengguna."
-        }
-      ],
-      "returns": "array|false",
-      "return_description": "Data pengguna sebagai array asosiatif, atau false jika tidak ditemukan."
+      "description": "Mencari data lengkap pengguna, di-join dengan data relasi bot untuk mendapatkan state.",
+      "parameters": [{"name": "telegram_user_id", "type": "int"}],
+      "logic": "`SELECT u.*, r.state, r.state_context FROM users u LEFT JOIN rel_user_bot r ON u.id = r.user_id WHERE u.telegram_id = ? AND r.bot_id = ?`",
+      "returns": "array|false"
     },
     {
       "name": "setUserState",
-      "description": "Mengatur state percakapan untuk seorang pengguna dalam konteks bot saat ini. Berguna untuk alur percakapan multi-langkah, seperti proses penjualan.",
+      "description": "Mengatur state percakapan untuk pengguna, yang disimpan di tabel `rel_user_bot`.",
       "parameters": [
-        {
-          "name": "telegram_user_id",
-          "type": "int",
-          "description": "ID Telegram pengguna."
-        },
-        {
-          "name": "state",
-          "type": "?string",
-          "description": "State baru (misal: 'awaiting_price') atau null untuk menghapus state."
-        },
-        {
-          "name": "context",
-          "type": "?array",
-          "description": "Data kontekstual tambahan yang akan disimpan sebagai JSON."
-        }
-      ]
-    },
-    {
-      "name": "getBotId",
-      "description": "Mendapatkan ID Telegram bot yang terkait dengan instance repositori ini.",
-      "returns": "int",
-      "return_description": "ID Telegram bot."
+        {"name": "telegram_user_id", "type": "int"},
+        {"name": "state", "type": "?string", "description": "Nama state, atau `null` untuk membersihkan."}, 
+        {"name": "context", "type": "?array", "description": "Konteks yang akan di-serialize ke JSON."}
+      ],
+      "logic": "`UPDATE rel_user_bot SET state = ?, state_context = ? WHERE user_id = (SELECT id FROM users WHERE telegram_id = ?) AND bot_id = ?`",
+      "returns": "void"
     },
     {
       "name": "setPublicId",
-      "description": "Menetapkan ID publik yang unik untuk seorang pengguna, efektif mendaftarkannya sebagai penjual. Terus mencoba menghasilkan ID unik jika terjadi tabrakan.",
-      "parameters": [
-        {
-          "name": "telegram_user_id",
-          "type": "int",
-          "description": "ID Telegram pengguna."
-        }
-      ],
+      "description": "Memberi pengguna ID publik yang unik untuk menjadi penjual.",
+      "parameters": [{"name": "telegram_user_id", "type": "int"}],
+      "logic": "`UPDATE users SET public_seller_id = ? WHERE telegram_id = ?`",
       "returns": "string",
-      "return_description": "ID publik yang baru dibuat dan disimpan.",
-      "throws": "Exception Jika gagal membuat ID unik setelah beberapa kali percobaan."
-    },
-    {
-      "name": "updateUserStatusByTelegramId",
-      "description": "Memperbarui status pengguna (misalnya, menjadi 'blocked') berdasarkan ID Telegram mereka. Berguna ketika bot mendeteksi diblokir oleh pengguna.",
-      "parameters": [
-        {
-          "name": "telegram_user_id",
-          "type": "int",
-          "description": "ID Telegram pengguna."
-        },
-        {
-          "name": "status",
-          "type": "string",
-          "description": "Status baru, harus 'active' atau 'blocked'."
-        }
-      ],
-      "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal atau status tidak valid."
+      "return_description": "ID publik yang baru dibuat."
     }
   ]
 }

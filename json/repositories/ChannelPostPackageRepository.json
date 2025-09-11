@@ -1,71 +1,33 @@
 {
   "class_name": "ChannelPostPackageRepository",
-  "purpose": "Mengelola hubungan antara postingan channel dan paket media.",
+  "table": "channel_post_packages",
+  "summary": "Menghubungkan post di channel dengan paket media.",
+  "description": "Repositori ini mengelola tabel pivot `channel_post_packages`, yang berfungsi untuk melacak paket media mana yang telah diposting ke channel mana, beserta ID pesannya. Ini penting untuk fitur seperti menarik kembali post.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi repositori dengan objek PDO.",
-      "parameters": [
-        {
-          "name": "pdo",
-          "type": "PDO",
-          "description": "Objek koneksi database."
-        }
-      ]
+      "description": "Menginisialisasi repositori dengan koneksi PDO.",
+      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
     },
     {
       "name": "create",
-      "description": "Membuat entri baru yang menghubungkan channel, ID pesan, dan ID paket.",
+      "description": "Membuat catatan baru yang menautkan sebuah post di channel dengan sebuah paket.",
       "parameters": [
-        {
-          "name": "channel_id",
-          "type": "int",
-          "description": "ID channel Telegram."
-        },
-        {
-          "name": "message_id",
-          "type": "int",
-          "description": "ID pesan di channel."
-        },
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket media."
-        }
+        {"name": "channel_id", "type": "int", "description": "ID Telegram channel."}, 
+        {"name": "message_id", "type": "int", "description": "ID pesan di dalam channel."}, 
+        {"name": "package_id", "type": "int", "description": "ID internal paket media."}
       ],
+      "logic": "`INSERT INTO channel_post_packages (channel_id, message_id, package_id) VALUES (?, ?, ?)`",
       "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal."
-    },
-    {
-      "name": "findByChannelAndMessage",
-      "description": "Mencari paket media berdasarkan ID channel dan ID pesan.",
-      "parameters": [
-        {
-          "name": "channel_id",
-          "type": "int",
-          "description": "ID channel Telegram."
-        },
-        {
-          "name": "message_id",
-          "type": "int",
-          "description": "ID pesan di channel."
-        }
-      ],
-      "returns": "?array",
-      "return_description": "Data paket media sebagai array asosiatif, atau null jika tidak ditemukan."
+      "return_description": "`true` jika berhasil, `false` jika gagal."
     },
     {
       "name": "findByPackageId",
-      "description": "Mencari postingan channel berdasarkan ID paket media.",
-      "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket media."
-        }
-      ],
+      "description": "Mencari detail post (channel dan message ID) berdasarkan ID paket.",
+      "parameters": [{"name": "package_id", "type": "int", "description": "ID internal paket media."}],
+      "logic": "`SELECT * FROM channel_post_packages WHERE package_id = ?`",
       "returns": "?array",
-      "return_description": "Data postingan channel sebagai array asosiatif, atau null jika tidak ditemukan."
+      "return_description": "Data post jika ditemukan, jika tidak `null`."
     }
   ]
 }

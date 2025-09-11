@@ -1,49 +1,47 @@
 {
   "class_name": "StorageChannelController",
-  "purpose": "Controller untuk mengelola channel penyimpanan di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Mengelola channel pribadi yang digunakan untuk backup media.",
+  "description": "Controller ini menyediakan antarmuka CRUD lengkap untuk `private_channels` dan hubungannya dengan `bots`.",
+  "dependencies": ["PrivateChannelRepository", "PrivateChannelBotRepository", "BotRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan daftar semua channel penyimpanan dan bot yang terhubung.",
+      "logic_flow": [
+        "1. Memanggil `PrivateChannelRepository::getAllChannels()`.",
+        "2. Merender view `admin/storage_channels/index.php`."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks channel penyimpanan."
-    },
-    {
       "name": "add",
-      "description": "Menambahkan channel penyimpanan baru."
-    },
-    {
-      "name": "delete",
-      "description": "Menghapus channel penyimpanan."
-    },
-    {
-      "name": "edit",
-      "description": "Menampilkan halaman edit channel penyimpanan."
-    },
-    {
-      "name": "update",
-      "description": "Memperbarui channel penyimpanan."
+      "description": "Menyimpan channel baru setelah memverifikasi ID-nya.",
+      "logic_flow": [
+        "1. Mengambil ID dan nama channel dari `$_POST`.",
+        "2. Memanggil `TelegramAPI::getChat()` untuk memvalidasi ID channel.",
+        "3. Jika valid, memanggil `PrivateChannelRepository::addChannel()`.",
+        "4. Mengalihkan ke halaman `index`."
+      ]
     },
     {
       "name": "addBot",
-      "description": "Menambahkan bot ke channel penyimpanan."
-    },
-    {
-      "name": "removeBot",
-      "description": "Menghapus bot dari channel penyimpanan."
+      "description": "Menghubungkan bot yang ada ke channel penyimpanan.",
+      "logic_flow": [
+        "1. Mengambil `channel_id` dan `bot_id` dari `$_POST`.",
+        "2. Memanggil `PrivateChannelBotRepository::addBotToChannel()`.",
+        "3. Mengalihkan ke halaman `index`."
+      ]
     },
     {
       "name": "verifyBot",
-      "description": "Memverifikasi bot di channel penyimpanan."
+      "description": "Memverifikasi bahwa bot adalah admin di channel penyimpanan.",
+      "logic_flow": [
+        "1. Mengambil `channel_id` dan `bot_id`.",
+        "2. Memanggil `TelegramAPI::getChatMember()` untuk memeriksa status bot di channel.",
+        "3. Jika bot adalah admin, panggil `PrivateChannelBotRepository::verifyBotInChannel()`.",
+        "4. Mengalihkan ke halaman `index` dengan pesan status."
+      ]
     }
-  ]
+  ],
+  "notes": "Juga berisi metode lain untuk `edit`, `update`, `delete`, dan `removeBot`."
 }

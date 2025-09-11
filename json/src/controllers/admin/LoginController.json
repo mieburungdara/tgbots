@@ -1,29 +1,35 @@
 {
   "class_name": "LoginController",
-  "purpose": "Controller untuk mengelola login admin.",
+  "extends": "BaseController",
+  "summary": "Menangani proses otentikasi untuk panel admin.",
+  "description": "Controller ini tidak mewarisi `AppController` karena harus dapat diakses sebelum login. Ia bertanggung jawab untuk menampilkan halaman login, memvalidasi kredensial, membuat sesi admin, dan melakukan logout.",
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan halaman formulir login admin.",
+      "logic_flow": [
+        "1. Jika admin sudah login, alihkan ke dasbor admin.",
+        "2. Jika tidak, render view `admin/auth/login.php`."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman login admin."
-    },
-    {
       "name": "authenticate",
-      "description": "Mengautentikasi pengguna admin."
+      "description": "Memvalidasi username dan password yang dikirim dari formulir.",
+      "logic_flow": [
+        "1. Mengambil `username` dan `password` dari `$_POST`.",
+        "2. Membandingkan kredensial dengan yang ada di file konfigurasi (`ADMIN_USERNAME`, `ADMIN_PASSWORD`).",
+        "3. Jika cocok, buat sesi admin (misalnya, `$_SESSION['admin_logged_in'] = true`).",
+        "4. Alihkan ke dasbor admin.",
+        "5. Jika gagal, alihkan kembali ke halaman login dengan pesan error."
+      ]
     },
     {
       "name": "logout",
-      "description": "Melakukan logout admin."
+      "description": "Menghancurkan sesi admin dan mengalihkan ke halaman login.",
+      "logic_flow": [
+        "1. Menghancurkan sesi PHP.",
+        "2. Mengalihkan ke halaman login admin."
+      ]
     }
   ]
 }

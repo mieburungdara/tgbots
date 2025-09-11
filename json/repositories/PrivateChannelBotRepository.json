@@ -1,102 +1,40 @@
 {
   "class_name": "PrivateChannelBotRepository",
-  "purpose": "Repositori untuk mengelola hubungan antara channel pribadi dan bot. Mengelola tabel pivot private_channel_bots.",
+  "table": "private_channel_bots",
+  "summary": "Mengelola hubungan antara channel pribadi dan bot (tabel pivot).",
+  "description": "Repositori ini mengelola tabel `private_channel_bots`, yang merupakan tabel pivot untuk hubungan many-to-many antara `private_channels` dan `bots`. Ini mendefinisikan bot mana yang memiliki akses untuk menggunakan channel backup mana.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi repositori dengan objek PDO.",
-      "parameters": [
-        {
-          "name": "pdo",
-          "type": "PDO",
-          "description": "Objek koneksi database."
-        }
-      ]
+      "description": "Menginisialisasi repositori dengan koneksi PDO.",
+      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
     },
     {
       "name": "addBotToChannel",
-      "description": "Menambahkan hubungan antara bot dan channel.",
+      "description": "Menautkan sebuah bot ke sebuah channel pribadi.",
       "parameters": [
-        {
-          "name": "private_channel_id",
-          "type": "int",
-          "description": "ID channel pribadi."
-        },
-        {
-          "name": "bot_id",
-          "type": "int",
-          "description": "ID bot."
-        }
+        {"name": "private_channel_id", "type": "int", "description": "ID internal channel dari tabel `private_channels`."},
+        {"name": "bot_id", "type": "int", "description": "ID internal bot dari tabel `bots`."}
       ],
-      "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal."
-    },
-    {
-      "name": "verifyBotInChannel",
-      "description": "Memverifikasi bot dalam sebuah channel dengan menandai timestamp verifikasi.",
-      "parameters": [
-        {
-          "name": "private_channel_id",
-          "type": "int",
-          "description": "ID channel pribadi."
-        },
-        {
-          "name": "bot_id",
-          "type": "int",
-          "description": "ID bot."
-        }
-      ],
-      "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal."
+      "logic": "`INSERT INTO private_channel_bots (private_channel_id, bot_id) VALUES (?, ?)`",
+      "returns": "bool"
     },
     {
       "name": "getBotsForChannel",
-      "description": "Mendapatkan semua bot yang terhubung dengan sebuah channel.",
-      "parameters": [
-        {
-          "name": "private_channel_id",
-          "type": "int",
-          "description": "ID channel pribadi."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dari bot-bot yang terhubung."
-    },
-    {
-      "name": "removeBotFromChannel",
-      "description": "Menghapus hubungan antara bot dan channel.",
-      "parameters": [
-        {
-          "name": "private_channel_id",
-          "type": "int",
-          "description": "ID channel pribadi."
-        },
-        {
-          "name": "bot_id",
-          "type": "int",
-          "description": "ID bot."
-        }
-      ],
-      "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal."
+      "description": "Mendapatkan semua bot yang terhubung dengan sebuah channel pribadi.",
+      "parameters": [{"name": "private_channel_id", "type": "int", "description": "ID internal channel."}],
+      "logic": "`SELECT b.* FROM bots b JOIN private_channel_bots pcb ON b.id = pcb.bot_id WHERE pcb.private_channel_id = ?`",
+      "returns": "array"
     },
     {
       "name": "isBotInChannel",
-      "description": "Memeriksa apakah bot sudah terhubung dengan channel.",
+      "description": "Memeriksa apakah sebuah bot sudah ditautkan ke sebuah channel.",
       "parameters": [
-        {
-          "name": "private_channel_id",
-          "type": "int",
-          "description": "ID channel pribadi."
-        },
-        {
-          "name": "bot_id",
-          "type": "int",
-          "description": "ID bot."
-        }
+        {"name": "private_channel_id", "type": "int", "description": "ID internal channel."},
+        {"name": "bot_id", "type": "int", "description": "ID internal bot."}
       ],
-      "returns": "bool",
-      "return_description": "true jika terhubung, false jika tidak."
+      "logic": "`SELECT 1 FROM private_channel_bots WHERE private_channel_id = ? AND bot_id = ?`",
+      "returns": "bool"
     }
   ]
 }

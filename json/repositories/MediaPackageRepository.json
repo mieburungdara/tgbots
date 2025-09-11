@@ -1,306 +1,62 @@
 {
   "class_name": "MediaPackageRepository",
-  "purpose": "Mengelola data paket media.",
+  "table": "media_packages",
+  "summary": "Mengelola entitas paket media, inti dari fitur penjualan.",
+  "description": "Repositori ini adalah salah satu yang paling kompleks, bertanggung jawab atas semua operasi terkait paket media. Ini termasuk pembuatan, pencarian, pembaruan harga/deskripsi, penghapusan, dan pemeriksaan status.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi repositori dengan objek PDO.",
-      "parameters": [
-        {
-          "name": "pdo",
-          "type": "PDO",
-          "description": "Objek koneksi database."
-        }
-      ]
-    },
-    {
-      "name": "find",
-      "description": "Mencari paket berdasarkan ID-nya.",
-      "parameters": [
-        {
-          "name": "id",
-          "type": "int",
-          "description": "ID paket."
-        }
-      ],
-      "returns": "array|false",
-      "return_description": "Data paket sebagai array asosiatif, atau false jika tidak ditemukan."
-    },
-    {
-      "name": "getPackageFiles",
-      "description": "Mendapatkan file-file yang terkait dengan sebuah paket.",
-      "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dari file-file paket."
-    },
-    {
-      "name": "getGroupedPackageContent",
-      "description": "Mendapatkan konten paket yang dikelompokkan (misalnya, berdasarkan media group ID).",
-      "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dari konten paket yang dikelompokkan."
-    },
-    {
-      "name": "findForPurchase",
-      "description": "Mencari paket yang tersedia untuk pembelian.",
-      "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket."
-        }
-      ],
-      "returns": "array|false",
-      "return_description": "Data paket sebagai array asosiatif, atau false jika tidak ditemukan atau tidak tersedia."
-    },
-    {
-      "name": "markAsSold",
-      "description": "Menandai sebuah paket sebagai terjual.",
-      "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket."
-        }
-      ]
-    },
-    {
-      "name": "findAllBySellerId",
-      "description": "Mendapatkan semua paket yang dimiliki oleh seorang penjual.",
-      "parameters": [
-        {
-          "name": "seller_user_id",
-          "type": "int",
-          "description": "ID pengguna penjual."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dari paket-paket penjual."
-    },
-    {
-      "name": "softDeletePackage",
-      "description": "Menghapus paket secara lunak (mengubah status menjadi 'deleted').",
-      "parameters": [
-        {
-          "name": "packageId",
-          "type": "int",
-          "description": "ID paket."
-        },
-        {
-          "name": "seller_user_id",
-          "type": "int",
-          "description": "ID pengguna penjual."
-        }
-      ],
-      "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal.",
-      "throws": "Exception jika paket tidak ditemukan, pengguna tidak memiliki izin, atau paket sudah terjual."
-    },
-    {
-      "name": "hardDeletePackage",
-      "description": "Menghapus paket secara permanen dari database.",
-      "parameters": [
-        {
-          "name": "packageId",
-          "type": "int",
-          "description": "ID paket."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array berisi informasi file yang dihapus.",
-      "throws": "Exception jika paket tidak ditemukan atau sudah terjual."
-    },
-    {
-      "name": "findAll",
-      "description": "Mendapatkan semua paket dengan paginasi.",
-      "parameters": [
-        {
-          "name": "limit",
-          "type": "int",
-          "description": "Batas jumlah paket yang dikembalikan (default 100)."
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "description": "Offset untuk paginasi (default 0)."
-        }
-      ],
-      "returns": "array",
-      "return_description": "Array asosiatif dari semua paket."
-    },
-    {
-      "name": "findByPublicId",
-      "description": "Mencari paket berdasarkan ID publiknya.",
-      "parameters": [
-        {
-          "name": "publicId",
-          "type": "string",
-          "description": "ID publik paket."
-        }
-      ],
-      "returns": "array|false",
-      "return_description": "Data paket sebagai array asosiatif, atau false jika tidak ditemukan."
-    },
-    {
-      "name": "toggleProtection",
-      "description": "Mengubah status perlindungan konten sebuah paket.",
-      "parameters": [
-        {
-          "name": "packageId",
-          "type": "int",
-          "description": "ID paket."
-        },
-        {
-          "name": "seller_user_id",
-          "type": "int",
-          "description": "ID pengguna penjual."
-        }
-      ],
-      "returns": "bool",
-      "return_description": "Status perlindungan konten yang baru.",
-      "throws": "Exception jika paket tidak ditemukan atau pengguna tidak memiliki izin."
-    },
-    {
-      "name": "updatePackageDetails",
-      "description": "Memperbarui detail paket (deskripsi dan harga).",
-      "parameters": [
-        {
-          "name": "packageId",
-          "type": "int",
-          "description": "ID paket."
-        },
-        {
-          "name": "seller_user_id",
-          "type": "int",
-          "description": "ID pengguna penjual."
-        },
-        {
-          "name": "description",
-          "type": "string",
-          "description": "Deskripsi baru."
-        },
-        {
-          "name": "price",
-          "type": "?int",
-          "description": "Harga baru."
-        }
-      ],
-      "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal.",
-      "throws": "Exception jika paket tidak ditemukan atau pengguna tidak memiliki izin."
+      "description": "Menginisialisasi repositori dengan koneksi PDO.",
+      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
     },
     {
       "name": "createPackageWithPublicId",
-      "description": "Membuat paket baru dengan ID publik yang unik.",
+      "description": "Membuat paket baru, termasuk menghasilkan ID publik yang unik. Ini adalah langkah pertama dalam alur penjualan setelah harga ditetapkan.",
       "parameters": [
-        {
-          "name": "seller_user_id",
-          "type": "int",
-          "description": "ID pengguna penjual."
-        },
-        {
-          "name": "bot_id",
-          "type": "int",
-          "description": "ID bot."
-        },
-        {
-          "name": "description",
-          "type": "string",
-          "description": "Deskripsi paket."
-        },
-        {
-          "name": "thumbnail_media_id",
-          "type": "int",
-          "description": "ID thumbnail media."
-        },
-        {
-          "name": "post_type",
-          "type": "string",
-          "description": "Jenis postingan (default 'sell')."
-        },
-        {
-          "name": "category",
-          "type": "?string",
-          "description": "Kategori paket."
-        }
+        {"name": "seller_user_id", "type": "int", "description": "ID internal pengguna penjual."},
+        {"name": "bot_id", "type": "int", "description": "ID internal bot."},
+        {"name": "description", "type": "string", "description": "Deskripsi awal paket."},
+        {"name": "thumbnail_media_id", "type": "int", "description": "ID dari file media yang akan dijadikan thumbnail."}
+      ],
+      "logic_flow": [
+        "1. Menghasilkan `public_id` unik secara acak.",
+        "2. `INSERT INTO media_packages (public_id, telegram_user_id, bot_id, description, thumbnail_media_id, ...)`.",
+        "3. Mengembalikan `id` dari paket yang baru dibuat."
       ],
       "returns": "int",
-      "return_description": "ID paket yang baru dibuat.",
-      "throws": "Exception jika gagal membuat ID unik atau menyimpan paket."
+      "return_description": "ID internal paket yang baru."
     },
     {
-      "name": "getThumbnailFile",
-      "description": "Mendapatkan file thumbnail untuk sebuah paket.",
-      "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket."
-        }
-      ],
-      "returns": "array|false",
-      "return_description": "Data file thumbnail sebagai array asosiatif, atau false jika tidak ditemukan."
+      "name": "findByPublicId",
+      "description": "Mencari paket berdasarkan ID publiknya, yang digunakan di URL dan callback.",
+      "parameters": [{"name": "publicId", "type": "string", "description": "ID publik paket."}],
+      "logic": "`SELECT * FROM media_packages WHERE public_id = ?`",
+      "returns": "array|false"
     },
     {
-      "name": "updateStatus",
-      "description": "Memperbarui status sebuah paket.",
-      "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket."
-        },
-        {
-          "name": "status",
-          "type": "string",
-          "description": "Status baru."
-        }
-      ],
-      "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal."
-    },
-    {
-      "name": "hasPendingPost",
-      "description": "Memeriksa apakah seorang pengguna memiliki postingan yang sedang dalam status 'pending'.",
-      "parameters": [
-        {
-          "name": "user_id",
-          "type": "int",
-          "description": "ID pengguna."
-        }
-      ],
-      "returns": "bool",
-      "return_description": "true jika ada, false jika tidak."
+      "name": "getPackageFiles",
+      "description": "Mengambil semua file media yang tergabung dalam sebuah paket.",
+      "parameters": [{"name": "package_id", "type": "int", "description": "ID internal paket."}],
+      "logic": "`SELECT * FROM media_files WHERE package_id = ?`",
+      "returns": "array"
     },
     {
       "name": "updatePrice",
-      "description": "Memperbarui harga sebuah paket.",
+      "description": "Memperbarui harga untuk sebuah paket.",
       "parameters": [
-        {
-          "name": "package_id",
-          "type": "int",
-          "description": "ID paket."
-        },
-        {
-          "name": "price",
-          "type": "int",
-          "description": "Harga baru."
-        }
+        {"name": "package_id", "type": "int", "description": "ID internal paket."},
+        {"name": "price", "type": "int", "description": "Harga baru."}
       ],
-      "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal."
+      "logic": "`UPDATE media_packages SET price = ? WHERE id = ?`",
+      "returns": "bool"
+    },
+    {
+      "name": "hasPendingPost",
+      "description": "Memeriksa apakah seorang pengguna memiliki kiriman yang sedang menunggu moderasi (status 'pending').",
+      "parameters": [{"name": "user_id", "type": "int", "description": "ID internal pengguna."}],
+      "logic": "`SELECT 1 FROM media_packages WHERE telegram_user_id = ? AND status = 'pending' LIMIT 1`",
+      "returns": "bool"
     }
-  ]
+  ],
+  "notes": "Repositori ini juga memiliki banyak metode lain untuk CRUD, soft/hard delete, dan pembaruan detail lainnya."
 }

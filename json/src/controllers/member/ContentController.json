@@ -1,37 +1,45 @@
 {
   "class_name": "ContentController",
-  "purpose": "Controller untuk mengelola konten member.",
+  "extends": "MemberBaseController",
+  "summary": "Mengelola konten (paket media) milik member.",
+  "description": "Controller ini menyediakan antarmuka bagi member untuk melihat, mengedit, dan mengelola paket media yang mereka jual.",
+  "dependencies": ["MediaPackageRepository", "FeatureChannelRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "channels",
+      "description": "Menampilkan daftar konten milik member.",
+      "logic_flow": [
+        "1. Mengambil ID pengguna dari sesi.",
+        "2. Memanggil `MediaPackageRepository::findAllBySellerId()` untuk mendapatkan semua paket media milik pengguna.",
+        "3. Merender view `member/content/index.php` dengan daftar konten."
       ]
     },
     {
-      "name": "channels",
-      "description": "Menampilkan halaman channel konten."
-    },
-    {
       "name": "edit",
-      "description": "Menampilkan halaman edit konten."
+      "description": "Menampilkan formulir untuk mengedit deskripsi dan harga sebuah paket.",
+      "logic_flow": [
+        "1. Mengambil ID paket dari URL.",
+        "2. Memanggil `MediaPackageRepository::find()` dan memverifikasi bahwa pengguna adalah pemiliknya.",
+        "3. Merender view `member/content/edit.php` dengan data paket."
+      ]
     },
     {
       "name": "update",
-      "description": "Memperbarui konten."
-    },
-    {
-      "name": "retract",
-      "description": "Menarik kembali konten."
+      "description": "Memperbarui detail paket dari formulir edit.",
+      "logic_flow": [
+        "1. Mengambil data (deskripsi, harga) dari `$_POST`.",
+        "2. Memanggil `MediaPackageRepository::updatePackageDetails()`.",
+        "3. Mengalihkan kembali ke halaman daftar konten."
+      ]
     },
     {
       "name": "toggleProtection",
-      "description": "Mengubah status perlindungan konten."
+      "description": "Mengaktifkan atau menonaktifkan perlindungan konten untuk sebuah paket.",
+      "logic_flow": [
+        "1. Mengambil ID paket dari `$_POST`.",
+        "2. Memanggil `MediaPackageRepository::toggleProtection()`.",
+        "3. Mengalihkan kembali."
+      ]
     }
   ]
 }

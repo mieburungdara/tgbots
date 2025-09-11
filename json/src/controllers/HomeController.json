@@ -1,10 +1,16 @@
 {
   "class_name": "HomeController",
-  "purpose": "Controller untuk halaman utama aplikasi.",
+  "extends": "AppController",
+  "summary": "Controller untuk halaman utama (landing page) aplikasi.",
+  "description": "Controller ini menangani rute root (`/`) dari aplikasi web. Biasanya hanya menampilkan halaman selamat datang atau mengalihkan pengguna ke halaman login.",
   "methods": [
     {
       "name": "index",
-      "description": "Metode indeks untuk halaman utama."
+      "description": "Menampilkan halaman utama atau melakukan pengalihan.",
+      "logic_flow": [
+        "1. (Tergantung implementasi) Merender view sederhana dari `src/Views/home.php`.",
+        "2. Atau, bisa juga langsung mengalihkan pengguna ke halaman login admin (`/admin/login`) atau member (`/login`)."
+      ]
     }
   ]
 }

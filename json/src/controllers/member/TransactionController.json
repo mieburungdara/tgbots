@@ -1,21 +1,18 @@
 {
   "class_name": "TransactionController",
-  "purpose": "Controller untuk mengelola transaksi member.",
+  "extends": "MemberBaseController",
+  "summary": "Menampilkan riwayat transaksi untuk member.",
+  "description": "Controller ini memungkinkan member untuk melihat riwayat penjualan (jika mereka penjual) dan riwayat pembelian mereka.",
+  "dependencies": ["SaleRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
-    },
-    {
       "name": "index",
-      "description": "Menampilkan halaman indeks transaksi."
+      "description": "Mengambil dan menampilkan riwayat penjualan dan pembelian.",
+      "logic_flow": [
+        "1. Mengambil ID pengguna dari sesi.",
+        "2. Memanggil metode dari `SaleRepository` untuk mendapatkan daftar item yang dijual dan dibeli oleh pengguna.",
+        "3. Merender view `member/transactions/index.php` dengan data transaksi."
+      ]
     }
   ]
 }

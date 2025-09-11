@@ -1,25 +1,23 @@
 {
   "class_name": "DatabaseController",
-  "purpose": "Controller untuk mengelola database di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Menyediakan alat untuk manajemen database.",
+  "description": "Controller ini menyediakan antarmuka untuk melakukan tugas-tugas administratif terkait database, seperti menjalankan migrasi atau memeriksa kesehatan skema.",
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan halaman utama manajemen database.",
+      "logic_flow": [
+        "1. Merender view `admin/database/index.php` yang berisi tombol-tombol untuk berbagai aksi."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks database."
-    },
-    {
       "name": "check",
-      "description": "Melakukan pemeriksaan database."
+      "description": "Menjalankan skrip untuk memeriksa konsistensi atau status skema database.",
+      "logic_flow": [
+        "1. (Placeholder) Menjalankan logika pemeriksaan database.",
+        "2. Menampilkan hasilnya kepada admin."
+      ]
     }
   ]
 }

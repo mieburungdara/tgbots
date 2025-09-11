@@ -1,21 +1,27 @@
 {
   "class_name": "BalanceController",
-  "purpose": "Controller untuk mengelola saldo pengguna di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Mengelola saldo pengguna dari panel admin.",
+  "description": "Controller ini menyediakan antarmuka bagi admin untuk melihat, menambah, atau mengurangi saldo pengguna secara manual.",
+  "dependencies": ["UserRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan daftar pengguna beserta saldo mereka.",
+      "logic_flow": [
+        "1. Mengambil daftar semua pengguna dari `UserRepository`.",
+        "2. Merender view `admin/balance/index.php` dengan data pengguna."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks saldo."
+      "name": "update",
+      "description": "Memproses permintaan untuk memperbarui saldo seorang pengguna.",
+      "logic_flow": [
+        "1. Mengambil `user_id` dan jumlah saldo baru dari `$_POST`.",
+        "2. Memvalidasi input.",
+        "3. Menggunakan `UserRepository` atau kueri langsung untuk `UPDATE users SET balance = ? WHERE id = ?`.",
+        "4. Mengalihkan kembali ke halaman daftar saldo dengan pesan sukses."
+      ]
     }
   ]
 }

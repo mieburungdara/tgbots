@@ -1,21 +1,25 @@
 {
   "class_name": "ReportController",
-  "purpose": "Controller untuk mengelola laporan di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Menghasilkan dan menampilkan laporan penjualan.",
+  "description": "Controller ini digunakan untuk membuat laporan penjualan yang lebih detail, kemungkinan dengan filter berdasarkan rentang tanggal, penjual, atau produk.",
+  "dependencies": ["AnalyticsRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan halaman utama laporan dengan formulir untuk filter.",
+      "logic_flow": [
+        "1. Merender view `admin/reports/index.php`."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks laporan."
+      "name": "generate",
+      "description": "Menghasilkan laporan berdasarkan filter yang diberikan.",
+      "logic_flow": [
+        "1. Mengambil parameter filter (rentang tanggal, dll.) dari `$_POST`.",
+        "2. Memanggil metode yang sesuai dari `AnalyticsRepository` (misalnya, `getSalesByDay` atau metode lain yang lebih spesifik).",
+        "3. Menampilkan hasil laporan di halaman baru atau mengembalikannya sebagai file unduhan (misalnya, CSV)."
+      ]
     }
   ]
 }

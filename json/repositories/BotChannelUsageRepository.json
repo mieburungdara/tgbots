@@ -1,30 +1,29 @@
 {
   "class_name": "BotChannelUsageRepository",
-  "purpose": "Mengelola penggunaan channel oleh bot, khususnya untuk menentukan channel berikutnya dalam skema round-robin.",
+  "table": "bot_channel_usage",
+  "summary": "Mengelola mekanisme round-robin untuk penggunaan channel backup.",
+  "description": "Repositori ini secara spesifik menangani logika untuk menentukan channel backup mana yang harus digunakan berikutnya oleh sebuah bot. Tujuannya adalah untuk mendistribusikan file backup secara merata ke semua channel yang tersedia untuk bot tersebut.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi repositori dengan objek PDO dan PrivateChannelRepository.",
-      "parameters": [
-        {
-          "name": "pdo",
-          "type": "PDO",
-          "description": "Objek koneksi database."
-        }
-      ]
+      "description": "Menginisialisasi repositori dengan koneksi PDO.",
+      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
     },
     {
       "name": "getNextChannelForBot",
-      "description": "Mendapatkan channel berikutnya yang akan digunakan oleh bot berdasarkan skema round-robin. Memperbarui catatan penggunaan channel.",
-      "parameters": [
-        {
-          "name": "botId",
-          "type": "int",
-          "description": "ID bot."
-        }
+      "description": "Mendapatkan channel berikutnya untuk backup dan memperbarui pointer `last_used_channel_id`. Bekerja dalam transaksi untuk memastikan konsistensi.",
+      "parameters": [{"name": "botId", "type": "int", "description": "ID internal bot."}],
+      "logic_flow": [
+        "1. Memulai transaksi database.",
+        "2. Mengambil `last_used_channel_id` dari tabel `bot_channel_usage` untuk bot yang diberikan.",
+        "3. Mengambil daftar semua channel yang tersedia untuk bot tersebut dari `private_channel_bots`.",
+        "4. Menentukan channel berikutnya dalam urutan (round-robin). Jika `last_used_channel_id` null, ambil yang pertama.",
+        "5. Memperbarui `last_used_channel_id` di `bot_channel_usage` dengan ID channel yang baru dipilih.",
+        "6. Commit transaksi.",
+        "7. Mengembalikan data channel yang dipilih."
       ],
       "returns": "?array",
-      "return_description": "Array asosiatif dari channel berikutnya, atau null jika tidak ada channel yang terdaftar."
+      "return_description": "Data channel berikutnya, atau `null` jika tidak ada channel yang terhubung."
     }
   ]
 }

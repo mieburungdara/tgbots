@@ -1,21 +1,25 @@
 {
   "class_name": "ApiTestController",
-  "purpose": "Controller untuk menguji API di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Menyediakan antarmuka untuk menguji endpoint Telegram Bot API.",
+  "description": "Controller ini memungkinkan admin untuk secara manual memanggil metode-metode dari `TelegramAPI` langsung dari panel admin. Ini sangat berguna untuk debugging tanpa perlu memicu aksi dari bot.",
+  "dependencies": ["TelegramAPI"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan halaman utama pengujian API, biasanya berisi formulir untuk memilih metode API dan memasukkan parameter.",
+      "logic_flow": [
+        "1. Merender view `admin/api_test/index.php`."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks pengujian API."
+      "name": "call",
+      "description": "Menerima data dari formulir, memanggil metode `TelegramAPI` yang sesuai, dan menampilkan hasilnya.",
+      "logic_flow": [
+        "1. Mengambil nama metode dan parameter dari `$_POST`.",
+        "2. Memanggil metode yang diminta pada instance `$this->app->telegram`.",
+        "3. Menampilkan respons JSON yang dikembalikan oleh API Telegram."
+      ]
     }
   ]
 }

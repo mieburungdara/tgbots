@@ -1,21 +1,18 @@
 {
   "class_name": "DashboardController",
-  "purpose": "Controller untuk mengelola dashboard admin.",
+  "extends": "AdminBaseController",
+  "summary": "Menampilkan halaman utama dasbor admin.",
+  "description": "Ini adalah halaman pertama yang dilihat admin setelah login. Halaman ini menampilkan ringkasan informasi penting dari seluruh sistem.",
+  "dependencies": ["AnalyticsRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
-    },
-    {
       "name": "index",
-      "description": "Menampilkan halaman indeks dashboard."
+      "description": "Mengambil data ringkasan dan menampilkan halaman dasbor.",
+      "logic_flow": [
+        "1. Memanggil `AnalyticsRepository::getGlobalSummary()` untuk mendapatkan total penjualan dan pendapatan.",
+        "2. (Opsional) Mengambil data lain seperti jumlah pengguna aktif, jumlah bot, dll.",
+        "3. Merender view `admin/dashboard/index.php` dengan data ringkasan tersebut."
+      ]
     }
   ]
 }

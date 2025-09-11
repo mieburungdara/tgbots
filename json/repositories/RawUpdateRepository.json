@@ -1,54 +1,30 @@
 {
   "class_name": "RawUpdateRepository",
-  "purpose": "Repositori untuk menyimpan dan mengambil data mentah (raw) pembaruan dari Telegram. Berguna untuk keperluan debugging dan analisis.",
+  "table": "raw_updates",
+  "summary": "Menyimpan setiap update mentah yang diterima dari Telegram.",
+  "description": "Repositori ini memiliki satu tanggung jawab utama: mencatat setiap payload JSON yang dikirim oleh Telegram ke webhook. Ini sangat berguna untuk tujuan debugging, memungkinkan developer untuk meninjau ulang data yang masuk persis seperti yang diterima.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Membuat instance RawUpdateRepository.",
-      "parameters": [
-        {
-          "name": "pdo",
-          "type": "PDO",
-          "description": "Objek koneksi database."
-        }
-      ]
+      "description": "Menginisialisasi repositori dengan koneksi PDO.",
+      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
     },
     {
       "name": "create",
-      "description": "Menyimpan payload pembaruan JSON mentah ke dalam database.",
-      "parameters": [
-        {
-          "name": "payload",
-          "type": "string",
-          "description": "String JSON yang diterima dari Telegram."
-        }
-      ],
-      "returns": "bool",
-      "return_description": "true jika berhasil, false jika gagal."
+      "description": "Menyimpan satu payload update ke dalam tabel `raw_updates`.",
+      "parameters": [{"name": "payload", "type": "string", "description": "String JSON mentah dari update Telegram."}],
+      "logic": "`INSERT INTO raw_updates (payload) VALUES (?)`",
+      "returns": "bool"
     },
     {
       "name": "findAll",
-      "description": "Mengambil semua data pembaruan mentah dengan paginasi, diurutkan dari yang terbaru.",
+      "description": "Mengambil semua catatan update dengan paginasi, diurutkan dari yang terbaru.",
       "parameters": [
-        {
-          "name": "limit",
-          "type": "int",
-          "description": "Jumlah maksimum catatan per halaman."
-        },
-        {
-          "name": "offset",
-          "type": "int",
-          "description": "Jumlah catatan yang akan dilewati (untuk paginasi)."
-        }
+        {"name": "limit", "type": "int", "description": "Jumlah catatan per halaman."},
+        {"name": "offset", "type": "int", "description": "Offset untuk paginasi."}
       ],
-      "returns": "array",
-      "return_description": "Sebuah array berisi catatan pembaruan."
-    },
-    {
-      "name": "countAll",
-      "description": "Menghitung jumlah total semua catatan pembaruan mentah.",
-      "returns": "int",
-      "return_description": "Jumlah total catatan."
+      "logic": "`SELECT * FROM raw_updates ORDER BY created_at DESC LIMIT ? OFFSET ?`",
+      "returns": "array"
     }
   ]
 }

@@ -1,25 +1,25 @@
 {
   "class_name": "ChatController",
-  "purpose": "Controller untuk mengelola chat di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Menyediakan alat untuk berinteraksi dengan API Chat Telegram.",
+  "description": "Controller ini kemungkinan digunakan untuk fitur-fitur administratif yang memerlukan informasi tentang chat atau channel, seperti mendapatkan detail chat atau memeriksa status keanggotaan.",
+  "dependencies": ["TelegramAPI"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Halaman utama untuk fitur-fitur terkait chat.",
+      "logic_flow": [
+        "1. Merender view `admin/chat/index.php`."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks chat."
-    },
-    {
       "name": "channel",
-      "description": "Menampilkan halaman channel chat."
+      "description": "Menampilkan informasi spesifik tentang sebuah channel.",
+      "logic_flow": [
+        "1. Mengambil ID channel dari `$_GET` atau parameter URL.",
+        "2. Memanggil `TelegramAPI::getChat()` dengan ID tersebut.",
+        "3. Menampilkan informasi yang dikembalikan oleh API."
+      ]
     }
   ]
 }

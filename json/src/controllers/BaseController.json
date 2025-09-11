@@ -1,44 +1,39 @@
 {
   "class_name": "BaseController",
-  "purpose": "Kelas dasar untuk semua controller, menyediakan fungsionalitas umum.",
+  "is_abstract": true,
+  "summary": "Kelas dasar abstrak untuk semua controller aplikasi.",
+  "description": "Menyediakan fungsionalitas inti yang digunakan bersama oleh semua controller, seperti merender view dan melakukan pengalihan (redirect). Controller lain akan mewarisi (extend) kelas ini.",
+  "properties": [
+    {
+      "name": "app",
+      "type": "App",
+      "description": "Instance dari objek aplikasi utama, menyediakan akses ke semua layanan lain (database, config, dll)."
+    }
+  ],
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dasar dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Constructor yang menerima dan menyimpan instance `App`.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
       "name": "render",
-      "description": "Merender tampilan dengan data yang diberikan.",
+      "description": "Merender sebuah file view dan meneruskan data ke dalamnya. Menggunakan `extract` untuk mengubah kunci array data menjadi variabel.",
       "parameters": [
-        {
-          "name": "view",
-          "type": "string",
-          "description": "Nama tampilan."
-        },
-        {
-          "name": "data",
-          "type": "array",
-          "description": "Data yang akan diteruskan ke tampilan."
-        }
+        {"name": "view", "type": "string", "description": "Path ke file view (misalnya, 'admin/dashboard')."},
+        {"name": "data", "type": "array", "description": "Array asosiatif data yang akan tersedia di dalam view."}
+      ],
+      "logic_flow": [
+        "1. Membangun path lengkap ke file view di dalam direktori `src/Views/`.",
+        "2. Memeriksa apakah file view ada.",
+        "3. Menggunakan `extract()` pada array `$data` untuk membuat variabel lokal.",
+        "4. Memuat file view menggunakan `require`, yang akan merendernya."
       ]
     },
     {
       "name": "redirect",
-      "description": "Mengarahkan ke URL yang diberikan.",
-      "parameters": [
-        {
-          "name": "url",
-          "type": "string",
-          "description": "URL tujuan."
-        }
-      ]
+      "description": "Melakukan pengalihan HTTP ke URL lain.",
+      "parameters": [{"name": "url", "type": "string", "description": "URL tujuan pengalihan."}]
     }
   ]
 }

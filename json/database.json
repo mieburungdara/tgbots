@@ -1,279 +1,147 @@
 {
-  "database_schema": {
-    "tables": [
-      {
-        "name": "bots",
-        "comment": "Tabel untuk menyimpan informasi bot",
-        "columns": [
-          {
-            "name": "id",
-            "type": "bigint",
-            "nullable": false,
-            "comment": "Telegram Bot ID unik",
-            "primary_key": true
-          },
-          {
-            "name": "name",
-            "type": "varchar(255)",
-            "nullable": false,
-            "comment": "Nama bot untuk identifikasi di admin panel"
-          },
-          {
-            "name": "token",
-            "type": "varchar(255)",
-            "nullable": false,
-            "unique": true,
-            "comment": "Token API dari BotFather"
-          },
-          {
-            "name": "username",
-            "type": "varchar(255)",
-            "nullable": true,
-            "comment": "Username bot (@namabot)"
-          },
-          {
-            "name": "first_name",
-            "type": "varchar(255)",
-            "nullable": true,
-            "comment": "Nama depan bot"
-          },
-          {
-            "name": "created_at",
-            "type": "timestamp",
-            "nullable": false,
-            "default": "current_timestamp"
-          }
-        ]
-      },
-      {
-        "name": "users",
-        "comment": "Tabel untuk menyimpan informasi pengguna yang berinteraksi dengan bot",
-        "columns": [
-          {
-            "name": "id",
-            "type": "bigint",
-            "nullable": false,
-            "comment": "User ID unik dari Telegram",
-            "primary_key": true
-          },
-          {
-            "name": "public_seller_id",
-            "type": "char(4)",
-            "nullable": true,
-            "unique": true
-          },
-          {
-            "name": "seller_package_sequence",
-            "type": "int UNSIGNED",
-            "nullable": false,
-            "default": 0
-          },
-          {
-            "name": "first_name",
-            "type": "varchar(255)",
-            "nullable": true
-          },
-          {
-            "name": "last_name",
-            "type": "varchar(255)",
-            "nullable": true
-          },
-          {
-            "name": "username",
-            "type": "varchar(255)",
-            "nullable": true
-          },
-          {
-            "name": "language_code",
-            "type": "varchar(10)",
-            "nullable": true
-          },
-          {
-            "name": "balance",
-            "type": "decimal(15, 2)",
-            "nullable": false,
-            "default": 0.00,
-            "comment": "Saldo internal pengguna"
-          },
-          {
-            "name": "status",
-            "type": "enum('active','blocked')",
-            "nullable": false,
-            "default": "active"
-          },
-          {
-            "name": "created_at",
-            "type": "timestamp",
-            "nullable": false,
-            "default": "current_timestamp"
-          }
-        ]
-      },
-      {
-        "name": "rel_user_bot",
-        "comment": "Tabel untuk relasi antara pengguna dan bot",
-        "columns": [
-          {
-            "name": "id",
-            "type": "int(11)",
-            "nullable": false,
-            "auto_increment": true,
-            "primary_key": true
-          },
-          {
-            "name": "user_id",
-            "type": "int(11)",
-            "nullable": false
-          },
-          {
-            "name": "bot_id",
-            "type": "int(11)",
-            "nullable": false
-          },
-          {
-            "name": "is_blocked",
-            "type": "tinyint(1)",
-            "nullable": false,
-            "default": 0,
-            "comment": "0: tidak diblokir, 1: diblokir"
-          },
-          {
-            "name": "last_interaction_at",
-            "type": "timestamp",
-            "nullable": true
-          }
-        ],
-        "foreign_keys": [
-          {
-            "column": "user_id",
-            "references_table": "users",
-            "references_column": "id",
-            "on_delete": "CASCADE"
-          },
-          {
-            "column": "bot_id",
-            "references_table": "bots",
-            "references_column": "id",
-            "on_delete": "CASCADE"
-          }
-        ],
-        "unique_keys": [
-          "user_id",
-          "bot_id"
-        ]
-      },
-      {
-        "name": "messages",
-        "comment": "Tabel untuk menyimpan semua pesan",
-        "columns": [
-          {
-            "name": "id",
-            "type": "int(11)",
-            "nullable": false,
-            "auto_increment": true,
-            "primary_key": true
-          },
-          {
-            "name": "user_id",
-            "type": "int(11)",
-            "nullable": false,
-            "comment": "Referensi ke tabel users"
-          },
-          {
-            "name": "bot_id",
-            "type": "int(11)",
-            "nullable": false,
-            "comment": "Referensi ke tabel bots"
-          },
-          {
-            "name": "telegram_message_id",
-            "type": "bigint(20)",
-            "nullable": false,
-            "comment": "Message ID dari Telegram"
-          },
-          {
-            "name": "text",
-            "type": "text",
-            "nullable": true
-          },
-          {
-            "name": "direction",
-            "type": "enum('incoming','outgoing')",
-            "nullable": false,
-            "comment": "incoming: dari user, outgoing: dari admin"
-          },
-          {
-            "name": "telegram_timestamp",
-            "type": "datetime",
-            "nullable": false,
-            "comment": "Waktu kirim pesan dari Telegram"
-          },
-          {
-            "name": "created_at",
-            "type": "timestamp",
-            "nullable": false,
-            "default": "CURRENT_TIMESTAMP"
-          }
-        ],
-        "foreign_keys": [
-          {
-            "column": "user_id",
-            "references_table": "users",
-            "references_column": "id",
-            "on_delete": "CASCADE"
-          },
-          {
-            "column": "bot_id",
-            "references_table": "bots",
-            "references_column": "id",
-            "on_delete": "CASCADE"
-          }
-        ]
-      },
-      {
-        "name": "members",
-        "comment": "Tabel untuk menyimpan informasi member (untuk fitur login panel)",
-        "columns": [
-          {
-            "name": "id",
-            "type": "int(11)",
-            "nullable": false,
-            "auto_increment": true,
-            "primary_key": true
-          },
-          {
-            "name": "user_id",
-            "type": "int(11)",
-            "nullable": false,
-            "comment": "Referensi ke tabel users",
-            "unique": true
-          },
-          {
-            "name": "login_token",
-            "type": "varchar(255)",
-            "nullable": true
-          },
-          {
-            "name": "token_created_at",
-            "type": "timestamp",
-            "nullable": true
-          },
-          {
-            "name": "token_used",
-            "type": "tinyint(1)",
-            "nullable": false,
-            "default": 0
-          }
-        ],
-        "foreign_keys": [
-          {
-            "column": "user_id",
-            "references_table": "users",
-            "references_column": "id",
-            "on_delete": "CASCADE"
-          }
-        ]
-      }
-    ]
-  }
+  "schema_summary": "Skema database ini dirancang untuk mendukung bot Telegram multifungsi dengan fitur penjualan konten, manajemen pengguna, dan sistem moderasi. Inti dari skema ini adalah hubungan antara `users`, `bots`, `media_packages`, dan `sales`.",
+  "tables": [
+    {
+      "name": "users",
+      "comment": "Menyimpan data inti untuk setiap pengguna yang pernah berinteraksi dengan bot.",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "telegram_id", "type": "BIGINT", "unique": true, "comment": "ID unik dari Telegram.", "nullable": false},
+        {"name": "public_seller_id", "type": "CHAR(5)", "unique": true, "comment": "ID singkat yang ditampilkan publik untuk penjual.", "nullable": true},
+        {"name": "first_name", "type": "VARCHAR(255)", "nullable": false},
+        {"name": "username", "type": "VARCHAR(255)", "nullable": true},
+        {"name": "role_id", "type": "INT", "fk": "roles.id", "comment": "Menentukan hak akses pengguna.", "nullable": true},
+        {"name": "balance", "type": "DECIMAL(15, 2)", "default": "0.00", "comment": "Saldo finansial pengguna.", "nullable": false},
+        {"name": "status", "type": "ENUM('active', 'blocked')", "default": "active", "nullable": false},
+        {"name": "login_token", "type": "VARCHAR(255)", "comment": "Token sekali pakai untuk login ke panel web.", "nullable": true},
+        {"name": "token_created_at", "type": "TIMESTAMP", "nullable": true},
+        {"name": "token_used", "type": "TINYINT(1)", "default": 0, "nullable": false},
+        {"name": "created_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"}
+      ]
+    },
+    {
+      "name": "bots",
+      "comment": "Menyimpan data untuk setiap bot yang dikelola oleh sistem.",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "telegram_id", "type": "BIGINT", "unique": true, "comment": "ID bot dari Telegram.", "nullable": false},
+        {"name": "token", "type": "VARCHAR(255)", "unique": true, "comment": "Token API dari BotFather.", "nullable": false},
+        {"name": "username", "type": "VARCHAR(255)", "nullable": true},
+        {"name": "assigned_feature", "type": "VARCHAR(50)", "comment": "Fitur utama yang ditugaskan ke bot ini (misal: 'sell', 'rate').", "nullable": true}
+      ]
+    },
+    {
+      "name": "rel_user_bot",
+      "comment": "Tabel pivot untuk menyimpan state percakapan pengguna per bot.",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "user_id", "type": "INT", "fk": "users.id", "nullable": false},
+        {"name": "bot_id", "type": "INT", "fk": "bots.id", "nullable": false},
+        {"name": "state", "type": "VARCHAR(255)", "comment": "State percakapan saat ini (misal: 'awaiting_price').", "nullable": true},
+        {"name": "state_context", "type": "JSON", "comment": "Data tambahan yang terkait dengan state.", "nullable": true},
+        {"name": "last_interaction_at", "type": "TIMESTAMP"}
+      ],
+      "unique_keys": [["user_id", "bot_id"]]
+    },
+    {
+      "name": "media_packages",
+      "comment": "Entitas utama untuk konten yang dijual. Sebuah paket bisa berisi satu atau lebih file media.",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "public_id", "type": "VARCHAR(20)", "unique": true, "comment": "ID yang ditampilkan di URL dan callback.", "nullable": false},
+        {"name": "telegram_user_id", "type": "INT", "fk": "users.id", "comment": "ID pemilik/penjual paket.", "nullable": false},
+        {"name": "bot_id", "type": "INT", "fk": "bots.id", "nullable": false},
+        {"name": "thumbnail_media_id", "type": "INT", "fk": "media_files.id", "comment": "Media yang digunakan sebagai preview.", "nullable": true},
+        {"name": "description", "type": "TEXT", "nullable": true},
+        {"name": "price", "type": "DECIMAL(15, 2)", "nullable": false},
+        {"name": "status", "type": "ENUM('available', 'sold', 'retracted', 'pending', 'deleted')", "default": "available"},
+        {"name": "is_protected", "type": "TINYINT(1)", "default": 0, "comment": "Jika 1, konten dilindungi dari copy/forward.", "nullable": false},
+        {"name": "created_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"}
+      ]
+    },
+    {
+      "name": "media_files",
+      "comment": "Menyimpan metadata untuk setiap file media yang diunggah.",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "package_id", "type": "INT", "fk": "media_packages.id", "comment": "Paket tempat media ini berada.", "nullable": true},
+        {"name": "telegram_user_id", "type": "INT", "fk": "users.id", "comment": "Pengguna yang mengunggah media.", "nullable": false},
+        {"name": "file_id", "type": "VARCHAR(255)", "comment": "ID file dari Telegram, bisa kedaluwarsa.", "nullable": false},
+        {"name": "file_unique_id", "type": "VARCHAR(255)", "comment": "ID file permanen dari Telegram.", "nullable": false},
+        {"name": "media_group_id", "type": "VARCHAR(255)", "comment": "Mengelompokkan beberapa media yang diunggah bersamaan.", "nullable": true},
+        {"name": "type", "type": "ENUM('photo', 'video', 'document')"},
+        {"name": "storage_channel_id", "type": "BIGINT", "comment": "ID channel backup tempat file disimpan.", "nullable": true},
+        {"name": "storage_message_id", "type": "BIGINT", "comment": "ID pesan di channel backup.", "nullable": true}
+      ]
+    },
+    {
+      "name": "sales",
+      "comment": "Mencatat setiap transaksi penjualan yang berhasil.",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "package_id", "type": "INT", "fk": "media_packages.id", "nullable": false},
+        {"name": "seller_user_id", "type": "INT", "fk": "users.id", "comment": "Penjual yang menerima pembayaran.", "nullable": false},
+        {"name": "buyer_user_id", "type": "INT", "fk": "users.id", "comment": "Pembeli yang melakukan pembayaran.", "nullable": false},
+        {"name": "price", "type": "DECIMAL(15, 2)", "comment": "Harga pada saat transaksi.", "nullable": false},
+        {"name": "sale_date", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"}
+      ]
+    },
+    {
+      "name": "roles",
+      "comment": "Menyimpan daftar peran pengguna (misal: Admin, Member).",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "name", "type": "VARCHAR(255)", "unique": true, "nullable": false}
+      ]
+    },
+    {
+      "name": "feature_channels",
+      "comment": "Menetapkan channel untuk fitur spesifik (misal: channel moderasi).",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "channel_id", "type": "BIGINT", "unique": true, "nullable": false},
+        {"name": "feature_type", "type": "VARCHAR(50)", "comment": "Tipe fitur, misal: 'moderation', 'sell'.", "nullable": false},
+        {"name": "owner_user_id", "type": "INT", "fk": "users.id", "comment": "Jika null, ini adalah channel sistem.", "nullable": true}
+      ]
+    },
+    {
+      "name": "private_channels",
+      "comment": "Menyimpan daftar channel pribadi yang digunakan untuk backup media.",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "channel_id", "type": "BIGINT", "unique": true, "nullable": false},
+        {"name": "name", "type": "VARCHAR(255)", "nullable": false}
+      ]
+    },
+    {
+      "name": "private_channel_bots",
+      "comment": "Tabel pivot yang menghubungkan bot dengan channel backup yang bisa diaksesnya.",
+      "columns": [
+        {"name": "private_channel_id", "type": "INT", "fk": "private_channels.id", "pk_part": true},
+        {"name": "bot_id", "type": "INT", "fk": "bots.id", "pk_part": true}
+      ]
+    },
+    {
+      "name": "raw_updates",
+      "comment": "Menyimpan setiap payload JSON mentah dari webhook Telegram untuk debugging.",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "payload", "type": "JSON", "nullable": false},
+        {"name": "created_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"}
+      ]
+    },
+    {
+      "name": "telegram_error_logs",
+      "comment": "Mencatat setiap kegagalan saat memanggil Telegram Bot API.",
+      "columns": [
+        {"name": "id", "type": "INT", "pk": true, "auto_increment": true},
+        {"name": "method", "type": "VARCHAR(255)", "comment": "Metode API yang dipanggil.", "nullable": true},
+        {"name": "request_data", "type": "TEXT", "nullable": true},
+        {"name": "http_code", "type": "INT", "nullable": true},
+        {"name": "error_code", "type": "INT", "nullable": true},
+        {"name": "description", "type": "TEXT", "nullable": true},
+        {"name": "created_at", "type": "TIMESTAMP", "default": "CURRENT_TIMESTAMP"}
+      ]
+    }
+  ]
 }

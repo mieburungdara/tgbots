@@ -1,21 +1,20 @@
 {
   "class_name": "AppController",
-  "purpose": "Controller dasar untuk aplikasi.",
+  "extends": "BaseController",
+  "summary": "Controller dasar untuk panel web (Admin dan Member).",
+  "description": "Kelas ini bertindak sebagai induk untuk semua controller yang terkait dengan antarmuka web. Tanggung jawab utamanya adalah memeriksa status instalasi aplikasi sebelum mengeksekusi tindakan apa pun.",
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
-      ]
+      "description": "Memanggil constructor induk dan segera memeriksa apakah aplikasi sudah diinstal. Jika belum, pengguna akan dialihkan ke halaman error setup.",
+      "parameters": [{"name": "app", "type": "App", "description": "Objek aplikasi inti."}]
     },
     {
-      "name": "index",
-      "description": "Metode indeks."
+      "name": "isAppInstalled",
+      "description": "Pemeriksaan internal untuk memverifikasi apakah file konfigurasi `config.php` ada.",
+      "logic": "`file_exists(ROOT_PATH . '/config.php')`",
+      "returns": "bool",
+      "return_description": "`true` jika terinstal, `false` jika tidak."
     }
   ]
 }

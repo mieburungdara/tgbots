@@ -1,21 +1,37 @@
 {
   "class_name": "UserController",
-  "purpose": "Controller untuk mengelola pengguna di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Mengelola pengguna sistem dari panel admin.",
+  "description": "Controller ini menyediakan antarmuka untuk melihat, mencari, dan mengedit data pengguna yang terdaftar di tabel `users`.",
+  "dependencies": ["UserRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan daftar semua pengguna dengan paginasi.",
+      "logic_flow": [
+        "1. Mengambil parameter paginasi dan filter dari `$_GET`.",
+        "2. Memanggil metode dari `UserRepository` untuk mendapatkan daftar pengguna (misalnya, `findAllPaginated`).",
+        "3. Merender view `admin/users/index.php` dengan data pengguna dan info paginasi."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks pengguna."
+      "name": "view",
+      "description": "Menampilkan detail seorang pengguna, termasuk riwayat transaksi, konten yang dimiliki, dll.",
+      "logic_flow": [
+        "1. Mengambil ID pengguna dari URL.",
+        "2. Menggunakan berbagai repositori (`UserRepository`, `SaleRepository`, `MediaPackageRepository`) untuk mengumpulkan semua data terkait pengguna.",
+        "3. Merender view `admin/users/view.php`."
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Memperbarui data pengguna, seperti peran atau status.",
+      "logic_flow": [
+        "1. Mengambil data dari formulir edit.",
+        "2. Memvalidasi input.",
+        "3. Memanggil metode update yang sesuai di `UserRepository`.",
+        "4. Mengalihkan kembali ke halaman detail pengguna."
+      ]
     }
   ]
 }

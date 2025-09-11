@@ -1,21 +1,36 @@
 {
   "class_name": "MediaPackageController",
-  "purpose": "Controller untuk mengelola paket media di panel admin.",
+  "extends": "AdminBaseController",
+  "summary": "Mengelola paket media dari panel admin.",
+  "description": "Controller ini menyediakan antarmuka bagi admin untuk melihat, mencari, mengedit, atau menghapus paket media yang dibuat oleh pengguna.",
+  "dependencies": ["MediaPackageRepository"],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan objek App.",
-      "parameters": [
-        {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi."
-        }
+      "name": "index",
+      "description": "Menampilkan daftar semua paket media dengan paginasi.",
+      "logic_flow": [
+        "1. Memanggil `MediaPackageRepository::findAll()` dengan parameter limit dan offset dari `$_GET`.",
+        "2. Merender view `admin/media_packages/index.php` dengan data paket dan informasi paginasi."
       ]
     },
     {
-      "name": "index",
-      "description": "Menampilkan halaman indeks paket media."
+      "name": "view",
+      "description": "Menampilkan detail satu paket media, termasuk file-file di dalamnya.",
+      "logic_flow": [
+        "1. Mengambil ID paket dari URL.",
+        "2. Memanggil `MediaPackageRepository::find()` untuk data paket.",
+        "3. Memanggil `MediaPackageRepository::getPackageFiles()` untuk daftar filenya.",
+        "4. Merender view `admin/media_packages/view.php`."
+      ]
+    },
+    {
+      "name": "delete",
+      "description": "Menghapus paket media (bisa soft atau hard delete).",
+      "logic_flow": [
+        "1. Mengambil ID paket dari `$_POST`.",
+        "2. Memanggil `MediaPackageRepository::softDeletePackage()` atau `hardDeletePackage()`.",
+        "3. Mengalihkan kembali ke halaman daftar paket."
+      ]
     }
   ]
 }
