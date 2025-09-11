@@ -1,5 +1,10 @@
 # Changelog
 
+## [5.2.23] - 2025-09-11
+
+### Peningkatan
+- **Sinkronisasi Dokumentasi**: Memperbarui file dokumentasi `json/repositories/AnalyticsRepository.json` agar sepenuhnya sinkron dengan kode PHP di `core/database/AnalyticsRepository.php`. Dokumentasi sekarang mencakup semua metode, parameter, dan logika yang benar.
+
 ## [5.2.22] - 2025-09-11
 
 ### Diubah
@@ -627,7 +632,7 @@
 - **Mengembalikan ke Mode `Markdown` Legacy**: Sesuai permintaan pengguna, semua penggunaan `parse_mode` diubah kembali dari `MarkdownV2` ke mode `Markdown` legacy.
   - **Penyebab**: Pengguna meminta untuk menggunakan mode parsing Markdown yang biasa, bukan `MarkdownV2`.
   - **Solusi**:
-    1.  Mengganti nama fungsi `escapeMarkdownV2` menjadi `escapeMarkdown` di `TelegramAPI.php` dan menyesuaikan logikanya untuk hanya melakukan escape pada karakter `_`, `*`, `\``, dan `[`.
+    1.  Mengganti nama fungsi `escapeMarkdownV2` menjadi `escapeMarkdown` di `TelegramAPI.php` dan menyesuaikan logikanya untuk hanya melakukan escape pada karakter `_`, `*`, ```, dan `[`.
     2.  Mengubah semua `parse_mode` dari `\'MarkdownV2\'` menjadi `\'Markdown\'` di semua file handler (`MessageHandler`, `CallbackQueryHandler`, `ChannelPostHandler`) dan `webhook.php`.
     3.  Menghapus escaping manual untuk karakter yang tidak relevan dengan mode `Markdown` legacy (seperti `.`, `!`, `(`, `)`).
 
@@ -659,7 +664,7 @@
   - **Penyebab**: Penggunaan `Markdown` legacy yang tidak konsisten dan karakter `-` yang tidak di-escape menyebabkan error saat parsing di `MarkdownV2`.
   - **Solusi**: Secara eksplisit mengubah `parse_mode` untuk perintah `/help` menjadi `MarkdownV2` dan melakukan escaping pada semua karakter khusus (`-`, `.`, `(`, `)`, dll.) sesuai dengan aturan `MarkdownV2`.
 
-## [4.2.6] - 2025-08-15
+## [42.6] - 2025-08-15
 
 ### Peningkatan
 - **Pesan Bantuan /help Disederhanakan**: Teks bantuan yang ditampilkan oleh perintah `/help` telah ditulis ulang sepenuhnya menjadi lebih ringkas, jelas, dan mudah dibaca menggunakan format daftar (bullet points) untuk meningkatkan pengalaman pengguna.
@@ -751,7 +756,7 @@
   - **Penyebab**: Serupa dengan error sebelumnya, query untuk mengambil data thumbnail di dalam `handleKontenCommand` masih mencoba memilih kolom `file_id` yang sudah dihapus.
   - **Solusi**: Menghapus referensi ke `file_id` dari query SQL di `MessageHandler.php`.
 
-## [3.12.2] - 2025-08-14
+## [312.2] - 2025-08-14
 
 ### Diperbaiki
 - **Fatal Error di Halaman Log Media**: Memperbaiki error fatal `Column not found: 1054 Unknown column 'mf.file_id'` pada halaman `admin/media_logs.php`.
@@ -794,7 +799,7 @@
 
 ### Diubah
 - **Penanganan Penjualan Album/Media Group**: Mengubah logika inti dari proses penjualan untuk mendukung album (media group) secara penuh.
-  - **Sebelumnya**: Saat menjual sebuah album, bot hanya akan menyalin satu media (yang di-reply oleh pengguna) ke channel penyimpanan.
+  - **Sebelumnya**: Saat menjual sebuah album, bot akan hanya menyalin satu media (yang di-reply oleh pengguna) ke channel penyimpanan.
   - **Sekarang**: Jika bot mendeteksi penjualan sebuah media group, bot akan menyalin *setiap* media dari grup tersebut ke channel penyimpanan, memastikan pembeli menerima semua konten.
 
 ### Peningkatan
