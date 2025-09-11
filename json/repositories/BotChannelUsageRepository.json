@@ -7,20 +7,30 @@
     {
       "name": "__construct",
       "description": "Menginisialisasi repositori dengan koneksi PDO.",
-      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
     },
     {
       "name": "getNextChannelForBot",
-      "description": "Mendapatkan channel berikutnya untuk backup dan memperbarui pointer `last_used_channel_id`. Bekerja dalam transaksi untuk memastikan konsistensi.",
-      "parameters": [{"name": "botId", "type": "int", "description": "ID internal bot."}],
+      "description": "Mendapatkan channel berikutnya untuk backup dan memperbarui pointer `last_used_channel_id`.",
+      "parameters": [
+        {
+          "name": "botId",
+          "type": "int",
+          "description": "ID internal bot."
+        }
+      ],
       "logic_flow": [
-        "1. Memulai transaksi database.",
+        "1. Mengambil semua channel pribadi yang tersedia.",
         "2. Mengambil `last_used_channel_id` dari tabel `bot_channel_usage` untuk bot yang diberikan.",
-        "3. Mengambil daftar semua channel yang tersedia untuk bot tersebut dari `private_channel_bots`.",
-        "4. Menentukan channel berikutnya dalam urutan (round-robin). Jika `last_used_channel_id` null, ambil yang pertama.",
-        "5. Memperbarui `last_used_channel_id` di `bot_channel_usage` dengan ID channel yang baru dipilih.",
-        "6. Commit transaksi.",
-        "7. Mengembalikan data channel yang dipilih."
+        "3. Menentukan channel berikutnya dalam urutan (round-robin). Jika channel terakhir tidak ditemukan atau tidak ada, mulai dari yang pertama.",
+        "4. Memperbarui `last_used_channel_id` di `bot_channel_usage` dengan ID channel yang baru dipilih menggunakan `INSERT ... ON DUPLICATE KEY UPDATE`.",
+        "5. Mengembalikan data channel yang dipilih."
       ],
       "returns": "?array",
       "return_description": "Data channel berikutnya, atau `null` jika tidak ada channel yang terhubung."

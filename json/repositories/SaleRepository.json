@@ -7,37 +7,84 @@
     {
       "name": "__construct",
       "description": "Menginisialisasi repositori dengan koneksi PDO.",
-      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
-    },
-    {
-      "name": "createSale",
-      "description": "Membuat catatan penjualan baru. Metode ini adalah bagian dari transaksi yang lebih besar yang juga mencakup pembaruan saldo pengguna.",
       "parameters": [
-        {"name": "package_id", "type": "int", "description": "ID paket yang terjual."},
-        {"name": "seller_user_id", "type": "int", "description": "ID pengguna penjual."},
-        {"name": "buyer_user_id", "type": "int", "description": "ID pengguna pembeli."},
-        {"name": "price", "type": "float", "description": "Harga pada saat penjualan."}
-      ],
-      "logic": "`INSERT INTO sales (package_id, seller_user_id, buyer_user_id, price) VALUES (?, ?, ?, ?)`",
-      "returns": "bool"
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
     },
     {
       "name": "hasUserPurchased",
       "description": "Memeriksa apakah seorang pengguna sudah pernah membeli sebuah paket.",
       "parameters": [
-        {"name": "package_id", "type": "int", "description": "ID internal paket."}, 
-        {"name": "user_id", "type": "int", "description": "ID internal pengguna."}
+        {
+          "name": "package_id",
+          "type": "int",
+          "description": "ID internal paket."
+        },
+        {
+          "name": "user_id",
+          "type": "int",
+          "description": "ID internal pengguna."
+        }
       ],
-      "logic": "`SELECT 1 FROM sales WHERE package_id = ? AND buyer_user_id = ? LIMIT 1`",
+      "logic": "`SELECT id FROM sales WHERE package_id = ? AND buyer_user_id = ?`",
       "returns": "bool",
       "return_description": "`true` jika catatan penjualan ditemukan, jika tidak `false`."
     },
     {
+      "name": "createSale",
+      "description": "Membuat catatan penjualan baru dan memperbarui saldo pembeli/penjual. Harus dijalankan di dalam transaksi.",
+      "parameters": [
+        {
+          "name": "package_id",
+          "type": "int",
+          "description": "ID paket yang terjual."
+        },
+        {
+          "name": "seller_user_id",
+          "type": "int",
+          "description": "ID pengguna penjual."
+        },
+        {
+          "name": "buyer_user_id",
+          "type": "int",
+          "description": "ID pengguna pembeli."
+        },
+        {
+          "name": "price",
+          "type": "float",
+          "description": "Harga pada saat penjualan."
+        }
+      ],
+      "logic": "Melakukan UPDATE pada saldo penjual dan pembeli, lalu INSERT ke tabel sales.",
+      "returns": "bool"
+    },
+    {
       "name": "findPackagesByBuyerId",
       "description": "Menemukan semua paket yang telah dibeli oleh seorang pengguna.",
-      "parameters": [{"name": "buyer_user_id", "type": "int", "description": "ID internal pengguna."}],
-      "logic": "`SELECT p.*, s.sale_date FROM media_packages p JOIN sales s ON p.id = s.package_id WHERE s.buyer_user_id = ?`",
+      "parameters": [
+        {
+          "name": "buyer_user_id",
+          "type": "int",
+          "description": "ID internal pengguna."
+        }
+      ],
+      "logic": "`SELECT s.purchased_at, mp.* FROM sales s JOIN media_packages mp ON s.package_id = mp.id WHERE s.buyer_user_id = ?`",
       "returns": "array"
+    },
+    {
+      "name": "countSalesForPackage",
+      "description": "Menghitung berapa kali sebuah paket telah terjual.",
+      "parameters": [
+        {
+          "name": "package_id",
+          "type": "int"
+        }
+      ],
+      "returns": "int"
     }
   ]
 }

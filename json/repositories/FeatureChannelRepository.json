@@ -7,14 +7,83 @@
     {
       "name": "__construct",
       "description": "Menginisialisasi repositori dengan koneksi PDO.",
-      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
+    },
+    {
+      "name": "find",
+      "description": "Mencari konfigurasi channel fitur berdasarkan ID-nya.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int"
+        }
+      ],
+      "returns": "array|false"
+    },
+    {
+      "name": "findAll",
+      "description": "Mengambil semua konfigurasi channel fitur yang ada.",
+      "parameters": [],
+      "returns": "array"
+    },
+    {
+      "name": "create",
+      "description": "Membuat konfigurasi channel fitur baru.",
+      "parameters": [
+        {
+          "name": "data",
+          "type": "array",
+          "description": "Array asosiatif berisi data channel."
+        }
+      ],
+      "returns": "bool"
+    },
+    {
+      "name": "update",
+      "description": "Memperbarui konfigurasi channel fitur yang ada.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int"
+        },
+        {
+          "name": "data",
+          "type": "array"
+        }
+      ],
+      "returns": "bool"
+    },
+    {
+      "name": "delete",
+      "description": "Menghapus konfigurasi channel fitur.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int"
+        }
+      ],
+      "returns": "bool"
     },
     {
       "name": "findAllByOwnerAndFeature",
       "description": "Mencari semua channel yang dimiliki oleh seorang pengguna untuk fitur tertentu.",
       "parameters": [
-        {"name": "owner_user_id", "type": "int", "description": "ID internal pengguna."}, 
-        {"name": "feature_type", "type": "string", "description": "Tipe fitur (misalnya, 'sell')."}
+        {
+          "name": "owner_user_id",
+          "type": "int",
+          "description": "ID internal pengguna."
+        },
+        {
+          "name": "feature_type",
+          "type": "string",
+          "description": "Tipe fitur (misalnya, 'sell')."
+        }
       ],
       "logic": "`SELECT * FROM feature_channels WHERE owner_user_id = ? AND feature_type = ?`",
       "returns": "array",
@@ -23,11 +92,16 @@
     {
       "name": "findSystemChannelByFeature",
       "description": "Mencari channel sistem (yang tidak dimiliki oleh pengguna spesifik) untuk sebuah fitur.",
-      "parameters": [{"name": "feature_type", "type": "string", "description": "Tipe fitur (misalnya, 'moderation')."}],
-      "logic": "`SELECT * FROM feature_channels WHERE owner_user_id IS NULL AND feature_type = ?`",
+      "parameters": [
+        {
+          "name": "feature_type",
+          "type": "string",
+          "description": "Tipe fitur (misalnya, 'moderation')."
+        }
+      ],
+      "logic": "`SELECT * FROM feature_channels WHERE feature_type = ? AND owner_user_id IS NULL LIMIT 1`",
       "returns": "array|false",
       "return_description": "Data channel jika ditemukan, jika tidak `false`."
     }
-  ],
-  "notes": "Repositori ini juga berisi metode CRUD standar seperti `find`, `findAll`, `create`, `update`, dan `delete`."
+  ]
 }

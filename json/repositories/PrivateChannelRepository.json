@@ -2,35 +2,120 @@
   "class_name": "PrivateChannelRepository",
   "table": "private_channels",
   "summary": "Mengelola data channel pribadi yang digunakan untuk backup media.",
-  "description": "Repositori ini bertanggung jawab atas operasi CRUD untuk tabel `private_channels`. Channel ini berfungsi sebagai tempat penyimpanan (storage) permanen untuk media yang dijual, memastikan file tetap tersedia bahkan jika dihapus dari chat asli.",
+  "description": "Repositori ini bertanggung jawab atas operasi CRUD untuk tabel `private_channels`. Channel ini berfungsi sebagai tempat penyimpanan (storage) permanen untuk media yang dijual.",
   "methods": [
     {
       "name": "__construct",
       "description": "Menginisialisasi repositori dengan koneksi PDO.",
-      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
     },
     {
       "name": "addChannel",
       "description": "Menambahkan channel backup baru ke database.",
       "parameters": [
-        {"name": "channel_id", "type": "int", "description": "ID unik channel dari Telegram."},
-        {"name": "name", "type": "string", "description": "Nama deskriptif untuk channel."}
+        {
+          "name": "channel_id",
+          "type": "int",
+          "description": "ID unik channel dari Telegram."
+        },
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Nama deskriptif untuk channel."
+        }
       ],
-      "logic": "`INSERT INTO private_channels (channel_id, name) VALUES (?, ?)`",
+      "returns": "bool"
+    },
+    {
+      "name": "deleteChannel",
+      "description": "Menghapus channel berdasarkan ID internalnya.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int"
+        }
+      ],
+      "returns": "bool"
+    },
+    {
+      "name": "deleteByTelegramId",
+      "description": "Menghapus channel berdasarkan ID Telegram-nya.",
+      "parameters": [
+        {
+          "name": "telegram_id",
+          "type": "int"
+        }
+      ],
       "returns": "bool"
     },
     {
       "name": "getAllChannels",
-      "description": "Mengambil semua channel pribadi yang terdaftar.",
-      "logic": "`SELECT * FROM private_channels`",
+      "description": "Mengambil semua channel pribadi yang terdaftar, termasuk jumlah dan nama bot yang terhubung.",
+      "logic": "`SELECT pc.*, COUNT(pcb.bot_id) as bot_count, GROUP_CONCAT(b.username SEPARATOR ', ') as bot_usernames FROM private_channels pc LEFT JOIN ...`",
       "returns": "array"
+    },
+    {
+      "name": "findById",
+      "description": "Mencari channel berdasarkan ID internalnya.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int"
+        }
+      ],
+      "returns": "array|false"
     },
     {
       "name": "findByTelegramId",
       "description": "Mencari channel berdasarkan ID Telegram-nya.",
-      "parameters": [{"name": "telegram_id", "type": "int", "description": "ID unik channel dari Telegram."}],
-      "logic": "`SELECT * FROM private_channels WHERE channel_id = ?`",
+      "parameters": [
+        {
+          "name": "telegram_id",
+          "type": "int",
+          "description": "ID unik channel dari Telegram."
+        }
+      ],
       "returns": "array|false"
+    },
+    {
+      "name": "updateChannel",
+      "description": "Memperbarui nama dan ID Telegram sebuah channel.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int"
+        },
+        {
+          "name": "newName",
+          "type": "string"
+        },
+        {
+          "name": "newChannelId",
+          "type": "int"
+        }
+      ],
+      "returns": "bool"
+    },
+    {
+      "name": "updateNameByTelegramId",
+      "description": "Memperbarui hanya nama channel berdasarkan ID Telegram-nya.",
+      "parameters": [
+        {
+          "name": "telegram_id",
+          "type": "int"
+        },
+        {
+          "name": "new_name",
+          "type": "string"
+        }
+      ],
+      "returns": "bool"
     }
   ]
 }

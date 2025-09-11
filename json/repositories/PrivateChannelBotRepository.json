@@ -7,31 +7,89 @@
     {
       "name": "__construct",
       "description": "Menginisialisasi repositori dengan koneksi PDO.",
-      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
     },
     {
       "name": "addBotToChannel",
       "description": "Menautkan sebuah bot ke sebuah channel pribadi.",
       "parameters": [
-        {"name": "private_channel_id", "type": "int", "description": "ID internal channel dari tabel `private_channels`."},
-        {"name": "bot_id", "type": "int", "description": "ID internal bot dari tabel `bots`."}
+        {
+          "name": "private_channel_id",
+          "type": "int",
+          "description": "ID internal channel dari tabel `private_channels`."
+        },
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID internal bot dari tabel `bots`."
+        }
       ],
       "logic": "`INSERT INTO private_channel_bots (private_channel_id, bot_id) VALUES (?, ?)`",
       "returns": "bool"
     },
     {
+      "name": "verifyBotInChannel",
+      "description": "Menandai bot sebagai terverifikasi di sebuah channel dengan mencatat timestamp.",
+      "parameters": [
+        {
+          "name": "private_channel_id",
+          "type": "int"
+        },
+        {
+          "name": "bot_id",
+          "type": "int"
+        }
+      ],
+      "returns": "bool"
+    },
+    {
       "name": "getBotsForChannel",
       "description": "Mendapatkan semua bot yang terhubung dengan sebuah channel pribadi.",
-      "parameters": [{"name": "private_channel_id", "type": "int", "description": "ID internal channel."}],
-      "logic": "`SELECT b.* FROM bots b JOIN private_channel_bots pcb ON b.id = pcb.bot_id WHERE pcb.private_channel_id = ?`",
+      "parameters": [
+        {
+          "name": "private_channel_id",
+          "type": "int",
+          "description": "ID internal channel."
+        }
+      ],
+      "logic": "`SELECT b.id, b.first_name, b.username, pcb.verified_at FROM bots b JOIN private_channel_bots pcb ON b.id = pcb.bot_id WHERE pcb.private_channel_id = ?`",
       "returns": "array"
+    },
+    {
+      "name": "removeBotFromChannel",
+      "description": "Menghapus hubungan antara bot dan channel.",
+      "parameters": [
+        {
+          "name": "private_channel_id",
+          "type": "int"
+        },
+        {
+          "name": "bot_id",
+          "type": "int"
+        }
+      ],
+      "returns": "bool"
     },
     {
       "name": "isBotInChannel",
       "description": "Memeriksa apakah sebuah bot sudah ditautkan ke sebuah channel.",
       "parameters": [
-        {"name": "private_channel_id", "type": "int", "description": "ID internal channel."},
-        {"name": "bot_id", "type": "int", "description": "ID internal bot."}
+        {
+          "name": "private_channel_id",
+          "type": "int",
+          "description": "ID internal channel."
+        },
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID internal bot."
+        }
       ],
       "logic": "`SELECT 1 FROM private_channel_bots WHERE private_channel_id = ? AND bot_id = ?`",
       "returns": "bool"

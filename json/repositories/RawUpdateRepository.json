@@ -7,12 +7,24 @@
     {
       "name": "__construct",
       "description": "Menginisialisasi repositori dengan koneksi PDO.",
-      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
     },
     {
       "name": "create",
       "description": "Menyimpan satu payload update ke dalam tabel `raw_updates`.",
-      "parameters": [{"name": "payload", "type": "string", "description": "String JSON mentah dari update Telegram."}],
+      "parameters": [
+        {
+          "name": "payload",
+          "type": "string",
+          "description": "String JSON mentah dari update Telegram."
+        }
+      ],
       "logic": "`INSERT INTO raw_updates (payload) VALUES (?)`",
       "returns": "bool"
     },
@@ -20,11 +32,26 @@
       "name": "findAll",
       "description": "Mengambil semua catatan update dengan paginasi, diurutkan dari yang terbaru.",
       "parameters": [
-        {"name": "limit", "type": "int", "description": "Jumlah catatan per halaman."},
-        {"name": "offset", "type": "int", "description": "Offset untuk paginasi."}
+        {
+          "name": "limit",
+          "type": "int",
+          "description": "Jumlah catatan per halaman."
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Offset untuk paginasi."
+        }
       ],
-      "logic": "`SELECT * FROM raw_updates ORDER BY created_at DESC LIMIT ? OFFSET ?`",
+      "logic": "`SELECT * FROM raw_updates ORDER BY id DESC LIMIT :limit OFFSET :offset`",
       "returns": "array"
+    },
+    {
+      "name": "countAll",
+      "description": "Menghitung jumlah total semua catatan pembaruan mentah.",
+      "parameters": [],
+      "logic": "`SELECT COUNT(*) FROM raw_updates`",
+      "returns": "int"
     }
   ]
 }

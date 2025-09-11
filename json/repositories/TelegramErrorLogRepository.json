@@ -2,17 +2,29 @@
   "class_name": "TelegramErrorLogRepository",
   "table": "telegram_error_logs",
   "summary": "Mencatat semua kegagalan saat memanggil Telegram Bot API.",
-  "description": "Setiap kali pemanggilan API melalui kelas `TelegramAPI` gagal (misalnya, karena bot diblokir, chat tidak ditemukan, atau parameter salah), repositori ini digunakan untuk mencatat detail error ke database untuk analisis lebih lanjut.",
+  "description": "Setiap kali pemanggilan API melalui kelas `TelegramAPI` gagal, repositori ini digunakan untuk mencatat detail error ke database untuk analisis lebih lanjut.",
   "methods": [
     {
       "name": "__construct",
       "description": "Menginisialisasi repositori dengan koneksi PDO.",
-      "parameters": [{"name": "pdo", "type": "PDO", "description": "Objek koneksi database."}]
+      "parameters": [
+        {
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database."
+        }
+      ]
     },
     {
       "name": "create",
       "description": "Menyimpan satu log error ke dalam tabel `telegram_error_logs`.",
-      "parameters": [{"name": "data", "type": "array", "description": "Array asosiatif berisi detail error seperti `method`, `request_data`, `http_code`, `description`, dll."}],
+      "parameters": [
+        {
+          "name": "data",
+          "type": "array",
+          "description": "Array asosiatif berisi detail error seperti `method`, `request_data`, `http_code`, `error_code`, `description`, `status`, `retry_after`, `chat_id`."
+        }
+      ],
       "logic": "`INSERT INTO telegram_error_logs (...) VALUES (...)`",
       "returns": "bool"
     },
@@ -20,11 +32,26 @@
       "name": "findAll",
       "description": "Mengambil semua catatan error dengan paginasi, diurutkan dari yang terbaru.",
       "parameters": [
-        {"name": "limit", "type": "int", "description": "Jumlah catatan per halaman."},
-        {"name": "offset", "type": "int", "description": "Offset untuk paginasi."}
+        {
+          "name": "limit",
+          "type": "int",
+          "description": "Jumlah catatan per halaman."
+        },
+        {
+          "name": "offset",
+          "type": "int",
+          "description": "Offset untuk paginasi."
+        }
       ],
-      "logic": "`SELECT * FROM telegram_error_logs ORDER BY created_at DESC LIMIT ? OFFSET ?`",
+      "logic": "`SELECT * FROM telegram_error_logs ORDER BY created_at DESC LIMIT :limit OFFSET :offset`",
       "returns": "array"
+    },
+    {
+      "name": "countAll",
+      "description": "Menghitung jumlah total semua log error.",
+      "parameters": [],
+      "logic": "`SELECT COUNT(*) FROM telegram_error_logs`",
+      "returns": "int"
     }
   ]
 }
