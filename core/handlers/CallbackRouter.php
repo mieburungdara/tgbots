@@ -35,7 +35,7 @@ class CallbackRouter
             'admin_ban_' => new AdminBanCallback(),
             'rate_' => new RateCallback(),
             'tanya_' => new TanyaCallback(),
-            'sell_confirm_' => new SellConfirmCallback(),
+            'sell_confirm' => new SellConfirmCallback(),
             'cancel_sell' => new CancelSellCallback(),
         ];
     }
