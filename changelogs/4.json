@@ -1,0 +1,392 @@
+{
+    "changelog": [
+        {
+            "version": "4.7.0",
+            "date": "2025-08-28",
+            "changes": {
+                "Fitur": [
+                    "**Manajemen & Verifikasi Bot untuk Channel Penyimpanan**: Merombak total halaman \"Channel Penyimpanan\" (`admin/channels.php`) untuk memperkenalkan alur kerja berbasis wizard untuk mengelola dan memverifikasi bot.\n  - **Hubungan Banyak-ke-Banyak**: Sistem sekarang mendukung beberapa bot yang dikaitkan dengan satu channel penyimpanan, yang dikelola melalui tabel database `private_channel_bots` baru.\n  - **Modal Manajemen Interaktif**: Mengklik tombol \"Kelola Bot\" baru pada sebuah channel akan membuka modal di mana admin dapat menambah, menghapus, dan memverifikasi bot untuk channel tersebut.\n  - **Verifikasi Otomatis via API**: Fitur \"Verifikasi\" secara otomatis memanggil API Telegram untuk memeriksa apakah bot adalah admin di channel. Jika ya, statusnya diperbarui di UI.\n  - **Endpoint API Modular**: Menambahkan beberapa endpoint API baru (`get_channel_bots.php`, `add_bot_to_channel.php`, `remove_bot_from_channel.php`, `verify_channel_bot.php`) untuk mendukung fungsionalitas modal secara dinamis."
+                ]
+            }
+        },
+        {
+            "version": "4.6.2",
+            "date": "2025-08-27",
+            "changes": {
+                "Diperbaiki": [
+                    "**Riwayat Chat Kosong Karena Integer Overflow**: Memperbaiki bug kritis di `admin/chat.php` yang menyebabkan riwayat chat tidak muncul untuk ID pengguna atau bot yang lebih besar dari batas 32-bit integer (sekitar 2.14 miliar).\n  - **Penyebab**: ID pengguna dan bot diikat ke kueri SQL menggunakan `PDO::PARAM_INT`. Ketika ID aktual (seperti 7.6 miliar) melebihi batas maksimum integer 32-bit, PDO akan memotongnya menjadi nilai yang salah sebelum mengirim kueri ke database, sehingga tidak ada baris yang ditemukan. Kueri `COUNT(*)` berhasil karena menggunakan metode `execute()` yang berbeda yang tidak memaksa tipe data.\n  - **Solusi**: Mengubah tipe parameter untuk `user_id` dan `bot_id` dari `PDO::PARAM_INT` menjadi `PDO::PARAM_STR` di `admin/chat.php`. Ini memastikan ID besar dikirim sebagai string dan tidak terpotong, memungkinkan database untuk mencocokkannya dengan benar terhadap kolom `BIGINT`."
+                ]
+            }
+        },
+        {
+            "version": "4.6.1",
+            "date": "2025-08-27",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error di Halaman Channel Jualan**: Memperbaiki error `Undefined array key \"bot_id\"` dan `TypeError` di halaman `admin/sales_channels.php`.\n  - **Penyebab**: Kueri database tidak menyertakan `bot_id` dalam hasil, yang menyebabkan error saat mencoba mengambil token bot untuk panggilan API.\n  - **Solusi**: Menambahkan `ssc.bot_id` ke dalam `SELECT` pada kueri SQL untuk memastikan data yang diperlukan tersedia."
+                ]
+            }
+        },
+        {
+            "version": "4.6.0",
+            "date": "2025-08-27",
+            "changes": {
+                "Fitur": [
+                    "**Halaman Manajemen Channel Jualan**: Menambahkan halaman baru `admin/sales_channels.php` untuk menampilkan daftar semua channel jualan yang didaftarkan oleh penjual.\n  - **Tampilan Komprehensif**: Menampilkan tabel dengan informasi lengkap termasuk nama channel, nama grup diskusi, pemilik channel (penjual), dan bot yang terhubung.\n  - **Integrasi API**: Secara dinamis mengambil nama channel dan grup dari API Telegram untuk ditampilkan di samping ID numeriknya.\n  - **Navigasi**: Menambahkan tautan \"Channel Jualan\" baru ke sidebar admin untuk akses mudah, dan memperjelas tautan lama menjadi \"Channel Penyimpanan\"."
+                ]
+            }
+        },
+        {
+            "version": "4.5.2",
+            "date": "2025-08-27",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error di Halaman Paket Admin**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'u.telegram_id\' in \'ON\'` yang terjadi saat mengakses halaman manajemen paket di panel admin.\n  - **Penyebab**: Kueri `findAll` di `PackageRepository.php` salah melakukan JOIN pada `users` menggunakan `u.telegram_id` yang tidak ada.\n  - **Solusi**: Mengubah kondisi JOIN menjadi `u.id` agar sesuai dengan skema database."
+                ]
+            }
+        },
+        {
+            "version": "4.5.1",
+            "date": "2025-08-27",
+            "changes": {
+                "Diperbaiki": [
+                    "**Inkonsistensi Kolom ID Pengguna (`id` vs `telegram_id`)**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'u.telegram_id\'` dan masalah terkait di seluruh aplikasi.\n  - **Penyebab**: Sebagian besar kode masih menggunakan `telegram_id` untuk merujuk pada ID pengguna, padahal skema database final (`updated_schema.sql`) menggunakan `id` sebagai primary key untuk tabel `users`.\n  - **Solusi**: Melakukan refactoring global untuk mengganti semua referensi ke kolom `telegram_id` pengguna dengan `id`. Ini termasuk perbaikan pada query SQL, nama variabel, dan parameter fungsi di direktori `admin`, `core`, dan `member`.\n  - **Perbaikan Tambahan**: Menonaktifkan atau memperbaiki file migrasi lama (`002_...`, `018_...`) dan `setup.sql` untuk memastikan konsistensi skema bagi instalasi baru."
+                ]
+            }
+        },
+        {
+            "version": "4.5.0",
+            "date": "2025-08-27",
+            "changes": {
+                "Fitur": [
+                    "**Reset Database dari File SQL**: Menambahkan fitur baru di halaman `admin/database.php` yang memungkinkan admin untuk me-reset database menggunakan file skema SQL yang dipilih.\n  - **Dropdown Pilihan File**: Mengganti tombol \"Bersihkan Data\" dengan dropdown yang berisi `updated_schema.sql` (disarankan) dan `setup.sql` (lama).\n  - **Logika Reset Penuh**: Aksi ini akan menghapus semua tabel yang ada dan menjalankan skrip dari file yang dipilih untuk membuat ulang seluruh skema database."
+                ]
+            }
+        },
+        {
+            "version": "4.4.2",
+            "date": "2025-08-27",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error di Dasbor Percakapan**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'telegram_bot_id\'` di halaman utama admin (`admin/index.php`).\n  - **Penyebab**: Kode di `admin/index.php` mencoba mengambil kolom `telegram_bot_id` dari tabel `bots`, padahal skema database yang benar (`updated_schema.sql`) menamai kolom tersebut `id`.\n  - **Solusi**: Mengubah semua referensi ke `telegram_bot_id` menjadi `id` di `admin/index.php`, termasuk query SQL dan variabel terkait, agar sesuai dengan struktur database."
+                ]
+            }
+        },
+        {
+            "version": "4.4.1",
+            "date": "2025-08-27",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error di Halaman Pilihan Login**: Memperbaiki error `SQLSTATE[42S02]: Base table or view not found` pada `login_choice.php`.\n  - **Penyebab**: Halaman ini masih mencoba mengakses tabel `members` yang sudah dihapus dan digabungkan ke dalam tabel `users` pada refactoring sebelumnya.\n  - **Solusi**: Mengubah query database di `login_choice.php` untuk mengambil data token langsung dari tabel `users`."
+                ]
+            }
+        },
+        {
+            "version": "4.4.0",
+            "date": "2025-08-27",
+            "changes": {
+                "Fitur": [
+                    "**Tombol \"Jadikan Admin\" di XOR Admin Panel**: Menambahkan fungsionalitas sederhana untuk memberikan peran Admin kepada pengguna dari panel `xoradmin.php`.\n  - **Tampilan Baru**: Menambahkan tab \"Manajemen Peran\" yang menampilkan daftar pengguna dan peran mereka saat ini.\n  - **Aksi Cepat**: Untuk setiap pengguna yang belum menjadi admin, sebuah tombol \"Jadikan Admin\" tersedia. Mengklik tombol ini akan langsung memberikan peran Admin kepada pengguna tersebut.\n  - **Backend**: Logika ini didukung oleh endpoint API `make_admin` baru di `xoradminapi.php`."
+                ]
+            }
+        },
+        {
+            "version": "4.3.3",
+            "date": "2025-08-27",
+            "changes": {
+                "Diperbaiki": [
+                    "**Inkonsistensi ID Pengguna di Seluruh Kode**: Memperbaiki serangkaian error fatal (`500 Internal Server Error`, `Column not found`, `Invalid Token`) yang disebabkan oleh penggunaan nama kolom yang tidak konsisten untuk ID pengguna (`id` vs. `telegram_id`) di seluruh basis kode.\n  - **Penyebab**: Sebagian kode telah diperbarui untuk menggunakan skema database baru (dengan `telegram_id` sebagai primary key), tetapi database yang aktif dan sebagian besar kode lainnya masih menggunakan skema lama (dengan `id` sebagai primary key). Hal ini menyebabkan kegagalan query SQL di banyak bagian aplikasi.\n  - **Solusi**: Melakukan audit dan perbaikan massal di seluruh basis kode untuk secara konsisten menggunakan kolom `id` sebagai primary key pengguna. File yang diperbaiki antara lain:\n    - `core/UpdateDispatcher.php`: Menggunakan ID bot internal yang benar.\n    - `core/database/UserRepository.php`: Mengoreksi query `INSERT` pengguna baru.\n    - `core/handlers/MessageHandler.php`: Menyelaraskan semua penggunaan ID pengguna.\n    - `core/handlers/CallbackQueryHandler.php`: Menyelaraskan semua penggunaan ID pengguna.\n    - `core/handlers/MediaHandler.php`: Menggunakan ID pengguna yang benar saat menyimpan media.\n    - `member/index.php`, `member/dashboard.php`: Memperbaiki alur login dan tampilan dasbor member.\n    - `admin/auth.php`, `admin/chat.php`, `admin/balance.php`, dan file terkait lainnya: Menyelaraskan semua query dan logika di panel admin."
+                ]
+            }
+        },
+        {
+            "version": "4.3.0",
+            "date": "2025-08-25",
+            "changes": {
+                "Diubah (Refactoring Besar)": [
+                    "**Arsitektur Webhook Didesain Ulang**: File `webhook.php` yang monolitik telah direfaktor secara besar-besaran menjadi arsitektur berbasis *Dispatcher* yang lebih bersih, modular, dan mudah dipelihara.\n  - **`UpdateDispatcher`**: Memperkenalkan kelas `UpdateDispatcher` baru yang sekarang berfungsi sebagai otak utama, bertanggung jawab untuk menerima pembaruan, menentukan jenisnya, dan mendelegasikannya ke handler yang sesuai.\n  - **Kontainer `App`**: Membuat kelas `App` baru yang berfungsi sebagai wadah dependensi sederhana untuk menampung objek-objek bersama (seperti koneksi PDO, instance TelegramAPI, dan data pengguna), menyederhanakan cara dependensi diteruskan ke handler.\n  - **`HandlerInterface`**: Menstandardisasi semua handler (`MessageHandler`, `CallbackQueryHandler`, dll.) untuk mengimplementasikan `HandlerInterface` umum, memastikan mereka memiliki metode `handle()` yang konsisten.\n  - **`webhook.php` yang Ramping**: `webhook.php` sekarang hanya bertanggung jawab untuk validasi awal, inisialisasi, dan memanggil dispatcher. Semua logika bisnis, penanganan transaksi, dan routing telah dipindahkan ke kelas-kelas yang sesuai."
+                ],
+                "Peningkatan": [
+                    "**Sentralisasi Logika**: Logika yang sebelumnya tersebar di `webhook.php` (seperti menyimpan pesan masuk, menangani state machine, atau kasus-kasus khusus untuk `channel_post`) sekarang telah dipindahkan ke dalam handler masing-masing, membuat setiap kelas lebih mandiri."
+                ]
+            }
+        },
+        {
+            "version": "4.2.23",
+            "date": "2025-08-23",
+            "changes": {
+                "Peningkatan": [
+                    "**Refactoring API Log Transaksi**: Mengubah semua endpoint API log transaksi (`get_balance_log.php`, `get_sales_log.php`, `get_purchases_log.php`) untuk menggunakan `telegram_id` sebagai parameter identifikasi pengguna, bukan `id` internal database.\n  - **Alasan**: Meningkatkan konsistensi dan keamanan dengan menggunakan ID publik yang tidak mengekspos struktur database internal.\n  - **Implementasi**: Backend API dan panggilan AJAX di frontend pada halaman `admin/balance.php` telah disesuaikan untuk menggunakan `telegram_id`."
+                ],
+                "Diperbaiki": [
+                    "**Fatal Error di Halaman Pengguna**: Memperbaiki error `SQLSTATE[HY093]: Invalid parameter number` yang terjadi saat menggunakan fungsi pencarian di halaman `admin/users.php`.\n  - **Penyebab**: Penggunaan placeholder bernama yang sama untuk beberapa kondisi `WHERE` dan `LIKE` dalam query pencarian tidak didukung secara konsisten oleh semua driver PDO.\n  - **Solusi**: Mengubah query untuk menggunakan placeholder bernama yang unik untuk setiap kondisi, memastikan query berjalan dengan benar.",
+                    "**Fatal Error `Cannot redeclare get_sort_link()`**: Memperbaiki error fatal yang terjadi di halaman `admin/users.php`.\n  - **Penyebab**: Fungsi `get_sort_link()` didefinisikan secara lokal di `admin/users.php` dan juga di `core/helpers.php`, menyebabkan konflik saat kedua file di-include.\n  - **Solusi**: Menghapus definisi fungsi yang duplikat dari `admin/users.php` dan memastikan halaman tersebut menggunakan versi global dari `core/helpers.php`."
+                ]
+            }
+        },
+        {
+            "version": "4.2.22",
+            "date": "2025-08-23",
+            "changes": {
+                "Fitur": [
+                    "**Log Transaksi Interaktif**: Menambahkan modal pop-up interaktif di halaman `admin/balance.php` untuk melihat riwayat transaksi secara detail.\n  - **Riwayat Saldo**: Mengklik jumlah \"Saldo Saat Ini\" akan menampilkan riwayat penyesuaian saldo oleh admin, lengkap dengan deskripsi.\n  - **Riwayat Pemasukan**: Mengklik \"Total Pemasukan\" akan menampilkan daftar konten yang telah dijual oleh pengguna.\n  - **Riwayat Pengeluaran**: Mengklik \"Total Pengeluaran\" akan menampilkan daftar konten yang telah dibeli oleh pengguna.\n  - **Implementasi AJAX**: Data untuk modal ini diambil secara dinamis menggunakan API endpoint baru di `admin/api/`, sehingga tidak memperlambat waktu muat halaman awal."
+                ]
+            }
+        },
+        {
+            "version": "4.2.21",
+            "date": "2025-08-23",
+            "changes": {
+                "Peningkatan": [
+                    "**Sorting di Halaman Saldo**: Menambahkan fungsionalitas pengurutan pada tabel di halaman `admin/balance.php`.\n  - Admin sekarang dapat mengurutkan daftar pengguna berdasarkan `Saldo Saat Ini`, `Total Pemasukan`, dan `Total Pengeluaran` dengan mengklik header kolom.\n  - **Dukungan Kolom Terhitung**: Logika pengurutan diimplementasikan untuk bekerja dengan benar pada kolom yang nilainya dihitung melalui subquery (aliased columns).\n  - **Helper Terpusat**: Membuat fungsi `get_sort_link()` yang dapat digunakan kembali di `core/helpers.php` untuk menyederhanakan pembuatan tautan pengurutan di seluruh panel admin."
+                ]
+            }
+        },
+        {
+            "version": "4.2.20",
+            "date": "2025-08-23",
+            "changes": {
+                "Peningkatan": [
+                    "**Alur Kerja Penyesuaian Saldo**: Mengubah alur kerja pada halaman Manajemen Saldo (`admin/balance.php`) untuk meningkatkan efisiensi.\n  - **Formulir Berbasis Modal**: Mengganti form di bagian atas halaman dengan tombol \"Ubah Saldo\" di setiap baris pengguna. Tombol ini akan membuka jendela modal (pop-up) untuk memasukkan jumlah penyesuaian saldo, membuat proses lebih cepat dan lebih terkontekstual."
+                ],
+                "Diperbaiki": [
+                    "**Fatal Error di Halaman Saldo**: Memperbaiki error `SQLSTATE[HY093]: Invalid parameter number` yang terjadi saat menggunakan fungsi pencarian di halaman `admin/balance.php`.\n  - **Penyebab**: Penggunaan placeholder bernama yang sama (`:search`) untuk beberapa kondisi `LIKE` dalam query pencarian tidak didukung secara konsisten oleh semua driver PDO.\n  - **Solusi**: Mengubah query untuk menggunakan placeholder bernama yang unik (`:search1`, `:search2`, `:search3`) untuk setiap kondisi `LIKE`, memastikan query berjalan dengan benar."
+                ]
+            }
+        },
+        {
+            "version": "4.2.19",
+            "date": "2025-08-23",
+            "changes": {
+                "Fitur": [
+                    "**Halaman Manajemen Saldo**: Menambahkan halaman baru (`admin/balance.php`) yang didedikasikan untuk manajemen saldo pengguna.\n  - **Penyesuaian Saldo**: Admin dapat menambah atau mengurangi saldo pengguna secara manual melalui form. Setiap transaksi dicatat dalam tabel `balance_transactions` yang baru.\n  - **Tabel Ringkasan**: Menampilkan tabel paginasi dari semua pengguna yang menunjukkan saldo mereka saat ini, total pemasukan (dari penjualan konten), dan total pengeluaran (dari pembelian konten).\n  - **Navigasi**: Menambahkan tautan \"Manajemen Saldo\" ke sidebar utama admin untuk akses mudah."
+                ],
+                "Diperbaiki": [
+                    "**Error Migrasi `balance_transactions`**: Memperbaiki error `errno: 150 \"Foreign key constraint is incorrectly formed\"` saat menjalankan migrasi untuk membuat tabel `balance_transactions`.\n  - **Penyebab**: Tipe data kolom `user_id` di tabel baru (`BIGINT`) tidak cocok dengan tipe data kolom `id` di tabel `users` (`INT(11)`).\n  - **Solusi**: Menyamakan tipe data `user_id` di file migrasi menjadi `INT(11)` agar sesuai dengan kolom yang direferensikan.",
+                    "**Fatal Error di Halaman Saldo**: Memperbaiki error `SQLSTATE[42S22]: Unknown column \'seller_id\'` yang terjadi saat memuat halaman `admin/balance.php`.\n  - **Penyebab**: Subquery untuk menghitung total pemasukan dan pengeluaran menggunakan nama kolom yang salah (`seller_id`, `buyer_id`).\n  - **Solusi**: Mengubah nama kolom di dalam query menjadi `seller_user_id` dan `buyer_user_id` agar cocok dengan skema tabel `sales`.",
+                    "**Fatal Error `format_currency()`**: Memperbaiki error `Call to undefined function format_currency()` di halaman `admin/balance.php`.\n  - **Penyebab**: Fungsi helper untuk memformat mata uang dipanggil tetapi belum pernah didefinisikan.\n  - **Solusi**: Menambahkan fungsi `format_currency()` baru ke dalam `core/helpers.php` agar tersedia secara global."
+                ]
+            }
+        },
+        {
+            "version": "4.2.18",
+            "date": "2025-08-23",
+            "changes": {
+                "Peningkatan": [
+                    "**Peningkatan Halaman Manajemen Pengguna**: Merombak halaman `admin/users.php` untuk meningkatkan fungsionalitas dan kegunaan.\n  - **Pagination**: Mengimplementasikan pagination sisi server untuk menangani daftar pengguna yang besar secara efisien.\n  - **Pencarian & Pengurutan**: Mempertahankan dan mengintegrasikan fungsionalitas pencarian dan pengurutan yang ada dengan sistem pagination baru.\n  - **Tombol Aksi yang Terintegrasi**: Menambahkan tombol \"Lihat Percakapan\" yang mengarahkan admin ke dasbor percakapan (`index.php`) dengan filter pengguna yang sudah diterapkan, menyederhanakan alur kerja untuk melihat riwayat chat pengguna."
+                ]
+            }
+        },
+        {
+            "version": "4.2.17",
+            "date": "2025-08-22",
+            "changes": {
+                "Peningkatan": [
+                    "**Konsistensi UI untuk Channel Chat**: Halaman riwayat pesan untuk channel dan grup (`admin/channel_chat.php`) telah diperbarui agar memiliki tampilan dan fungsionalitas yang sama dengan halaman riwayat pesan pengguna.\n  - **Tampilan Tabel & Pagination**: Mengganti antarmuka lama dengan tampilan tabel yang padat informasi dan menyertakan pagination sisi server.\n  - **Fitur Hapus Massal**: Menambahkan fungsionalitas hapus massal dengan checkbox dan menu aksi, sama seperti pada halaman chat pengguna.\n  - **Konsistensi Kode**: `delete_messages_handler.php` telah digeneralisasi untuk menangani permintaan hapus dari kedua jenis halaman (pengguna dan channel), mengurangi duplikasi kode."
+                ]
+            }
+        },
+        {
+            "version": "4.2.16",
+            "date": "2025-08-22",
+            "changes": {
+                "Fitur": [
+                    "**Hapus Pesan Massal**: Menambahkan fungsionalitas untuk menghapus beberapa pesan sekaligus di halaman detail percakapan (`admin/chat.php`).\n  - **Seleksi Pesan**: Admin dapat memilih pesan satu per satu menggunakan checkbox atau memilih semua pesan di halaman dengan satu klik.\n  - **Menu Aksi**: Sebuah menu aksi memungkinkan admin untuk memilih tiga jenis penghapusan: hanya dari database lokal, hanya dari Telegram, atau dari keduanya.\n  - **Implementasi**: Fitur ini didukung oleh handler backend baru (`delete_messages_handler.php`) dan penambahan metode `deleteMessage` pada `TelegramAPI.php`."
+                ]
+            }
+        },
+        {
+            "version": "4.2.15",
+            "date": "2025-08-22",
+            "changes": {
+                "Diubah": [
+                    "**Tampilan Detail Chat menjadi Tabel**: Mengubah total halaman detail percakapan (`admin/chat.php`) dari format obrolan menjadi tampilan tabel yang padat informasi, sesuai permintaan pengguna.\n  - **Integrasi Tata Letak**: Halaman sekarang terintegrasi penuh dengan tata letak admin utama, menampilkan sidebar navigasi yang konsisten.\n  - **Tampilan Tabel**: Pesan sekarang ditampilkan dalam tabel dengan kolom untuk ID, Waktu, Arah (Masuk/Keluar), Tipe, dan Konten.\n  - **Fitur Pagination**: Mengimplementasikan pagination sisi server untuk menangani riwayat percakapan yang panjang secara efisien. Pesan ditampilkan per 50 item, dengan kontrol navigasi \"Sebelumnya\" dan \"Berikutnya\"."
+                ],
+                "Diperbaiki": [
+                    "**Fatal Error di Halaman Detail Chat**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'mf.bot_id\'` yang terjadi saat melihat riwayat chat.\n  - **Penyebab**: Kondisi `JOIN` pada query SQL salah, mencoba menghubungkan tabel `messages` dan `media_files` menggunakan `bot_id` yang tidak ada di tabel media.\n  - **Solusi**: Mengubah kondisi `JOIN` untuk menggunakan `m.chat_id = mf.chat_id`, yang secara akurat menautkan pesan ke media yang sesuai berdasarkan ID chat yang sama."
+                ]
+            }
+        },
+        {
+            "version": "4.2.14",
+            "date": "2025-08-22",
+            "changes": {
+                "Peningkatan": [
+                    "**Desain Ulang Halaman Percakapan**: Merombak total halaman daftar percakapan (`admin/index.php`) untuk pengalaman pengguna yang lebih baik dan lebih informatif.\n  - **Tata Letak Dua Kolom**: Mengganti pemilihan bot berbasis dropdown dengan tata letak dua kolom yang persisten. Sidebar kiri sekarang menampilkan daftar semua bot, memungkinkan admin untuk beralih antar bot dengan cepat.\n  - **Daftar Percakapan Berbasis Kartu**: Mengubah tampilan daftar percakapan dari tabel HTML standar menjadi daftar berbasis kartu yang modern.\n  - **Fitur Informatif**: Setiap kartu sekarang menampilkan avatar berbasis inisial, nama pengguna, cuplikan pesan terakhir, dan waktu, sehingga lebih mudah untuk memindai dan mengidentifikasi percakapan penting."
+                ]
+            }
+        },
+        {
+            "version": "4.2.13",
+            "date": "2025-08-22",
+            "changes": {
+                "Diubah": [
+                    "**Tata Letak Panel Admin**: Merombak total tata letak panel admin dengan memindahkan navigasi utama dari header ke sidebar vertikal di sisi kiri.\n  - **Tujuan**: Untuk meningkatkan pengalaman pengguna dengan menyediakan navigasi yang lebih terstruktur, mudah diakses, dan dapat diskalakan seiring penambahan fitur baru.\n  - **Implementasi**:\n    - Membuat file `partials/sidebar.php` baru untuk menampung menu navigasi admin.\n    - Mengubah `partials/header.php` dan `partials/footer.php` untuk secara kondisional menerapkan tata letak dua kolom (sidebar dan konten utama) hanya untuk halaman admin, tanpa memengaruhi panel member."
+                ]
+            }
+        },
+        {
+            "version": "4.2.12",
+            "date": "2025-08-22",
+            "changes": {
+                "Dokumentasi": [
+                    "**Dokumentasi Kode Komprehensif**: Menambahkan dokumentasi lengkap (docstrings dan komentar sebaris) di seluruh basis kode PHP.\n  - **Tujuan**: Untuk secara signifikan meningkatkan keterbacaan, pemeliharaan, dan kemudahan pemahaman kode bagi pengembang di masa depan.\n  - **Cakupan**:\n    - **Direktori `core/`**: Semua kelas `Handler` dan `Repository`, serta file-file inti seperti `TelegramAPI.php`, `database.php`, dan `helpers.php` telah didokumentasikan sepenuhnya, menjelaskan tujuan setiap kelas, metode, parameter, dan nilai kembalian.\n    - **Direktori `admin/`**: Semua file halaman panel admin (misalnya, `index.php`, `bots.php`, `users.php`) dan file-file handler AJAX terkait telah diberikan blok komentar di tingkat file yang merangkum fungsionalitasnya, serta komentar pada blok logika utama.\n    - **Direktori `member/`**: Semua file di panel anggota telah didokumentasikan dengan cara yang sama seperti direktori `admin`.\n    - **File Root**: File `webhook.php` yang krusial telah didokumentasikan secara mendalam untuk menjelaskan alur kerja pemrosesan pembaruan dari awal hingga akhir."
+                ]
+            }
+        },
+        {
+            "version": "4.2.11",
+            "date": "2025-08-18",
+            "changes": {
+                "Fitur": [
+                    "**Balasan Otomatis di Grup Diskusi**: Bot sekarang akan secara otomatis membalas postingan yang di-forward dari channel ke grup diskusi yang terhubung.\n  - **Pemicu**: Fitur ini aktif ketika sebuah pesan `is_automatic_forward` terdeteksi di grup.\n  - **Aksi**: Bot akan membalas dengan pesan \"Klik tombol di bawah untuk membeli\" dan menyertakan tombol inline \"Beli Sekarang\"."
+                ],
+                "Diperbaiki": [
+                    "**Logika Pendeteksian Forward Channel**: Memperbaiki logika di `MessageHandler` untuk mendeteksi pesan yang di-forward secara otomatis dari channel.\n  - **Penyebab**: Implementasi sebelumnya salah menggunakan `forward_from_chat` untuk mendapatkan detail pesan asli, padahal spesifikasi dari Telegram untuk jenis forward ini menggunakan objek `forward_origin`.\n  - **Solusi**: Mengubah `handleAutomaticForward` untuk membaca `forward_origin.chat.id` dan `forward_origin.message_id` untuk mencocokkan postingan asli di channel dengan paket yang tersimpan di database."
+                ]
+            }
+        },
+        {
+            "version": "4.2.10",
+            "date": "2025-08-16",
+            "changes": {
+                "Diubah": [
+                    "**Mengembalikan ke Mode `Markdown` Legacy**: Sesuai permintaan pengguna, semua penggunaan `parse_mode` diubah kembali dari `MarkdownV2` ke mode `Markdown` legacy.\n  - **Penyebab**: Pengguna meminta untuk menggunakan mode parsing Markdown yang biasa, bukan `MarkdownV2`.\n  - **Solusi**:\n    1.  Mengganti nama fungsi `escapeMarkdownV2` menjadi `escapeMarkdown` di `TelegramAPI.php` dan menyesuaikan logikanya untuk hanya melakukan escape pada karakter `_`, `*`, `\``, dan `[`.\n    2.  Mengubah semua `parse_mode` dari `\"MarkdownV2\"` menjadi `\"Markdown\"` di semua file handler (`MessageHandler`, `CallbackQueryHandler`, `ChannelPostHandler`) dan `webhook.php`.\n    3.  Menghapus escaping manual untuk karakter yang tidak relevan dengan mode `Markdown` legacy (seperti `.`, `!`, `(`, `)`)."
+                ]
+            }
+        },
+        {
+            "version": "4.2.9",
+            "date": "2025-08-16",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error `can\'t parse entities` pada Callback Handler**: Memperbaiki error `can\'t parse entities` yang terlewat pada beberapa alur kerja yang ditangani oleh `CallbackQueryHandler`.\n  - **Penyebab**: Beberapa metode di `CallbackQueryHandler` (seperti `handleRegisterSeller` dan `handlePostToChannel`) masih mengirim pesan dengan `parse_mode` `Markdown` atau tidak menyertakan `parse_mode` saat mengirim caption dengan markup, serta tidak melakukan escaping pada konten. Selain itu, metode `copyMessage` di `TelegramAPI.php` tidak mendukung parameter `parse_mode`.\n  - **Solusi**:\n    1.  Menambahkan dukungan parameter `parse_mode` ke metode `copyMessage` di `TelegramAPI.php`.\n    2.  Di `CallbackQueryHandler.php`, mengubah semua pemanggilan `sendMessage` dan `copyMessage` yang relevan untuk menggunakan `parse_mode=MarkdownV2`.\n    3.  Menerapkan fungsi `escapeMarkdownV2()` pada semua konten dinamis (seperti ID publik, deskripsi, harga) sebelum dikirim."
+                ]
+            }
+        },
+        {
+            "version": "4.2.8",
+            "date": "2025-08-16",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error `can\'t parse entities` pada Berbagai Perintah**: Memperbaiki error `can\'t parse entities` yang disebabkan oleh karakter khusus (`=`, `!`, `.`, `(`, `)`, dll.) dalam data dinamis (seperti nama pengguna, deskripsi item) atau teks statis di berbagai perintah.\n  - **Penyebab**: Pesan yang dikirim dengan `parse_mode=Markdown` atau `MarkdownV2` tidak melakukan escaping pada karakter-karakter khusus yang dicadangkan oleh Telegram, menyebabkan API gagal mem-parsing pesan.\n  - **Solusi**:\n    1.  Membuat fungsi helper baru `escapeMarkdownV2()` di `TelegramAPI.php` untuk melakukan escaping pada semua karakter khusus sesuai standar `MarkdownV2`.\n    2.  Mengubah semua `parse_mode` yang relevan di `MessageHandler.php` dan `webhook.php` menjadi `MarkdownV2`.\n    3.  Menerapkan fungsi `escapeMarkdownV2()` pada semua data dinamis yang dimasukkan ke dalam pesan.\n    4.  Melakukan escaping manual pada karakter khusus di semua teks pesan statis untuk memastikan konsistensi."
+                ]
+            }
+        },
+        {
+            "version": "4.2.7",
+            "date": "2025-08-15",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error `can\'t parse entities` pada Perintah /help**: Memperbaiki error Markdown yang tersisa pada perintah `/help`.\n  - **Penyebab**: Penggunaan `Markdown` legacy yang tidak konsisten dan karakter `-` yang tidak di-escape menyebabkan error saat parsing di `MarkdownV2`.\n  - **Solusi**: Secara eksplisit mengubah `parse_mode` untuk perintah `/help` menjadi `MarkdownV2` dan melakukan escaping pada semua karakter khusus (`-`, `.`, `(`, `)`, dll.) sesuai dengan aturan `MarkdownV2`."
+                ]
+            }
+        },
+        {
+            "version": "42.6",
+            "date": "2025-08-15",
+            "changes": {
+                "Peningkatan": [
+                    "**Pesan Bantuan /help Disederhanakan**: Teks bantuan yang ditampilkan oleh perintah `/help` telah ditulis ulang sepenuhnya menjadi lebih ringkas, jelas, dan mudah dibaca menggunakan format daftar (bullet points) untuk meningkatkan pengalaman pengguna."
+                ]
+            }
+        },
+        {
+            "version": "4.2.5",
+            "date": "2025-08-15",
+            "changes": {
+                "Diperbaiki": [
+                    "**Format Markdown Rusak pada Perintah /help**: Memperbaiki masalah format pada pesan `/help` yang menyebabkan teks tidak ditampilkan dengan benar.\n  - **Penyebab**: Karakter garis bawah (`_`) dalam contoh ID paket (misalnya, `ABCD_0001`) tidak di-escape, sehingga merusak parser Markdown Telegram.\n  - **Solusi**: Melakukan escaping pada karakter `_` di semua contoh ID dalam teks bantuan."
+                ]
+            }
+        },
+        {
+            "version": "4.2.4",
+            "date": "2025-08-15",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error di Halaman \"Konten Dibeli\"**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'mf.file_id\'` yang terjadi saat member membuka halaman \"Konten Dibeli\".\n  - **Penyebab**: Query database untuk mengambil daftar konten yang dibeli (`findPackagesByBuyerId`) masih mencoba memilih kolom `file_id` yang sudah dihapus.\n  - **Solusi**: Menghapus referensi ke kolom `mf.file_id` dari query di `SaleRepository.php`."
+                ]
+            }
+        },
+        {
+            "version": "4.2.3",
+            "date": "2025-08-15",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error di Halaman \"Konten Dijual\"**: Memperbaiki error `SQLSTATE[42S22]: Column not found: 1054 Unknown column \'mf.file_id\'` yang terjadi saat member membuka halaman \"Konten Dijual\".\n  - **Penyebab**: Query database untuk mengambil daftar konten yang dijual (`findAllBySellerId`) masih mencoba memilih kolom `file_id` yang sudah dihapus.\n  - **Solusi**: Menghapus referensi ke kolom `mf.file_id` dari query di `PackageRepository.php`."
+                ]
+            }
+        },
+        {
+            "version": "4.2.2",
+            "date": "2025-08-15",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error pada Perintah /start dengan Deep Link**: Memperbaiki error `TypeError` yang terjadi saat pengguna menggunakan tautan `start` yang berisi ID paket (misalnya, dari tombol \"Beli\").\n  - **Penyebab**: ID paket diekstrak sebagai string, tetapi metode `PackageRepository::find()` mengharapkan integer.\n  - **Solusi**: Melakukan konversi tipe data (casting) ID paket menjadi integer sebelum memanggil metode `find()`."
+                ]
+            }
+        },
+        {
+            "version": "4.2.1",
+            "date": "2025-08-15",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error pada Callback Tombol \"Post ke Channel\"**: Memperbaiki error `Undefined constant \"BOT_USERNAME\"` yang terjadi saat pengguna menekan tombol \"Post ke Channel\".\n  - **Penyebab**: Konstanta `BOT_USERNAME` hanya didefinisikan untuk satu jenis update (inline query) dan tidak tersedia untuk callback query.\n  - **Solusi**: Logika untuk mendefinisikan konstanta `BOT_USERNAME` telah dipindahkan ke bagian awal skrip `webhook.php` sehingga tersedia secara global untuk semua jenis update."
+                ]
+            }
+        },
+        {
+            "version": "4.2.0",
+            "date": "2025-08-15",
+            "changes": {
+                "Fitur": [
+                    "**Posting Konten ke Channel Jualan**: Penjual sekarang dapat mendaftarkan channel jualan mereka dan mem-posting konten ke sana.\n  - **Pendaftaran Channel**: Perintah baru `/register_channel <ID Channel>` memungkinkan penjual untuk mendaftarkan channel mereka melalui chat pribadi dengan bot. Bot akan memverifikasi bahwa ia adalah admin di channel tersebut.\n  - **Tombol Posting Manual**: Saat melihat detail konten milik sendiri via `/konten`, penjual akan melihat tombol baru \"Post ke Channel\".\n  - **Penanganan Kegagalan Otomatis**: Jika bot gagal mem-posting ke channel (misalnya, karena sudah bukan admin), channel tersebut akan otomatis di-unregister dari sistem untuk mencegah error berulang."
+                ]
+            }
+        },
+        {
+            "version": "4.1.0",
+            "date": "2025-08-14",
+            "changes": {
+                "Fitur": [
+                    "**Berbagi Konten via Inline Mode**: Bot sekarang mendukung Inline Mode. Pengguna dapat mengetik `@nama_bot <ID Konten>` di grup atau chat mana pun untuk secara instan mencari dan membagikan pratinjau konten, lengkap dengan tombol \"Beli\". Ini memberikan cara yang cepat dan ramah privasi untuk mempromosikan konten."
+                ]
+            }
+        },
+        {
+            "version": "4.0.2",
+            "date": "2025-08-14",
+            "changes": {
+                "Keamanan": [
+                    "**Menyembunyikan Perintah Admin**: Perintah `/help` sekarang hanya akan menampilkan bagian \"Perintah Admin\" kepada pengguna yang memiliki peran sebagai admin. Ini mencegah pengguna biasa melihat perintah-perintah sensitif yang dapat disalahgunakan."
+                ]
+            }
+        },
+        {
+            "version": "4.0.1",
+            "date": "2025-08-14",
+            "changes": {
+                "Diperbaiki": [
+                    "**Pesan Perintah /help Terlalu Panjang**: Memperbaiki error `Bad Request: message is too long` yang terjadi saat menggunakan perintah `/help`. Pesan bantuan yang panjang sekarang secara otomatis dipecah menjadi beberapa pesan yang lebih kecil untuk mematuhi batas karakter API Telegram."
+                ]
+            }
+        },
+        {
+            "version": "4.0.0",
+            "date": "2025-08-14",
+            "changes": {
+                "Fitur": [
+                    "**Logging Kesalahan API ke Database**: Semua kegagalan saat berkomunikasi dengan API Telegram sekarang dicatat secara otomatis ke dalam tabel `telegram_error_logs` baru di database. Ini memberikan catatan permanen dan terstruktur untuk analisis masalah.",
+                    "**Halaman Log Kesalahan di Panel Admin**: Menambahkan halaman baru (`admin/telegram_logs.php`) yang menampilkan semua log kesalahan API Telegram dari database. Halaman ini dilengkapi dengan paginasi untuk navigasi yang mudah."
+                ],
+                "Peningkatan": [
+                    "**Penanganan Kesalahan API**: Merombak total mekanisme penanganan kesalahan di `TelegramAPI.php`. Sekarang menggunakan blok `try-catch` yang lebih tangguh untuk menangkap semua jenis kegagalan, termasuk error koneksi cURL, timeout, dan respons error dari Telegram.",
+                    "**Logika Penanganan Error Spesifik**: Menambahkan logika cerdas untuk menangani kode error spesifik dari Telegram:\n  - **400 (Bad Request)**: Memberikan log yang lebih deskriptif untuk masalah umum seperti \"chat not found\" atau \"can't parse entities\".\n  - **403 (Forbidden)**: Secara spesifik mendeteksi saat bot diblokir oleh pengguna.\n  - **429 (Too Many Requests)**: Mendeteksi permintaan rate-limit dan mencatatnya dengan status `pending_retry` untuk potensi pemrosesan ulang di masa depan.",
+                    "**Navigasi Panel Admin**: Menambahkan tautan \"Log Error Telegram\" ke menu navigasi di semua halaman panel admin untuk akses yang cepat dan konsisten.",
+                    "**Status Pengguna Diblokir**: Saat bot mendeteksi bahwa ia diblokir oleh pengguna, sistem sekarang secara otomatis akan memperbarui status pengguna tersebut menjadi 'blocked' di database, bukan hanya mencatatnya di log."
+                ]
+            }
+        }
+    ]
+}

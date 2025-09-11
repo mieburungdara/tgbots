@@ -1,0 +1,302 @@
+{
+    "changelog": [
+        {
+            "version": "5.2.24",
+            "date": "2025-09-11",
+            "changes": {
+                "Peningkatan": [
+                    "**Sinkronisasi Dokumentasi Kritis**: Memperbarui dokumentasi JSON untuk tiga repositori paling kritis (`BotRepository`, `MediaPackageRepository`, `UserRepository`) agar sepenuhnya sinkron dengan kode PHP. Ini memperbaiki puluhan metode dan parameter yang hilang atau tidak akurat."
+                ]
+            }
+        },
+        {
+            "version": "5.2.23",
+            "date": "2025-09-11",
+            "changes": {
+                "Peningkatan": [
+                    "**Sinkronisasi Dokumentasi**: Memperbarui file dokumentasi `json/repositories/AnalyticsRepository.json` agar sepenuhnya sinkron dengan kode PHP di `core/database/AnalyticsRepository.php`. Dokumentasi sekarang mencakup semua metode, parameter, dan logika yang benar."
+                ]
+            }
+        },
+        {
+            "version": "5.2.22",
+            "date": "2025-09-11",
+            "changes": {
+                "Diubah": [
+                    "**Pembaruan Struktur File JSON**: Menambahkan berbagai file konfigurasi JSON baru untuk perintah, handler, dan repositori. Menghapus `alur_sell.md`."
+                ]
+            }
+        },
+        {
+            "version": "5.1.21",
+            "date": "2025-08-31",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error `undefined function` (Final Fix)**: Menambahkan `require_once` untuk `core/database.php` ke dalam `core/autoloader.php`. Ini adalah perbaikan definitif untuk error `Call to undefined function get_db_connection()` yang terus-menerus terjadi.\n  - **Penyebab Akar**: Fungsi `get_db_connection()` didefinisikan di `core/database.php`, tetapi file ini tidak pernah di-include oleh autoloader, sehingga tidak tersedia secara global.\n  - **Solusi**: Dengan secara eksplisit me-require `core/database.php` di autoloader, fungsi koneksi database sekarang dijamin tersedia untuk semua bagian aplikasi yang membutuhkannya.",
+                    "**Diagnostik Tambahan**: Menambahkan kode diagnostik untuk memverifikasi bahwa titik masuk aplikasi (`public/index.php` dan `run_migrations_cli.php`) dieksekusi dengan benar. Ini untuk membantu melacak masalah lingkungan server yang persisten yang menyebabkan error `undefined function`.",
+                    "**Fatal Error `undefined function` (Workaround)**: Menambahkan `require_once` untuk `core/helpers.php` secara eksplisit di `BaseController.php` dan `AppController.php`. Ini adalah workaround untuk memastikan fungsi-fungsi helper selalu tersedia, mengatasi error fatal `Call to undefined function` yang dilaporkan oleh pengguna, yang kemungkinan disebabkan oleh masalah lingkungan server.",
+                    "**Fatal Error `require_once` dan `undefined function`**: Melakukan refactoring besar dengan mengganti semua pemanggilan `require_once` yang berulang dengan autoloader terpusat. Ini memperbaiki serangkaian error fatal, termasuk `Class not found` dan `Call to undefined function`.\n  - **Penyebab**: Ketergantungan pada `require_once` manual menyebabkan file tidak dimuat dalam urutan yang benar, dan pemanggilan fungsi global dari dalam namespace menyebabkan konflik.\n  - **Solusi**:\n    1.  Membuat `core/autoloader.php` baru yang secara cerdas memuat kelas dari direktori `src` dan `core` berdasarkan namespace `TGBot`.\n    2.  Menghapus semua `require_once` yang berlebihan dari seluruh file controller dan file inti.\n    3.  Memperbaiki semua pemanggilan fungsi helper global (seperti `get_db_connection`, `app_log`) dengan menambahkan prefix `\` untuk memanggilnya dari namespace global, menyelesaikan semua error `undefined function`."
+                ]
+            }
+        },
+        {
+            "version": "5.1.17",
+            "date": "2025-08-31",
+            "changes": {
+                "Diperbaiki": [
+                    "**Fatal Error Class Not Found**: Memperbaiki error fatal `Class \"TGBot\\Controllers\\BaseController\" not found` yang terjadi secara sporadis di berbagai controller di dalam panel admin.\n  - **Penyebab**: Kurangnya autoloader terpusat (seperti Composer) menyebabkan `BaseController.php` tidak selalu dimuat sebelum controller turunan yang membutuhkannya.\n  - **Solusi**: Menambahkan `require_once __DIR__ . \'/../BaseController.php\';` secara eksplisit di semua controller admin yang mewarisi `BaseController`. Ini memastikan kelas dasar selalu tersedia, menstabilkan seluruh panel admin dan mencegah error serupa di masa depan."
+                ]
+            }
+        },
+        {
+            "version": "5.1.16",
+            "date": "2025-08-30",
+            "changes": {
+                "Fitur": [
+                    "**Halaman Laporan Keuangan**: Menambahkan halaman \"Laporan Keuangan\" baru di panel admin (`/admin/reports/financial`). Halaman ini menampilkan ringkasan pendapatan (harian, mingguan, bulanan, total) serta tabel rincian pendapatan harian dan bulanan, berdasarkan data dari tabel `sales`."
+                ]
+            }
+        },
+        {
+            "version": "5.1.15",
+            "date": "2025-08-30",
+            "changes": {
+                "Dokumentasi": [
+                    "**Dokumentasi Struktur Database**: Menambahkan bagian baru \"Struktur Database\" ke dalam `DOCUMENTATION.md`. Bagian ini memberikan penjelasan rinci tentang setiap tabel utama (seperti `users`, `bots`, `media_packages`, `sales`) dan kolom-kolomnya, membantu pengembang memahami model data aplikasi."
+                ]
+            }
+        },
+        {
+            "version": "5.1.14",
+            "date": "2025-08-30",
+            "changes": {
+                "Dokumentasi": [
+                    "**Panduan Pembaruan (Upgrade)**: Menambahkan file `UPGRADE.md` baru. File ini menyediakan instruksi langkah-demi-langkah yang aman bagi pengguna untuk memperbarui aplikasi mereka, mencakup proses pencadangan file dan database, penggantian file inti, dan menjalankan migrasi database."
+                ]
+            }
+        },
+        {
+            "version": "5.1.13",
+            "date": "2025-08-30",
+            "changes": {
+                "Dokumentasi": [
+                    "**Panduan Praktik Terbaik**: Menambahkan bagian baru \"💡 Praktik Terbaik (Best Practices)\" ke dalam `DOCUMENTATION.md`. Bagian ini memberikan tips penting tentang manajemen keamanan (backup, password), pengelolaan konten (channel penyimpanan, deskripsi), dan pemeliharaan rutin (monitoring log, migrasi) untuk membantu pengguna mengelola bot mereka secara efisien dan aman."
+                ]
+            }
+        },
+        {
+            "version": "5.1.12",
+            "date": "2025-08-30",
+            "changes": {
+                "Dokumentasi": [
+                    "**Langkah Verifikasi Instalasi**: Menambahkan bagian \"Langkah 7: Verifikasi Instalasi\" ke dalam `DOCUMENTATION.md`. Bagian ini memberikan daftar periksa (checklist) bagi pengguna untuk memastikan semua komponen (panel admin, respons bot, koneksi database) berfungsi dengan benar setelah proses instalasi selesai."
+                ]
+            }
+        },
+        {
+            "version": "5.1.11",
+            "date": "2025-02-30",
+            "changes": {
+                "Dokumentasi": [
+                    "**Panduan Troubleshooting**: Menambahkan bagian \"Penyelesaian Masalah Umum\" (Troubleshooting) baru ke dalam `DOCUMENTATION.md`. Bagian ini memberikan solusi langkah-demi-langkah untuk masalah umum seperti bot yang tidak merespons, error 500, masalah routing URL (`.htaccess`), dan kegagalan koneksi database."
+                ]
+            }
+        },
+        {
+            "version": "5.1.10",
+            "date": "2025-09-05",
+            "changes": {
+                "Dokumentasi": [
+                    "**Konsolidasi Dokumentasi**: Menggabungkan file `INSTALL.md` dan `howto.md` ke dalam satu file `DOCUMENTATION.md` yang komprehensif. File-file lama dihapus untuk menyederhanakan struktur dokumentasi dan menyediakan satu sumber informasi terpusat."
+                ]
+            }
+        },
+        {
+            "version": "5.1.9",
+            "date": "2025-08-30",
+            "changes": {
+                "Dokumentasi": [
+                    "**Panduan Kontributor**: Menambahkan file `CONTRIBUTING.md` baru. File ini berisi panduan lengkap bagi kontributor manusia, mencakup standar kode, alur kerja kontribusi menggunakan Pull Request, format pesan commit, dan cara melaporkan bug. Tujuannya adalah untuk memudahkan kontributor baru bergabung dan menjaga konsistensi proyek."
+                ]
+            }
+        },
+        {
+            "version": "5.1.8",
+            "date": "2025-08-30",
+            "changes": {
+                "Refactoring": [
+                    "**Konsolidasi Panduan Kontribusi**: Menggabungkan beberapa file panduan (`GEMINI.md`, `AGENTS.md`, `.gemini/styleguide.md`) yang tumpang tindih ke dalam satu file `GEMINI.md` tunggal sebagai sumber kebenaran utama. File-file yang berlebihan telah dihapus untuk menyederhanakan dokumentasi proyek dan menghindari kebingungan."
+                ]
+            }
+        },
+        {
+            "version": "5.1.7",
+            "date": "2025-08-30",
+            "changes": {
+                "Dokumentasi": [
+                    "**Panduan Instalasi**: Menambahkan file `INSTALL.md` baru yang berisi panduan lengkap dan terperinci untuk menginstal dan mengkonfigurasi aplikasi dari awal, termasuk pengaturan server, database, dan webhook Telegram."
+                ]
+            }
+        },
+        {
+            "version": "5.1.6",
+            "date": "2025-08-30",
+            "changes": {
+                "Peningkatan": [
+                    "**Keterbacaan Kode Paginasi**: Melakukan refactoring pada logika paginasi di beberapa view admin. Variabel lokal `$currentPage` dan `$totalPages` sekarang didefinisikan di dalam blok paginasi untuk meningkatkan keterbacaan dan menghindari pengulangan, sejalan dengan prinsip DRY dan praktik terbaik kode."
+                ]
+            }
+        },
+        {
+            "version": "5.1.5",
+            "date": "2025-08-30",
+            "changes": {
+                "Peningkatan": [
+                    "**Konsistensi Gaya Kode**: Memperbarui beberapa file view untuk menggunakan tag echo pendek `<?= ... ?>` daripada `<?php echo ...; ?>`. Perubahan ini menyelaraskan kode dengan standar PSR-12 dan praktik yang sudah ada di seluruh proyek, meningkatkan keterbacaan dan konsistensi."
+                ]
+            }
+        },
+        {
+            "version": "5.1.4",
+            "date": "2025-08-30",
+            "changes": {
+                "Peningkatan": [
+                    "**Konsistensi Kode View**: Melakukan refactoring pada `debug_feed/index.php` untuk memastikan konsistensi dengan view lain. Variabel paginasi sekarang diakses langsung dari array `$data['pagination']` daripada mendefinisikan variabel lokal, sejalan dengan praktik terbaik di seluruh aplikasi."
+                ]
+            }
+        },
+        {
+            "version": "5.1.3",
+            "date": "2025-08-30",
+            "changes": {
+                "Peningkatan": [
+                    "**Konsistensi Tipe Exception**: Mengubah tipe `Exception` menjadi `\RuntimeException` di `StorageChannelController` saat terjadi kegagalan penambahan bot ke channel. Perubahan ini membuat penanganan error lebih konsisten dengan bagian lain dari file yang sudah menggunakan `\RuntimeException` untuk error saat runtime."
+                ]
+            }
+        },
+        {
+            "version": "5.1.2",
+            "date": "2025-08-30",
+            "changes": {
+                "Diubah (Keamanan)": [
+                    "**Refactoring View**: Menghapus penggunaan fungsi `extract()` yang berisiko dari `AppController`. Semua variabel sekarang secara eksplisit diakses melalui array `$data` di dalam view (misalnya, `$data['nama_variabel']`). Perubahan ini meningkatkan keamanan dengan mencegah potensi *variable overwriting* dan membuat alur data ke dalam template lebih jelas dan mudah untuk di-debug."
+                ]
+            }
+        },
+        {
+            "version": "5.1.1",
+            "date": "2025-08-29",
+            "changes": {
+                "Diperbaiki": [
+                    "**Penanganan Error Verifikasi Bot**: Menambahkan pemeriksaan error setelah memanggil `addBotToChannel` di dalam `StorageChannelController`. Sebelumnya, jika penambahan bot ke channel gagal di database, sistem akan tetap melanjutkan ke proses verifikasi, yang kemungkinan besar juga akan gagal. Sekarang, sebuah `Exception` akan dilempar lebih awal, memberikan pesan error yang jelas dan mencegah kegagalan berantai."
+                ]
+            }
+        },
+        {
+            "version": "5.1.0",
+            "date": "2025-08-29",
+            "changes": {
+                "Peningkatan": [
+                    "**Pesan Status yang Lebih Akurat**: Memperbaiki logika penambahan peran di `RoleController`. Sistem sekarang memberikan pesan yang jelas kepada pengguna jika peran berhasil ditambahkan, jika peran tersebut sudah ada, atau jika terjadi kesalahan, daripada hanya menampilkan pesan sukses umum.",
+                    "**Perbaikan Bug Variabel**: Memperbaiki bug di `RoleController` di mana variabel `$roleRepo` dipanggil alih-alih properti kelas `$this->roleRepo`, yang akan menyebabkan error fatal.",
+                    "**Pesan Status Hapus yang Lebih Akurat**: Mengikuti pembaruan sebelumnya, logika penghapusan peran di `RoleController` kini juga telah diperbaiki. Sistem sekarang memberikan pesan yang jelas kepada pengguna jika peran berhasil dihapus, jika peran tidak ditemukan (sehingga tidak ada yang dihapus), atau jika terjadi kesalahan database."
+                ]
+            }
+        },
+        {
+            "version": "5.0.8",
+            "date": "2025-08-29",
+            "changes": {
+                "Diperbaiki": [
+                    "**Penanganan Kesalahan Database**: Memperbaiki blok `catch` yang kosong di `BaseController`. Sebelumnya, kesalahan saat mengambil nama pengguna bot untuk halaman \"Akses Ditolak\" akan diabaikan secara diam-diam. Sekarang, kesalahan tersebut dicatat menggunakan `app_log()` untuk memastikan semua masalah dapat ditelusuri. (#303)",
+                    "**Penanganan Perintah di Grup**: Memperbaiki bug di `MessageHandler` yang menyebabkan bot tidak merespons perintah yang dikirim di dalam grup jika perintah tersebut menyertakan nama bot (misalnya, `/start@nama_bot_saya`). Logika parsing sekarang dengan benar memisahkan perintah dari nama bot, memastikan perintah dikenali dan diproses dengan benar di semua jenis chat."
+                ]
+            }
+        },
+        {
+            "version": "5.0.7",
+            "date": "2025-08-29",
+            "changes": {
+                "Peningkatan": [
+                    "**Refactoring Controller**: Memindahkan inisialisasi `RoleRepository` ke dalam `__construct` di `RoleController`. Ini menghilangkan duplikasi kode di setiap metode dan meningkatkan pemeliharaan dengan mengikuti prinsip DRY."
+                ]
+            }
+        },
+        {
+            "version": "5.0.6",
+            "date": "2025-08-29",
+            "changes": {
+                "Diperbaiki (Keamanan)": [
+                    "**Validasi Input**: Memperkuat keamanan di `RoleController` dengan mengganti pemeriksaan `empty()` yang tidak aman dengan `filter_input(INPUT_POST, \'role_id\', FILTER_VALIDATE_INT)`. Ini memastikan bahwa hanya nilai integer yang valid yang diproses saat menghapus peran, mencegah potensi manipulasi input."
+                ]
+            }
+        },
+        {
+            "version": "5.0.5",
+            "date": "2025-08-29",
+            "changes": {
+                "Diperbaiki (Keamanan)": [
+                    "**Sanitasi Input**: Memperkuat keamanan di `RoleController` dengan mengganti `trim()` sederhana dengan `htmlspecialchars()` untuk membersihkan input `role_name` dari pengguna. Ini mencegah potensi serangan XSS."
+                ]
+            }
+        },
+        {
+            "version": "5.0.4",
+            "date": "2025-08-29",
+            "changes": {
+                "Peningkatan": [
+                    "**Refactoring Otentikasi**: Memusatkan logika pemeriksaan otentikasi yang berulang di `XorAdminController.php` ke dalam satu metode privat `requireAuth()`. Ini mengurangi duplikasi kode dan meningkatkan keterbacaan serta pemeliharaan."
+                ]
+            }
+        },
+        {
+            "version": "5.0.3",
+            "date": "2025-08-29",
+            "changes": {
+                "Diperbaiki": [
+                    "**Kode Redundan Dihapus**: Menghapus pemeriksaan `if ($result === false)` yang tidak perlu dari `XorAdminController.php`. Pemeriksaan ini tidak akan pernah tercapai karena `TelegramAPI` dirancang untuk melempar `Exception` saat terjadi kegagalan, yang sudah ditangani oleh blok `try-catch` di sekitarnya."
+                ]
+            }
+        },
+        {
+            "version": "5.0.2",
+            "date": "2025-08-29",
+            "changes": {
+                "Diperbaiki (Keamanan)": [
+                    "**Perbandingan Password Aman**: Mengganti perbandingan password yang rentan terhadap serangan waktu (`===`) dengan fungsi `hash_equals()` di `XorAdminController.php`. Ini memastikan perbandingan string dilakukan dalam waktu konstan, yang merupakan praktik keamanan standar untuk melindungi rahasia."
+                ]
+            }
+        },
+        {
+            "version": "5.0.1",
+            "date": "2025-08-29",
+            "changes": {
+                "Peningkatan": [
+                    "**Halaman Akses Ditolak yang Lebih Baik**: Mengganti pesan \"Akses Ditolak\" berbasis teks biasa dengan halaman HTML yang ramah pengguna. Halaman baru ini memberikan instruksi yang jelas kepada pengguna untuk login kembali melalui bot Telegram dan secara dinamis menyertakan tautan ke bot jika tersedia."
+                ]
+            }
+        },
+        {
+            "version": "5.0.0",
+            "date": "2025-08-28",
+            "changes": {
+                "Diubah (Refactoring Arsitektur)": [
+                    "**Implementasi Pola Model-View-Controller-Router (MVCR)**: Memulai refactoring besar-besaran pada arsitektur aplikasi dari struktur PHP native menjadi pola MVCR untuk meningkatkan modularitas, keterbacaan, dan kemudahan pemeliharaan.\n  - **Router & Front Controller**: Memperkenalkan `public/index.php` sebagai satu-satunya titik masuk (front controller) dan `core/Router.php` untuk menangani semua permintaan web. Ini memungkinkan penggunaan URL yang bersih (misalnya, `/admin/dashboard`).\n  - **Struktur Direktori Baru**: Membuat struktur direktori baru (`src/Controllers`, `src/Views`, `src/Models`, `public`) untuk memisahkan tanggung jawab dengan jelas.\n  - **BaseController**: Membuat `BaseController` yang menangani logika umum seperti otentikasi sesi admin dan rendering view, yang akan diwarisi oleh semua controller lain.\n  - **Refactor Dasbor Admin**: Halaman pertama yang berhasil di-refactor adalah Dasbor Percakapan Admin (`admin/index.php`). Logika bisnisnya sekarang berada di `Admin/DashboardController.php`, dan presentasinya di `src/Views/admin/dashboard/index.php` dengan layout terpusat.",
+                    "**Lanjutan Refactoring**: Melanjutkan refactoring dengan memigrasikan halaman \"Kelola Bot\" (`admin/bots.php`) dan \"Edit Bot\" (`admin/edit_bot.php`) ke `BotController` baru. Juga memulai refactoring area member dengan membuat `MemberBaseController` dan memigrasikan halaman \"Dasbor Member\" (`member/dashboard.php`).",
+                    "**Alur Login Member**: Menyelesaikan refactoring area member dengan memigrasikan halaman login (`member/index.php`) ke `Member/LoginController` yang baru, membuat alur otentikasi member sepenuhnya dikelola oleh arsitektur MVCR.",
+                    "**Manajemen Pengguna**: Halaman manajemen pengguna (`admin/users.php`) telah dimigrasikan ke `UserController`, mendukung fungsionalitas pencarian, pengurutan, dan paginasi dalam arsitektur baru.",
+                    "**Manajemen Konten Member**: Melanjutkan refactoring area member dengan memigrasikan halaman \"Konten Saya\" (`member/my_content.php`) dan \"Edit Paket\" (`member/edit_package.php`) ke dalam `ContentController`.",
+                    "**Halaman Chat Admin**: Memigrasikan halaman chat admin (`admin/chat.php`) dan fungsionalitas hapus pesan ke `ChatController`, membuat alur kerja inti ini sesuai dengan arsitektur MVCR.",
+                    "**Halaman Chat Channel**: Melengkapi refactoring fitur chat dengan memigrasikan halaman chat channel (`admin/channel_chat.php`) ke metode baru di dalam `ChatController`.",
+                    "**Penyelesaian Area Member**: Menyelesaikan semua halaman di area member (`channels.php`, `purchased.php`, `sold.php`, `view_package.php`) dengan memigrasikannya ke dalam controller dan view yang sesuai.",
+                    "**Lanjutan Refactor Admin**: Melanjutkan migrasi area admin dengan merefaktor halaman 'Manajemen Konten' (`admin/packages.php`).",
+                    "**Halaman Log Admin**: Memigrasikan semua halaman penampil log (`logs.php`, `media_logs.php`, `telegram_logs.php`) ke dalam `LogController` baru untuk konsistensi.",
+                    "**Migrasi AJAX ke API Controller**: Memigrasikan semua endpoint AJAX lama (misalnya, `api/update_user_roles.php`, `webhook_manager.php`, `package_manager.php`) ke dalam metode API yang sesuai di dalam controller yang ada, membuat semua interaksi backend konsisten dengan pola MVCR.",
+                    "**Lanjutan Refactor Admin**: Melanjutkan migrasi dengan merefaktor halaman 'Analitik' (`admin/analytics.php`) dan 'Manajemen Saldo' (`admin/balance.php`) beserta endpoint-endpoint API terkaitnya.",
+                    "**Penyelesaian Refactor Admin**: Menyelesaikan migrasi penuh area admin dengan merefaktor halaman 'Channel Penyimpanan' (`admin/channels.php`) dan 'Manajemen Peran' (`admin/roles.php`), membuat semua fungsionalitas admin kini berjalan di bawah arsitektur MVCR yang baru.",
+                    "**Penyelesaian Refactoring Total**: Menyelesaikan migrasi semua sisa halaman legacy, termasuk halaman admin (`database`, `sales_channels`, `api_test`, `debug_feed`), halaman root (`login_choice`, `xoradmin`), dan yang paling penting, titik masuk utama `webhook.php`. Seluruh fungsionalitas web dan bot sekarang berjalan sepenuhnya di bawah arsitektur MVCR yang baru. Direktori `admin/` dan `partials/` yang usang telah dihapus."
+                ]
+            }
+        }
+    ]
+}
