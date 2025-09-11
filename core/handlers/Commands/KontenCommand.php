@@ -87,7 +87,14 @@ class KontenCommand implements CommandInterface
                 $keyboard = ['inline_keyboard' => $keyboard_buttons];
             } elseif ($package['status'] === 'available') {
                 $price_formatted = "Rp " . number_format($package['price'], 0, ',', '.');
-                $keyboard = ['inline_keyboard' => [[['text' => "Beli Konten Ini ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"]]]];
+                $keyboard = [
+                    'inline_keyboard' => [
+                        [
+                            ['text' => "Beli ({$price_formatted}) 🛒", 'callback_data' => "buy_{$package['public_id']}"],
+                            ['text' => 'Tawar Harga 💬', 'callback_data' => "offer_{$package['public_id']}"]
+                        ]
+                    ]
+                ];
             }
         }
 

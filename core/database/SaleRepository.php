@@ -50,26 +50,45 @@ class SaleRepository
      */
     public function createSale(int $package_id, int $seller_user_id, int $buyer_user_id, float $price): bool
     {
-        // Transaksi sekarang ditangani oleh pemanggil (webhook.php).
-        // Menghapus beginTransaction/commit/rollback dari sini untuk menghindari transaksi bersarang.
+        // CATATAN: Pastikan konstanta SYSTEM_INCOME_USER_ID sudah didefinisikan di config.php
+        if (!defined('SYSTEM_INCOME_USER_ID')) {
+            throw new Exception('ID pengguna sistem untuk komisi belum diatur.');
+        }
+
         try {
-            // Kurangi saldo pembeli
+            // 1. Hitung komisi berdasarkan tingkatan harga
+            if ($price < 10000) {
+                $commission_rate = 0.10; // 10%
+            } elseif ($price >= 100000) {
+                $commission_rate = 0.05; // 5%
+            } else {
+                $commission_rate = 0.07; // 7%
+            }
+
+            $commission_amount = floor($price * $commission_rate);
+            $seller_earning = $price - $commission_amount;
+
+            // 2. Kurangi saldo pembeli
             $stmt_buyer = $this->pdo->prepare("UPDATE users SET balance = balance - ? WHERE id = ?");
             $stmt_buyer->execute([$price, $buyer_user_id]);
 
-            // Tambah saldo penjual
+            // 3. Tambah saldo penjual
             $stmt_seller = $this->pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
-            $stmt_seller->execute([$price, $seller_user_id]);
+            $stmt_seller->execute([$seller_earning, $seller_user_id]);
 
-            // Catat penjualan
-            $stmt_sale = $this->pdo->prepare("INSERT INTO sales (package_id, seller_user_id, buyer_user_id, price) VALUES (?, ?, ?, ?)");
-            $stmt_sale->execute([$package_id, $seller_user_id, $buyer_user_id, $price]);
+            // 4. Tambah saldo komisi ke akun sistem
+            if ($commission_amount > 0) {
+                $stmt_admin = $this->pdo->prepare("UPDATE users SET balance = balance + ? WHERE id = ?");
+                $stmt_admin->execute([$commission_amount, SYSTEM_INCOME_USER_ID]);
+            }
+
+            // 5. Catat penjualan
+            $stmt_sale = $this->pdo->prepare("INSERT INTO sales (package_id, seller_user_id, buyer_user_id, price, commission) VALUES (?, ?, ?, ?, ?)");
+            $stmt_sale->execute([$package_id, $seller_user_id, $buyer_user_id, $price, $commission_amount]);
 
             return true;
         } catch (Exception $e) {
-            // Biarkan pemanggil menangani rollback.
             app_log("Sale creation failed: " . $e->getMessage(), 'error');
-            // Lemparkan kembali exception agar pemanggil tahu ada masalah dan bisa me-rollback.
             throw $e;
         }
     }

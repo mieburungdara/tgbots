@@ -16,6 +16,10 @@ use TGBot\Handlers\Callbacks\RateCallback;
 use TGBot\Handlers\Callbacks\TanyaCallback;
 use TGBot\Handlers\Callbacks\SellConfirmCallback;
 use TGBot\Handlers\Callbacks\CancelSellCallback;
+use TGBot\Handlers\Callbacks\OfferCallback;
+use TGBot\Handlers\Callbacks\AcceptOfferCallback;
+use TGBot\Handlers\Callbacks\RejectOfferCallback;
+use TGBot\Handlers\Callbacks\BuyOfferCallback;
 
 class CallbackRouter
 {
@@ -37,6 +41,10 @@ class CallbackRouter
             'tanya_' => new TanyaCallback(),
             'sell_confirm' => new SellConfirmCallback(),
             'cancel_sell' => new CancelSellCallback(),
+            'offer_' => new OfferCallback(),
+            'accept_offer_' => new AcceptOfferCallback(),
+            'reject_offer_' => new RejectOfferCallback(),
+            'buy_offer_' => new BuyOfferCallback(),
         ];
     }
 
