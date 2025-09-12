@@ -495,7 +495,7 @@ class TelegramAPI
      */
     public function deleteWebhook(): array
     {
-        return $this->apiRequest('deleteWebhook');
+        return $this->setWebhook('');
     }
 
     /**
