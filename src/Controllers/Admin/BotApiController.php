@@ -144,20 +144,10 @@ class BotApiController extends BaseApiController
      */
     private function generateWebhookUrl(int $bot_id): string
     {
-        $protocol = 'http://';
-        if ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] == 'https')) {
-            $protocol = 'https://';
+        if (!defined('BASE_URL') || empty(BASE_URL)) {
+            throw new Exception("BASE_URL tidak didefinisikan atau kosong di file config.php.");
         }
-
-        $domain = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
-        $script_name = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '';
-        $base_path = rtrim(dirname($script_name), "/\\");
-
-        if ($base_path === '/' || $base_path === '\\') {
-            $base_path = '';
-        }
-
-        return $protocol . $domain . $base_path . '/webhook/' . $bot_id;
+        return rtrim(BASE_URL, '/') . '/webhook/' . $bot_id;
     }
 
     private function handleApiError(Exception $e, string $methodName): void
