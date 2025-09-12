@@ -1,0 +1,16 @@
+{
+  "changelog": [
+    {
+      "version": "1.0.7",
+      "date": "2025-09-12",
+      "changes": {
+        "Diperbaiki": [
+          "Memperbaiki isu pada pengujian PHPUnit untuk perintah `/konten` yang sebelumnya gagal karena masalah caching. Pengujian sekarang berjalan dengan sukses."
+        ],
+        "Dokumentasi": [
+          "Menambahkan dokumentasi proses debugging dan verifikasi pengujian PHPUnit untuk perintah `/konten`."
+        ]
+      }
+    }
+  ]
+}
