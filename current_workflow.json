@@ -1,0 +1,25 @@
+{
+  "task_description": "Membuat alur kerja untuk melanjutkan pekerjaan yang terhenti.",
+  "current_step": {
+    "name": "Mendefinisikan struktur file alur kerja",
+    "description": "Membuat file `current_workflow.json` dengan struktur yang jelas untuk menyimpan status dan rencana tugas.",
+    "status": "in_progress"
+  },
+  "next_steps": [
+    {
+      "name": "Menjelaskan penggunaan alur kerja",
+      "description": "Menjelaskan kepada pengguna bagaimana file alur kerja ini akan digunakan di interaksi mendatang untuk melanjutkan pekerjaan."
+    },
+    {
+      "name": "Mengintegrasikan pembaruan alur kerja",
+      "description": "Memastikan bahwa setiap langkah signifikan dalam pekerjaan akan memperbarui `current_workflow.json`."
+    }
+  ],
+  "files_involved": [
+    "/home/zadinmitraabadi/tgbots/current_workflow.json"
+  ],
+  "context": {
+    "last_tool_output": "",
+    "relevant_variables": {}
+  }
+}
