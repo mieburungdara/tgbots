@@ -1,0 +1,31 @@
+{
+  "name": "FeatureChannelController",
+  "description": "Kontroler ini mengelola konfigurasi channel fitur, memungkinkan admin untuk menambah, mengedit, memperbarui, dan menghapus konfigurasi channel.",
+  "methods": {
+    "__construct": {
+      "description": "Menginisialisasi koneksi database dan repository terkait. Memperbaiki kesalahan ArgumentCountError dengan menyediakan instance Logger ke fungsi get_db_connection().",
+      "changes": [
+        "Menambahkan `use TGBot\\Logger;`.",
+        "Membuat instance `Logger` baru dan meneruskannya sebagai argumen ke `get_db_connection()`."
+      ]
+    },
+    "index": {
+      "description": "Menampilkan daftar konfigurasi channel fitur."
+    },
+    "create": {
+      "description": "Menampilkan formulir untuk membuat konfigurasi channel baru."
+    },
+    "store": {
+      "description": "Menyimpan konfigurasi channel yang baru dibuat ke database."
+    },
+    "edit": {
+      "description": "Menampilkan formulir untuk mengedit konfigurasi channel yang ditentukan."
+    },
+    "update": {
+      "description": "Memperbarui konfigurasi channel yang ditentukan di database."
+    },
+    "destroy": {
+      "description": "Menghapus konfigurasi channel yang ditentukan dari database."
+    }
+  }
+}

@@ -6,6 +6,7 @@ use Exception;
 use TGBot\Controllers\BaseController;
 use TGBot\Database\FeatureChannelRepository;
 use TGBot\Database\BotRepository;
+use TGBot\Logger;
 
 class FeatureChannelController extends BaseController
 {
@@ -15,7 +16,8 @@ class FeatureChannelController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $pdo = \get_db_connection();
+        $logger = new Logger('FeatureChannelController');
+        $pdo = \get_db_connection($logger);
         $this->featureChannelRepo = new FeatureChannelRepository($pdo);
         $this->botRepo = new BotRepository($pdo);
     }
