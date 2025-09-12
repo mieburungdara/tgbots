@@ -1,0 +1,17 @@
+[
+  {
+    "task": "Make circuit breaker parameters configurable per bot",
+    "description": "Allow MAX_FAILURES and RESET_TIMEOUT to be set per bot, possibly in the bots table or bot_settings table.",
+    "status": "todo"
+  },
+  {
+    "task": "Implement notification message customization",
+    "description": "Allow customization of notification messages (e.g., templates, dynamic content) for more specific alerts.",
+    "status": "todo"
+  },
+  {
+    "task": "Explore asynchronous notifications",
+    "description": "Investigate using message queues or other asynchronous methods for sending notifications to avoid blocking.",
+    "status": "todo"
+  }
+]
