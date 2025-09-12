@@ -4,6 +4,7 @@ namespace TGBot\Database;
 
 use PDO;
 use PDOException;
+use TGBot\App;
 
 /**
  * Repositori untuk mengelola channel pribadi yang digunakan sebagai penyimpanan media.
@@ -40,7 +41,7 @@ class PrivateChannelRepository
             return $stmt->execute([$channel_id, $name]);
         } catch (PDOException $e) {
             // Mungkin sudah ada (unique constraint) atau error lain
-            error_log("Error adding private channel: " . $e->getMessage());
+            App::getLogger()->error("Error adding private channel: " . $e->getMessage());
             return false;
         }
     }
@@ -150,7 +151,7 @@ class PrivateChannelRepository
     {
         // This feature is deprecated as the 'is_default' column has been removed.
         // Returning true to not break the controller, but doing nothing.
-        error_log("Attempted to call deprecated function setDefaultChannel.");
+        App::getLogger()->warning("Attempted to call deprecated function setDefaultChannel.");
         return true;
         /*
         $this->pdo->beginTransaction();
@@ -168,7 +169,7 @@ class PrivateChannelRepository
             return true;
         } catch (PDOException $e) {
             $this->pdo->rollBack();
-            error_log("Failed to set default channel: " . $e->getMessage());
+            App::getLogger()->error("Failed to set default channel: " . $e->getMessage());
             return false;
         }
         */

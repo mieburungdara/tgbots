@@ -4,7 +4,7 @@ namespace TGBot\Controllers\Admin;
 
 use Exception;
 use TGBot\Controllers\BaseController;
-use TGBot\Logger; // Add this line
+use TGBot\App;
 
 class DashboardController extends BaseController {
 
@@ -12,7 +12,7 @@ class DashboardController extends BaseController {
         try {
             // The BaseController's constructor already handles session start and auth check.
 
-            $logger = new Logger(); // Instantiate Logger
+            $logger = App::getLogger(); // Instantiate Logger
             $pdo = \get_db_connection(); // Pass logger to get_db_connection()
 
             // The helper function 'get_initials' is loaded via the front controller,
@@ -87,7 +87,7 @@ class DashboardController extends BaseController {
                 'bot_exists' => $bot_exists
             ], 'admin_layout'); // Using a layout
         } catch (Exception $e) {
-            \app_log('Error in DashboardController/index: ' . $e->getMessage(), 'error');
+            App::getLogger()->error('Error in DashboardController/index: ' . $e->getMessage());
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the dashboard.'

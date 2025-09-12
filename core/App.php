@@ -12,7 +12,7 @@
 namespace TGBot;
 
 use PDO;
-use TGBot\Logger;
+use Monolog\Logger;
 
 /**
  * Class App
@@ -90,12 +90,11 @@ class App
      * Mengambil instansi logger terpusat.
      *
      * @return Logger Instansi logger.
-     * @throws \Exception Jika logger belum diatur.
      */
     public static function getLogger(): Logger
     {
         if (!isset(self::$logger)) {
-            throw new \Exception("Logger belum diatur di kelas App.");
+            self::$logger = LoggerFactory::create();
         }
         return self::$logger;
     }

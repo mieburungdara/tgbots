@@ -4,6 +4,7 @@ namespace TGBot\Database;
 
 use PDO;
 use PDOException;
+use TGBot\App;
 
 class RoleRepository
 {
@@ -26,7 +27,7 @@ class RoleRepository
             $stmt->execute([$name]);
             return $stmt->rowCount();
         } catch (PDOException $e) {
-            error_log("Error adding role: " . $e->getMessage());
+            App::getLogger()->error("Error adding role: " . $e->getMessage());
             return -1;
         }
     }
@@ -38,7 +39,7 @@ class RoleRepository
             $stmt->execute([$id]);
             return $stmt->rowCount();
         } catch (PDOException $e) {
-            error_log("Error deleting role: " . $e->getMessage());
+            App::getLogger()->error("Error deleting role: " . $e->getMessage());
             return -1;
         }
     }

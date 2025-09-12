@@ -4,6 +4,7 @@ namespace TGBot\Database;
 
 use PDO;
 use PDOException;
+use TGBot\App;
 
 /**
  * Repositori untuk mengelola hubungan antara channel pribadi dan bot.
@@ -36,7 +37,7 @@ class PrivateChannelBotRepository
             );
             return $stmt->execute([$private_channel_id, $bot_id]);
         } catch (PDOException $e) {
-            error_log("Error adding bot to channel: " . $e->getMessage());
+            App::getLogger()->error("Error adding bot to channel: " . $e->getMessage());
             return false;
         }
     }

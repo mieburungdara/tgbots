@@ -4,17 +4,20 @@ namespace TGBot\Controllers\Admin;
 
 use TGBot\Controllers\BaseController;
 use TGBot\Database\TelegramErrorLogRepository;
+use TGBot\Controllers\BaseController;
+use TGBot\Database\TelegramErrorLogRepository;
 use PDO;
 use Exception;
 use PDOException;
-use TGBot\Logger;
+use TGBot\App;
+use Monolog\Logger;
 
 class LogController extends BaseController
 {
     public function app()
     {
         try {
-            $logger = new Logger();
+            $logger = App::getLogger();
             $pdo = \get_db_connection();
             $itemsPerPage = 50;
 
@@ -94,7 +97,7 @@ class LogController extends BaseController
             exit();
         }
 
-        $logger = new Logger();
+        $logger = App::getLogger();
         $pdo = \get_db_connection();
 
         try {
@@ -112,7 +115,7 @@ class LogController extends BaseController
     public function media()
     {
         try {
-            $logger = new Logger();
+            $logger = App::getLogger();
             $pdo = \get_db_connection();
 
             $sql = "
@@ -180,7 +183,7 @@ class LogController extends BaseController
     public function telegram()
     {
         try {
-            $logger = new Logger();
+            $logger = App::getLogger();
             $pdo = \get_db_connection();
             $logRepo = new TelegramErrorLogRepository($pdo);
 
@@ -225,7 +228,7 @@ class LogController extends BaseController
             exit();
         }
 
-        $logger = new Logger();
+        $logger = App::getLogger();
         $pdo = \get_db_connection();
         $logRepo = new TelegramErrorLogRepository($pdo);
 
@@ -257,7 +260,7 @@ class LogController extends BaseController
             exit();
         }
 
-        $logger = new Logger();
+        $logger = App::getLogger();
         $pdo = \get_db_connection();
         $logRepo = new TelegramErrorLogRepository($pdo);
 
@@ -276,7 +279,7 @@ class LogController extends BaseController
 
     public function publicErrorLog(): void
     {
-        $logger = new Logger();
+        $logger = App::getLogger();
 
         try {
             $logFilePath = $this->getPublicLogFilePath();
@@ -428,7 +431,7 @@ class LogController extends BaseController
 
     public function clearPublicErrorLog(): void
     {
-        $logger = new Logger();
+        $logger = App::getLogger();
 
         try {
             $logFilePath = $this->getPublicLogFilePath();

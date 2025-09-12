@@ -15,7 +15,8 @@ use Exception;
 use PDO;
 use TGBot\Database\TelegramErrorLogRepository;
 use TGBot\Database\UserRepository;
-use TGBot\Logger;
+use Monolog\Logger;
+use TGBot\App;
 
 /**
  * Class TelegramAPI
@@ -70,7 +71,7 @@ class TelegramAPI
         $this->token = $token;
         $this->pdo = $pdo;
         $this->bot_id = $internal_bot_id;
-        $this->logger = $logger ?? new Logger('telegram_api', __DIR__ . '/../logs/telegram_api.log');
+        $this->logger = $logger ?? App::getLogger();
 
         if ($this->pdo) {
             $this->errorLogRepo = new TelegramErrorLogRepository($this->pdo);

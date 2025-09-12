@@ -1,8 +1,8 @@
 <?php
 
 use TGBot\Router;
-use TGBot\Logger;
 use TGBot\App;
+use TGBot\LoggerFactory;
 
 // Bootstrap the application
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -10,7 +10,7 @@ require_once __DIR__ . '/../config.php'; // Include configuration file
 require_once __DIR__ . '/../core/database.php'; // Include database connection functions
 
 // Initialize and set the centralized logger
-$logger = new Logger('app', __DIR__ . '/../logs/app.log');
+$logger = LoggerFactory::create('app', __DIR__ . '/../logs/app.log');
 App::setLogger($logger);
 
 // Get the request URI
@@ -23,7 +23,7 @@ $uri = trim($uri, '/');
 // Load the routes and direct the request
 try {
     // The routes file will be loaded by the router and will have access to the $router instance.
-    Router::load(__DIR__ . '/../routes.php', $logger)
+    Router::load(__DIR__ . '/../routes.php')
         ->direct($uri, $_SERVER['REQUEST_METHOD']);
 } catch (Exception $e) {
     // Log the error using the centralized logger

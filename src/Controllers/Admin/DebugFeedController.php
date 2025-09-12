@@ -5,14 +5,14 @@ namespace TGBot\Controllers\Admin;
 use Exception;
 use TGBot\Controllers\BaseController;
 use TGBot\Database\RawUpdateRepository;
-use TGBot\Logger;
+use TGBot\App;
 
 class DebugFeedController extends BaseController
 {
     public function index()
     {
         try {
-            $logger = new Logger();
+            $logger = App::getLogger();
             $pdo = \get_db_connection();
             $raw_update_repo = new RawUpdateRepository($pdo);
 
@@ -35,7 +35,7 @@ class DebugFeedController extends BaseController
                 ]
             ], 'admin_layout');
         } catch (Exception $e) {
-            \app_log('Error in DebugFeedController/index: ' . $e->getMessage(), 'error');
+            App::getLogger()->error('Error in DebugFeedController/index: ' . $e->getMessage());
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the debug feed.'

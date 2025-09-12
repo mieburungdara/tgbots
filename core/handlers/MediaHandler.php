@@ -72,7 +72,7 @@ class MediaHandler implements HandlerInterface
 
             if ($storage_channel_info) {
                 $storage_channel_id = $storage_channel_info['channel_id'];
-                error_log("[MediaHandler] Copying message " . $message['message_id'] . " from chat " . $app->chat_id . " to storage channel " . $storage_channel_id);
+                App::getLogger()->info("[MediaHandler] Copying message " . $message['message_id'] . " from chat " . $app->chat_id . " to storage channel " . $storage_channel_id);
 
                 $copied_message_response = $app->telegram_api->copyMessage(
                     $storage_channel_id,
@@ -83,12 +83,12 @@ class MediaHandler implements HandlerInterface
                 if ($copied_message_response && $copied_message_response['ok']) {
                     $copied_message_id = $copied_message_response['result']['message_id'];
                     $media_repo->updateStorageInfo($media_file_id, $storage_channel_id, $copied_message_id);
-                    error_log("[MediaHandler] Successfully copied message to storage. media_file_id: " . $media_file_id . ", storage_channel_id: " . $storage_channel_id . ", storage_message_id: " . $copied_message_id);
+                    App::getLogger()->info("[MediaHandler] Successfully copied message to storage. media_file_id: " . $media_file_id . ", storage_channel_id: " . $storage_channel_id . ", storage_message_id: " . $copied_message_id);
                 } else {
-                    error_log("[MediaHandler] Failed to copy message to storage channel. Response: " . json_encode($copied_message_response));
+                    App::getLogger()->error("[MediaHandler] Failed to copy message to storage channel. Response: " . json_encode($copied_message_response));
                 }
             } else {
-                error_log("[MediaHandler] No storage channel found for bot ID: " . $app->bot['id']);
+                App::getLogger()->warning("[MediaHandler] No storage channel found for bot ID: " . $app->bot['id']);
             }
         }
     }

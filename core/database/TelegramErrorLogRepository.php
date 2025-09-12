@@ -4,6 +4,7 @@ namespace TGBot\Database;
 
 use PDO;
 use PDOException;
+use TGBot\App;
 
 /**
  * Repositori untuk mengelola log kesalahan yang spesifik dari interaksi dengan API Telegram.
@@ -56,7 +57,7 @@ class TelegramErrorLogRepository
             return $stmt->execute();
         } catch (PDOException $e) {
             // Jika terjadi error saat menyimpan ke DB, catat ke log error PHP.
-            error_log('Gagal menyimpan log error Telegram ke DB: ' . $e->getMessage());
+            App::getLogger()->error('Gagal menyimpan log error Telegram ke DB: ' . $e->getMessage());
             return false;
         }
     }
@@ -104,7 +105,7 @@ class TelegramErrorLogRepository
             $stmt->bindParam(':id', $id, PDO::PARAM_INT);
             return $stmt->execute();
         } catch (PDOException $e) {
-            error_log('Gagal menghapus log error Telegram dari DB: ' . $e->getMessage());
+            App::getLogger()->error('Gagal menghapus log error Telegram dari DB: ' . $e->getMessage());
             return false;
         }
     }
@@ -121,7 +122,7 @@ class TelegramErrorLogRepository
             $stmt = $this->pdo->prepare($sql);
             return $stmt->execute();
         } catch (PDOException $e) {
-            error_log('Gagal mengosongkan tabel log error Telegram: ' . $e->getMessage());
+            App::getLogger()->error('Gagal mengosongkan tabel log error Telegram: ' . $e->getMessage());
             return false;
         }
     }
