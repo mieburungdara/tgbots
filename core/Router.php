@@ -178,7 +178,7 @@ class Router
             }
             $controllerInstance = $reflectionClass->newInstanceArgs($paramsToPass);
         } else {
-            $controllerInstance = new $className;
+            $controllerInstance = $reflectionClass->newInstance();
         }
 
         if (!method_exists($controllerInstance, $action)) {

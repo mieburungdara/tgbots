@@ -1,0 +1,13 @@
+{
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-09-12",
+      "changes": {
+        "Diperbaiki": [
+          "Mengatasi parse error di Router.php dengan menggunakan `newInstance()` dari ReflectionClass untuk pembuatan instance controller, yang lebih aman dan konsisten."
+        ]
+      }
+    }
+  ]
+}
