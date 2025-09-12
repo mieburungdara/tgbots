@@ -89,6 +89,18 @@
       "returns": "Array. Berisi `true` jika berhasil."
     },
     {
+      "name": "sendNotification",
+      "description": "Mengirim pesan notifikasi menggunakan bot Telegram terpisah. Digunakan untuk memberi tahu admin tentang peristiwa penting seperti circuit breaker yang terbuka atau tertutup.",
+      "parameters": [
+        {
+          "name": "message",
+          "type": "string",
+          "description": "Pesan notifikasi yang akan dikirim."
+        }
+      ],
+      "returns": "void"
+    },
+    {
       "name": "escapeMarkdown",
       "description": "Membersihkan string dari karakter-karakter yang memiliki arti khusus di `MarkdownV2` Telegram untuk mencegah error parsing.",
       "returns": "String yang aman untuk digunakan dalam mode `MarkdownV2`."

@@ -186,6 +186,7 @@ class TelegramAPI
                 if ($this->failure_count >= self::MAX_FAILURES) {
                     $this->circuit_breaker_open_until = time() + self::RESET_TIMEOUT;
                     $this->logger->critical("Circuit breaker terbuka untuk bot ID {$this->bot_id} karena " . self::MAX_FAILURES . " kegagalan berurutan. Akan terbuka kembali pada " . date('Y-m-d H:i:s', $this->circuit_breaker_open_until));
+                    $this->sendNotification("Circuit breaker terbuka untuk bot ID {$this->bot_id} karena " . self::MAX_FAILURES . " kegagalan berurutan. Akan terbuka kembali pada " . date('Y-m-d H:i:s', $this->circuit_breaker_open_until));
                 }
 
                 // Persist circuit breaker state
@@ -197,8 +198,11 @@ class TelegramAPI
             }
 
             // If successful, reset failure count
-            $this->failure_count = 0;
-            $this->circuit_breaker_open_until = 0;
+            if ($this->failure_count > 0) {
+                $this->failure_count = 0;
+                $this->circuit_breaker_open_until = 0;
+                $this->sendNotification("Circuit breaker tertutup untuk bot ID {$this->bot_id}. API kembali normal.");
+            }
 
             // Persist circuit breaker state
             if ($this->botRepo && $this->bot_id) {
@@ -217,6 +221,7 @@ class TelegramAPI
             if ($this->failure_count >= self::MAX_FAILURES) {
                 $this->circuit_breaker_open_until = time() + self::RESET_TIMEOUT;
                 $this->logger->critical("Circuit breaker terbuka untuk bot ID {$this->bot_id} karena " . self::MAX_FAILURES . " kegagalan berurutan (exception). Akan terbuka kembali pada " . date('Y-m-d H:i:s', $this->circuit_breaker_open_until));
+                $this->sendNotification("Circuit breaker terbuka untuk bot ID {$this->bot_id} karena " . self::MAX_FAILURES . " kegagalan berurutan (exception). Akan terbuka kembali pada " . date('Y-m-d H:i:s', $this->circuit_breaker_open_until));
             }
 
             // Persist circuit breaker state
@@ -231,6 +236,45 @@ class TelegramAPI
                 'error_code' => $e->getCode(),
                 'description' => $e->getMessage(),
             ];
+        }
+    }
+
+    /**
+     * Send a notification message using a separate bot.
+     *
+     * @param string $message The message to send.
+     * @return void
+     */
+    protected function sendNotification(string $message): void
+    {
+        // Load notification bot token and chat ID from config.php
+        // Ensure config.php is included and constants are defined
+        if (!defined('NOTIFICATION_BOT_TOKEN') || !defined('NOTIFICATION_CHAT_ID')) {
+            // Attempt to load config.php if not already loaded
+            if (file_exists(__DIR__ . '/../config.php')) {
+                require_once __DIR__ . '/../config.php';
+            } else {
+                $this->logger->warning("Konfigurasi bot notifikasi tidak ditemukan. Lewati pengiriman notifikasi.");
+                return;
+            }
+        }
+
+        $notification_token = NOTIFICATION_BOT_TOKEN;
+        $notification_chat_id = NOTIFICATION_CHAT_ID;
+
+        if (empty($notification_token) || empty($notification_chat_id)) {
+            $this->logger->info("Token bot notifikasi atau chat ID tidak dikonfigurasi. Lewati pengiriman notifikasi.");
+            return;
+        }
+
+        try {
+            // Create a new TelegramAPI instance for the notification bot
+            // Pass null for pdo, botId, and logger as it's a simple notification
+            $notification_api = new TelegramAPI($notification_token, null, null, $this->logger);
+            $notification_api->sendMessage($notification_chat_id, $message);
+            $this->logger->info("Notifikasi dikirim: {$message}");
+        } catch (Exception $e) {
+            $this->logger->error("Gagal mengirim notifikasi: " . $e->getMessage());
         }
     }
 
@@ -367,7 +411,7 @@ class TelegramAPI
     {
         $data = [
             'chat_id' => $chat_id,
-            'media' => $media,
+            'media'] => $media,
         ];
         return $this->apiRequest('sendMediaGroup', $data);
     }
@@ -388,7 +432,7 @@ class TelegramAPI
     {
         $data = [
             'chat_id' => $chat_id,
-            'from_chat_id' => $from_chat_id,
+            'from_chat_id'] => $from_chat_id,
             'message_id' => $message_id,
         ];
         if ($caption !== null) {
@@ -419,8 +463,8 @@ class TelegramAPI
     {
         $data = [
             'chat_id' => $chat_id,
-            'from_chat_id' => $from_chat_id,
-            'message_ids' => $message_ids,
+            'from_chat_id'] => $from_chat_id,
+            'message_ids'] => $message_ids,
         ];
         if ($protect_content) {
             $data['protect_content'] = true;
@@ -439,7 +483,7 @@ class TelegramAPI
     public function answerCallbackQuery(string $callback_query_id, ?string $text = null, bool $show_alert = false): array
     {
         $data = [
-            'callback_query_id' => $callback_query_id,
+            'callback_query_id'] => $callback_query_id,
         ];
         if ($text) {
             $data['text'] = $text;
@@ -498,7 +542,7 @@ class TelegramAPI
      */
     public function sendAudio($chat_id, string $audio, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
     {
-        $data = ['chat_id' => $chat_id, 'audio' => $audio];
+        $data = ['chat_id' => $chat_id, 'audio'] => $audio];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
         if ($reply_markup) $data['reply_markup'] = $reply_markup;
@@ -517,7 +561,7 @@ class TelegramAPI
      */
     public function sendDocument($chat_id, string $document, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
     {
-        $data = ['chat_id' => $chat_id, 'document' => $document];
+        $data = ['chat_id' => $chat_id, 'document'] => $document];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
         if ($reply_markup) $data['reply_markup'] = $reply_markup;
@@ -536,7 +580,7 @@ class TelegramAPI
      */
     public function sendAnimation($chat_id, string $animation, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
     {
-        $data = ['chat_id' => $chat_id, 'animation' => $animation];
+        $data = ['chat_id' => $chat_id, 'animation'] => $animation];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
         if ($reply_markup) $data['reply_markup'] = $reply_markup;
@@ -555,7 +599,7 @@ class TelegramAPI
      */
     public function sendVoice($chat_id, string $voice, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
     {
-        $data = ['chat_id' => $chat_id, 'voice' => $voice];
+        $data = ['chat_id' => $chat_id, 'voice'] => $voice];
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
         if ($reply_markup) $data['reply_markup'] = $reply_markup;
@@ -601,7 +645,7 @@ class TelegramAPI
      */
     public function setMyCommands(array $commands): array
     {
-        return $this->apiRequest('setMyCommands', ['commands' => json_encode($commands)]);
+        return $this->apiRequest('setMyCommands', ['commands'] => json_encode($commands)]);
     }
 
     /**
@@ -691,8 +735,8 @@ class TelegramAPI
     public function answerInlineQuery(string $inline_query_id, array $results): array
     {
         $data = [
-            'inline_query_id' => $inline_query_id,
-            'results' => json_encode($results),
+            'inline_query_id'] => $inline_query_id,
+            'results'] => json_encode($results),
         ];
         return $this->apiRequest('answerInlineQuery', $data);
     }
