@@ -65,6 +65,13 @@
       ],
       "logic": "`DELETE FROM telegram_error_logs WHERE id = :id`",
       "returns": "bool"
+    },
+    {
+      "name": "truncate",
+      "description": "Mengosongkan seluruh tabel `telegram_error_logs`.",
+      "parameters": [],
+      "logic": "`TRUNCATE TABLE telegram_error_logs`",
+      "returns": "bool"
     }
   ]
 }

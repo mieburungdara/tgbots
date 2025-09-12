@@ -43,6 +43,7 @@ $router->get('xoradmin/public_error_log', 'Admin/LogController@publicErrorLog');
 $router->post('xoradmin/public_error_log/clear', 'Admin/LogController@clearPublicErrorLog');
 $router->get('xoradmin/telegram_logs', 'Admin/LogController@telegram');
 $router->post('xoradmin/telegram_logs/delete', 'Admin/LogController@deleteTelegramLog');
+$router->post('xoradmin/telegram_logs/clear_all', 'Admin/LogController@clearAllTelegramLogs');
 
 // API routes for Admin
 $router->post('api/xoradmin/user/roles', 'Admin/UserController@updateRoles');

@@ -247,6 +247,30 @@ class LogController extends BaseController
         exit;
     }
 
+    public function clearAllTelegramLogs(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /xoradmin/telegram_logs');
+            exit();
+        }
+
+        $logger = new Logger();
+        $pdo = \get_db_connection($logger);
+        $logRepo = new TelegramErrorLogRepository($pdo);
+
+        try {
+            $logRepo->truncate();
+            $logger->info("Semua log Telegram berhasil dibersihkan oleh admin.");
+            $_SESSION['flash_message'] = "Semua log Telegram berhasil dibersihkan.";
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = "Gagal membersihkan semua log Telegram: " . $e->getMessage();
+            $logger->error("Gagal membersihkan semua log Telegram: " . $e->getMessage());
+        }
+
+        header("Location: /xoradmin/telegram_logs");
+        exit;
+    }
+
     public function publicErrorLog(): void
     {
         $logger = new Logger();
@@ -333,7 +357,7 @@ class LogController extends BaseController
                 continue;
             }
 
-$regex = '/^\[(.+?)\]\[.*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/';
+            $regex = '/^\['.(.+?)\]\[.*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/';
 
             if (preg_match($regex, $line, $matches)) {
                 if ($currentLogEntry !== null) {

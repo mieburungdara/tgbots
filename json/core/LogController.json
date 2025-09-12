@@ -42,6 +42,11 @@
                 }
             ],
             "returns": "void"
+        },
+        "clearAllTelegramLogs": {
+            "description": "Membersihkan semua log kesalahan Telegram dari database.",
+            "parameters": [],
+            "returns": "void"
         }
     }
 }

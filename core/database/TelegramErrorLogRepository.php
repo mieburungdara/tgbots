@@ -108,4 +108,21 @@ class TelegramErrorLogRepository
             return false;
         }
     }
+
+    /**
+     * Mengosongkan seluruh tabel log kesalahan Telegram.
+     *
+     * @return bool True jika berhasil, false jika gagal.
+     */
+    public function truncate(): bool
+    {
+        $sql = "TRUNCATE TABLE telegram_error_logs";
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log('Gagal mengosongkan tabel log error Telegram: ' . $e->getMessage());
+            return false;
+        }
+    }
 }
