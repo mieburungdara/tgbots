@@ -1,0 +1,5 @@
+parameters:
+    level: 5 # You can adjust this level (0-9)
+    paths:
+        - core
+        - src

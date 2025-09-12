@@ -1,7 +1,7 @@
 {
   "class_name": "App",
   "summary": "Wadah dependensi dan service locator utama aplikasi.",
-  "description": "Kelas `App` berfungsi sebagai pusat kontrol aplikasi. Ia memegang konfigurasi, menginisialisasi koneksi database, dan menyediakan akses ke berbagai komponen sistem (seperti data bot, pengguna, dan API Telegram) melalui mekanisme lazy loading untuk efisiensi. Aplikasi ini sekarang sepenuhnya mengandalkan autoloader Composer untuk manajemen dependensi dan pemuatan kelas.",
+  "description": "Kelas `App` berfungsi sebagai pusat kontrol aplikasi. Ia memegang konfigurasi, menginisialisasi koneksi database, dan menyediakan akses ke berbagai komponen sistem (seperti data bot, pengguna, dan API Telegram) melalui mekanisme lazy loading untuk efisiensi. Aplikasi ini sekarang sepenuhnya mengandalkan autoloader Composer untuk manajemen dependensi dan pemuatan kelas. PHPStan juga telah diintegrasikan untuk analisis statis kode, memastikan kualitas dan keandalan kode.",
   "properties": [
     {
       "name": "config",
