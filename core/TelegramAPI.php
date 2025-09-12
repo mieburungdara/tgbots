@@ -102,8 +102,10 @@ class TelegramAPI
 
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
-            curl_setopt($ch, CURLOPT_POST, true);
+            if (!empty($data)) {
+                curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+                curl_setopt($ch, CURLOPT_POST, true);
+            }
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
             curl_setopt($ch, CURLOPT_TIMEOUT, 30);
 
@@ -495,7 +497,7 @@ class TelegramAPI
      */
     public function deleteWebhook(): array
     {
-        return $this->setWebhook('');
+        return $this->apiRequest('deleteWebhook');
     }
 
     /**
