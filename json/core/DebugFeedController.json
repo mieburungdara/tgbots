@@ -1,0 +1,11 @@
+{
+    "class": "DebugFeedController",
+    "description": "Controller untuk menampilkan feed update mentah dari Telegram untuk tujuan debugging.",
+    "methods": {
+        "index": {
+            "description": "Menampilkan halaman feed update mentah Telegram dengan paginasi.",
+            "parameters": [],
+            "returns": "void"
+        }
+    }
+}

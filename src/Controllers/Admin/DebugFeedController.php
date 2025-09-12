@@ -2,18 +2,18 @@
 
 namespace TGBot\Controllers\Admin;
 
-
-
 use Exception;
 use TGBot\Controllers\BaseController;
 use TGBot\Database\RawUpdateRepository;
+use TGBot\Logger;
 
 class DebugFeedController extends BaseController
 {
     public function index()
     {
         try {
-            $pdo = \get_db_connection();
+            $logger = new Logger();
+            $pdo = \get_db_connection($logger);
             $raw_update_repo = new RawUpdateRepository($pdo);
 
             // Pagination Logic
