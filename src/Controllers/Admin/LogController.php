@@ -4,13 +4,10 @@ namespace TGBot\Controllers\Admin;
 
 use TGBot\Controllers\BaseController;
 use TGBot\Database\TelegramErrorLogRepository;
-use TGBot\Controllers\BaseController;
-use TGBot\Database\TelegramErrorLogRepository;
 use PDO;
 use Exception;
 use PDOException;
 use TGBot\App;
-use Monolog\Logger;
 
 class LogController extends BaseController
 {
