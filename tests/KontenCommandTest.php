@@ -16,6 +16,7 @@ use TGBot\TelegramAPI; // Asumsi ada kelas TelegramAPI
 use PDO;
 use PDOStatement;
 use TGBot\Logger;
+use TGBot\SellerReportGenerator;
 
 class KontenCommandTest extends TestCase
 {
@@ -28,6 +29,7 @@ class KontenCommandTest extends TestCase
     private $userRepoMock;
     private $viewRepoMock;
     private $loggerMock;
+    private $sellerReportGeneratorMock;
     private $kontenCommand;
 
     protected function setUp(): void
@@ -41,12 +43,24 @@ class KontenCommandTest extends TestCase
 
         // Mock Repositories
         $this->packageRepoMock = $this->createMock(MediaPackageRepository::class);
+        $this->packageRepoMock->method('find')->willReturnCallback(function($id) {
+            // Simulate finding a package by ID for the logPackageView method
+            // This needs to return a structure similar to what findByPublicId returns
+            // For simplicity, we'll return a basic package array if ID is 1
+            if ($id === 1) {
+                return ['id' => 1, 'seller_user_id' => 99999]; // Example seller_user_id, not the current user
+            }
+            return null;
+        });
         $this->saleRepoMock = $this->createMock(SaleRepository::class);
         $this->subscriptionRepoMock = $this->createMock(SubscriptionRepository::class);
         $this->featureChannelRepoMock = $this->createMock(FeatureChannelRepository::class);
         $this->userRepoMock = $this->createMock(UserRepository::class);
         $this->viewRepoMock = $this->createMock(PackageViewRepository::class);
         $this->loggerMock = $this->createMock(Logger::class);
+        $this->sellerReportGeneratorMock = $this->createMock(SellerReportGenerator::class);
+        $this->sellerReportGeneratorMock->method('generateReport')
+                                        ->willReturn(['Mock Caption', ['inline_keyboard' => [[['text' => 'Mock Button', 'callback_data' => 'mock_data']]]]]);
 
         // Mock App object
         $this->appMock = $this->createMock(App::class);
@@ -66,7 +80,8 @@ class KontenCommandTest extends TestCase
             $this->featureChannelRepoMock,
             $this->userRepoMock,
             $this->viewRepoMock,
-            $this->loggerMock
+            $this->loggerMock,
+            $this->sellerReportGeneratorMock
         );
     }
 
@@ -218,7 +233,7 @@ class KontenCommandTest extends TestCase
     public function testExecute_visitorViewsUnavailableContent(): void
     {
         $message = [];
-        $publicId = 'ABCDE';
+        $publicId = 'NONEXISTENT';
         $parts = ['/konten', $publicId];
         $package = [
             'id' => 1,
@@ -226,7 +241,7 @@ class KontenCommandTest extends TestCase
             'seller_user_id' => 99999,
             'description' => 'Deskripsi konten',
             'price' => 10000,
-            'status' => 'sold', // Status tidak tersedia
+            'status' => 'sold',
             'created_at' => '2025-01-01 10:00:00'
         ];
 
@@ -297,40 +312,6 @@ class KontenCommandTest extends TestCase
         $this->assertStringContainsString('3.34MB', $summary); // (1+2+0.5)MB = 3.5MB, rounded to 3.34MB
     }
 
-    // Test case untuk generateSellerReport (memastikan cache berfungsi dan laporan dibuat)
-    public function testGenerateSellerReport(): void
-    {
-        $publicId = 'ABCDE';
-        $package = [
-            'id' => 1,
-            'public_id' => $publicId,
-            'seller_user_id' => $this->appMock->user['id'],
-            'description' => 'Deskripsi konten',
-            'price' => 10000,
-            'status' => 'available',
-            'created_at' => '2025-01-01 10:00:00'
-        ];
-        $description = 'Deskripsi konten';
-
-        $this->saleRepoMock->method('getAnalyticsForPackage')->willReturn(['sales_count' => 5, 'views_count' => 100, 'offers_count' => 10]);
-        $this->featureChannelRepoMock->method('findAllByOwnerAndFeature')->willReturn([]);
-
-        // Menggunakan Reflection untuk mengakses metode privat
-        $reflection = new \ReflectionClass(KontenCommand::class);
-        $method = $reflection->getMethod('generateSellerReport');
-        $method->setAccessible(true);
-
-        list($caption, $keyboard) = $method->invokeArgs($this->kontenCommand, [$this->appMock, $package, $description]);
-
-        $this->assertStringContainsString('Laporan Konten', $caption);
-        $this->assertStringContainsString('ID Konten: `ABCDE`', $caption);
-        $this->assertStringContainsString('Jumlah Terjual: 5 kali', $caption);
-        $this->assertStringContainsString('Total Pendapatan: Rp 50.000', $caption);
-        $this->assertStringContainsString('Tingkat Konversi: 5%', $caption);
-        $this->assertArrayHasKey('inline_keyboard', $keyboard);
-        $this->assertStringContainsString('Lihat Selengkapnya', $keyboard['inline_keyboard'][0][0]['text']);
-    }
-
     // Test case untuk handleSellerView
     public function testHandleSellerView(): void
     {
@@ -346,8 +327,11 @@ class KontenCommandTest extends TestCase
         ];
         $description = 'Deskripsi konten';
 
-        $this->saleRepoMock->method('getAnalyticsForPackage')->willReturn(['sales_count' => 5, 'views_count' => 100, 'offers_count' => 10]);
-        $this->featureChannelRepoMock->method('findAllByOwnerAndFeature')->willReturn([]);
+        // Mock the generateReport method of SellerReportGenerator
+        $expectedCaption = "Mock Caption";
+        $expectedKeyboard = ['inline_keyboard' => [[['text' => 'Mock Button', 'callback_data' => 'mock_data']]]];
+        $this->sellerReportGeneratorMock->method('generateReport')
+                                        ->willReturn([$expectedCaption, $expectedKeyboard]);
 
         $reflection = new \ReflectionClass(KontenCommand::class);
         $method = $reflection->getMethod('handleSellerView');
@@ -355,14 +339,15 @@ class KontenCommandTest extends TestCase
 
         list($caption, $keyboard) = $method->invokeArgs($this->kontenCommand, [$this->appMock, $package, $description]);
 
-        $this->assertStringContainsString('Laporan Konten', $caption);
-        $this->assertArrayHasKey('inline_keyboard', $keyboard);
+        $this->assertEquals($expectedCaption, $caption);
+        $this->assertEquals($expectedKeyboard, $keyboard);
     }
 
     // Test case untuk handlePurchasedOrAdminView
     public function testHandlePurchasedOrAdminView(): void
     {
         $publicId = 'ABCDE';
+        $parts = ['/konten', $publicId];
         $package = [
             'id' => 1,
             'public_id' => $publicId,
