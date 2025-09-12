@@ -1,0 +1,13 @@
+{
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-09-12",
+      "changes": {
+        "Refactoring": [
+          "Refactor metode `publicErrorLog` di `LogController` untuk meningkatkan keterbacaan dan pemeliharaan dengan memecahnya menjadi beberapa metode privat yang lebih kecil."
+        ]
+      }
+    }
+  ]
+}

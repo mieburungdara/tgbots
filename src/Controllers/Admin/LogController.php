@@ -175,89 +175,23 @@ class LogController extends BaseController {
 
     public function publicErrorLog(): void
     {
+        $logger = new Logger();
         try {
-            $log_file_path = __DIR__ . '/../../../public/error_log.txt';
-            $parsed_logs = [];
-            $error_message = null;
+            $logFilePath = $this->getPublicLogFilePath();
+            $errorMessage = null;
+            $parsedLogs = [];
 
-            if (file_exists($log_file_path)) {
-                $log_content = file_get_contents($log_file_path);
-                if ($log_content === false) {
-                    $error_message = "Gagal membaca isi file log: " . htmlspecialchars($log_file_path);
-                    $logger->error('Error reading public/error_log.txt: ' . $log_file_path);
-                } elseif (empty($log_content)) {
-                    $error_message = "File log kosong.";
-                } else {
-                    $lines = explode("\n", $log_content);
-                    $current_log_entry = null;
+            $logContent = $this->readPublicLogFile($logFilePath, $logger, $errorMessage);
 
-                    foreach ($lines as $line) {
-                        $line = trim($line);
-                        if (empty($line)) continue;
-
-                        // Regex to identify the start of a new log entry
-                        // Example: [06-Sep-2025 08:51:22 UTC] PHP Fatal error: ...
-                        if (preg_match('/^\['.([^\\]+?)\].*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/', $line, $matches)) {
-                            // If there's a previous entry being built, save it
-                            if ($current_log_entry !== null) {
-                                $parsed_logs[] = $current_log_entry;
-                            }
-
-                            $timestamp_utc_str = $matches[1];
-                            $level = $matches[2];
-                            $message = $matches[3];
-
-                            // Convert UTC timestamp to local timezone
-                            try {
-                                $datetime_utc = new \DateTime($timestamp_utc_str, new \DateTimeZone('UTC'));
-                                $timezone = new \DateTimeZone('Asia/Singapore'); // Assuming user's timezone is UTC+8
-                                $datetime_utc->setTimezone($timezone);
-                                $timestamp_local_str = $datetime_utc->format('d-M-Y H:i:s'); // Removed 'T'
-                                $sortable_timestamp = $datetime_utc->getTimestamp(); // Get Unix timestamp for sorting
-                            } catch (Exception $e) {
-                                \app_log('Error converting timestamp: ' . $e->getMessage(), 'error');
-                                $timestamp_local_str = $timestamp_utc_str . ' (Error TZ)';
-                                $sortable_timestamp = 0; // Fallback for sorting
-                            }
-
-                            $current_log_entry = [
-                                'timestamp' => $timestamp_local_str,
-                                'level' => $level,
-                                'message' => $message,
-                                'sortable_timestamp' => $sortable_timestamp // Store for sorting
-                            ];
-                        } else {
-                            if ($current_log_entry !== null) {
-                                $current_log_entry['message'] .= "\n" . $line;
-                            } else {
-                                $parsed_logs[] = [
-                                    'timestamp' => 'N/A',
-                                    'level' => 'UNKNOWN',
-                                    'message' => $line,
-                                    'sortable_timestamp' => 0 // Fallback for sorting
-                                ];
-                            }
-                        }
-                    }
-
-                    if ($current_log_entry !== null) {
-                        $parsed_logs[] = $current_log_entry;
-                    }
-
-                    // Sort the logs by sortable_timestamp in descending order (newest first)
-                    usort($parsed_logs, function($a, $b) {
-                        return $b['sortable_timestamp'] <=> $a['sortable_timestamp'];
-                    });
-                } 
-            } else {
-                $error_message = "File log tidak ditemukan: " . htmlspecialchars($log_file_path);
-                $logger->warning('Public error log file not found: ' . $log_file_path);
+            if ($logContent !== false) {
+                $parsedLogs = $this->parseLogContent($logContent, $logger);
+                $this->sortParsedLogs($parsedLogs);
             }
 
             $this->view('admin/logs/public_error', [
                 'page_title' => 'Public Error Log Viewer',
-                'parsed_logs' => $parsed_logs,
-                'error_message' => $error_message
+                'parsed_logs' => $parsedLogs,
+                'error_message' => $errorMessage
             ], 'admin_layout');
         } catch (Exception $e) {
             $logger->error('Error in LogController/publicErrorLog: ' . $e->getMessage());
@@ -268,10 +202,117 @@ class LogController extends BaseController {
         }
     }
 
+    private function getPublicLogFilePath(): string
+    {
+        return __DIR__ . '/../../../public/error_log.txt';
+    }
+
+    private function readPublicLogFile(string $logFilePath, Logger $logger, ?string &$errorMessage): string|false
+    {
+        if (!file_exists($logFilePath)) {
+            $errorMessage = "File log tidak ditemukan: " . htmlspecialchars($logFilePath);
+            $logger->warning('Public error log file not found: ' . $logFilePath);
+            return false;
+        }
+
+        $logContent = file_get_contents($logFilePath);
+
+        if ($logContent === false) {
+            $errorMessage = "Gagal membaca isi file log: " . htmlspecialchars($logFilePath);
+            $logger->error('Error reading public/error_log.txt: ' . $logFilePath);
+            return false;
+        }
+
+        if (empty($logContent)) {
+            $errorMessage = "File log kosong.";
+            return false;
+        }
+
+        return $logContent;
+    }
+
+    private function parseLogContent(string $logContent, Logger $logger): array
+    {
+        $lines = explode("\n", $logContent);
+        $parsedLogs = [];
+        $currentLogEntry = null;
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+
+            $regex = '/^\['.([^\]+?)\].*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/';
+            if (preg_match($regex, $line, $matches)) {
+                if ($currentLogEntry !== null) {
+                    $parsedLogs[] = $currentLogEntry;
+                }
+                $currentLogEntry = $this->createNewLogEntry($matches, $logger);
+            } else {
+                $this->appendToCurrentLogEntry($line, $currentLogEntry, $parsedLogs);
+            }
+        }
+
+        if ($currentLogEntry !== null) {
+            $parsedLogs[] = $currentLogEntry;
+        }
+
+        return $parsedLogs;
+    }
+
+    private function createNewLogEntry(array $matches, Logger $logger): array
+    {
+        [, $timestampUtcStr, $level, $message] = $matches;
+
+        try {
+            $datetimeUtc = new \DateTime($timestampUtcStr, new \DateTimeZone('UTC'));
+            $timezone = new \DateTimeZone('Asia/Singapore'); // Assuming user\\'s timezone is UTC+8
+            $datetimeUtc->setTimezone($timezone);
+            $timestampLocalStr = $datetimeUtc->format('d-M-Y H:i:s');
+            $sortableTimestamp = $datetimeUtc->getTimestamp();
+        } catch (Exception $e) {
+            $logger->error('Error converting timestamp: ' . $e->getMessage());
+            $timestampLocalStr = $timestampUtcStr . ' (Error TZ)';
+            $sortableTimestamp = 0;
+        }
+
+        return [
+            'timestamp' => $timestampLocalStr,
+            'level' => $level,
+            'message' => $message,
+            'sortable_timestamp' => $sortableTimestamp,
+        ];
+    }
+
+    private function appendToCurrentLogEntry(string $line, ?array &$currentLogEntry, array &$parsedLogs): void
+    {
+        if ($currentLogEntry !== null) {
+            $currentLogEntry['message'] .= "\n" . $line;
+        } else {
+            // This handles lines that appear before the first matched log entry
+            $parsedLogs[] = [
+                'timestamp' => 'N/A',
+                'level' => 'UNKNOWN',
+                'message' => $line,
+                'sortable_timestamp' => 0,
+            ];
+        }
+    }
+
+    private function sortParsedLogs(array &$parsedLogs): void
+    {
+        usort($parsedLogs, function ($a, $b) {
+            return $b['sortable_timestamp'] <=> $a['sortable_timestamp'];
+        });
+    }
+
+
     public function clearPublicErrorLog(): void
     {
+        $logger = new Logger();
         try {
-            $log_file_path = __DIR__ . '/../../../public/error_log.txt';
+            $log_file_path = $this->getPublicLogFilePath();
             if (file_exists($log_file_path)) {
                 // Menghapus isi file dengan menulis string kosong
                 if (file_put_contents($log_file_path, '') !== false) {
