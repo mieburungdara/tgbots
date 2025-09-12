@@ -1,0 +1,11 @@
+{
+  "version": "1.0.0",
+  "date": "2025-09-12",
+  "changes": [
+    {
+      "type": "fix",
+      "scope": "LogController",
+      "description": "Memperbaiki kesalahan sintaksis pada `preg_match` di `src/Controllers/Admin/LogController.php` (baris 200) yang menyebabkan 'Parse error: syntax error, unexpected token \'^\', expecting \']\'."
+    }
+  ]
+}
