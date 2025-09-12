@@ -14,7 +14,8 @@ namespace TGBot;
 use Exception;
 use ReflectionMethod;
 use ReflectionClass;
-use TGBot\Logger;
+use Monolog\Logger;
+use TGBot\App;
 
 /**
  * Class Router
@@ -26,13 +27,6 @@ use TGBot\Logger;
  */
 class Router
 {
-    protected Logger $logger;
-
-    public function __construct(Logger $logger)
-    {
-        $this->logger = $logger;
-    }
-
     /**
      * @var array
      */
@@ -47,9 +41,9 @@ class Router
      * @param string $file Path ke file rute.
      * @return static
      */
-    public static function load(string $file, Logger $logger): static
+    public static function load(string $file): static
     {
-        $router = new static($logger);
+        $router = new static();
         require $file;
         return $router;
     }
@@ -101,7 +95,7 @@ class Router
 
                     return $this->callAction($parts[0], $parts[1], $params);
                 } catch (Exception $e) {
-                    error_log("Router Error: " . $e->getMessage());
+                    App::getLogger()->error("Router Error: " . $e->getMessage());
                     http_response_code(500);
                     require __DIR__ . '/../src/Views/500.php';
                     exit();
@@ -143,7 +137,7 @@ class Router
             $paramsToPass = [];
             foreach ($constructor->getParameters() as $param) {
                 if ($param->getType() && (string) $param->getType() === Logger::class) {
-                    $paramsToPass[] = $this->logger;
+                    $paramsToPass[] = App::getLogger();
                 } else {
                     throw new Exception("Unsupported constructor parameter type for controller {$className}: {$param->getName()}");
                 }

@@ -7,6 +7,7 @@ namespace TGBot\Controllers\Admin;
 use Exception;
 use PDO;
 use TGBot\Controllers\BaseController;
+use TGBot\App;
 
 class UserController extends BaseController {
 
@@ -85,7 +86,7 @@ class UserController extends BaseController {
 
             unset($_SESSION['flash_message']);
         } catch (Exception $e) {
-            \app_log('Error in UserController/index: ' . $e->getMessage(), 'error');
+            App::getLogger()->error('Error in UserController/index: ' . $e->getMessage());
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the user management page.'
@@ -105,7 +106,7 @@ class UserController extends BaseController {
             $role_ids = array_map('intval', $stmt->fetchAll(PDO::FETCH_COLUMN, 0));
             return $this->jsonResponse(['role_ids' => $role_ids]);
         } catch (Exception $e) {
-            error_log('API Error in UserController@getRoles: ' . $e->getMessage());
+            App::getLogger()->error('API Error in UserController@getRoles: ' . $e->getMessage());
             return $this->jsonResponse(['error' => 'Terjadi kesalahan pada server.'], 500);
         }
     }
@@ -140,7 +141,7 @@ class UserController extends BaseController {
             return $this->jsonResponse(['success' => true, 'message' => 'Peran pengguna berhasil diperbarui.']);
         } catch (Exception $e) {
             if ($pdo->inTransaction()) $pdo->rollBack();
-            error_log('API Error in UserController@updateRoles: ' . $e->getMessage());
+            App::getLogger()->error('API Error in UserController@updateRoles: ' . $e->getMessage());
             return $this->jsonResponse(['error' => 'Terjadi kesalahan pada server.'], 500);
         }
     }

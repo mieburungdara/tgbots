@@ -4,11 +4,11 @@
 require_once __DIR__ . '/../core/autoloader.php';
 require_once __DIR__ . '/../core/database.php';
 require_once __DIR__ . '/../core/helpers.php';
-use TGBot\Logger;
+use TGBot\App;
 
 // Get a database connection
 $pdo = get_db_connection();
-$logger = new Logger('cron_check_subscriptions', __DIR__ . '/../logs/cron.log');
+$logger = App::getLogger();
 
 $logger->info('Cron job: check_subscriptions started.');
 

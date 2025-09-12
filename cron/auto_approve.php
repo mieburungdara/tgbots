@@ -6,10 +6,10 @@ require_once __DIR__ . '/../core/helpers.php';
 
 use TGBot\Database\MediaPackageRepository;
 use TGBot\TelegramAPI;
-use TGBot\Logger;
+use TGBot\App;
 
 $pdo = get_db_connection();
-$logger = new Logger('cron_auto_approve', __DIR__ . '/../logs/cron.log');
+$logger = App::getLogger();
 
 if (!$pdo) {
     $logger->critical("Cronjob Error: Gagal terkoneksi ke database.");
