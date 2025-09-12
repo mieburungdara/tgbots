@@ -89,4 +89,23 @@ class TelegramErrorLogRepository
         $stmt = $this->pdo->query($sql);
         return (int) $stmt->fetchColumn();
     }
+
+    /**
+     * Menghapus log kesalahan Telegram berdasarkan ID.
+     *
+     * @param int $id ID dari log yang akan dihapus.
+     * @return bool True jika berhasil dihapus, false jika gagal.
+     */
+    public function delete(int $id): bool
+    {
+        $sql = "DELETE FROM telegram_error_logs WHERE id = :id";
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+            return $stmt->execute();
+        } catch (PDOException $e) {
+            error_log('Gagal menghapus log error Telegram dari DB: ' . $e->getMessage());
+            return false;
+        }
+    }
 }

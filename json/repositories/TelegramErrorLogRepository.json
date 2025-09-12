@@ -52,6 +52,19 @@
       "parameters": [],
       "logic": "`SELECT COUNT(*) FROM telegram_error_logs`",
       "returns": "int"
+    },
+    {
+      "name": "delete",
+      "description": "Menghapus satu log error dari tabel `telegram_error_logs` berdasarkan ID.",
+      "parameters": [
+        {
+          "name": "id",
+          "type": "int",
+          "description": "ID dari log error yang akan dihapus."
+        }
+      ],
+      "logic": "`DELETE FROM telegram_error_logs WHERE id = :id`",
+      "returns": "bool"
     }
   ]
 }
