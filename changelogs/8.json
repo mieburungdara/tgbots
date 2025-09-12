@@ -1,0 +1,10 @@
+{
+  "version": "1.0.0",
+  "date": "2025-09-12",
+  "changes": [
+    {
+      "type": "docs",
+      "description": "Menambahkan dokumentasi JSON untuk kelas SellerReportGenerator baru di `json/core/SellerReportGenerator.json`."
+    }
+  ]
+}

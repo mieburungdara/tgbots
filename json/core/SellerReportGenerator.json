@@ -1,0 +1,51 @@
+{
+  "class_name": "SellerReportGenerator",
+  "summary": "Menghasilkan laporan penjualan dan analitik untuk konten seller.",
+  "description": "Kelas ini bertanggung jawab untuk mengumpulkan data penjualan, tampilan, dan penawaran untuk sebuah paket konten, kemudian memformatnya menjadi laporan yang komprehensif. Laporan ini juga mencakup opsi untuk mempromosikan konten atau memposting ke channel penjualan.",
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Menginisialisasi generator laporan dengan dependensi yang diperlukan.",
+      "parameters": [
+        {
+          "name": "saleRepo",
+          "type": "SaleRepository",
+          "description": "Repository untuk mengakses data penjualan."
+        },
+        {
+          "name": "featureChannelRepo",
+          "type": "FeatureChannelRepository",
+          "description": "Repository untuk mengakses data channel fitur."
+        },
+        {
+          "name": "logger",
+          "type": "Logger",
+          "description": "Instance logger untuk mencatat kesalahan."
+        }
+      ]
+    },
+    {
+      "name": "generateReport",
+      "description": "Menghasilkan laporan penjualan dan analitik untuk paket konten yang diberikan.",
+      "parameters": [
+        {
+          "name": "app",
+          "type": "App",
+          "description": "Instance aplikasi utama."
+        },
+        {
+          "name": "package",
+          "type": "array",
+          "description": "Array yang berisi detail paket konten."
+        },
+        {
+          "name": "description",
+          "type": "string",
+          "description": "Deskripsi konten yang akan disertakan dalam laporan."
+        }
+      ],
+      "returns": "array",
+      "return_description": "Array yang berisi caption laporan dan keyboard inline untuk Telegram."
+    }
+  ]
+}
