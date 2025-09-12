@@ -1,0 +1,36 @@
+{
+    "class": "LogController",
+    "description": "Controller untuk mengelola dan menampilkan berbagai jenis log aplikasi, media, Telegram, dan log kesalahan publik.",
+    "methods": {
+        "app": {
+            "description": "Menampilkan log aplikasi dari database.",
+            "parameters": [],
+            "returns": "void"
+        },
+        "clearAppLogs": {
+            "description": "Membersihkan log aplikasi dari database.",
+            "parameters": [],
+            "returns": "void"
+        },
+        "media": {
+            "description": "Menampilkan log terkait media.",
+            "parameters": [],
+            "returns": "void"
+        },
+        "telegram": {
+            "description": "Menampilkan log kesalahan Telegram dari database.",
+            "parameters": [],
+            "returns": "void"
+        },
+        "publicErrorLog": {
+            "description": "Menampilkan log kesalahan publik dari file.",
+            "parameters": [],
+            "returns": "void"
+        },
+        "clearPublicErrorLog": {
+            "description": "Membersihkan file log kesalahan publik.",
+            "parameters": [],
+            "returns": "void"
+        }
+    }
+}

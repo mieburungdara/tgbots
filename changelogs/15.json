@@ -1,0 +1,16 @@
+{
+  "changelog": [
+    {
+      "version": "",
+      "date": "2025-09-12",
+      "changes": {
+        "Diperbaiki": [
+          "Perbaikan syntax error pada `LogController.php` di baris 200."
+        ],
+        "Dokumentasi": [
+          "Penambahan dokumentasi untuk `LogController` di `json/core/LogController.json`."
+        ]
+      }
+    }
+  ]
+}
