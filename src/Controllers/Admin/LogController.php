@@ -2,19 +2,19 @@
 
 namespace TGBot\Controllers\Admin;
 
-
-
 use TGBot\Controllers\BaseController;
 use TGBot\Database\TelegramErrorLogRepository;
 use PDO;
 use Exception;
 use PDOException;
+use TGBot\Logger;
 
 class LogController extends BaseController {
 
     public function app() {
         try {
-            $pdo = \get_db_connection();
+            $logger = new Logger();
+            $pdo = \get_db_connection($logger);
             $items_per_page = 50;
 
             $stmt_levels = $pdo->query("SELECT DISTINCT level FROM app_logs ORDER BY level ASC");
@@ -79,7 +79,8 @@ class LogController extends BaseController {
             exit();
         }
 
-        $pdo = \get_db_connection();
+        $logger = new Logger();
+        $pdo = \get_db_connection($logger);
         try {
             $pdo->query("TRUNCATE TABLE app_logs");
             \app_log("Tabel app_logs dibersihkan oleh admin.", 'system');
@@ -94,7 +95,8 @@ class LogController extends BaseController {
 
     public function media() {
         try {
-            $pdo = \get_db_connection();
+            $logger = new Logger();
+            $pdo = \get_db_connection($logger);
             $sql = "
                 SELECT
                     mf.id, mf.type, mf.file_name, mf.caption, mf.file_size, mf.media_group_id, mf.created_at,
@@ -143,7 +145,8 @@ class LogController extends BaseController {
 
     public function telegram() {
         try {
-            $pdo = \get_db_connection();
+            $logger = new Logger();
+            $pdo = \get_db_connection($logger);
             $logRepo = new TelegramErrorLogRepository($pdo);
 
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;

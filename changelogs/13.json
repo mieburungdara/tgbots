@@ -1,0 +1,14 @@
+{
+    "version": "1.0.0",
+    "date": "2025-09-12",
+    "changes": [
+        {
+            "type": "Perbaikan Bug",
+            "description": "Memperbaiki error 'Too few arguments to function get_db_connection()' di LogController.php dengan melewatkan objek Logger.",
+            "files_modified": [
+                "src/Controllers/Admin/LogController.php"
+            ],
+            "related_issues": []
+        }
+    ]
+}
