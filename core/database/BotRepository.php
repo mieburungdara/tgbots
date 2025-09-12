@@ -54,9 +54,23 @@ class BotRepository
     public function findBotByTelegramId(int $bot_id)
     {
         // Bot sekarang dicari berdasarkan ID Telegram-nya, yang merupakan Primary Key.
-        $stmt = $this->pdo->prepare("SELECT id, token, username, assigned_feature FROM bots WHERE id = ?");
+        $stmt = $this->pdo->prepare("SELECT id, token, username, assigned_feature, failure_count, circuit_breaker_open_until FROM bots WHERE id = ?");
         $stmt->execute([$bot_id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+
+    /**
+     * Update the circuit breaker state for a bot.
+     *
+     * @param int $bot_id
+     * @param int $failure_count
+     * @param int $circuit_breaker_open_until
+     * @return bool
+     */
+    public function updateCircuitBreakerState(int $bot_id, int $failure_count, int $circuit_breaker_open_until): bool
+    {
+        $stmt = $this->pdo->prepare("UPDATE bots SET failure_count = ?, circuit_breaker_open_until = ? WHERE id = ?");
+        return $stmt->execute([$failure_count, $circuit_breaker_open_until, $bot_id]);
     }
 
     /**

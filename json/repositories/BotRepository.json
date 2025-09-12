@@ -25,7 +25,7 @@
     },
     {
       "name": "findBotByTelegramId",
-      "description": "Mencari satu bot berdasarkan ID Telegram uniknya (yang juga merupakan Primary Key).",
+      "description": "Mencari satu bot berdasarkan ID Telegram uniknya (yang juga merupakan Primary Key), termasuk status circuit breaker.",
       "parameters": [
         {
           "name": "bot_id",
@@ -33,9 +33,33 @@
           "description": "ID Telegram bot."
         }
       ],
-      "logic": "SELECT id, token, username, assigned_feature FROM bots WHERE id = ?",
+      "logic": "SELECT id, token, username, assigned_feature, failure_count, circuit_breaker_open_until FROM bots WHERE id = ?",
       "returns": "array|false",
-      "return_description": "Data bot jika ditemukan, jika tidak `false`."
+      "return_description": "Data bot jika ditemukan, termasuk `failure_count` dan `circuit_breaker_open_until`, jika tidak `false`."
+    },
+    {
+      "name": "updateCircuitBreakerState",
+      "description": "Memperbarui status circuit breaker (jumlah kegagalan dan waktu buka) untuk bot tertentu.",
+      "parameters": [
+        {
+          "name": "bot_id",
+          "type": "int",
+          "description": "ID Telegram bot."
+        },
+        {
+          "name": "failure_count",
+          "type": "int",
+          "description": "Jumlah kegagalan berurutan saat ini."
+        },
+        {
+          "name": "circuit_breaker_open_until",
+          "type": "int",
+          "description": "Timestamp kapan circuit breaker akan terbuka kembali (0 jika tertutup)."
+        }
+      ],
+      "logic": "UPDATE bots SET failure_count = ?, circuit_breaker_open_until = ? WHERE id = ?",
+      "returns": "bool",
+      "return_description": "`true` jika berhasil diperbarui, `false` jika gagal."
     },
     {
       "name": "getBotSettings",

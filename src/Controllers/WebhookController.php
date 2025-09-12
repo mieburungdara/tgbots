@@ -54,8 +54,7 @@ class WebhookController
             }
             App::getLogger()->info("Bot ditemukan: " . json_encode($bot));
 
-            
-            
+            $telegram_api = $this->getTelegramAPI($bot['token'], $pdo, $bot_id, App::getLogger(), $bot);
 
             $update_json = $this->getPhpInput();
             if (empty($update_json)) {
@@ -74,7 +73,7 @@ class WebhookController
                 $this->terminate();
             }
 
-            $dispatcher = $this->getUpdateDispatcher($pdo, $bot, $update);
+            $dispatcher = $this->getUpdateDispatcher($pdo, $bot, $update, $telegram_api);
             $dispatcher->dispatch();
 
             $this->setHttpResponseCode(200);
@@ -120,13 +119,13 @@ class WebhookController
         return new RawUpdateRepository($pdo);
     }
 
-    protected function getTelegramAPI($token, $pdo, $botId, $logger)
+    protected function getTelegramAPI($token, $pdo, $botId, $logger, $bot_data)
     {
-        return new TelegramAPI($token, $pdo, $botId, $logger);
+        return new TelegramAPI($token, $pdo, $botId, $logger, $bot_data);
     }
 
-    protected function getUpdateDispatcher($pdo, $bot, $update)
+    protected function getUpdateDispatcher($pdo, $bot, $update, $telegram_api)
     {
-        return new UpdateDispatcher($pdo, $bot, $update);
+        return new UpdateDispatcher($pdo, $bot, $update, $telegram_api);
     }
 }

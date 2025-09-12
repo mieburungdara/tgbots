@@ -5,12 +5,28 @@
   "methods": [
     {
       "name": "__construct",
-      "description": "Menginisialisasi dispatcher dengan instance `App`, yang memberikan akses ke semua komponen lain seperti database dan API.",
+      "description": "Menginisialisasi dispatcher dengan data yang diperlukan untuk memproses pembaruan.",
       "parameters": [
         {
-          "name": "app",
-          "type": "App",
-          "description": "Objek aplikasi inti.",
+          "name": "pdo",
+          "type": "PDO",
+          "description": "Objek koneksi database.",
+          "is_dependency": true
+        },
+        {
+          "name": "bot",
+          "type": "array",
+          "description": "Data bot yang sedang aktif."
+        },
+        {
+          "name": "update",
+          "type": "array",
+          "description": "Data pembaruan mentah dari Telegram."
+        },
+        {
+          "name": "telegram_api",
+          "type": "TelegramAPI",
+          "description": "Objek TelegramAPI untuk berinteraksi dengan API Telegram.",
           "is_dependency": true
         }
       ]

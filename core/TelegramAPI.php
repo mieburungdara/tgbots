@@ -17,6 +17,7 @@ use TGBot\Database\TelegramErrorLogRepository;
 use TGBot\Database\UserRepository;
 use Monolog\Logger;
 use TGBot\App;
+use TGBot\Database\BotRepository;
 
 /**
  * Class TelegramAPI
@@ -60,24 +61,29 @@ class TelegramAPI
     protected Logger $logger;
 
     /**
+     * @var \TGBot\Database\BotRepository|null
+     */
+    protected ?\TGBot\Database\BotRepository $botRepo = null;
+
+    /**
      * @var int Konter kegagalan berurutan untuk circuit breaker.
      */
-    protected int $failure_count = 0;
+    protected int $failure_count;
 
     /**
      * @var int Waktu (timestamp) kapan circuit breaker akan terbuka kembali.
      */
-    protected int $circuit_breaker_open_until = 0;
+    protected int $circuit_breaker_open_until;
 
     /**
      * @var int Jumlah kegagalan maksimum sebelum circuit breaker terbuka.
      */
-    protected int $max_failures = 5;
+    protected const MAX_FAILURES = 5;
 
     /**
      * @var int Durasi (detik) circuit breaker akan tetap terbuka.
      */
-    protected int $reset_timeout = 300; // 5 menit
+    protected const RESET_TIMEOUT = 300; // 5 menit
 
     /**
      * TelegramAPI constructor.
@@ -85,8 +91,10 @@ class TelegramAPI
      * @param string $token
      * @param PDO|null $pdo
      * @param int|null $internal_bot_id
+     * @param Logger|null $logger
+     * @param array|null $bot_data Data bot dari database, termasuk status circuit breaker.
      */
-    public function __construct(string $token, ?PDO $pdo = null, ?int $internal_bot_id = null, ?Logger $logger = null)
+    public function __construct(string $token, ?PDO $pdo = null, ?int $internal_bot_id = null, ?Logger $logger = null, ?array $bot_data = null)
     {
         $this->token = $token;
         $this->pdo = $pdo;
@@ -97,8 +105,13 @@ class TelegramAPI
             $this->errorLogRepo = new TelegramErrorLogRepository($this->pdo);
             if ($this->bot_id) {
                 $this->userRepo = new UserRepository($this->pdo, $this->bot_id);
+                $this->botRepo = new \TGBot\Database\BotRepository($this->pdo);
             }
         }
+
+        // Load persistent circuit breaker state
+        $this->failure_count = $bot_data['failure_count'] ?? 0;
+        $this->circuit_breaker_open_until = $bot_data['circuit_breaker_open_until'] ?? 0;
     }
 
     /**
@@ -170,9 +183,14 @@ class TelegramAPI
 
                 // Increment failure count for circuit breaker
                 $this->failure_count++;
-                if ($this->failure_count >= $this->max_failures) {
-                    $this->circuit_breaker_open_until = time() + $this->reset_timeout;
-                    $this->logger->critical("Circuit breaker terbuka untuk bot ID {$this->bot_id} karena {$this->max_failures} kegagalan berurutan. Akan terbuka kembali pada " . date('Y-m-d H:i:s', $this->circuit_breaker_open_until));
+                if ($this->failure_count >= self::MAX_FAILURES) {
+                    $this->circuit_breaker_open_until = time() + self::RESET_TIMEOUT;
+                    $this->logger->critical("Circuit breaker terbuka untuk bot ID {$this->bot_id} karena " . self::MAX_FAILURES . " kegagalan berurutan. Akan terbuka kembali pada " . date('Y-m-d H:i:s', $this->circuit_breaker_open_until));
+                }
+
+                // Persist circuit breaker state
+                if ($this->botRepo && $this->bot_id) {
+                    $this->botRepo->updateCircuitBreakerState($this->bot_id, $this->failure_count, $this->circuit_breaker_open_until);
                 }
 
                 throw new Exception($errorMessage, $errorCode);
@@ -181,6 +199,11 @@ class TelegramAPI
             // If successful, reset failure count
             $this->failure_count = 0;
             $this->circuit_breaker_open_until = 0;
+
+            // Persist circuit breaker state
+            if ($this->botRepo && $this->bot_id) {
+                $this->botRepo->updateCircuitBreakerState($this->bot_id, $this->failure_count, $this->circuit_breaker_open_until);
+            }
 
             curl_close($ch);
             return $response;
@@ -191,9 +214,14 @@ class TelegramAPI
             }
             // Increment failure count for circuit breaker even on general exceptions
             $this->failure_count++;
-            if ($this->failure_count >= $this->max_failures) {
-                $this->circuit_breaker_open_until = time() + $this->reset_timeout;
-                $this->logger->critical("Circuit breaker terbuka untuk bot ID {$this->bot_id} karena {$this->max_failures} kegagalan berurutan (exception). Akan terbuka kembali pada " . date('Y-m-d H:i:s', $this->circuit_breaker_open_until));
+            if ($this->failure_count >= self::MAX_FAILURES) {
+                $this->circuit_breaker_open_until = time() + self::RESET_TIMEOUT;
+                $this->logger->critical("Circuit breaker terbuka untuk bot ID {$this->bot_id} karena " . self::MAX_FAILURES . " kegagalan berurutan (exception). Akan terbuka kembali pada " . date('Y-m-d H:i:s', $this->circuit_breaker_open_until));
+            }
+
+            // Persist circuit breaker state
+            if ($this->botRepo && $this->bot_id) {
+                $this->botRepo->updateCircuitBreakerState($this->bot_id, $this->failure_count, $this->circuit_breaker_open_until);
             }
 
             $this->handleApiError($e, $response, $method, $data);

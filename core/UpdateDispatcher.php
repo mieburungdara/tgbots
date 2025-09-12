@@ -69,18 +69,17 @@ class UpdateDispatcher
      * @param array $bot
      * @param array $update
      */
-    public function __construct(PDO $pdo, array $bot, array $update)
+    public function __construct(PDO $pdo, array $bot, array $update, TelegramAPI $telegram_api)
     {
         $this->pdo = $pdo;
         $this->bot = $bot;
         $this->update = $update;
+        $this->telegram_api = $telegram_api;
 
         $bot_repo = new BotRepository($pdo);
         $this->bot_settings = $bot_repo->getBotSettings((int)$bot['id']);
 
         $this->update_handler = new UpdateHandler($this->bot_settings);
-
-        $this->telegram_api = new TelegramAPI($bot['token'], $pdo, (int)$bot['id']);
     }
 
     /**
