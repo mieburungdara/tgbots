@@ -410,8 +410,8 @@ class TelegramAPI
     public function sendMediaGroup($chat_id, string $media): array
     {
         $data = [
-            'chat_id' => $chat_id,
-            'media'] => $media,
+            'chat_id' => $chat_id, // Fix: Removed unexpected token "]"
+            'media' => $media,
         ];
         return $this->apiRequest('sendMediaGroup', $data);
     }
@@ -431,8 +431,8 @@ class TelegramAPI
     public function copyMessage($chat_id, $from_chat_id, int $message_id, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null, bool $protect_content = false): array
     {
         $data = [
-            'chat_id' => $chat_id,
-            'from_chat_id'] => $from_chat_id,
+            'chat_id' => $chat_id, // Fix: Removed unexpected token "]"
+            'from_chat_id' => $from_chat_id,
             'message_id' => $message_id,
         ];
         if ($caption !== null) {
@@ -462,9 +462,9 @@ class TelegramAPI
     public function copyMessages($chat_id, $from_chat_id, string $message_ids, bool $protect_content = false): array
     {
         $data = [
-            'chat_id' => $chat_id,
-            'from_chat_id'] => $from_chat_id,
-            'message_ids'] => $message_ids,
+            'chat_id' => $chat_id, // Fix: Removed unexpected token "]"
+            'from_chat_id' => $from_chat_id, // Fix: Removed unexpected token "]"
+            'message_ids' => $message_ids,
         ];
         if ($protect_content) {
             $data['protect_content'] = true;
@@ -483,7 +483,7 @@ class TelegramAPI
     public function answerCallbackQuery(string $callback_query_id, ?string $text = null, bool $show_alert = false): array
     {
         $data = [
-            'callback_query_id'] => $callback_query_id,
+            'callback_query_id' => $callback_query_id, // Fix: Removed unexpected token "]"
         ];
         if ($text) {
             $data['text'] = $text;
@@ -542,7 +542,7 @@ class TelegramAPI
      */
     public function sendAudio($chat_id, string $audio, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
     {
-        $data = ['chat_id' => $chat_id, 'audio'] => $audio];
+        $data = ['chat_id' => $chat_id, 'audio' => $audio]; // Fix: Removed unexpected token "]"
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
         if ($reply_markup) $data['reply_markup'] = $reply_markup;
@@ -561,7 +561,7 @@ class TelegramAPI
      */
     public function sendDocument($chat_id, string $document, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
     {
-        $data = ['chat_id' => $chat_id, 'document'] => $document];
+        $data = ['chat_id' => $chat_id, 'document' => $document]; // Fix: Removed unexpected token "]"
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
         if ($reply_markup) $data['reply_markup'] = $reply_markup;
@@ -580,7 +580,7 @@ class TelegramAPI
      */
     public function sendAnimation($chat_id, string $animation, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
     {
-        $data = ['chat_id' => $chat_id, 'animation'] => $animation];
+        $data = ['chat_id' => $chat_id, 'animation' => $animation]; // Fix: Removed unexpected token "]"
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
         if ($reply_markup) $data['reply_markup'] = $reply_markup;
@@ -599,7 +599,7 @@ class TelegramAPI
      */
     public function sendVoice($chat_id, string $voice, ?string $caption = null, ?string $parse_mode = 'Markdown', ?string $reply_markup = null): array
     {
-        $data = ['chat_id' => $chat_id, 'voice'] => $voice];
+        $data = ['chat_id' => $chat_id, 'voice' => $voice]; // Fix: Removed unexpected token "]"
         if ($caption) $data['caption'] = $caption;
         if ($parse_mode) $data['parse_mode'] = $parse_mode;
         if ($reply_markup) $data['reply_markup'] = $reply_markup;
@@ -645,7 +645,7 @@ class TelegramAPI
      */
     public function setMyCommands(array $commands): array
     {
-        return $this->apiRequest('setMyCommands', ['commands'] => json_encode($commands)]);
+        return $this->apiRequest('setMyCommands', ['commands' => json_encode($commands)]); // Fix: Removed unexpected token "]"
     }
 
     /**
@@ -735,8 +735,8 @@ class TelegramAPI
     public function answerInlineQuery(string $inline_query_id, array $results): array
     {
         $data = [
-            'inline_query_id'] => $inline_query_id,
-            'results'] => json_encode($results),
+            'inline_query_id' => $inline_query_id, // Fix: Removed unexpected token "]"
+            'results' => json_encode($results),
         ];
         return $this->apiRequest('answerInlineQuery', $data);
     }
