@@ -1,0 +1,13 @@
+{
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-09-12",
+      "changes": {
+        "Fitur": [
+          "Menambahkan tampilan log mentah (raw) di halaman Public Error Log, dengan kemampuan untuk beralih antara tampilan mentah dan ter-parse."
+        ]
+      }
+    }
+  ]
+}

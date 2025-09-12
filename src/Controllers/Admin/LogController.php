@@ -179,20 +179,29 @@ class LogController extends BaseController {
         try {
             $logFilePath = $this->getPublicLogFilePath();
             $errorMessage = null;
-            $parsedLogs = [];
-
             $logContent = $this->readPublicLogFile($logFilePath, $logger, $errorMessage);
 
+            $isRawView = isset($_GET['raw']) && $_GET['raw'] === 'true';
+
+            $viewData = [
+                'page_title' => 'Public Error Log Viewer',
+                'error_message' => $errorMessage,
+                'parsed_logs' => [],
+                'raw_log_content' => null,
+            ];
+
             if ($logContent !== false) {
-                $parsedLogs = $this->parseLogContent($logContent, $logger);
-                $this->sortParsedLogs($parsedLogs);
+                if ($isRawView) {
+                    $viewData['page_title'] = 'Public Error Log (Raw)';
+                    $viewData['raw_log_content'] = htmlspecialchars($logContent);
+                } else {
+                    $viewData['parsed_logs'] = $this->parseLogContent($logContent, $logger);
+                    $this->sortParsedLogs($viewData['parsed_logs']);
+                }
             }
 
-            $this->view('admin/logs/public_error', [
-                'page_title' => 'Public Error Log Viewer',
-                'parsed_logs' => $parsedLogs,
-                'error_message' => $errorMessage
-            ], 'admin_layout');
+            $this->view('admin/logs/public_error', $viewData, 'admin_layout');
+
         } catch (Exception $e) {
             $logger->error('Error in LogController/publicErrorLog: ' . $e->getMessage());
             $this->view('admin/error', [
@@ -243,7 +252,7 @@ class LogController extends BaseController {
                 continue;
             }
 
-            $regex = '/^\['.([^\]+?)\].*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/';
+            $regex = '/^\['.([^\\\]+?)\].*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/';
             if (preg_match($regex, $line, $matches)) {
                 if ($currentLogEntry !== null) {
                     $parsedLogs[] = $currentLogEntry;
@@ -267,7 +276,7 @@ class LogController extends BaseController {
 
         try {
             $datetimeUtc = new \DateTime($timestampUtcStr, new \DateTimeZone('UTC'));
-            $timezone = new \DateTimeZone('Asia/Singapore'); // Assuming user\\'s timezone is UTC+8
+            $timezone = new \DateTimeZone('Asia/Singapore'); // Assuming user\'s timezone is UTC+8
             $datetimeUtc->setTimezone($timezone);
             $timestampLocalStr = $datetimeUtc->format('d-M-Y H:i:s');
             $sortableTimestamp = $datetimeUtc->getTimestamp();
