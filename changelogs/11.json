@@ -1,0 +1,14 @@
+{
+    "version": "1.0.0",
+    "date": "2025-09-12",
+    "changes": [
+        {
+            "type": "Perbaikan Bug",
+            "description": "Memperbaiki error 'Call to undefined function get_db_connection()' dengan memastikan file database.php dimuat di index.php.",
+            "files_modified": [
+                "public/index.php"
+            ],
+            "related_issues": []
+        }
+    ]
+}
