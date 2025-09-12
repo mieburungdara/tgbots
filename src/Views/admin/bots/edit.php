@@ -33,7 +33,7 @@
     <button class="set-webhook" data-bot-id="<?= $data['bot']['id'] ?>">Set Webhook</button>
     <button class="check-webhook" data-bot-id="<?= $data['bot']['id'] ?>">Check Webhook</button>
     <button class="delete-webhook" data-bot-id="<?= $data['bot']['id'] ?>">Delete Webhook</button>
-    <button class="test-webhook" data-telegram-bot-id="<?= htmlspecialchars($data['bot']['id']) ?>" title="Kirim POST request kosong untuk memeriksa apakah webhook merespons 200 OK">Test Webhook</button>
+    <button class="test-webhook" data-bot-id="<?= htmlspecialchars($data['bot']['id']) ?>" title="Kirim POST request kosong untuk memeriksa apakah webhook merespons 200 OK">Test Webhook</button>
     <button class="get-me" data-bot-id="<?= $data['bot']['id'] ?>">Get Me & Update</button>
 </div>
 
