@@ -7,12 +7,42 @@
       "name": "routes",
       "type": "array",
       "description": "Array asosiatif yang menyimpan semua rute yang terdaftar. Strukturnya biasanya `['GET' => ['/uri' => 'Controller@method'], 'POST' => [...]]`."
+    },
+    {
+      "name": "logger",
+      "type": "TGBot\\Logger",
+      "description": "Instance logger untuk mencatat aktivitas dan error."
     }
   ],
   "methods": [
     {
       "name": "__construct",
-      "description": "Constructor. Menginisialisasi properti `routes` sebagai array kosong."
+      "description": "Constructor. Menginisialisasi properti `routes` dan menerima instance `Logger`.",
+      "parameters": [
+        {
+          "name": "logger",
+          "type": "TGBot\\Logger",
+          "description": "Instance logger."
+        }
+      ]
+    },
+    {
+      "name": "load",
+      "description": "Memuat file yang berisi definisi rute dan mengembalikan instance Router.",
+      "parameters": [
+        {
+          "name": "file",
+          "type": "string",
+          "description": "Path ke file rute."
+        },
+        {
+          "name": "logger",
+          "type": "TGBot\\Logger",
+          "description": "Instance logger."
+        }
+      ],
+      "returns": "static",
+      "return_description": "Instance Router."
     },
     {
       "name": "get",
@@ -47,29 +77,52 @@
       ]
     },
     {
-      "name": "dispatch",
-      "description": "Mencari dan mengeksekusi controller yang cocok dengan URI dan metode permintaan saat ini. Jika tidak ada rute yang cocok, ia akan menampilkan halaman 404.",
+      "name": "direct",
+      "description": "Mengarahkan permintaan ke controller dan aksi yang sesuai. Jika tidak ada rute yang cocok, ia akan menampilkan halaman 404.",
       "parameters": [
         {
           "name": "uri",
           "type": "string",
-          "description": "URI dari permintaan HTTP yang masuk."
+          "description": "URI yang diminta."
         },
         {
-          "name": "method",
+          "name": "requestType",
           "type": "string",
-          "description": "Metode HTTP dari permintaan (misalnya, 'GET', 'POST')."
+          "description": "Tipe permintaan (GET atau POST)."
         }
       ],
       "logic_flow": [
         "1. Memeriksa apakah URI dan metode ada di dalam array `routes`.",
         "2. Jika cocok, mem-parse string 'Controller@method'.",
-        "3. Membuat instance dari kelas Controller yang sesuai.",
+        "3. Membuat instance dari kelas Controller yang sesuai, dengan injeksi dependensi jika diperlukan.",
         "4. Memanggil metode yang ditentukan pada instance tersebut.",
         "5. Jika tidak cocok, memanggil controller 404."
       ],
       "returns": "mixed",
       "return_description": "Hasil dari pemanggilan metode controller, yang biasanya adalah output HTML halaman."
+    },
+    {
+      "name": "callAction",
+      "description": "Memanggil aksi pada controller, menangani injeksi dependensi untuk konstruktor controller.",
+      "parameters": [
+        {
+          "name": "controller",
+          "type": "string",
+          "description": "Nama kelas controller."
+        },
+        {
+          "name": "action",
+          "type": "string",
+          "description": "Nama metode (aksi) yang akan dipanggil."
+        },
+        {
+          "name": "params",
+          "type": "array",
+          "description": "Parameter yang diekstrak dari URI."
+        }
+      ],
+      "returns": "mixed",
+      "return_description": "Hasil dari pemanggilan metode controller."
     }
   ]
 }

@@ -1,0 +1,43 @@
+{
+  "class_name": "WebhookController",
+  "summary": "Menangani permintaan webhook yang masuk dari Telegram.",
+  "description": "Controller ini bertanggung jawab untuk menerima dan memproses update dari Telegram melalui webhook. Ini termasuk validasi bot, penyimpanan data mentah, dan pendelegasian update ke `UpdateDispatcher`.",
+  "properties": [
+    {
+      "name": "logger",
+      "type": "TGBot\\Logger",
+      "description": "Instance logger untuk mencatat aktivitas dan error."
+    }
+  ],
+  "methods": [
+    {
+      "name": "__construct",
+      "description": "Constructor. Menginisialisasi controller dengan instance `Logger`.",
+      "parameters": [
+        {
+          "name": "logger",
+          "type": "TGBot\\Logger",
+          "description": "Instance logger."
+        }
+      ]
+    },
+    {
+      "name": "handle",
+      "description": "Menangani permintaan webhook yang masuk.",
+      "parameters": [
+        {
+          "name": "params",
+          "type": "array",
+          "description": "Parameter dari router, contoh: ['id' => 123]."
+        }
+      ],
+      "logic_flow": [
+        "1. Menerima data JSON yang dikirim oleh Telegram.",
+        "2. Memvalidasi ID bot dari URL.",
+        "3. Menyimpan data mentah dari Telegram ke dalam database.",
+        "4. Memanggil UpdateDispatcher untuk menganalisis dan meneruskan update ke handler yang sesuai."
+      ],
+      "returns": "void"
+    }
+  ]
+}

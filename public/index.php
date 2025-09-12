@@ -23,7 +23,7 @@ $uri = trim($uri, '/');
 // Load the routes and direct the request
 try {
     // The routes file will be loaded by the router and will have access to the $router instance.
-    Router::load(__DIR__ . '/../routes.php')
+    Router::load(__DIR__ . '/../routes.php', $logger)
         ->direct($uri, $_SERVER['REQUEST_METHOD']);
 } catch (Exception $e) {
     // Log the error using the centralized logger

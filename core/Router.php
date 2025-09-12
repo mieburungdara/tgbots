@@ -13,6 +13,8 @@ namespace TGBot;
 
 use Exception;
 use ReflectionMethod;
+use ReflectionClass;
+use TGBot\Logger;
 
 /**
  * Class Router
@@ -24,6 +26,13 @@ use ReflectionMethod;
  */
 class Router
 {
+    protected Logger $logger;
+
+    public function __construct(Logger $logger)
+    {
+        $this->logger = $logger;
+    }
+
     /**
      * @var array
      */
@@ -40,9 +49,9 @@ class Router
      * @param string $file Path ke file rute.
      * @return static
      */
-    public static function load(string $file): static
+    public static function load(string $file, Logger $logger): static
     {
-        $router = new static;
+        $router = new static($logger);
         require $file;
         return $router;
     }
@@ -147,13 +156,30 @@ class Router
         require_once $controllerFile;
 
         // Construct the fully qualified class name
-        $className = "TGBot\\Controllers\\" . str_replace('/', '\\', $controller);
+        $className = "TGBot\Controllers\" . str_replace('/', '\\', $controller);
 
         if (!class_exists($className)) {
             throw new Exception("Controller class not found: {$className}");
         }
 
-        $controllerInstance = new $className;
+        $reflectionClass = new ReflectionClass($className);
+        $constructor = $reflectionClass->getConstructor();
+
+        $controllerInstance = null;
+        if ($constructor && $constructor->getNumberOfParameters() > 0) {
+            $paramsToPass = [];
+            foreach ($constructor->getParameters() as $param) {
+                if ($param->getType() && $param->getType()->getName() === Logger::class) {
+                    $paramsToPass[] = $this->logger;
+                } else {
+                    // Handle other dependencies if necessary, or throw an error if not supported
+                    throw new Exception("Unsupported constructor parameter type for controller {$className}: {$param->getName()}");
+                }
+            }
+            $controllerInstance = $reflectionClass->newInstanceArgs($paramsToPass);
+        } else {
+            $controllerInstance = new $className;
+        }
 
         if (!method_exists($controllerInstance, $action)) {
             throw new Exception("{$className} does not respond to the {$action} action.");
