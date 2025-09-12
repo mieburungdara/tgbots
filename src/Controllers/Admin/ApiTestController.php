@@ -11,14 +11,13 @@
 
 namespace TGBot\Controllers\Admin;
 
-
-
 use Exception;
 use PDO;
 use ReflectionClass;
 use ReflectionMethod;
 use TGBot\Controllers\BaseController;
 use TGBot\TelegramAPI;
+use TGBot\Logger;
 
 /**
  * Class ApiTestController
@@ -42,7 +41,8 @@ class ApiTestController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $this->pdo = \get_db_connection();
+        $logger = new Logger('ApiTestController');
+        $this->pdo = \get_db_connection($logger);
     }
 
     /**

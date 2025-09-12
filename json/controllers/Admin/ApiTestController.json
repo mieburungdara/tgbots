@@ -1,0 +1,31 @@
+{
+  "name": "ApiTestController",
+  "description": "Kontroler ini menyediakan antarmuka untuk menguji metode-metode dari Telegram Bot API secara langsung dari panel admin. Ini memungkinkan developer untuk memanggil metode API, melihat riwayat panggilan, dan mendapatkan daftar metode yang tersedia.",
+  "methods": {
+    "__construct": {
+      "description": "Menginisialisasi koneksi database. Memperbaiki kesalahan ArgumentCountError dengan menyediakan instance Logger ke fungsi get_db_connection().",
+      "changes": [
+        "Menambahkan `use TGBot\\Logger;`.",
+        "Membuat instance `Logger` baru dan meneruskannya ke `get_db_connection()`."
+      ]
+    },
+    "index": {
+      "description": "Menampilkan halaman utama untuk pengujian API. Metode ini mengambil daftar bot dari database untuk ditampilkan di dropdown, lalu merender halaman utama antarmuka pengujian API."
+    },
+    "handle": {
+      "description": "Menangani permintaan AJAX untuk metode API. Bertindak sebagai router untuk berbagai aksi seperti mengambil metode, menjalankan metode, dan melihat riwayat."
+    },
+    "getMethods": {
+      "description": "Mengambil daftar metode publik dari kelas TelegramAPI menggunakan Reflection. Metode ini secara dinamis memeriksa kelas TelegramAPI dan mengekstrak semua metode publik, mengabaikan metode internal, dan mengembalikan daftar tersebut sebagai JSON untuk digunakan di frontend."
+    },
+    "runMethod": {
+      "description": "Menjalankan metode API Telegram yang dipilih. Metode ini menerima data dari frontend, memvalidasi input, mengambil token bot, dan memanggil metode yang sesuai di kelas TelegramAPI dengan parameter yang diberikan."
+    },
+    "getHistory": {
+      "description": "Mengambil riwayat permintaan API untuk bot tertentu. Metode ini mengambil data dari tabel `api_request_logs` dengan paginasi dan mengembalikannya sebagai JSON."
+    },
+    "getSpecialParamStructures": {
+      "description": "Helper untuk mendefinisikan struktur parameter kustom. Metode ini menyediakan metadata untuk parameter API yang memerlukan perlakuan khusus di frontend, seperti dropdown untuk `parse_mode` atau input objek untuk `reply_parameters`."
+    }
+  }
+}
