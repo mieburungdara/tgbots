@@ -357,7 +357,7 @@ class LogController extends BaseController
                 continue;
             }
 
-            $regex = '/^\['.(.+?)\]\[.*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/';
+            $regex = '/^\[(.+?)\]\[.*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/';
 
             if (preg_match($regex, $line, $matches)) {
                 if ($currentLogEntry !== null) {
