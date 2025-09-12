@@ -2,10 +2,9 @@
 
 namespace TGBot\Controllers\Admin;
 
-
-
 use Exception;
 use TGBot\Controllers\BaseController;
+use TGBot\Logger; // Add this line
 
 class DashboardController extends BaseController {
 
@@ -13,7 +12,8 @@ class DashboardController extends BaseController {
         try {
             // The BaseController's constructor already handles session start and auth check.
 
-            $pdo = \get_db_connection();
+            $logger = new Logger(); // Instantiate Logger
+            $pdo = \get_db_connection($logger); // Pass logger to get_db_connection()
 
             // The helper function 'get_initials' is loaded via the front controller,
             // so it will be available in the view scope.
