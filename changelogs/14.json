@@ -1,0 +1,34 @@
+{
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "YYYY-MM-DD",
+      "changes": {
+        "Fitur": [
+          "Deskripsi fitur baru yang ditambahkan."
+        ],
+        "Ditambahkan": [
+          "Deskripsi penambahan kecil lainnya."
+        ],
+        "Peningkatan": [
+          "Deskripsi peningkatan pada fungsionalitas yang sudah ada."
+        ],
+        "Diubah": [
+          "Deskripsi perubahan pada fungsionalitas atau perilaku sistem."
+        ],
+        "Diperbaiki": [
+          "Deskripsi perbaikan bug."
+        ],
+        "Keamanan": [
+          "Deskripsi perbaikan yang terkait dengan keamanan."
+        ],
+        "Refactoring": [
+          "Deskripsi refactoring kode yang tidak mengubah fungsionalitas secara eksternal."
+        ],
+        "Dokumentasi": [
+          "Deskripsi perubahan atau penambahan pada dokumentasi."
+        ]
+      }
+    }
+  ]
+}
