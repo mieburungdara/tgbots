@@ -2,6 +2,7 @@
   "flow_name": "/balance",
   "summary": "Menampilkan saldo pengguna saat ini.",
   "description": "Mengambil dan menampilkan saldo finansial pengguna yang tersimpan di database, diformat sebagai mata uang Rupiah.",
+  "notes": "Diperbaiki masalah 'Array to string conversion' pada tampilan admin panel manajemen saldo (src/Views/admin/balance/index.php) dengan mengakses properti 'url' dan 'arrow' dari hasil fungsi `get_sort_link`.",
   "steps": [
     {
       "step_number": 1,

@@ -25,12 +25,12 @@
         <table class="chat-log-table">
             <thead>
                 <tr>
-                    <th><a href="<?= get_sort_link('id', $data['sort_by'], $data['order'], $_GET) ?>">Telegram ID</a></th>
-                    <th><a href="<?= get_sort_link('first_name', $data['sort_by'], $data['order'], $_GET) ?>">Nama</a></th>
-                    <th><a href="<?= get_sort_link('username', $data['sort_by'], $data['order'], $_GET) ?>">Username</a></th>
-                    <th class="sortable"><a href="<?= get_sort_link('balance', $data['sort_by'], $data['order'], $_GET) ?>">Saldo Saat Ini</a></th>
-                    <th class="sortable"><a href="<?= get_sort_link('total_income', $data['sort_by'], $data['order'], $_GET) ?>">Total Pemasukan</a></th>
-                    <th class="sortable"><a href="<?= get_sort_link('total_spending', $data['sort_by'], $data['order'], $_GET) ?>">Total Pengeluaran</a></th>
+                    <th><a href="<?= get_sort_link('id', $data['sort_by'], $data['order'], $_GET)['url'] ?>">Telegram ID<?= get_sort_link('id', $data['sort_by'], $data['order'], $_GET)['arrow'] ?></a></th>
+                    <th><a href="<?= get_sort_link('first_name', $data['sort_by'], $data['order'], $_GET)['url'] ?>">Nama<?= get_sort_link('first_name', $data['sort_by'], $data['order'], $_GET)['arrow'] ?></a></th>
+                    <th><a href="<?= get_sort_link('username', $data['sort_by'], $data['order'], $_GET)['url'] ?>">Username<?= get_sort_link('username', $data['sort_by'], $data['order'], $_GET)['arrow'] ?></a></th>
+                    <th class="sortable"><a href="<?= get_sort_link('balance', $data['sort_by'], $data['order'], $_GET)['url'] ?>">Saldo Saat Ini<?= get_sort_link('balance', $data['sort_by'], $data['order'], $_GET)['arrow'] ?></a></th>
+                    <th class="sortable"><a href="<?= get_sort_link('total_income', $data['sort_by'], $data['order'], $_GET)['url'] ?>">Total Pemasukan<?= get_sort_link('total_income', $data['sort_by'], $data['order'], $_GET)['arrow'] ?></a></th>
+                    <th class="sortable"><a href="<?= get_sort_link('total_spending', $data['sort_by'], $data['order'], $_GET)['url'] ?>">Total Pengeluaran<?= get_sort_link('total_spending', $data['sort_by'], $data['order'], $_GET)['arrow'] ?></a></th>
                     <th>Aksi</th>
                 </tr>
             </thead>
