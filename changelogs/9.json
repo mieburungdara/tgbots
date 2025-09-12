@@ -1,0 +1,18 @@
+{
+  "changelog": [
+    {
+      "version": "N/A",
+      "date": "2025-09-12",
+      "changes": {
+        "Diubah": [
+          "Menghapus konfigurasi PestPHP dari composer.json.",
+          "PHPUnit dipertahankan sebagai dependensi karena diperlukan oleh Codeception dan paket lainnya.",
+          "Menghapus file tes PestPHP: tests/WebhookController.php."
+        ],
+        "Dokumentasi": [
+          "Memperbarui dokumentasi terkait perubahan framework pengujian."
+        ]
+      }
+    }
+  ]
+}
