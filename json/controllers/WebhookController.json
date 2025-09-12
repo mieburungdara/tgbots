@@ -11,17 +11,6 @@
   ],
   "methods": [
     {
-      "name": "__construct",
-      "description": "Constructor. Menginisialisasi controller dengan instance `Logger`.",
-      "parameters": [
-        {
-          "name": "logger",
-          "type": "TGBot\\Logger",
-          "description": "Instance logger."
-        }
-      ]
-    },
-    {
       "name": "handle",
       "description": "Menangani permintaan webhook yang masuk.",
       "parameters": [

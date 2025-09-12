@@ -55,11 +55,7 @@ class WebhookController
             App::getLogger()->info("Bot ditemukan: " . json_encode($bot));
 
             
-            $api_for_globals = $this->getTelegramAPI($bot['token'], $pdo, $bot_id, App::getLogger());
-            $bot_info = $api_for_globals->getMe();
-            if ($bot_info['ok'] && !defined('BOT_USERNAME')) {
-                @define('BOT_USERNAME', $bot_info['result']['username'] ?? '');
-            }
+            
 
             $update_json = $this->getPhpInput();
             if (empty($update_json)) {
