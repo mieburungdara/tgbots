@@ -116,9 +116,8 @@ class WebhookController
     protected function getDbConnection()
     {
         // This method is intended to be mocked in tests.
-        // In production, it would typically return a real PDO connection.
-        // For now, we'll return null to avoid calling a global function that might not be defined.
-        return null; // Or a default PDO instance if applicable
+        // In production, it should return a real PDO connection.
+        return \get_db_connection();
     }
 
     protected function getBotRepository($pdo)

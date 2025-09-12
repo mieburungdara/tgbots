@@ -1,0 +1,13 @@
+{
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-09-12",
+      "changes": {
+        "Diperbaiki": [
+          "Mengatasi 500 Internal Server Error pada webhook dengan memastikan WebhookController menggunakan koneksi database yang sebenarnya, bukan null."
+        ]
+      }
+    }
+  ]
+}
