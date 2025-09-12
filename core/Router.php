@@ -44,8 +44,6 @@ class Router
     /**
      * Memuat file yang berisi definisi rute.
      *
-     * @purpose Fungsi statis untuk memuat file yang berisi definisi rute (dalam kasus ini, `routes.php`).
-     *
      * @param string $file Path ke file rute.
      * @return static
      */
@@ -57,11 +55,7 @@ class Router
     }
 
     /**
-     * Mendaftarkan sebuah rute baru yang hanya merespons metode HTTP GET.
-     *
-     * @param string $uri Pola URI yang akan dicocokkan.
-     * @param string $controller Nama controller dan metode yang akan menangani rute ini (format: 'Controller@method').
-     * @return void
+     * Mendaftarkan rute GET.
      */
     public function get(string $uri, string $controller): void
     {
@@ -69,11 +63,7 @@ class Router
     }
 
     /**
-     * Mendaftarkan sebuah rute baru yang hanya merespons metode HTTP POST.
-     *
-     * @param string $uri Pola URI yang akan dicocokkan.
-     * @param string $controller Nama controller dan metode yang akan menangani rute ini (format: 'Controller@method').
-     * @return void
+     * Mendaftarkan rute POST.
      */
     public function post(string $uri, string $controller): void
     {
@@ -82,20 +72,12 @@ class Router
 
     /**
      * Mengarahkan permintaan ke controller dan aksi yang sesuai.
-     *
-     * @purpose Fungsi utama yang mengambil URI dan tipe permintaan (GET/POST), mencocokkannya 
-     * dengan rute yang terdaftar, dan memanggil metode controller yang sesuai. Jika tidak 
-     * ada rute yang cocok, ia akan menampilkan halaman 404 (Tidak Ditemukan).
-     *
-     * @param string $uri URI yang diminta.
-     * @param string $requestType Tipe permintaan (GET atau POST).
-     * @return mixed
      */
     public function direct(string $uri, string $requestType)
     {
         $uri = trim($uri, '/');
 
-        // Fix #2: Handle unregistered HTTP methods
+        // Jika metode HTTP tidak didukung
         if (!isset($this->routes[$requestType])) {
             http_response_code(404);
             require __DIR__ . '/../src/Views/404.php';
@@ -103,8 +85,8 @@ class Router
         }
 
         foreach ($this->routes[$requestType] as $route => $controller) {
-            // Fix #3: Allow numbers in placeholder names
-            $routeRegex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?<${1}>[^/]+)', $route);
+            // Allow numbers in placeholder names
+            $routeRegex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?<$1>[^/]+)', $route);
             $routeRegex = '#^' . $routeRegex . '$#';
 
             if (preg_match($routeRegex, $uri, $matches)) {
@@ -114,7 +96,7 @@ class Router
                     $parts = explode('@', $controller);
 
                     if (count($parts) !== 2 || empty(trim($parts[0])) || empty(trim($parts[1]))) {
-                        throw new Exception("Format controller tidak valid pada definisi rute: '{$controller}'. Diharapkan format 'Controller@action' dengan bagian controller dan action yang tidak kosong.");
+                        throw new Exception("Format controller tidak valid pada definisi rute: '{$controller}'. Diharapkan format 'Controller@action'.");
                     }
 
                     return $this->callAction($parts[0], $parts[1], $params);
@@ -134,20 +116,11 @@ class Router
 
     /**
      * Memanggil aksi pada controller.
-     *
-     * @purpose Fungsi internal yang dipanggil oleh `direct()`. Tugasnya adalah membuat instance 
-     * dari kelas controller yang benar dan memanggil metode (aksi) yang ditentukan, sambil 
-     * meneruskan parameter dari URL jika ada.
-     *
-     * @param string $controller Nama kelas controller.
-     * @param string $action Nama metode (aksi) yang akan dipanggil.
-     * @param array $params Parameter yang diekstrak dari URI.
-     * @return mixed
-     * @throws Exception
      */
     protected function callAction(string $controller, string $action, array $params = [])
     {
-        $controllerFile = __DIR__ . "/../src/Controllers/{$controller}.php";
+        // Path file controller
+        $controllerFile = __DIR__ . "/../src/Controllers/" . str_replace('\\', '/', $controller) . ".php";
 
         if (!file_exists($controllerFile)) {
             throw new Exception("Controller file not found: {$controllerFile}");
@@ -155,8 +128,8 @@ class Router
 
         require_once $controllerFile;
 
-        // Construct the fully qualified class name
-        $className = "TGBot\Controllers\" . str_replace('/', '\\', $controller);
+        // Fully qualified class name
+        $className = "TGBot\\Controllers\\" . str_replace('/', '\\', $controller);
 
         if (!class_exists($className)) {
             throw new Exception("Controller class not found: {$className}");
@@ -172,7 +145,6 @@ class Router
                 if ($param->getType() && $param->getType()->getName() === Logger::class) {
                     $paramsToPass[] = $this->logger;
                 } else {
-                    // Handle other dependencies if necessary, or throw an error if not supported
                     throw new Exception("Unsupported constructor parameter type for controller {$className}: {$param->getName()}");
                 }
             }
@@ -185,7 +157,7 @@ class Router
             throw new Exception("{$className} does not respond to the {$action} action.");
         }
 
-        // Fix #1: Use Reflection to call method correctly based on its signature
+        // Reflection untuk handle parameter action
         $reflection = new ReflectionMethod($controllerInstance, $action);
         if ($reflection->getNumberOfParameters() === 0) {
             return $controllerInstance->$action();
