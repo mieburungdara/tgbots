@@ -152,3 +152,5 @@ class LoginController extends AppController
             header("Location: /member/login");
             exit();
         }
+    }
+}
