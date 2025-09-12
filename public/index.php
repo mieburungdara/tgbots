@@ -3,7 +3,7 @@
 use TGBot\Router;
 
 // Bootstrap the application
-require_once __DIR__ . '/../core/autoloader.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
 // Get the request URI
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);

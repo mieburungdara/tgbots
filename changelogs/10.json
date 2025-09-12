@@ -1,0 +1,20 @@
+{
+  "changelog": [
+    {
+      "version": "N/A",
+      "date": "2025-09-12",
+      "changes": {
+        "Diubah": [
+          "Mengganti autoloader kustom dengan autoloader Composer untuk manajemen dependensi yang lebih baik.",
+          "Menghapus file core/autoloader.php."
+        ],
+        "Diperbaiki": [
+          "Memperbaiki error 'Interface \"Psr\\Log\\LoggerInterface\" not found' dengan memastikan autoloader Composer dimuat dengan benar."
+        ],
+        "Dokumentasi": [
+          "Memperbarui dokumentasi App.json untuk mencerminkan penggunaan autoloader Composer."
+        ]
+      }
+    }
+  ]
+}
