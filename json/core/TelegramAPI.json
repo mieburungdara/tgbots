@@ -1,7 +1,7 @@
 {
   "class_name": "TelegramAPI",
   "summary": "Kelas pembungkus (wrapper) untuk semua interaksi dengan Telegram Bot API.",
-  "description": "Kelas ini menyediakan serangkaian metode yang menyederhanakan proses pengiriman permintaan ke endpoint Telegram Bot API. Setiap metode merepresentasikan sebuah aksi spesifik, seperti mengirim pesan atau mengedit pesan. Kelas ini juga menangani logging error API ke database.",
+  "description": "Kelas ini menyediakan serangkaian metode yang menyederhanakan proses pengiriman permintaan ke endpoint Telegram Bot API. Setiap metode merepresentasikan sebuah aksi spesifik, seperti mengirim pesan atau mengedit pesan. Kelas ini juga menangani logging error API ke database dan sekarang menyertakan mekanisme percobaan ulang otomatis untuk kesalahan rate limiting (HTTP 429).",
   "methods": [
     {
       "name": "__construct",

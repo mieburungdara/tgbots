@@ -88,10 +88,13 @@ class TelegramAPI
      * @param array $data
      * @return array
      */
-    protected function apiRequest(string $method, array $data = []): array
+    protected function apiRequest(string $method, array $data = [], int $retries = 0): array
     {
         $ch = null;
         $response = null;
+        $max_retries = 3; // Maksimal percobaan ulang
+        $initial_retry_delay = 1; // Detik
+
         try {
             $url = $this->api_url . $this->token . '/' . $method;
 
@@ -121,6 +124,20 @@ class TelegramAPI
             if ($http_code !== 200 || (isset($response['ok']) && $response['ok'] === false)) {
                 $errorMessage = $response['description'] ?? 'Unknown Telegram API error';
                 $errorCode = $response['error_code'] ?? $http_code;
+
+                // Handle rate limiting (HTTP 429) with retry mechanism
+                if ($errorCode === 429 && $retries < $max_retries) {
+                    $retryAfter = 0;
+                    if (preg_match('/retry after (\d+)/i', $errorMessage, $matches)) {
+                        $retryAfter = (int)$matches[1];
+                    }
+                    $delay = $retryAfter > 0 ? $retryAfter : ($initial_retry_delay * pow(2, $retries));
+                    $this->logger->warning("Rate limit hit. Retrying in {$delay} seconds (attempt " . ($retries + 1) . "/{$max_retries}). Method: {$method}");
+                    sleep($delay);
+                    curl_close($ch); // Close current cURL handle before retrying
+                    return $this->apiRequest($method, $data, $retries + 1); // Recursive call with incremented retries
+                }
+
                 throw new Exception($errorMessage, $errorCode);
             }
 
@@ -216,7 +233,7 @@ class TelegramAPI
     {
         // Karakter yang perlu di-escape untuk Markdown lama
         $escape_chars = '_*`[';
-        return preg_replace('/([' . preg_quote($escape_chars, '/') . '])/', '\$1', $text);
+        return preg_replace('/([' . preg_quote($escape_chars, '/') . '])/', '\\$1', $text);
     }
 
     /**
