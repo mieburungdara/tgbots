@@ -1,0 +1,13 @@
+{
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-09-12",
+      "changes": {
+        "Diperbaiki": [
+          "Mengganti nama rute API dari 'check-webhook' menjadi 'test-webhook' untuk konsistensi dan mengatasi error 404."
+        ]
+      }
+    }
+  ]
+}
