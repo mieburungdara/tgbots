@@ -78,7 +78,7 @@ class WebhookController
                 $this->terminate();
             }
 
-            $dispatcher = $this->getUpdateDispatcher($pdo, $bot, $update, App::getLogger());
+            $dispatcher = $this->getUpdateDispatcher($pdo, $bot, $update);
             $dispatcher->dispatch();
 
             $this->setHttpResponseCode(200);
@@ -129,8 +129,8 @@ class WebhookController
         return new TelegramAPI($token, $pdo, $botId, $logger);
     }
 
-    protected function getUpdateDispatcher($pdo, $bot, $update, $logger)
+    protected function getUpdateDispatcher($pdo, $bot, $update)
     {
-        return new UpdateDispatcher($pdo, $bot, $update, $logger);
+        return new UpdateDispatcher($pdo, $bot, $update);
     }
 }
