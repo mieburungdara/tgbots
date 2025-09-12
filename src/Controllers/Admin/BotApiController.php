@@ -24,10 +24,10 @@ class BotApiController extends BaseApiController
             $result = $telegram->setWebhook($webhook_url);
             $this->jsonResponse($result);
         } catch (BotNotFoundException $e) {
-            $this->jsonResponse(['error' => $e->getMessage()], 404);
+            $this->jsonResponse(array('error' => $e->getMessage()), 404);
         } catch (Exception $e) {
             App::getLogger()->error('Error in BotApiController/setWebhook: ' . $e->getMessage());
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
+            $this->jsonResponse(array('error' => 'An internal error occurred.'), 500);
         }
     }
 
@@ -46,10 +46,10 @@ class BotApiController extends BaseApiController
             $result = $telegram->getWebhookInfo();
             $this->jsonResponse($result);
         } catch (BotNotFoundException $e) {
-            $this->jsonResponse(['error' => $e->getMessage()], 404);
+            $this->jsonResponse(array('error' => $e->getMessage()), 404);
         } catch (Exception $e) {
             App::getLogger()->error('Error in BotApiController/getWebhookInfo: ' . $e->getMessage());
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
+            $this->jsonResponse(array('error' => 'An internal error occurred.'), 500);
         }
     }
 
@@ -68,10 +68,10 @@ class BotApiController extends BaseApiController
             $result = $telegram->deleteWebhook();
             $this->jsonResponse($result);
         } catch (BotNotFoundException $e) {
-            $this->jsonResponse(['error' => $e->getMessage()], 404);
+            $this->jsonResponse(array('error' => $e->getMessage()), 404);
         } catch (Exception $e) {
             App::getLogger()->error('Error in BotApiController/deleteWebhook: ' . $e->getMessage());
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
+            $this->jsonResponse(array('error' => 'An internal error occurred.'), 500);
         }
     }
 
@@ -91,12 +91,12 @@ class BotApiController extends BaseApiController
             $bot_info = $telegram->getMe();
 
             if (!isset($bot_info['ok']) || !$bot_info['ok']) {
-                $this->jsonResponse(['error' => "Gagal mendapatkan info dari Telegram: " . (isset($bot_info['description']) ? $bot_info['description'] : 'Error')], 500);
+                $this->jsonResponse(array('error' => "Gagal mendapatkan info dari Telegram: " . (isset($bot_info['description']) ? $bot_info['description'] : 'Error')), 500);
             }
 
             $bot_result = $bot_info['result'];
             if ($bot_result['id'] != $bot_id) {
-                $this->jsonResponse(['error' => "Token tidak cocok dengan ID bot."], 400);
+                $this->jsonResponse(array('error' => "Token tidak cocok dengan ID bot."), 400);
             }
 
             $first_name = $bot_result['first_name'];
@@ -104,17 +104,17 @@ class BotApiController extends BaseApiController
 
             $pdo = \get_db_connection();
             $stmt_update = $pdo->prepare("UPDATE bots SET first_name = ?, username = ? WHERE id = ?");
-            $stmt_update->execute([$first_name, $username, $bot_id]);
+            $stmt_update->execute(array($first_name, $username, $bot_id));
 
-            $this->jsonResponse([
+            $this->jsonResponse(array(
                 'success' => true,
-                'data' => ['first_name' => $first_name, 'username' => $username]
-            ]);
+                'data' => array('first_name' => $first_name, 'username' => $username)
+            ));
         } catch (BotNotFoundException $e) {
-            $this->jsonResponse(['error' => $e->getMessage()], 404);
+            $this->jsonResponse(array('error' => $e->getMessage()), 404);
         } catch (Exception $e) {
             App::getLogger()->error('Error in BotApiController/getMe: ' . $e->getMessage());
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
+            $this->jsonResponse(array('error' => 'An internal error occurred.'), 500);
         }
     }
 
@@ -139,15 +139,15 @@ class BotApiController extends BaseApiController
             $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
 
-            $this->jsonResponse([
+            $this->jsonResponse(array(
                 'status_code' => $http_code,
                 'body' => $response_body
-            ]);
+            ));
         } catch (BotNotFoundException $e) {
-            $this->jsonResponse(['error' => $e->getMessage()], 404);
+            $this->jsonResponse(array('error' => $e->getMessage()), 404);
         } catch (Exception $e) {
             App::getLogger()->error('Error in BotApiController/testWebhook: ' . $e->getMessage());
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
+            $this->jsonResponse(array('error' => 'An internal error occurred.'), 500);
         }
     }
 
