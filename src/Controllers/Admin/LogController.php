@@ -281,16 +281,25 @@ class LogController extends BaseController
         try {
             $logFilePath = $this->getPublicLogFilePath();
             $errorMessage = null;
-            $logContent = $this->readPublicLogFile($logFilePath, $errorMessage);
+            $logContent = $this->readPublicLogFile($logFilePath, $logger, $errorMessage);
+
+            $isRawView = isset($_GET['raw']) && $_GET['raw'] === 'true';
 
             $viewData = [
                 'page_title'      => 'Public Error Log Viewer',
                 'error_message'   => $errorMessage,
+                'parsed_logs'     => [],
                 'raw_log_content' => null,
             ];
 
             if ($logContent !== false) {
-                $viewData['raw_log_content'] = htmlspecialchars($logContent);
+                if ($isRawView) {
+                    $viewData['page_title'] = 'Public Error Log (Raw)';
+                    $viewData['raw_log_content'] = htmlspecialchars($logContent);
+                } else {
+                    $viewData['parsed_logs'] = $this->parseLogContent($logContent, $logger);
+                    $this->sortParsedLogs($viewData['parsed_logs']);
+                }
             }
 
             $this->view('admin/logs/public_error', $viewData, 'admin_layout');
@@ -313,9 +322,8 @@ class LogController extends BaseController
         return __DIR__ . '/../../../public/error_log.txt';
     }
 
-    private function readPublicLogFile(string $logFilePath, ?string &$errorMessage): string|false
+    private function readPublicLogFile(string $logFilePath, Logger $logger, ?string &$errorMessage): string|false
     {
-        $logger = App::getLogger();
         if (!file_exists($logFilePath)) {
             $errorMessage = "File log tidak ditemukan: " . htmlspecialchars($logFilePath);
             $logger->warning('Public error log file not found: ' . $logFilePath);
@@ -340,6 +348,83 @@ class LogController extends BaseController
         return $logContent;
     }
 
+    private function parseLogContent(string $logContent, Logger $logger): array
+    {
+        $lines = explode("\n", $logContent);
+        $parsedLogs = [];
+        $currentLogEntry = null;
+
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (empty($line)) {
+                continue;
+            }
+
+            $regex = '/^\[(.+?)\]\[.*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/';
+
+            if (preg_match($regex, $line, $matches)) {
+                if ($currentLogEntry !== null) {
+                    $parsedLogs[] = $currentLogEntry;
+                }
+
+                $currentLogEntry = $this->createNewLogEntry($matches, $logger);
+            } else {
+                $this->appendToCurrentLogEntry($line, $currentLogEntry, $parsedLogs);
+            }
+        }
+
+        if ($currentLogEntry !== null) {
+            $parsedLogs[] = $currentLogEntry;
+        }
+
+        return $parsedLogs;
+    }
+
+    private function createNewLogEntry(array $matches, Logger $logger): array
+    {
+        [, $timestampUtcStr, $level, $message] = $matches;
+
+        try {
+            $datetimeUtc = new \DateTime($timestampUtcStr, new \DateTimeZone('UTC'));
+            $timezone = new \DateTimeZone('Asia/Singapore'); // Assuming user's timezone is UTC+8
+            $datetimeUtc->setTimezone($timezone);
+
+            $timestampLocalStr = $datetimeUtc->format('d-M-Y H:i:s');
+            $sortableTimestamp = $datetimeUtc->getTimestamp();
+        } catch (Exception $e) {
+            $logger->error('Error converting timestamp: ' . $e->getMessage());
+            $timestampLocalStr = $timestampUtcStr . ' (Error TZ)';
+            $sortableTimestamp = 0;
+        }
+
+        return [
+            'timestamp'          => $timestampLocalStr,
+            'level'              => $level,
+            'message'            => $message,
+            'sortable_timestamp' => $sortableTimestamp,
+        ];
+    }
+
+    private function appendToCurrentLogEntry(string $line, ?array &$currentLogEntry, array &$parsedLogs): void
+    {
+        if ($currentLogEntry !== null) {
+            $currentLogEntry['message'] .= "\n" . $line;
+        } else {
+            $parsedLogs[] = [
+                'timestamp'          => 'N/A',
+                'level'              => 'UNKNOWN',
+                'message'            => $line,
+                'sortable_timestamp' => 0,
+            ];
+        }
+    }
+
+    private function sortParsedLogs(array &$parsedLogs): void
+    {
+        usort($parsedLogs, function ($a, $b) {
+            return $b['sortable_timestamp'] <=> $a['sortable_timestamp'];
+        });
+    }
 
     public function clearPublicErrorLog(): void
     {
