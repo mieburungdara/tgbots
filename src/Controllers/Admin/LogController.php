@@ -197,7 +197,7 @@ class LogController extends BaseController {
 
                         // Regex to identify the start of a new log entry
                         // Example: [06-Sep-2025 08:51:22 UTC] PHP Fatal error: ...
-                                                if (preg_match('/^\['.([^\\]+?)\].*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/', $line, $matches)) {
+                        if (preg_match('/^\['.([^\\]+?)\].*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/', $line, $matches)) {
                             // If there's a previous entry being built, save it
                             if ($current_log_entry !== null) {
                                 $parsed_logs[] = $current_log_entry;

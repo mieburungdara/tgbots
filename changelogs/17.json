@@ -1,0 +1,13 @@
+{
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-09-12",
+      "changes": {
+        "Diperbaiki": [
+          "Memperbaiki kesalahan sintaks pada regex di LogController yang menyebabkan error parse."
+        ]
+      }
+    }
+  ]
+}
