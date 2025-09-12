@@ -1,0 +1,14 @@
+{
+    "version": "1.0.0",
+    "date": "2025-09-12",
+    "changes": [
+        {
+            "type": "Perbaikan Bug",
+            "description": "Memperbaiki error 'Undefined constant DB_HOST' dengan memastikan file config.php dimuat di index.php sebelum database.php.",
+            "files_modified": [
+                "public/index.php"
+            ],
+            "related_issues": []
+        }
+    ]
+}

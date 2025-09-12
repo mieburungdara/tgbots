@@ -4,6 +4,7 @@ use TGBot\Router;
 
 // Bootstrap the application
 require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../config.php'; // Include configuration file
 require_once __DIR__ . '/../core/database.php'; // Include database connection functions
 
 // Get the request URI
