@@ -84,7 +84,7 @@ function format_currency($number, string $currency = 'Rp'): string {
  * @param string $current_sort_by Kolom yang saat ini digunakan untuk mengurutkan.
  * @param string $current_order Arah urutan saat ini ('asc' atau 'desc').
  * @param array $existing_params Parameter GET yang sudah ada.
- * @return string URL lengkap untuk tautan pengurutan.
+ * @return array URL dan panah untuk tautan pengurutan.
  */
 function get_sort_link(string $column, string $current_sort_by, string $current_order, array $existing_params = []): array {
     $new_order = ($column === $current_sort_by && $current_order === 'asc') ? 'desc' : 'asc';
@@ -226,4 +226,15 @@ function redirect(string $path): void
 {
     header("Location: " . $path);
     exit();
+}
+
+/**
+ * Logs a message using the global logger instance.
+ *
+ * @param string $message The message to log.
+ * @param string $level The log level (e.g., 'info', 'error', 'warning').
+ */
+function app_log(string $message, string $level = 'info', array $context = [])
+{
+    \TGBot\App::getLogger()->log($level, $message, $context);
 }

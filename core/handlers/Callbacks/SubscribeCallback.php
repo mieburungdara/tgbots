@@ -13,6 +13,7 @@ class SubscribeCallback implements CallbackCommandInterface
 {
     public function execute(App $app, array $callback_query, string $seller_id): void
     {
+        $seller_id = (int)$seller_id;
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
         $subscription_repo = new SubscriptionRepository($app->pdo);
         $sale_repo = new SaleRepository($app->pdo);

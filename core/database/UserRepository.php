@@ -73,7 +73,7 @@ class UserRepository
         }
 
         // Periksa dan berikan peran super admin jika belum ada.
-        $is_super_admin = defined('SUPER_ADMIN_TELEGRAM_ID') && !empty(SUPER_ADMIN_TELEGRAM_ID) && (string)$telegram_user_id === (string)SUPER_ADMIN_TELEGRAM_ID;
+        $is_super_admin = defined('SUPER_ADMIN_TELEGRAM_ID') && SUPER_ADMIN_TELEGRAM_ID !== '' && (string)$telegram_user_id === (string)SUPER_ADMIN_TELEGRAM_ID;
         if ($is_super_admin) {
             $latest_user_data = $this->findUserByTelegramId($telegram_user_id);
             if (($latest_user_data['role'] ?? null) !== 'Admin') {

@@ -110,7 +110,7 @@ class LoginController extends AppController
                 exit();
             }
 
-            $pdo = \get_db_connection($this->logger);
+            $pdo = \get_db_connection();
 
             // Check if token is valid and not used
             $stmt = $pdo->prepare(

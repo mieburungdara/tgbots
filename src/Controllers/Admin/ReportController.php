@@ -1,36 +1,34 @@
 <?php
 
-namespace App\Controllers\Admin;
+namespace TGBot\Controllers\Admin;
 
-
-use App\Models\Repositories\ReportRepository;
+use TGBot\Controllers\BaseController;
 use Exception;
 
-class ReportController extends AdminBaseController
+class ReportController extends BaseController
 {
-    private $reportRepo;
-
-    public function __construct()
-    {
-        parent::__construct();
-        $this->reportRepo = new ReportRepository($this->getDB());
-    }
-
     public function financial()
     {
         try {
-            $this->render('admin/reports/financial', [
-                'title' => 'Laporan Keuangan',
-                'summary' => $this->reportRepo->getSummary(),
-                'dailyRevenue' => $this->reportRepo->getDailyRevenueLast30Days(),
-                'monthlyRevenue' => $this->reportRepo->getMonthlyRevenueThisYear(),
-            ]);
+            // $pdo = \get_db_connection();
+            // $reportRepo = new \TGBot\Database\ReportRepository($pdo);
+
+            $this->view('admin/reports/financial', [
+                'page_title' => 'Laporan Keuangan',
+                // 'summary' => $reportRepo->getSummary(),
+                // 'dailyRevenue' => $reportRepo->getDailyRevenueLast30Days(),
+                // 'monthlyRevenue' => $reportRepo->getMonthlyRevenueThisYear(),
+                'summary' => [],
+                'dailyRevenue' => [],
+                'monthlyRevenue' => [],
+                'error' => 'ReportRepository belum diimplementasikan.'
+            ], 'admin_layout');
         } catch (Exception $e) {
             \app_log('Error fetching financial report: ' . $e->getMessage(), 'error');
-            $this->render('admin/reports/financial', [
-                'title' => 'Laporan Keuangan',
+            $this->view('admin/reports/financial', [
+                'page_title' => 'Laporan Keuangan',
                 'error' => 'Gagal memuat laporan keuangan. Silakan periksa log untuk detailnya.'
-            ]);
+            ], 'admin_layout');
         }
     }
 }

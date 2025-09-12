@@ -68,22 +68,7 @@ class StartCommand implements CommandInterface
             } else {
                 $app->telegram_api->sendMessage($app->chat_id, $response_text, 'HTML', json_encode($keyboard));
             }
-            return;
-
-            $keyboard_buttons = [[['text' => 'Lihat Selengkapnya 📂', 'callback_data' => "view_page_{$public_id}_0"]]];
-            $sales_channels = $feature_channel_repo->findAllByOwnerAndFeature($telegram_user_id, 'sell');
-            if (!empty($sales_channels)) {
-                $keyboard_buttons[0][] = ['text' => '📢 Post ke Channel', 'callback_data' => "post_channel_{$public_id}"];
-            }
-            $keyboard = ['inline_keyboard' => $keyboard_buttons];
-
-            $thumbnail = $package_repo->getThumbnailFile($package_id);
-
-            if ($thumbnail && !empty($thumbnail['storage_channel_id']) && !empty($thumbnail['storage_message_id'])) {
-                $app->telegram_api->copyMessage($app->chat_id, $thumbnail['storage_channel_id'], $thumbnail['storage_message_id'], $response_text, 'Markdown', json_encode($keyboard));
-            } else {
-                $app->telegram_api->sendMessage($app->chat_id, $response_text, 'Markdown', json_encode($keyboard));
-            }
+            
             return;
         }
 

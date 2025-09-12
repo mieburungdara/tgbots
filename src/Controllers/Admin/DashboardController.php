@@ -13,7 +13,7 @@ class DashboardController extends BaseController {
             // The BaseController's constructor already handles session start and auth check.
 
             $logger = new Logger(); // Instantiate Logger
-            $pdo = \get_db_connection($logger); // Pass logger to get_db_connection()
+            $pdo = \get_db_connection(); // Pass logger to get_db_connection()
 
             // The helper function 'get_initials' is loaded via the front controller,
             // so it will be available in the view scope.

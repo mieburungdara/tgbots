@@ -86,7 +86,7 @@ class BuyCallback implements CallbackCommandInterface
         $subscription_repo->createSubscription($app->user['id'], $package['id'], $endDate->format('Y-m-d H:i:s'));
         
         // We still create a sale record for financial tracking
-        $sale_repo->createSale($package['id'], $package['seller_user_id'], $app->user['id'], $package['monthly_price']);
+        $sale_repo->createSale($package['id'], $package['seller_user_id'], $app->user['id'], $app->user['id'], $package['monthly_price']);
 
         // Kirim notifikasi ke penjual
         $price_formatted = "Rp " . number_format($package['monthly_price'], 0, ',', '.');

@@ -38,9 +38,9 @@ class MediaFileRepository
      * Save a new media file.
      *
      * @param array $params
-     * @return string
+     * @return int
      */
-    public function saveMediaFile(array $params): string
+    public function saveMediaFile(array $params): int
     {
         $sql = "INSERT INTO media_files (type, file_size, width, height, duration, mime_type, file_name, caption, caption_entities, user_id, chat_id, message_id, media_group_id, has_spoiler, storage_channel_id, storage_message_id)
                 VALUES (:type, :file_size, :width, :height, :duration, :mime_type, :file_name, :caption, :caption_entities, :user_id, :chat_id, :message_id, :media_group_id, :has_spoiler, :storage_channel_id, :storage_message_id)";
@@ -65,7 +65,7 @@ class MediaFileRepository
             ':storage_message_id' => $params['storage_message_id'] ?? null
         ]);
 
-        return $this->pdo->lastInsertId();
+        return (int)$this->pdo->lastInsertId();
     }
 
     /**

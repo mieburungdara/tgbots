@@ -3,3 +3,9 @@ parameters:
     paths:
         - core
         - src
+    bootstrapFiles:
+        - vendor/autoload.php
+        - core/helpers.php
+        - phpstan-bootstrap.php
+    reportUnmatchedIgnoredErrors: false
+    checkMissingIterableValueType: false

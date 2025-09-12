@@ -30,7 +30,7 @@ class TransactionController extends MemberBaseController
     public function purchased(): void
     {
         try {
-            $pdo = \get_db_connection($this->logger);
+            $pdo = \get_db_connection();
             $saleRepo = new SaleRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
@@ -57,7 +57,7 @@ class TransactionController extends MemberBaseController
     public function sold(): void
     {
         try {
-            $pdo = \get_db_connection($this->logger);
+            $pdo = \get_db_connection();
             $packageRepo = new MediaPackageRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 
@@ -92,7 +92,7 @@ class TransactionController extends MemberBaseController
             exit();
         }
 
-        $pdo = \get_db_connection($this->logger);
+        $pdo = \get_db_connection();
         $packageRepo = new MediaPackageRepository($pdo);
         $user_id = $_SESSION['member_user_id'];
         $package_id_to_delete = filter_input(INPUT_POST, 'package_id', FILTER_VALIDATE_INT);

@@ -13,7 +13,7 @@ class DebugFeedController extends BaseController
     {
         try {
             $logger = new Logger();
-            $pdo = \get_db_connection($logger);
+            $pdo = \get_db_connection();
             $raw_update_repo = new RawUpdateRepository($pdo);
 
             // Pagination Logic

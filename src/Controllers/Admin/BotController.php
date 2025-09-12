@@ -11,11 +11,10 @@
 
 namespace TGBot\Controllers\Admin;
 
-
-
 use Exception;
 use PDO;
 use TGBot\Controllers\BaseController;
+use TGBot\Exceptions\BotNotFoundException;
 use TGBot\TelegramAPI;
 
 /**
@@ -71,8 +70,8 @@ class BotController extends BaseController
             $pdo = \get_db_connection();
             $bots = $pdo->query("SELECT id, first_name, username, created_at, assigned_feature FROM bots ORDER BY created_at DESC")->fetchAll();
 
-            $error = $_SESSION['flash_error'] ?? null;
-            $success = $_SESSION['flash_success'] ?? null;
+            $error = isset($_SESSION['flash_error']) ? $_SESSION['flash_error'] : null;
+            $success = isset($_SESSION['flash_success']) ? $_SESSION['flash_success'] : null;
 
             // Unset flash messages so they don't show again
             unset($_SESSION['flash_error']);
@@ -124,7 +123,7 @@ class BotController extends BaseController
                 if (isset($bot_info['ok']) && $bot_info['ok'] === true) {
                     $bot_result = $bot_info['result'];
                     $first_name = $bot_result['first_name'];
-                    $username = $bot_result['username'] ?? null;
+                    $username = isset($bot_result['username']) ? $bot_result['username'] : null;
                     $bot_id = $bot_result['id'];
 
                     $stmt_check_token = $pdo->prepare("SELECT id FROM bots WHERE token = ?");
@@ -145,7 +144,7 @@ class BotController extends BaseController
                     $success = "Bot '{$first_name}' (@{$username}) berhasil ditambahkan!";
 
                 } else {
-                    throw new Exception("Token tidak valid atau gagal menghubungi API Telegram. " . ($bot_info['description'] ?? ''));
+                    throw new Exception("Token tidak valid atau gagal menghubungi API Telegram. " . (isset($bot_info['description']) ? $bot_info['description'] : ''));
                 }
             } catch (Exception $e) {
                 if ($e->getCode() == 23000) {
@@ -198,13 +197,13 @@ class BotController extends BaseController
             $bot_settings_raw = $stmt_settings->fetchAll(PDO::FETCH_KEY_PAIR);
 
             $settings = [
-                'save_text_messages'    => $bot_settings_raw['save_text_messages'] ?? '1',
-                'save_media_messages'   => $bot_settings_raw['save_media_messages'] ?? '1',
-                'save_callback_queries' => $bot_settings_raw['save_callback_queries'] ?? '0',
-                'save_edited_messages'  => $bot_settings_raw['save_edited_messages'] ?? '0',
+                'save_text_messages'    => isset($bot_settings_raw['save_text_messages']) ? $bot_settings_raw['save_text_messages'] : '1',
+                'save_media_messages'   => isset($bot_settings_raw['save_media_messages']) ? $bot_settings_raw['save_media_messages'] : '1',
+                'save_callback_queries' => isset($bot_settings_raw['save_callback_queries']) ? $bot_settings_raw['save_callback_queries'] : '0',
+                'save_edited_messages'  => isset($bot_settings_raw['save_edited_messages']) ? $bot_settings_raw['save_edited_messages'] : '0',
             ];
 
-            $status_message = $_SESSION['flash_status'] ?? null;
+            $status_message = isset($_SESSION['flash_status']) ? $_SESSION['flash_status'] : null;
             unset($_SESSION['flash_status']);
 
             $this->view('admin/bots/edit', [
@@ -238,8 +237,8 @@ class BotController extends BaseController
         }
 
         $bot_id = (int)$_POST['bot_id'];
-        $submitted_settings = $_POST['settings'] ?? [];
-        $assigned_feature = $_POST['assigned_feature'] ?? null;
+        $submitted_settings = isset($_POST['settings']) ? $_POST['settings'] : [];
+        $assigned_feature = isset($_POST['assigned_feature']) ? $_POST['assigned_feature'] : null;
         $pdo = \get_db_connection();
 
         // Define all possible settings to ensure we process all of them
@@ -283,6 +282,9 @@ class BotController extends BaseController
 
             $pdo->commit();
             $status_message = "Pengaturan berhasil disimpan.";
+        } catch (BotNotFoundException $e) {
+            $pdo->rollBack();
+            $status_message = "Gagal menyimpan pengaturan: " . $e->getMessage();
         } catch (Exception $e) {
             $pdo->rollBack();
             $status_message = "Gagal menyimpan pengaturan: " . $e->getMessage();
@@ -292,186 +294,5 @@ class BotController extends BaseController
 
         header("Location: /xoradmin/bots/edit?id=" . $bot_id);
         exit();
-    }
-
-    /**
-     * Mendapatkan instance bot dan API.
-     *
-     * @param int $bot_id
-     * @return TelegramAPI
-     */
-    private function getBotAndApi(int $bot_id): TelegramAPI
-    {
-        try {
-            if (!$bot_id) {
-                $this->jsonResponse(['error' => 'ID Bot tidak valid.'], 400);
-            }
-            $pdo = \get_db_connection();
-            $stmt = $pdo->prepare("SELECT token FROM bots WHERE id = ?");
-            $stmt->execute([$bot_id]);
-            $bot = $stmt->fetch();
-            if (!$bot) {
-                $this->jsonResponse(['error' => "Bot dengan ID {$bot_id} tidak ditemukan."], 404);
-            }
-            return new TelegramAPI($bot['token']);
-        } catch (Exception $e) {
-            \app_log('Error in BotController/getBotAndApi: ' . $e->getMessage(), 'error');
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
-        }
-    }
-
-    /**
-     * Mengatur webhook untuk bot.
-     *
-     * @purpose Fungsi API untuk mengatur webhook bot langsung dari panel admin.
-     *
-     * @return void
-     */
-    public function setWebhook(): void
-    {
-        try {
-            $bot_id = (int)($_POST['bot_id'] ?? 0);
-            $telegram = $this->getBotAndApi($bot_id);
-            $webhook_url = $this->generateWebhookUrl($bot_id);
-            $result = $telegram->setWebhook($webhook_url);
-            $this->jsonResponse($result);
-        } catch (Exception $e) {
-            \app_log('Error in BotController/setWebhook: ' . $e->getMessage(), 'error');
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
-        }
-    }
-
-    /**
-     * Mendapatkan info webhook untuk bot.
-     *
-     * @purpose Fungsi API untuk memeriksa status webhook bot langsung dari panel admin.
-     *
-     * @return void
-     */
-    public function getWebhookInfo(): void
-    {
-        try {
-            $bot_id = (int)($_POST['bot_id'] ?? 0);
-            $telegram = $this->getBotAndApi($bot_id);
-            $result = $telegram->getWebhookInfo();
-            $this->jsonResponse($result);
-        } catch (Exception $e) {
-            \app_log('Error in BotController/getWebhookInfo: ' . $e->getMessage(), 'error');
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
-        }
-    }
-
-    /**
-     * Menghapus webhook untuk bot.
-     *
-     * @purpose Fungsi API untuk menghapus webhook bot langsung dari panel admin.
-     *
-     * @return void
-     */
-    public function deleteWebhook(): void
-    {
-        try {
-            $bot_id = (int)($_POST['bot_id'] ?? 0);
-            $telegram = $this->getBotAndApi($bot_id);
-            $result = $telegram->deleteWebhook();
-            $this->jsonResponse($result);
-        } catch (Exception $e) {
-            \app_log('Error in BotController/deleteWebhook: ' . $e->getMessage(), 'error');
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
-        }
-    }
-
-    /**
-     * Mendapatkan info bot dari Telegram.
-     *
-     * @purpose Menghubungi API Telegram untuk mendapatkan informasi terbaru tentang bot
-     * (nama, username) dan memperbaruinya di database.
-     *
-     * @return void
-     */
-    public function getMe(): void
-    {
-        try {
-            $bot_id = (int)($_POST['bot_id'] ?? 0);
-            $telegram = $this->getBotAndApi($bot_id);
-            $bot_info = $telegram->getMe();
-
-            if (!isset($bot_info['ok']) || !$bot_info['ok']) {
-                $this->jsonResponse(['error' => "Gagal mendapatkan info dari Telegram: " . ($bot_info['description'] ?? 'Error')], 500);
-            }
-
-            $bot_result = $bot_info['result'];
-            if ($bot_result['id'] != $bot_id) {
-                $this->jsonResponse(['error' => "Token tidak cocok dengan ID bot."], 400);
-            }
-
-            $first_name = $bot_result['first_name'];
-            $username = $bot_result['username'] ?? null;
-
-            $pdo = \get_db_connection();
-            $stmt_update = $pdo->prepare("UPDATE bots SET first_name = ?, username = ? WHERE id = ?");
-            $stmt_update->execute([$first_name, $username, $bot_id]);
-
-            $this->jsonResponse([
-                'success' => true,
-                'data' => ['first_name' => $first_name, 'username' => $username]
-            ]);
-        } catch (Exception $e) {
-            \app_log('Error in BotController/getMe: ' . $e->getMessage(), 'error');
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
-        }
-    }
-
-    /**
-     * Menguji webhook untuk bot.
-     *
-     * @return void
-     */
-    public function testWebhook(): void
-    {
-        try {
-            // This is a bit tricky as it's a request from the browser to the server itself.
-            // The original script was making a request to webhook.php. We will do the same.
-            $bot_id = (int)($_POST['bot_id'] ?? 0);
-            if (!$bot_id) {
-                $this->jsonResponse(['error' => 'ID Bot tidak valid.'], 400);
-                return;
-            }
-            $webhook_url = $this->generateWebhookUrl($bot_id);
-
-            // Using cURL to make the request from the server to itself
-            $ch = curl_init($webhook_url);
-            curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(["update_id"=>0, "message"=>["text"=>"/test"]]));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            $response_body = curl_exec($ch);
-            $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
-
-            $this->jsonResponse([
-                'status_code' => $http_code,
-                'body' => $response_body
-            ]);
-        } catch (Exception $e) {
-            \app_log('Error in BotController/testWebhook: ' . $e->getMessage(), 'error');
-            $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
-        }
-    }
-
-    /**
-     * Generates the full webhook URL for a given bot.
-     *
-     * @param int $bot_id The ID of the bot.
-     * @return string The full webhook URL.
-     */
-    private function generateWebhookUrl(int $bot_id): string
-    {
-        $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
-        $domain = $_SERVER['HTTP_HOST'];
-        // Using dirname($_SERVER['SCRIPT_NAME']) is more reliable for finding the application's base path
-        // and avoids the brittle str_replace.
-        $base_path = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
-        return $protocol . $domain . $base_path . '/webhook.php?id=' . $bot_id;
     }
 }

@@ -4,6 +4,7 @@ namespace TGBot\Controllers;
 
 require_once __DIR__ . '/../../core/helpers.php';
 use TGBot\Logger;
+use Exception;
 
 abstract class AppController {
 

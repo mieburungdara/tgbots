@@ -15,7 +15,7 @@ class LogController extends BaseController
     {
         try {
             $logger = new Logger();
-            $pdo = \get_db_connection($logger);
+            $pdo = \get_db_connection();
             $itemsPerPage = 50;
 
             $stmtLevels = $pdo->query("SELECT DISTINCT level FROM app_logs ORDER BY level ASC");
@@ -95,7 +95,7 @@ class LogController extends BaseController
         }
 
         $logger = new Logger();
-        $pdo = \get_db_connection($logger);
+        $pdo = \get_db_connection();
 
         try {
             $pdo->query("TRUNCATE TABLE app_logs");
@@ -113,7 +113,7 @@ class LogController extends BaseController
     {
         try {
             $logger = new Logger();
-            $pdo = \get_db_connection($logger);
+            $pdo = \get_db_connection();
 
             $sql = "
                 SELECT
@@ -174,11 +174,14 @@ class LogController extends BaseController
         }
     }
 
+    /**
+     * @var Logger $logger
+     */
     public function telegram()
     {
         try {
             $logger = new Logger();
-            $pdo = \get_db_connection($logger);
+            $pdo = \get_db_connection();
             $logRepo = new TelegramErrorLogRepository($pdo);
 
             $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
@@ -223,7 +226,7 @@ class LogController extends BaseController
         }
 
         $logger = new Logger();
-        $pdo = \get_db_connection($logger);
+        $pdo = \get_db_connection();
         $logRepo = new TelegramErrorLogRepository($pdo);
 
         $logId = $_POST['id'] ?? null;
@@ -255,7 +258,7 @@ class LogController extends BaseController
         }
 
         $logger = new Logger();
-        $pdo = \get_db_connection($logger);
+        $pdo = \get_db_connection();
         $logRepo = new TelegramErrorLogRepository($pdo);
 
         try {

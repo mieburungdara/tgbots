@@ -30,7 +30,7 @@ class DashboardController extends MemberBaseController
     {
         try {
             // The constructor of MemberBaseController already handles the session check.
-            $pdo = \get_db_connection($this->logger);
+            $pdo = \get_db_connection();
             $analyticsRepo = new AnalyticsRepository($pdo);
             $user_id = $_SESSION['member_user_id'];
 

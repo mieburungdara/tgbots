@@ -142,7 +142,7 @@ class Router
         if ($constructor && $constructor->getNumberOfParameters() > 0) {
             $paramsToPass = [];
             foreach ($constructor->getParameters() as $param) {
-                if ($param->getType() && $param->getType()->getName() === Logger::class) {
+                if ($param->getType() && (string) $param->getType() === Logger::class) {
                     $paramsToPass[] = $this->logger;
                 } else {
                     throw new Exception("Unsupported constructor parameter type for controller {$className}: {$param->getName()}");

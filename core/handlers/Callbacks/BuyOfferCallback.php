@@ -30,7 +30,7 @@ class BuyOfferCallback implements CallbackCommandInterface
             }
 
             // Gunakan metode createSale yang sudah ada dengan harga penawaran
-            $sale_repo->createSale($offer['package_id'], $offer['seller_user_id'], $offer['buyer_user_id'], $offer['offer_price']);
+            $sale_repo->createSale($offer['package_id'], $offer['seller_user_id'], $offer['buyer_user_id'], $offer['buyer_user_id'], $offer['offer_price']);
             $package_repo->markAsSold($offer['package_id']);
 
             // Kirim notifikasi ke penjual

@@ -359,7 +359,7 @@ class MediaPackageRepository
             $stmt_update_seq->execute([$new_sequence, $seller_user_id]);
 
             // 3. Buat ID publik
-            $public_id = $seller_info['public_seller_id'] . '_' . str_pad($new_sequence, 4, '0', STR_PAD_LEFT);
+            $public_id = $seller_info['public_seller_id'] . '_' . str_pad((string) $new_sequence, 4, '0', STR_PAD_LEFT);
 
             // 4. Tentukan status awal berdasarkan jenis post
             $initial_status = ($post_type === 'sell') ? 'available' : 'pending';

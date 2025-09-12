@@ -31,7 +31,7 @@ class AwaitingQuestionState implements StateInterface
             return;
         }
 
-        $seller = $user_repo->findUserById($seller_user_id);
+        $seller = $user_repo->findUserByTelegramId($seller_user_id);
         if (!$seller) {
             $app->telegram_api->sendMessage($app->chat_id, "Error: Penjual tidak ditemukan.");
             $user_repo->setUserState($app->user['id'], null, null);

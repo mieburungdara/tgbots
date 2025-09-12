@@ -19,6 +19,7 @@ class SellConfirmCallback implements CallbackCommandInterface
         $state_context = json_decode($app->user['state_context'] ?? '[]', true);
         $price = $state_context['price'] ?? null;
         $media_messages = $state_context['media_messages'] ?? [];
+        $package_type = $state_context['package_type'] ?? 'one_time';
 
         if (empty($price) || empty($media_messages)) {
             $app->telegram_api->editMessageText($app->chat_id, $callback_query['message']['message_id'], '⚠️ Terjadi kesalahan: Konteks penjualan tidak valid atau kedaluwarsa.');
@@ -31,7 +32,7 @@ class SellConfirmCallback implements CallbackCommandInterface
             $app->pdo->beginTransaction();
 
             $post_repo = new MediaPackageRepository($app->pdo);
-            $package_data = $this->createMediaPackage($app, $media_messages, $price, $post_repo);
+            $package_data = $this->createMediaPackage($app, $media_messages, $price, $post_repo, $package_type);
             $package_id = $package_data['package_id'];
             $public_id = $package_data['public_id'];
 
@@ -65,7 +66,7 @@ class SellConfirmCallback implements CallbackCommandInterface
         }
     }
 
-    private function createMediaPackage(App $app, array $media_messages, int $price, MediaPackageRepository $post_repo): array
+    private function createMediaPackage(App $app, array $media_messages, int $price, MediaPackageRepository $post_repo, string $package_type): array
     {
         // Gunakan media pertama sebagai thumbnail dan untuk deskripsi
         $first_media_context = $media_messages[0];

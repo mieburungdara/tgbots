@@ -47,7 +47,7 @@ class SellCommand implements CommandInterface
 
         // 5. Atur state awal
         $user_repo = new UserRepository($app->pdo, $app->bot['id']);
-        $state_context = ['media_messages' => $initial_media];
+        $state_context = ['media_messages' => $initial_media, 'package_type' => 'one_time'];
         $user_repo->setUserState($app->user['id'], 'selling_process', $state_context);
 
         // 6. Kirim prompt awal
