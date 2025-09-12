@@ -1,0 +1,13 @@
+{
+  "changelog": [
+    {
+      "version": "1.0.0",
+      "date": "2025-09-12",
+      "changes": {
+        "Ditambahkan": [
+          "Menambahkan kembali rute API 'check-webhook' untuk mendukung kedua endpoint (test-webhook dan check-webhook)."
+        ]
+      }
+    }
+  ]
+}
