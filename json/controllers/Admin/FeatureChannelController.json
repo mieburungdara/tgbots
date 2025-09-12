@@ -3,10 +3,10 @@
   "description": "Kontroler ini mengelola konfigurasi channel fitur, memungkinkan admin untuk menambah, mengedit, memperbarui, dan menghapus konfigurasi channel.",
   "methods": {
     "__construct": {
-      "description": "Menginisialisasi koneksi database dan repository terkait. Memperbaiki kesalahan ArgumentCountError dengan menyediakan instance Logger ke fungsi get_db_connection().",
+      "description": "Menginisialisasi koneksi database dan repository terkait. Sekarang menggunakan instansi Logger terpusat dari `TGBot\\App`.",
       "changes": [
-        "Menambahkan `use TGBot\\Logger;`.",
-        "Membuat instance `Logger` baru dan meneruskannya sebagai argumen ke `get_db_connection()`."
+        "Menghapus instansiasi `Logger` lokal.",
+        "Menggunakan `TGBot\\App::getLogger()` untuk mendapatkan instansi logger."
       ]
     },
     "index": {

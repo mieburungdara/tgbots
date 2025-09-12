@@ -1,8 +1,10 @@
 <?php
 
 use TGBot\Logger;
+use TGBot\App;
 
-function get_db_connection(Logger $logger) {
+function get_db_connection() {
+    $logger = App::getLogger();
     // Memerlukan file config yang akan dibuat oleh pengguna dari contoh.
     if (!file_exists(__DIR__ . '/../config.php')) {
         // Berhenti jika file konfigurasi tidak ditemukan.
@@ -39,7 +41,8 @@ function get_db_connection(Logger $logger) {
  * @param PDO $pdo Objek koneksi PDO.
  * @return bool True jika berhasil, false jika gagal.
  */
-function setup_database(PDO $pdo, Logger $logger): bool {
+function setup_database(PDO $pdo): bool {
+    $logger = App::getLogger();
     $sql_file = __DIR__ . '/../setup.sql';
     if (!file_exists($sql_file)) {
         $logger->error("Error: file setup.sql tidak ditemukan.");
@@ -64,7 +67,8 @@ function setup_database(PDO $pdo, Logger $logger): bool {
  * @param PDO $pdo Objek koneksi PDO.
  * @return void
  */
-function ensure_migrations_table_exists(PDO $pdo, Logger $logger): void {
+function ensure_migrations_table_exists(PDO $pdo): void {
+    $logger = App::getLogger();
     try {
         // Query untuk membuat tabel jika belum ada
         $sql = "
@@ -91,7 +95,8 @@ function ensure_migrations_table_exists(PDO $pdo, Logger $logger): void {
  * @return void
  * @throws Exception Jika terjadi error saat proses truncate.
  */
-function clean_transactional_data(PDO $pdo, Logger $logger): void {
+function clean_transactional_data(PDO $pdo): void {
+    $logger = App::getLogger();
     $tables_to_truncate = [
         'sales',
         'media_files',

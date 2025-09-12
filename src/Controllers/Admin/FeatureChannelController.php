@@ -6,7 +6,7 @@ use Exception;
 use TGBot\Controllers\BaseController;
 use TGBot\Database\FeatureChannelRepository;
 use TGBot\Database\BotRepository;
-use TGBot\Logger;
+use TGBot\App;
 
 class FeatureChannelController extends BaseController
 {
@@ -16,8 +16,7 @@ class FeatureChannelController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $logger = new Logger('FeatureChannelController');
-        $pdo = \get_db_connection($logger);
+        $pdo = \get_db_connection();
         $this->featureChannelRepo = new FeatureChannelRepository($pdo);
         $this->botRepo = new BotRepository($pdo);
     }
@@ -36,6 +35,7 @@ class FeatureChannelController extends BaseController
             ], 'admin_layout');
             unset($_SESSION['flash_message']);
         } catch (Exception $e) {
+            App::getLogger()->error('Error in FeatureChannelController/index: ' . $e->getMessage());
             $this->view('admin/error', ['error_message' => $e->getMessage()], 'admin_layout');
         }
     }

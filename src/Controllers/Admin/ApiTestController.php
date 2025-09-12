@@ -17,7 +17,7 @@ use ReflectionClass;
 use ReflectionMethod;
 use TGBot\Controllers\BaseController;
 use TGBot\TelegramAPI;
-use TGBot\Logger;
+use TGBot\App;
 
 /**
  * Class ApiTestController
@@ -41,8 +41,7 @@ class ApiTestController extends BaseController
     public function __construct()
     {
         parent::__construct();
-        $logger = new Logger('ApiTestController');
-        $this->pdo = \get_db_connection($logger);
+        $this->pdo = \get_db_connection();
     }
 
     /**
@@ -63,7 +62,7 @@ class ApiTestController extends BaseController
                 'bots' => $bots
             ], 'admin_layout');
         } catch (Exception $e) {
-            \app_log('Error in ApiTestController/index: ' . $e->getMessage(), 'error');
+            App::getLogger()->error('Error in ApiTestController/index: ' . $e->getMessage());
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the API Test page.'

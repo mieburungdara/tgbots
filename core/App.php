@@ -12,6 +12,7 @@
 namespace TGBot;
 
 use PDO;
+use TGBot\Logger;
 
 /**
  * Class App
@@ -42,6 +43,9 @@ class App
     /** @var int ID obrolan saat ini. */
     public int $chat_id;
 
+    /** @var Logger Instansi logger terpusat. */
+    private static Logger $logger;
+
     /**
      * App constructor.
      *
@@ -69,5 +73,30 @@ class App
         $this->bot_settings = $bot_settings;
         $this->user = $user;
         $this->chat_id = $chat_id;
+    }
+
+    /**
+     * Mengatur instansi logger terpusat.
+     *
+     * @param Logger $logger Instansi logger.
+     * @return void
+     */
+    public static function setLogger(Logger $logger): void
+    {
+        self::$logger = $logger;
+    }
+
+    /**
+     * Mengambil instansi logger terpusat.
+     *
+     * @return Logger Instansi logger.
+     * @throws \Exception Jika logger belum diatur.
+     */
+    public static function getLogger(): Logger
+    {
+        if (!isset(self::$logger)) {
+            throw new \Exception("Logger belum diatur di kelas App.");
+        }
+        return self::$logger;
     }
 }

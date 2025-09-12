@@ -1,7 +1,7 @@
 {
   "class_name": "App",
   "summary": "Wadah dependensi dan service locator utama aplikasi.",
-  "description": "Kelas `App` berfungsi sebagai pusat kontrol aplikasi. Ia memegang konfigurasi, menginisialisasi koneksi database, dan menyediakan akses ke berbagai komponen sistem (seperti data bot, pengguna, dan API Telegram) melalui mekanisme lazy loading untuk efisiensi. Aplikasi ini sekarang sepenuhnya mengandalkan autoloader Composer untuk manajemen dependensi dan pemuatan kelas. PHPStan juga telah diintegrasikan untuk analisis statis kode, memastikan kualitas dan keandalan kode.",
+  "description": "Kelas `App` berfungsi sebagai pusat kontrol aplikasi. Ia memegang konfigurasi, menginisialisasi koneksi database, dan menyediakan akses ke berbagai komponen sistem (seperti data bot, pengguna, dan API Telegram) melalui mekanisme lazy loading untuk efisiensi. Aplikasi ini sekarang sepenuhnya mengandalkan autoloader Composer untuk manajemen dependensi dan pemuatan kelas. PHPStan juga telah diintegrasikan untuk analisis statis kode, memastikan kualitas dan keandalan kode. Kelas ini juga mengelola instansi logger terpusat untuk seluruh aplikasi.",
   "properties": [
     {
       "name": "config",
@@ -48,6 +48,23 @@
       ],
       "returns": "mixed",
       "return_description": "Mengembalikan instance dari komponen yang diminta. Akan melempar Exception jika komponen tidak valid."
+    },
+    {
+      "name": "setLogger",
+      "description": "Mengatur instansi logger terpusat untuk aplikasi. Harus dipanggil sekali di awal bootstrap aplikasi.",
+      "parameters": [
+        {
+          "name": "logger",
+          "type": "TGBot\\Logger",
+          "description": "Instansi logger yang akan digunakan secara terpusat."
+        }
+      ]
+    },
+    {
+      "name": "getLogger",
+      "description": "Mengambil instansi logger terpusat. Akan melempar Exception jika logger belum diatur.",
+      "returns": "TGBot\\Logger",
+      "return_description": "Instansi logger terpusat."
     }
   ]
 }

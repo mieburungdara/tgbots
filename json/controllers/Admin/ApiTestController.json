@@ -3,10 +3,10 @@
   "description": "Kontroler ini menyediakan antarmuka untuk menguji metode-metode dari Telegram Bot API secara langsung dari panel admin. Ini memungkinkan developer untuk memanggil metode API, melihat riwayat panggilan, dan mendapatkan daftar metode yang tersedia.",
   "methods": {
     "__construct": {
-      "description": "Menginisialisasi koneksi database. Memperbaiki kesalahan ArgumentCountError dengan menyediakan instance Logger ke fungsi get_db_connection().",
+      "description": "Menginisialisasi koneksi database. Sekarang menggunakan instansi Logger terpusat dari `TGBot\\App`.",
       "changes": [
-        "Menambahkan `use TGBot\\Logger;`.",
-        "Membuat instance `Logger` baru dan meneruskannya ke `get_db_connection()`."
+        "Menghapus instansiasi `Logger` lokal.",
+        "Menggunakan `TGBot\\App::getLogger()` untuk mendapatkan instansi logger."
       ]
     },
     "index": {

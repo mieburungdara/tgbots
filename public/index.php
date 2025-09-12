@@ -1,11 +1,17 @@
 <?php
 
 use TGBot\Router;
+use TGBot\Logger;
+use TGBot\App;
 
 // Bootstrap the application
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../config.php'; // Include configuration file
 require_once __DIR__ . '/../core/database.php'; // Include database connection functions
+
+// Initialize and set the centralized logger
+$logger = new Logger('app', __DIR__ . '/../logs/app.log');
+App::setLogger($logger);
 
 // Get the request URI
 $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
@@ -20,8 +26,8 @@ try {
     Router::load(__DIR__ . '/../routes.php')
         ->direct($uri, $_SERVER['REQUEST_METHOD']);
 } catch (Exception $e) {
-    // Log the error
-    error_log("Front Controller Exception: " . $e->getMessage());
+    // Log the error using the centralized logger
+    App::getLogger()->critical("Front Controller Exception: " . $e->getMessage());
 
     // Display a generic error page
     http_response_code(500);
