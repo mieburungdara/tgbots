@@ -62,6 +62,7 @@ $router->post('api/xoradmin/media/forward', 'Admin/ForwardManagerController@forw
 $router->post('api/xoradmin/bots/test-webhook', 'Admin/BotApiController@testWebhook');
 $router->post('api/xoradmin/bots/check-webhook', 'Admin/BotApiController@getWebhookInfo');
 $router->post('api/xoradmin/bots/get-me', 'Admin/BotApiController@getMe');
+$router->post('api/xoradmin/bots/delete-webhook', 'Admin/BotApiController@deleteWebhook');
 
 // Balance Page
 $router->get('xoradmin/balance', 'Admin/BalanceController@index');
