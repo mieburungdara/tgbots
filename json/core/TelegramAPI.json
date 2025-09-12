@@ -1,7 +1,29 @@
 {
   "class_name": "TelegramAPI",
   "summary": "Kelas pembungkus (wrapper) untuk semua interaksi dengan Telegram Bot API.",
-  "description": "Kelas ini menyediakan serangkaian metode yang menyederhanakan proses pengiriman permintaan ke endpoint Telegram Bot API. Setiap metode merepresentasikan sebuah aksi spesifik, seperti mengirim pesan atau mengedit pesan. Kelas ini juga menangani logging error API ke database dan sekarang menyertakan mekanisme percobaan ulang otomatis untuk kesalahan rate limiting (HTTP 429).",
+  "description": "Kelas ini menyediakan serangkaian metode yang menyederhanakan proses pengiriman permintaan ke endpoint Telegram Bot API. Setiap metode merepresentasikan sebuah aksi spesifik, seperti mengirim pesan atau mengedit pesan. Kelas ini juga menangani logging error API ke database, menyertakan mekanisme percobaan ulang otomatis untuk kesalahan rate limiting (HTTP 429), dan mengimplementasikan circuit breaker sederhana per-bot untuk mencegah overloading API yang sedang bermasalah.",
+  "properties": [
+    {
+      "name": "failure_count",
+      "type": "int",
+      "description": "Konter kegagalan berurutan untuk circuit breaker."
+    },
+    {
+      "name": "circuit_breaker_open_until",
+      "type": "int",
+      "description": "Waktu (timestamp) kapan circuit breaker akan terbuka kembali."
+    },
+    {
+      "name": "max_failures",
+      "type": "int",
+      "description": "Jumlah kegagalan maksimum sebelum circuit breaker terbuka."
+    },
+    {
+      "name": "reset_timeout",
+      "type": "int",
+      "description": "Durasi (detik) circuit breaker akan tetap terbuka."
+    }
+  ],
   "methods": [
     {
       "name": "__construct",

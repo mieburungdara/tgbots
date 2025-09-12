@@ -60,6 +60,26 @@ class TelegramAPI
     protected Logger $logger;
 
     /**
+     * @var int Konter kegagalan berurutan untuk circuit breaker.
+     */
+    protected int $failure_count = 0;
+
+    /**
+     * @var int Waktu (timestamp) kapan circuit breaker akan terbuka kembali.
+     */
+    protected int $circuit_breaker_open_until = 0;
+
+    /**
+     * @var int Jumlah kegagalan maksimum sebelum circuit breaker terbuka.
+     */
+    protected int $max_failures = 5;
+
+    /**
+     * @var int Durasi (detik) circuit breaker akan tetap terbuka.
+     */
+    protected int $reset_timeout = 300; // 5 menit
+
+    /**
      * TelegramAPI constructor.
      *
      * @param string $token
@@ -90,9 +110,19 @@ class TelegramAPI
      */
     protected function apiRequest(string $method, array $data = [], int $retries = 0): array
     {
+        // Circuit Breaker check
+        if (time() < $this->circuit_breaker_open_until) {
+            $this->logger->warning("Circuit breaker terbuka untuk bot ID {$this->bot_id}. Melewatkan panggilan API untuk metode {$method}.");
+            return [
+                'ok' => false,
+                'error_code' => 503,
+                'description' => 'Circuit breaker terbuka. Coba lagi nanti.',
+            ];
+        }
+
         $ch = null;
         $response = null;
-        $max_retries = 3; // Maksimal percobaan ulang
+        $max_retries = 3; // Maksimal percobaan ulang untuk rate limit
         $initial_retry_delay = 1; // Detik
 
         try {
@@ -138,8 +168,19 @@ class TelegramAPI
                     return $this->apiRequest($method, $data, $retries + 1); // Recursive call with incremented retries
                 }
 
+                // Increment failure count for circuit breaker
+                $this->failure_count++;
+                if ($this->failure_count >= $this->max_failures) {
+                    $this->circuit_breaker_open_until = time() + $this->reset_timeout;
+                    $this->logger->critical("Circuit breaker terbuka untuk bot ID {$this->bot_id} karena {$this->max_failures} kegagalan berurutan. Akan terbuka kembali pada " . date('Y-m-d H:i:s', $this->circuit_breaker_open_until));
+                }
+
                 throw new Exception($errorMessage, $errorCode);
             }
+
+            // If successful, reset failure count
+            $this->failure_count = 0;
+            $this->circuit_breaker_open_until = 0;
 
             curl_close($ch);
             return $response;
@@ -148,6 +189,13 @@ class TelegramAPI
             if (is_resource($ch)) {
                 curl_close($ch);
             }
+            // Increment failure count for circuit breaker even on general exceptions
+            $this->failure_count++;
+            if ($this->failure_count >= $this->max_failures) {
+                $this->circuit_breaker_open_until = time() + $this->reset_timeout;
+                $this->logger->critical("Circuit breaker terbuka untuk bot ID {$this->bot_id} karena {$this->max_failures} kegagalan berurutan (exception). Akan terbuka kembali pada " . date('Y-m-d H:i:s', $this->circuit_breaker_open_until));
+            }
+
             $this->handleApiError($e, $response, $method, $data);
             // Kembalikan array error yang konsisten dengan format respons Telegram
             return [
