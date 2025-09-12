@@ -4,6 +4,7 @@ namespace TGBot\Controllers\Admin;
 
 use TGBot\Exceptions\BotNotFoundException;
 use Exception;
+use TGBot\App;
 
 class BotApiController extends BaseApiController
 {
@@ -25,7 +26,7 @@ class BotApiController extends BaseApiController
         } catch (BotNotFoundException $e) {
             $this->jsonResponse(['error' => $e->getMessage()], 404);
         } catch (Exception $e) {
-            \app_log('Error in BotApiController/setWebhook: ' . $e->getMessage(), 'error');
+            App::getLogger()->error('Error in BotApiController/setWebhook: ' . $e->getMessage());
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }
@@ -47,7 +48,7 @@ class BotApiController extends BaseApiController
         } catch (BotNotFoundException $e) {
             $this->jsonResponse(['error' => $e->getMessage()], 404);
         } catch (Exception $e) {
-            \app_log('Error in BotApiController/getWebhookInfo: ' . $e->getMessage(), 'error');
+            App::getLogger()->error('Error in BotApiController/getWebhookInfo: ' . $e->getMessage());
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }
@@ -69,7 +70,7 @@ class BotApiController extends BaseApiController
         } catch (BotNotFoundException $e) {
             $this->jsonResponse(['error' => $e->getMessage()], 404);
         } catch (Exception $e) {
-            \app_log('Error in BotApiController/deleteWebhook: ' . $e->getMessage(), 'error');
+            App::getLogger()->error('Error in BotApiController/deleteWebhook: ' . $e->getMessage());
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }
@@ -112,7 +113,7 @@ class BotApiController extends BaseApiController
         } catch (BotNotFoundException $e) {
             $this->jsonResponse(['error' => $e->getMessage()], 404);
         } catch (Exception $e) {
-            \app_log('Error in BotApiController/getMe: ' . $e->getMessage(), 'error');
+            App::getLogger()->error('Error in BotApiController/getMe: ' . $e->getMessage());
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }
@@ -131,8 +132,8 @@ class BotApiController extends BaseApiController
 
             $ch = curl_init($webhook_url);
             curl_setopt($ch, CURLOPT_POST, 1);
-            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(["update_id"=>0, "message"=>["text"=>"/test"]]));
-            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(array("update_id"=>0, "message"=>array("text"=>"/test"))));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $response_body = curl_exec($ch);
             $http_code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -145,7 +146,7 @@ class BotApiController extends BaseApiController
         } catch (BotNotFoundException $e) {
             $this->jsonResponse(['error' => $e->getMessage()], 404);
         } catch (Exception $e) {
-            \app_log('Error in BotApiController/testWebhook: ' . $e->getMessage(), 'error');
+            App::getLogger()->error('Error in BotApiController/testWebhook: ' . $e->getMessage());
             $this->jsonResponse(['error' => 'An internal error occurred.'], 500);
         }
     }
