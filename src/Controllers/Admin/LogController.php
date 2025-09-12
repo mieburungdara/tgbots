@@ -215,6 +215,38 @@ class LogController extends BaseController
         }
     }
 
+    public function deleteTelegramLog(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /xoradmin/telegram_logs');
+            exit();
+        }
+
+        $logger = new Logger();
+        $pdo = \get_db_connection($logger);
+        $logRepo = new TelegramErrorLogRepository($pdo);
+
+        $logId = $_POST['id'] ?? null;
+
+        if (!$logId || !is_numeric($logId)) {
+            $_SESSION['flash_message'] = "ID log tidak valid.";
+            header("Location: /xoradmin/telegram_logs");
+            exit;
+        }
+
+        try {
+            $logRepo->delete($logId);
+            $logger->info("Log Telegram dengan ID {$logId} berhasil dihapus oleh admin.");
+            $_SESSION['flash_message'] = "Log Telegram berhasil dihapus.";
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = "Gagal menghapus log Telegram: " . $e->getMessage();
+            $logger->error("Gagal menghapus log Telegram dengan ID {$logId}: " . $e->getMessage());
+        }
+
+        header("Location: /xoradmin/telegram_logs");
+        exit;
+    }
+
     public function publicErrorLog(): void
     {
         $logger = new Logger();
@@ -301,7 +333,7 @@ class LogController extends BaseController
                 continue;
             }
 
-$regex = '/^\[(.+?)\]\[.*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/';
+$regex = '/^\['(.+?)\]\[.*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/';
 
             if (preg_match($regex, $line, $matches)) {
                 if ($currentLogEntry !== null) {

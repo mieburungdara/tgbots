@@ -31,6 +31,17 @@
             "description": "Membersihkan file log kesalahan publik.",
             "parameters": [],
             "returns": "void"
+        },
+        "deleteTelegramLog": {
+            "description": "Menghapus entri log kesalahan Telegram berdasarkan ID.",
+            "parameters": [
+                {
+                    "name": "id",
+                    "type": "int",
+                    "description": "ID dari log Telegram yang akan dihapus."
+                }
+            ],
+            "returns": "void"
         }
     }
 }

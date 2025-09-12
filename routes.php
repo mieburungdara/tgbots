@@ -42,6 +42,7 @@ $router->get('xoradmin/media_logs', 'Admin/LogController@media');
 $router->get('xoradmin/public_error_log', 'Admin/LogController@publicErrorLog');
 $router->post('xoradmin/public_error_log/clear', 'Admin/LogController@clearPublicErrorLog');
 $router->get('xoradmin/telegram_logs', 'Admin/LogController@telegram');
+$router->post('xoradmin/telegram_logs/delete', 'Admin/LogController@deleteTelegramLog');
 
 // API routes for Admin
 $router->post('api/xoradmin/user/roles', 'Admin/UserController@updateRoles');

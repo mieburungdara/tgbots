@@ -26,12 +26,13 @@
                 <th>Status</th>
                 <th>Deskripsi</th>
                 <th>Data Request</th>
+                <th>Aksi</th>
             </tr>
         </thead>
         <tbody>
             <?php if (empty($data['logs'])): ?>
                 <tr>
-                    <td colspan="8" style="text-align: center; padding: 20px;">Tidak ada log kesalahan yang tercatat.</td>
+                    <td colspan="9" style="text-align: center; padding: 20px;">Tidak ada log kesalahan yang tercatat.</td>
                 </tr>
             <?php else: ?>
                 <?php foreach ($data['logs'] as $log): ?>
@@ -50,6 +51,12 @@
                                     <pre><code class="language-json"><?= htmlspecialchars(json_encode(json_decode($log['request_data']), JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)) ?></code></pre>
                                 </div>
                             <?php endif; ?>
+                        </td>
+                        <td>
+                            <form action="/xoradmin/telegram_logs/delete" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus log ini?');">
+                                <input type="hidden" name="id" value="<?= $log['id'] ?>">
+                                <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                            </form>
                         </td>
                     </tr>
                 <?php endforeach; ?>
