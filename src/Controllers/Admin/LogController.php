@@ -65,7 +65,7 @@ class LogController extends BaseController {
                 'message' => $message
             ], 'admin_layout');
         } catch (Exception $e) {
-            \app_log('Error in LogController/app: ' . $e->getMessage(), 'error');
+            $logger->error('Error in LogController/app: ' . $e->getMessage());
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the app logs.'
@@ -83,7 +83,7 @@ class LogController extends BaseController {
         $pdo = \get_db_connection($logger);
         try {
             $pdo->query("TRUNCATE TABLE app_logs");
-            \app_log("Tabel app_logs dibersihkan oleh admin.", 'system');
+            $logger->info("Tabel app_logs dibersihkan oleh admin.");
             $_SESSION['flash_message'] = "Semua log berhasil dibersihkan.";
         } catch (PDOException $e) {
             $_SESSION['flash_message'] = "Gagal membersihkan log: " . $e->getMessage();
@@ -135,7 +135,7 @@ class LogController extends BaseController {
                 'grouped_logs' => $grouped_logs
             ], 'admin_layout');
         } catch (Exception $e) {
-            \app_log('Error in LogController/media: ' . $e->getMessage(), 'error');
+            $logger->error('Error in LogController/media: ' . $e->getMessage());
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the media logs.'
@@ -165,7 +165,7 @@ class LogController extends BaseController {
                 'page' => $page
             ], 'admin_layout');
         } catch (Exception $e) {
-            \app_log('Error in LogController/telegram: ' . $e->getMessage(), 'error');
+            $logger->error('Error in LogController/telegram: ' . $e->getMessage());
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the Telegram error logs.'
@@ -184,7 +184,7 @@ class LogController extends BaseController {
                 $log_content = file_get_contents($log_file_path);
                 if ($log_content === false) {
                     $error_message = "Gagal membaca isi file log: " . htmlspecialchars($log_file_path);
-                    \app_log('Error reading public/error_log.txt: ' . $log_file_path, 'error');
+                    $logger->error('Error reading public/error_log.txt: ' . $log_file_path);
                 } elseif (empty($log_content)) {
                     $error_message = "File log kosong.";
                 } else {
@@ -197,7 +197,7 @@ class LogController extends BaseController {
 
                         // Regex to identify the start of a new log entry
                         // Example: [06-Sep-2025 08:51:22 UTC] PHP Fatal error: ...
-                        if (preg_match('/^\[(.*?)\] (PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/', $line, $matches)) {
+                        if (preg_match('/^\['.(.*?)\].*?(PHP (?:Fatal error|Warning|Parse error|Notice|Deprecated|Strict Standards|Recoverable fatal error|Catchable fatal error)): (.*)$/', $line, $matches)) {
                             // If there's a previous entry being built, save it
                             if ($current_log_entry !== null) {
                                 $parsed_logs[] = $current_log_entry;
@@ -248,10 +248,10 @@ class LogController extends BaseController {
                     usort($parsed_logs, function($a, $b) {
                         return $b['sortable_timestamp'] <=> $a['sortable_timestamp'];
                     });
-                }
+                } 
             } else {
                 $error_message = "File log tidak ditemukan: " . htmlspecialchars($log_file_path);
-                \app_log('Public error log file not found: ' . $log_file_path, 'warning');
+                $logger->warning('Public error log file not found: ' . $log_file_path);
             }
 
             $this->view('admin/logs/public_error', [
@@ -260,7 +260,7 @@ class LogController extends BaseController {
                 'error_message' => $error_message
             ], 'admin_layout');
         } catch (Exception $e) {
-            \app_log('Error in LogController/publicErrorLog: ' . $e->getMessage(), 'error');
+            $logger->error('Error in LogController/publicErrorLog: ' . $e->getMessage());
             $this->view('admin/error', [
                 'page_title' => 'Error',
                 'error_message' => 'An error occurred while loading the public error log.'
@@ -276,18 +276,18 @@ class LogController extends BaseController {
                 // Menghapus isi file dengan menulis string kosong
                 if (file_put_contents($log_file_path, '') !== false) {
                     $_SESSION['flash_message'] = "Log kesalahan publik berhasil dibersihkan.";
-                    \app_log('Log kesalahan publik berhasil dibersihkan oleh admin.', 'system');
+                    $logger->info('Log kesalahan publik berhasil dibersihkan oleh admin.');
                 } else {
                     $_SESSION['flash_message'] = "Gagal membersihkan isi file log kesalahan publik.";
-                    \app_log('Gagal membersihkan isi public/error_log.txt: ' . $log_file_path, 'error');
+                    $logger->error('Gagal membersihkan isi public/error_log.txt: ' . $log_file_path);
                 }
             } else {
                 $_SESSION['flash_message'] = "File log kesalahan publik tidak ditemukan.";
-                \app_log('File log kesalahan publik tidak ditemukan saat mencoba membersihkan: ' . $log_file_path, 'warning');
+                $logger->warning('File log kesalahan publik tidak ditemukan saat mencoba membersihkan: ' . $log_file_path);
             }
         } catch (Exception $e) {
             $_SESSION['flash_message'] = "Terjadi kesalahan saat membersihkan log: " . $e->getMessage();
-            \app_log('Error saat membersihkan log kesalahan publik: ' . $e->getMessage(), 'error');
+            $logger->error('Error saat membersihkan log kesalahan publik: ' . $e->getMessage());
         }
 
         header("Location: /xoradmin/public_error_log");

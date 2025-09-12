@@ -1,0 +1,43 @@
+{
+  "class_name": "LogController",
+  "summary": "Mengelola tampilan dan pembersihan log aplikasi, media, dan Telegram.",
+  "description": "Controller ini bertanggung jawab untuk menampilkan berbagai jenis log yang dihasilkan oleh aplikasi, termasuk log umum, log media, dan log kesalahan Telegram. Ini juga menyediakan fungsionalitas untuk membersihkan log aplikasi dan log kesalahan publik.",
+  "methods": [
+    {
+      "name": "app",
+      "description": "Menampilkan log aplikasi dari database, dengan fitur paginasi dan filter level log.",
+      "parameters": [],
+      "logging_changes": "Mengganti penggunaan fungsi global `app_log()` dengan metode `$logger->error()` dari instance `Logger` untuk pencatatan kesalahan."
+    },
+    {
+      "name": "clearAppLogs",
+      "description": "Membersihkan semua log aplikasi dari database.",
+      "parameters": [],
+      "logging_changes": "Mengganti penggunaan fungsi global `app_log()` dengan metode `$logger->info()` dari instance `Logger` untuk pencatatan informasi sistem."
+    },
+    {
+      "name": "media",
+      "description": "Menampilkan log file media yang diunggah, mengelompokkan berdasarkan `media_group_id`.",
+      "parameters": [],
+      "logging_changes": "Mengganti penggunaan fungsi global `app_log()` dengan metode `$logger->error()` dari instance `Logger` untuk pencatatan kesalahan."
+    },
+    {
+      "name": "telegram",
+      "description": "Menampilkan log kesalahan Telegram dari database.",
+      "parameters": [],
+      "logging_changes": "Mengganti penggunaan fungsi global `app_log()` dengan metode `$logger->error()` dari instance `Logger` untuk pencatatan kesalahan."
+    },
+    {
+      "name": "publicErrorLog",
+      "description": "Menampilkan log kesalahan PHP publik dari file `error_log.txt`, dengan parsing dan pengurutan.",
+      "parameters": [],
+      "logging_changes": "Mengganti penggunaan fungsi global `app_log()` dengan metode `$logger->error()` dan `$logger->warning()` dari instance `Logger` untuk pencatatan kesalahan dan peringatan."
+    },
+    {
+      "name": "clearPublicErrorLog",
+      "description": "Membersihkan log kesalahan PHP publik dari file `error_log.txt`.",
+      "parameters": [],
+      "logging_changes": "Mengganti penggunaan fungsi global `app_log()` dengan metode `$logger->info()`, `$logger->error()`, dan `$logger->warning()` dari instance `Logger` untuk pencatatan informasi, kesalahan, dan peringatan."
+    }
+  ]
+}
