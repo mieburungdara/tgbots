@@ -29,11 +29,11 @@ class WebhookController
     public function handle($params)
     {
         try {
-                        $bot_id = $params['id'] ?? null;
+            $bot_id = $params['id'] ?? null;
             if (!$bot_id || !filter_var($bot_id, FILTER_VALIDATE_INT)) {
                 $this->setHttpResponseCode(400);
                 App::getLogger()->error("Webhook Error: ID bot dari URL tidak valid atau tidak ada.");
-                $this->terminate();
+                return;
             }
             $bot_id = (int)$bot_id;
             App::getLogger()->info("Webhook dipanggil untuk bot ID: {$bot_id}");
@@ -42,7 +42,7 @@ class WebhookController
             if (!$pdo) {
                 App::getLogger()->critical("Webhook Error: Gagal terkoneksi ke database.");
                 $this->setHttpResponseCode(500);
-                $this->terminate();
+                return;
             }
 
             $bot_repo = $this->getBotRepository($pdo);
@@ -50,7 +50,7 @@ class WebhookController
             if (!$bot) {
                 $this->setHttpResponseCode(404);
                 App::getLogger()->error("Webhook Error: Bot dengan ID Telegram {$bot_id} tidak ditemukan.");
-                $this->terminate();
+                return;
             }
             App::getLogger()->info("Bot ditemukan: " . json_encode($bot));
 
@@ -59,7 +59,7 @@ class WebhookController
             $update_json = $this->getPhpInput();
             if (empty($update_json)) {
                 $this->setHttpResponseCode(200);
-                $this->terminate();
+                return;
             }
             App::getLogger()->info("Update mentah diterima: {$update_json}");
 
@@ -70,7 +70,7 @@ class WebhookController
             if (!$update) {
                 App::getLogger()->warning("Webhook Error: Gagal mendekode JSON dari Telegram.");
                 $this->setHttpResponseCode(200);
-                $this->terminate();
+                return;
             }
 
             $dispatcher = $this->getUpdateDispatcher($pdo, $bot, $update, $telegram_api);
@@ -82,9 +82,7 @@ class WebhookController
             $error_message = sprintf("Fatal Webhook Error: %s in %s on line %d", $e->getMessage(), $e->getFile(), $e->getLine());
             App::getLogger()->error($error_message);
             $this->setHttpResponseCode(500);
-            $this->terminate();
         }
-        $this->terminate();
     }
 
     protected function setHttpResponseCode(int $code): void
