@@ -90,7 +90,7 @@
 </div>
 
 <div style="margin-top: 20px;">
-    <form action="/xoradmin/telegram_logs/clear_all" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus SEMUA log Telegram? Tindakan ini tidak dapat dibatalkan!');">
+    <form action="/xoradmin/telegram_logs/clear_all" method="POST" onsubmit="return prompt('Untuk mengkonfirmasi penghapusan SEMUA log Telegram, ketik \'DELETE ALL\' di bawah ini:') === 'DELETE ALL';">
         <button type="submit" class="btn btn-danger">Hapus Semua Log Telegram</button>
     </form>
 </div>
