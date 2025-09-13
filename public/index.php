@@ -29,11 +29,14 @@ require_once __DIR__ . '/../core/database.php'; // Include database connection f
 $logger = LoggerFactory::create('app', __DIR__ . '/../logs/app.log');
 App::setLogger($logger);
 
-// Get the request URI
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+// Get the request URI and remove the base path to isolate the application-specific URI
+$basePath = rtrim(parse_url(BASE_URL, PHP_URL_PATH), '/');
+$requestUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-// This simple logic assumes the app is in the web root.
-// A more robust solution would calculate the base path dynamically.
+$uri = '/'; // Default URI
+if (strpos($requestUri, $basePath) === 0) {
+    $uri = substr($requestUri, strlen($basePath));
+}
 $uri = trim($uri, '/');
 
 // Load the routes and direct the request
