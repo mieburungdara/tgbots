@@ -170,6 +170,7 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
             <div class="sidebar-section">
                 <p class="sidebar-heading collapsible-toggle" data-target="system-debug-collapse">System & Debug</p>
                 <div id="system-debug-collapse" class="collapsible-content">
+                    <a href="/xoradmin/health_check" class="<?= is_active_nav('xoradmin/health_check', $current_path) ? 'active' : '' ?>">Health Check</a>
                     <a href="/xoradmin/logs" class="<?= is_active_nav('xoradmin/logs', $current_path) ? 'active' : '' ?>">App Logs</a>
                     <a href="/xoradmin/telegram_logs" class="<?= is_active_nav('xoradmin/telegram_logs', $current_path) ? 'active' : '' ?>">Telegram Error Logs</a>
                     <a href="/xoradmin/media_logs" class="<?= is_active_nav('xoradmin/media_logs', $current_path) ? 'active' : '' ?>">Media Logs</a>

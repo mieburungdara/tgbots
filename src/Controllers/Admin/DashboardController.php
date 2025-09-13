@@ -99,27 +99,41 @@ class DashboardController extends BaseController {
     {
         try {
             $doctorScriptPath = __DIR__ . '/../../../doctor.php';
-            $output = '<div class="text-red-500">Error: doctor.php script not found.</div>'; // Default error message
+            $results = [];
 
             if (file_exists($doctorScriptPath)) {
-                // Execute the doctor script
-                $raw_output = shell_exec('php ' . escapeshellarg($doctorScriptPath));
+                // Execute the doctor script and get JSON output
+                $json_output = shell_exec('php ' . escapeshellarg($doctorScriptPath) . ' --format=json');
+                $results = json_decode($json_output, true);
 
-                // Strip ANSI color codes for HTML display
-                $clean_output = preg_replace('/\x1b\[[0-9;]*m/', '', $raw_output);
-                $output = htmlspecialchars($clean_output);
+                // Fallback if JSON decoding fails
+                if (json_last_error() !== JSON_ERROR_NONE) {
+                    $results = [
+                        [
+                            'description' => 'Gagal mem-parsing output JSON dari doctor.php',
+                            'status' => 'ERROR',
+                            'message' => json_last_error_msg() . '<br><pre>' . htmlspecialchars($json_output) . '</pre>'
+                        ]
+                    ];
+                }
+            } else {
+                $results[] = [
+                    'description' => 'File doctor.php',
+                    'status' => 'ERROR',
+                    'message' => 'Skrip tidak ditemukan di root proyek.'
+                ];
             }
 
             $this->view('admin/health_check', [
                 'page_title' => 'Pemeriksaan Kesehatan Sistem',
-                'check_output' => $output
+                'results' => $results
             ], 'admin_layout');
 
         } catch (Exception $e) {
             App::getLogger()->error('Error in DashboardController/healthCheck: ' . $e->getMessage());
             $this->view('admin/error', [
                 'page_title' => 'Error',
-                'error_message' => 'An error occurred while running the health check.'
+                'error_message' => 'Terjadi kesalahan saat menjalankan pemeriksaan kesehatan: ' . $e->getMessage()
             ], 'admin_layout');
         }
     }
