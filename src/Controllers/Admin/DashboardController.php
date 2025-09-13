@@ -103,7 +103,7 @@ class DashboardController extends BaseController {
 
             if (file_exists($doctorScriptPath)) {
                 // Execute the doctor script and get JSON output
-                $json_output = shell_exec('php ' . escapeshellarg($doctorScriptPath) . ' --format=json');
+                $json_output = shell_exec('php ' . \escapeshellarg($doctorScriptPath) . ' --format=json');
                 $results = json_decode($json_output, true);
 
                 // Fallback if JSON decoding fails
