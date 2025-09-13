@@ -1,6 +1,6 @@
 {
   "class": "LogController",
-  "namespace": "TGBot\\Controllers\\Admin",
+  "namespace": "TGBot\Controllers\Admin",
   "description": "Controller for handling various log viewing and management operations in the admin panel.",
   "methods": [
     {
@@ -74,12 +74,12 @@
       ]
     },
     {
-      "name": "fileErrorLog",
-      "description": "Displays the content of the main application error log file (logs/error.log).",
+      "name": "viewFileLog",
+      "description": "Displays the content of a specified log file from the logs/ directory.",
       "routes": [
         {
           "method": "GET",
-          "path": "xoradmin/file_error_log"
+          "path": "xoradmin/file_logs/{log_file_name}"
         }
       ]
     },

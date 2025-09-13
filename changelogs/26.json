@@ -1,0 +1,24 @@
+{
+  "version": "1.0.0",
+  "date": "2025-09-13",
+  "changes": [
+    {
+      "type": "changed",
+      "description": "Mengubah penampil log file menjadi lebih generik untuk mendukung berbagai file log di direktori 'logs/'.",
+      "files": [
+        "routes.php",
+        "src/Controllers/Admin/LogController.php",
+        "src/Views/admin/logs/file_log.php",
+        "json/controllers/Admin/LogController.json"
+      ]
+    },
+    {
+      "type": "renamed",
+      "description": "Mengganti nama view 'file_error.php' menjadi 'file_log.php' untuk konsistensi.",
+      "files": [
+        "src/Views/admin/logs/file_error.php",
+        "src/Views/admin/logs/file_log.php"
+      ]
+    }
+  ]
+}

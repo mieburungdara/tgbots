@@ -308,34 +308,47 @@ class LogController extends BaseController
         }
     }
 
-    public function fileErrorLog(): void
+    public function viewFileLog(string $logFileName): void
     {
         $logger = App::getLogger();
 
         try {
-            $logFilePath = __DIR__ . '/../../../logs/error.log'; // Path to /home/zadinmitraabadi/tgbots/logs/error.log
+            // Validate log file name to prevent directory traversal
+            if (!preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $logFileName)) {
+                throw new Exception("Nama file log tidak valid.");
+            }
+
+            $baseLogPath = __DIR__ . '/../../../logs/';
+            $logFilePath = realpath($baseLogPath . $logFileName);
+
+            // Ensure the resolved path is within the intended logs directory
+            if ($logFilePath === false || strpos($logFilePath, realpath($baseLogPath)) !== 0) {
+                throw new Exception("Akses ke file log tidak diizinkan.");
+            }
+
             $errorMessage = null;
             $logContent = $this->readLogFile($logFilePath, $errorMessage);
 
             $viewData = [
-                'page_title'      => 'File Error Log Viewer',
+                'page_title'      => 'File Log Viewer: ' . htmlspecialchars($logFileName),
                 'error_message'   => $errorMessage,
                 'raw_log_content' => null,
+                'log_file_name'   => $logFileName, // Pass the file name to the view
             ];
 
             if ($logContent !== false) {
                 $viewData['raw_log_content'] = htmlspecialchars($logContent);
             }
 
-            $this->view('admin/logs/file_error', $viewData, 'admin_layout');
+            $this->view('admin/logs/file_log', $viewData, 'admin_layout');
         } catch (Exception $e) {
-            $logger->error('Error in LogController/fileErrorLog: ' . $e->getMessage());
+            $logger->error('Error in LogController/viewFileLog: ' . $e->getMessage());
 
             $this->view(
                 'admin/error',
                 [
                     'page_title'    => 'Error',
-                    'error_message' => 'An error occurred while loading the file error log.',
+                    'error_message' => 'An error occurred while loading the file log: ' . $e->getMessage(),
                 ],
                 'admin_layout'
             );
