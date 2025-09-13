@@ -10,7 +10,7 @@
     "require": {
         "psr/log": "^3.0",
         "monolog/monolog": "^3.9",
-        "robmorgan/phinx": "^0.16.0"
+        "robmorgan/phinx": "^0.16.10"
     },
     "config": {
         "allow-plugins": true
