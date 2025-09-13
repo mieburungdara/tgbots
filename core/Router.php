@@ -85,7 +85,12 @@ class Router
 
             if (preg_match($routeRegex, $uri, $matches)) {
                 try {
-                    $params = array_filter($matches, 'is_string', ARRAY_FILTER_USE_KEY);
+                    $params = [];
+                    foreach ($matches as $key => $value) {
+                        if (is_string($key)) { // Only take named capture groups
+                            $params[$key] = $value;
+                        }
+                    }
 
                     $parts = explode('@', $controller);
 
