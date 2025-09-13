@@ -1,0 +1,18 @@
+
+{
+  "version": "5.3.0",
+  "date": "2025-09-13",
+  "changes": [
+    {
+      "type": "FIX",
+      "summary": "Memperbaiki sistem migrasi database yang rusak.",
+      "details": "Terjadi error fatal 'Class Not Found' saat menjalankan migrasi karena library Phinx tidak terinstal dan skrip migrasi kustom tidak berfungsi. Perbaikan ini mengintegrasikan Phinx secara resmi ke dalam proyek, menghapus skrip lama yang rusak, dan menyediakan konfigurasi standar. Migrasi sekarang harus dijalankan melalui perintah 'vendor/bin/phinx migrate'."
+    },
+    {
+      "type": "IMPROVEMENT",
+      "summary": "Mengganti skrip migrasi kustom dengan Phinx standar.",
+      "details": "Skrip 'run_migrations_cli.php' yang error dan tidak kompatibel telah dihapus. Proyek sekarang menggunakan Phinx, library standar industri untuk migrasi database di PHP, yang lebih andal dan mudah dikelola."
+    }
+  ],
+  "author": "Gemini"
+}
