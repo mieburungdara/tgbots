@@ -140,7 +140,7 @@ $current_log_file = $data['log_file_name'] ?? null;
                 <div class="log-viewer-header">
                     <h2 class="text-xl font-semibold">Isi: <?= htmlspecialchars($current_log_file) ?></h2>
                     <?php if ($data['raw_log_content'] !== ''): ?>
-                        <form action="/xoradmin/file_logs/clear/<?= htmlspecialchars($current_log_file) ?>" method="post" onsubmit="return confirm('Anda yakin ingin MENGHAPUS SEMUA isi log file ini? Aksi ini tidak dapat diurungkan.');">
+                        <form action="/xoradmin/file_logs/clear/<?= base64_encode($current_log_file) ?>" method="post" onsubmit="return confirm('Anda yakin ingin MENGHAPUS SEMUA isi log file ini? Aksi ini tidak dapat diurungkan.');">
                             <button type="submit" class="btn btn-delete">Clear Log File</button>
                         </form>
                     <?php endif; ?>
@@ -171,7 +171,7 @@ $current_log_file = $data['log_file_name'] ?? null;
 
                         <nav class="inline-flex rounded-md shadow">
                             <?php for ($i = 1; $i <= $data['total_pages']; $i++): ?>
-                                <a href="/xoradmin/file_logs/view/<?= htmlspecialchars($current_log_file) ?>?page=<?= $i ?>&lines=<?= $data['lines_per_page'] ?>"
+                                <a href="/xoradmin/file_logs/view/<?= base64_encode($current_log_file) ?>?page=<?= $i ?>&lines=<?= $data['lines_per_page'] ?>"
                                    class="px-4 py-2 text-sm font-medium <?= ($i == $data['current_page']) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700' ?> border border-gray-300 hover:bg-gray-50">
                                     <?= $i ?>
                                 </a>
@@ -187,4 +187,4 @@ $current_log_file = $data['log_file_name'] ?? null;
             <?php endif; ?>
         </main>
     </div>
-</div>
+</div>/div>

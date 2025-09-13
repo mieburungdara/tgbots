@@ -505,6 +505,9 @@ class LogController extends BaseController
 
     public function clearFileLog(string $logFileName): void
     {
+        // Decode the filename from URL
+        $logFileName = base64_decode($logFileName);
+
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /xoradmin/file_logs/' . $logFileName);
             exit();
@@ -543,5 +546,7 @@ class LogController extends BaseController
 
         header("Location: /xoradmin/file_logs/" . $logFileName);
         exit;
+    }
+}
     }
 }
