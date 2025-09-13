@@ -1,0 +1,22 @@
+{
+  "class": "TGBot\\Controllers\\Admin\\DashboardController",
+  "description": "Handles the main admin dashboard and system health checks.",
+  "methods": [
+    {
+      "name": "index",
+      "description": "Displays the main admin dashboard with conversations and channel chats.",
+      "parameters": [],
+      "return_type": "void"
+    },
+    {
+      "name": "healthCheck",
+      "description": "Runs the doctor.php script and displays the system health check results in a web view.",
+      "parameters": [],
+      "return_type": "void"
+    }
+  ],
+  "dependencies": [
+    "BaseController",
+    "App"
+  ]
+}

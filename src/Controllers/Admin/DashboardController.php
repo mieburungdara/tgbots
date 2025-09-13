@@ -94,4 +94,33 @@ class DashboardController extends BaseController {
             ], 'admin_layout');
         }
     }
+
+    public function healthCheck()
+    {
+        try {
+            $doctorScriptPath = __DIR__ . '/../../../doctor.php';
+            $output = '<div class="text-red-500">Error: doctor.php script not found.</div>'; // Default error message
+
+            if (file_exists($doctorScriptPath)) {
+                // Execute the doctor script
+                $raw_output = shell_exec('php ' . escapeshellarg($doctorScriptPath));
+
+                // Strip ANSI color codes for HTML display
+                $clean_output = preg_replace('/\x1b\[[0-9;]*m/', '', $raw_output);
+                $output = htmlspecialchars($clean_output);
+            }
+
+            $this->view('admin/health_check', [
+                'page_title' => 'Pemeriksaan Kesehatan Sistem',
+                'check_output' => $output
+            ], 'admin_layout');
+
+        } catch (Exception $e) {
+            App::getLogger()->error('Error in DashboardController/healthCheck: ' . $e->getMessage());
+            $this->view('admin/error', [
+                'page_title' => 'Error',
+                'error_message' => 'An error occurred while running the health check.'
+            ], 'admin_layout');
+        }
+    }
 }

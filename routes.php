@@ -104,6 +104,9 @@ $router->get('xoradmin/api_test', 'Admin/ApiTestController@index');
 // Debug Feed
 $router->get('xoradmin/debug_feed', 'Admin/DebugFeedController@index');
 
+// Health Check
+$router->get('xoradmin/health_check', 'Admin/DashboardController@healthCheck');
+
 
 // --- Member Area Routes ---
 $router->get('member/login', 'Member/LoginController@showLoginForm');
