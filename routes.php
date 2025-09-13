@@ -44,6 +44,7 @@ $router->post('xoradmin/public_error_log/clear', 'Admin/LogController@clearPubli
 $router->get('xoradmin/telegram_logs', 'Admin/LogController@telegram');
 $router->post('xoradmin/telegram_logs/delete', 'Admin/LogController@deleteTelegramLog');
 $router->post('xoradmin/telegram_logs/clear_all', 'Admin/LogController@clearAllTelegramLogs');
+$router->get('xoradmin/file_logs', 'Admin/LogController@viewFileLog');
 $router->get('xoradmin/file_logs/{logFileName?}', 'Admin/LogController@viewFileLog');
 $router->post('xoradmin/file_logs/clear/{logFileName}', 'Admin/LogController@clearFileLog'); // New route for clearing file logs
 
