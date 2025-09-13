@@ -111,7 +111,7 @@ class Router
     /**
      * Memanggil aksi pada controller.
      */
-    protected function callAction(string $controller, string $action, array $params = [])
+    protected function callAction(string $controller, string $action, array $routeParams = [])
     {
         // Path file controller
         $controllerFile = __DIR__ . "/../src/Controllers/" . str_replace('\\', '/', $controller) . ".php";
@@ -151,20 +151,24 @@ class Router
             throw new Exception("{$className} does not respond to the {$action} action.");
         }
 
-        // Reflection untuk handle parameter action
         $reflection = new ReflectionMethod($controllerInstance, $action);
         $methodParameters = $reflection->getParameters();
 
         $args = [];
-        foreach ($methodParameters as $param) {
-            $paramName = $param->getName();
-            if (isset($params[$paramName])) {
-                $args[] = $params[$paramName];
-            } elseif ($param->isDefaultValueAvailable()) {
-                $args[] = $param->getDefaultValue();
-            } else {
-                // Handle missing required parameters, e.g., throw an exception
-                throw new Exception("Missing required parameter '{$paramName}' for action '{$action}'.");
+
+        // If the method expects exactly one parameter and it's an array, pass all routeParams as that array
+        if (count($methodParameters) === 1 && $methodParameters[0]->getType() && (string)$methodParameters[0]->getType() === 'array') {
+            $args[] = $routeParams;
+        } else {
+            foreach ($methodParameters as $param) {
+                $paramName = $param->getName();
+                if (isset($routeParams[$paramName])) {
+                    $args[] = $routeParams[$paramName];
+                } elseif ($param->isDefaultValueAvailable()) {
+                    $args[] = $param->getDefaultValue();
+                } else {
+                    throw new Exception("Missing required parameter '{$paramName}' for action '{$action}'.");
+                }
             }
         }
 
