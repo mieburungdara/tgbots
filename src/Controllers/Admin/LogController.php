@@ -350,6 +350,14 @@ class LogController extends BaseController
 
             // --- Jika nama file log DIPILIH ---
 
+            echo "<pre>";
+            echo "--- DEBUGGING LOG CONTROLLER ---\\n";
+            echo "Value of \$logFileName: ";
+            var_dump($logFileName);
+            echo "\\nFiles found in logs/ directory (\$logFiles): ";
+            var_dump($logFiles);
+            die("---" . "END DEBUG ---");
+
             // Validasi nama file untuk mencegah directory traversal
             if (!in_array($logFileName, $logFiles)) {
                 throw new Exception("File log tidak valid atau tidak ditemukan.");
