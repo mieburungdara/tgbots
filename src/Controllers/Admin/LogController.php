@@ -316,8 +316,15 @@ class LogController extends BaseController
         try {
             // Selalu dapatkan daftar semua file log untuk ditampilkan di navigasi
             $logFiles = [];
+            if (!function_exists('scandir')) {
+                throw new Exception('Fungsi scandir() dinonaktifkan di server ini. Tidak dapat menampilkan daftar file log.');
+            }
             if (is_dir($baseLogPath)) {
                 $files = scandir($baseLogPath);
+                if ($files === false) {
+                    throw new Exception('Gagal memindai direktori logs. Ini mungkin disebabkan oleh batasan `open_basedir` pada server Anda.');
+                }
+
                 foreach ($files as $file) {
                     if (preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $file)) {
                         $logFiles[] = $file;
