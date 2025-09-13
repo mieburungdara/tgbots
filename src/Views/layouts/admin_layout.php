@@ -313,6 +313,61 @@ $current_path = trim(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH), '/');
                     localStorage.setItem(`sidebar_collapse_${targetId}`, isCurrentlyCollapsed);
                 });
             });
+
+            // --- AJAX Content Loading for File Logs ---
+            const contentArea = document.querySelector('.content');
+
+            document.body.addEventListener('click', function(event) {
+                // Find the closest ancestor which is a link inside .log-file-list
+                const link = event.target.closest('.log-file-list a');
+
+                if (link) {
+                    event.preventDefault();
+                    const url = link.href;
+
+                    // Show a loading indicator
+                    if (contentArea) {
+                        contentArea.innerHTML = '<p>Loading...</p>';
+                    }
+
+                    fetch(url, {
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok.');
+                        }
+                        return response.text();
+                    })
+                    .then(html => {
+                        if (contentArea) {
+                            contentArea.innerHTML = html;
+                            history.pushState({path: url}, '', url);
+
+                            // The new content includes the sidebar, so we don't need to manually update the class.
+                            // The newly rendered sidebar will have the correct active class set by the PHP logic.
+                        } else {
+                             contentArea.innerHTML = '<p>Error: Main content area not found.</p>';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Fetch error:', error);
+                        if (contentArea) {
+                            contentArea.innerHTML = `<p>Failed to load content. Please try a full page refresh.</p>`;
+                        }
+                    });
+                }
+            });
+
+             // Handle browser back/forward buttons
+            window.addEventListener('popstate', function(event) {
+                if (event.state && event.state.path) {
+                    // You could fetch the content again, but for simplicity, we'll just reload.
+                    window.location.reload();
+                }
+            });
         });
     </script>
 </body>
