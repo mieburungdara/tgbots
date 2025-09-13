@@ -1,0 +1,23 @@
+{
+  "version": "1.0.0",
+  "date": "2025-09-13",
+  "changes": [
+    {
+      "type": "added",
+      "description": "Menambahkan halaman penampil log untuk file error utama (logs/error.log) di panel admin.",
+      "files": [
+        "routes.php",
+        "src/Controllers/Admin/LogController.php",
+        "src/Views/admin/logs/file_error.php",
+        "json/controllers/Admin/LogController.json"
+      ]
+    },
+    {
+      "type": "refactor",
+      "description": "Merefaktor LogController untuk menggunakan helper readLogFile yang lebih umum untuk membaca file log.",
+      "files": [
+        "src/Controllers/Admin/LogController.php"
+      ]
+    }
+  ]
+}

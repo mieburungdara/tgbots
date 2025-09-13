@@ -281,7 +281,7 @@ class LogController extends BaseController
         try {
             $logFilePath = $this->getPublicLogFilePath();
             $errorMessage = null;
-            $logContent = $this->readPublicLogFile($logFilePath, $errorMessage);
+            $logContent = $this->readLogFile($logFilePath, $errorMessage);
 
             $viewData = [
                 'page_title'      => 'Public Error Log Viewer',
@@ -308,18 +308,51 @@ class LogController extends BaseController
         }
     }
 
+    public function fileErrorLog(): void
+    {
+        $logger = App::getLogger();
+
+        try {
+            $logFilePath = __DIR__ . '/../../../logs/error.log'; // Path to /home/zadinmitraabadi/tgbots/logs/error.log
+            $errorMessage = null;
+            $logContent = $this->readLogFile($logFilePath, $errorMessage);
+
+            $viewData = [
+                'page_title'      => 'File Error Log Viewer',
+                'error_message'   => $errorMessage,
+                'raw_log_content' => null,
+            ];
+
+            if ($logContent !== false) {
+                $viewData['raw_log_content'] = htmlspecialchars($logContent);
+            }
+
+            $this->view('admin/logs/file_error', $viewData, 'admin_layout');
+        } catch (Exception $e) {
+            $logger->error('Error in LogController/fileErrorLog: ' . $e->getMessage());
+
+            $this->view(
+                'admin/error',
+                [
+                    'page_title'    => 'Error',
+                    'error_message' => 'An error occurred while loading the file error log.',
+                ],
+                'admin_layout'
+            );
+        }
+    }
+
     private function getPublicLogFilePath(): string
     {
         return __DIR__ . '/../../../public/error_log.txt';
     }
 
-    private function readPublicLogFile(string $logFilePath, ?string &$errorMessage): string|false
+    private function readLogFile(string $logFilePath, ?string &$errorMessage): string|false
     {
         $logger = App::getLogger();
         if (!file_exists($logFilePath)) {
             $errorMessage = "File log tidak ditemukan: " . htmlspecialchars($logFilePath);
-            $logger->warning('Public error log file not found: ' . $logFilePath);
-
+            $logger->warning('Log file not found: ' . $logFilePath);
             return false;
         }
 
@@ -327,8 +360,7 @@ class LogController extends BaseController
 
         if ($logContent === false) {
             $errorMessage = "Gagal membaca isi file log: " . htmlspecialchars($logFilePath);
-            $logger->error('Error reading public/error_log.txt: ' . $logFilePath);
-
+            $logger->error('Error reading log file: ' . $logFilePath);
             return false;
         }
 

@@ -1,0 +1,97 @@
+{
+  "class": "LogController",
+  "namespace": "TGBot\\Controllers\\Admin",
+  "description": "Controller for handling various log viewing and management operations in the admin panel.",
+  "methods": [
+    {
+      "name": "app",
+      "description": "Displays application logs from the database with filtering and pagination.",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "xoradmin/logs"
+        }
+      ]
+    },
+    {
+      "name": "clearAppLogs",
+      "description": "Clears all application logs from the database.",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "xoradmin/logs/clear"
+        }
+      ]
+    },
+    {
+      "name": "media",
+      "description": "Displays media-related logs, grouping them by media group ID.",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "xoradmin/media_logs"
+        }
+      ]
+    },
+    {
+      "name": "telegram",
+      "description": "Displays Telegram error logs with pagination.",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "xoradmin/telegram_logs"
+        }
+      ]
+    },
+    {
+      "name": "deleteTelegramLog",
+      "description": "Deletes a specific Telegram error log by ID.",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "xoradmin/telegram_logs/delete"
+        }
+      ]
+    },
+    {
+      "name": "clearAllTelegramLogs",
+      "description": "Clears all Telegram error logs.",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "xoradmin/telegram_logs/clear_all"
+        }
+      ]
+    },
+    {
+      "name": "publicErrorLog",
+      "description": "Displays the content of the public error log file (public/error_log.txt).",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "xoradmin/public_error_log"
+        }
+      ]
+    },
+    {
+      "name": "fileErrorLog",
+      "description": "Displays the content of the main application error log file (logs/error.log).",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "xoradmin/file_error_log"
+        }
+      ]
+    },
+    {
+      "name": "clearPublicErrorLog",
+      "description": "Clears the content of the public error log file (public/error_log.txt).",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "xoradmin/public_error_log/clear"
+        }
+      ]
+    }
+  ]
+}
