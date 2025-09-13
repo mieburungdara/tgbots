@@ -21,4 +21,13 @@ define('SUPER_ADMIN_TELEGRAM_ID', '');
 // Sangat disarankan untuk mengubah nilai default ini ke password yang kuat.
 define('XOR_ADMIN_PASSWORD', 'sup3r4dmin');
 
+
+// (Opsional) Konfigurasi untuk Notifikasi Sistem
+// Digunakan untuk mengirim notifikasi (misalnya, error log) ke admin.
+// 1. Buat bot baru dari BotFather, dapatkan tokennya.
+// 2. Mulai percakapan dengan bot Anda.
+// 3. Dapatkan chat ID Anda (bisa dengan bot seperti @userinfobot).
+define('NOTIFICATION_BOT_TOKEN', ''); // Isi dengan token bot notifikasi Anda
+define('NOTIFICATION_CHAT_ID', '');   // Isi dengan chat ID Anda
+
 ?>
