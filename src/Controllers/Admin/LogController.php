@@ -308,98 +308,131 @@ class LogController extends BaseController
         }
     }
 
-    public function viewFileLog(?string $logFileName = null): void // Make logFileName optional
+    public function viewFileLog(?string $logFileName = null): void
     {
         $logger = App::getLogger();
+        $baseLogPath = __DIR__ . '/../../../logs/';
 
         try {
-            $baseLogPath = __DIR__ . '/../../../logs/';
-
-            if ($logFileName === null) {
-                // Display list of log files
-                $logFiles = [];
-                if (is_dir($baseLogPath)) {
-                    $files = scandir($baseLogPath);
-                    foreach ($files as $file) {
-                        if (preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $file)) {
-                            $logFiles[] = $file;
-                        }
+            // Selalu dapatkan daftar semua file log untuk ditampilkan di navigasi
+            $logFiles = [];
+            if (is_dir($baseLogPath)) {
+                $files = scandir($baseLogPath);
+                foreach ($files as $file) {
+                    if (preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $file)) {
+                        $logFiles[] = $file;
                     }
                 }
-
-                $this->view(
-                    'admin/logs/file_log', // Render file_log.php
-                    [
-                        'page_title' => 'Daftar File Log',
-                        'log_files'  => $logFiles, // Pass log files list
-                        'raw_log_content' => null, // No content to display initially
-                        'error_message' => null,
-                        'log_file_name' => null,
-                        'total_pages' => 0,
-                        'current_page' => 0,
-                        'lines_per_page' => 0,
-                    ],
-                    'admin_layout'
-                );
-            } else {
-                // Display content of a specific log file
-                // Validate log file name to prevent directory traversal
-                if (!preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $logFileName)) {
-                    throw new Exception("Nama file log tidak valid.");
-                }
-
-                $logFilePath = realpath($baseLogPath . $logFileName);
-
-                // Ensure the resolved path is within the intended logs directory
-                if ($logFilePath === false || strpos($logFilePath, realpath($baseLogPath)) !== 0) {
-                    throw new Exception("Akses ke file log tidak diizinkan.");
-                }
-
-                $errorMessage = null;
-                $logContentArray = file($logFilePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-                if ($logContentArray === false) {
-                    throw new Exception("Gagal membaca isi file log: " . htmlspecialchars($logFileName));
-                }
-
-                $totalLines = count($logContentArray);
-                $linesPerPage = isset($_GET['lines']) ? (int)$_GET['lines'] : 50;
-                $linesPerPage = max(1, min($linesPerPage, 500)); // Limit lines per page between 1 and 500
-
-                $totalPages = (int) ceil($totalLines / $linesPerPage);
-                $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-                $currentPage = max(1, min($currentPage, $totalPages));
-
-                $offset = ($currentPage - 1) * $linesPerPage;
-                $paginatedLines = array_slice($logContentArray, $offset, $linesPerPage);
-
-                $this->view(
-                    'admin/logs/file_log',
-                    [
-                        'page_title'      => 'File Log Viewer: ' . htmlspecialchars($logFileName),
-                        'error_message'   => $errorMessage,
-                        'raw_log_content' => implode("\n", $paginatedLines),
-                        'log_file_name'   => $logFileName,
-                        'total_pages'     => $totalPages,
-                        'current_page'    => $currentPage,
-                        'lines_per_page'  => $linesPerPage,
-                        'log_files' => null, // Not listing files when viewing a single log
-                    ],
-                    'admin_layout'
-                );
+                rsort($logFiles); // Tampilkan file terbaru di atas
             }
+
+            // Jika tidak ada nama file log yang dipilih, tampilkan halaman daftar saja
+            if ($logFileName === null) {
+                $this->view('admin/logs/file_log', [
+                    'page_title'      => 'Daftar File Log',
+                    'log_files'       => $logFiles,
+                    'log_file_name'   => null,
+                    'raw_log_content' => null,
+                    'total_pages'     => 0,
+                    'current_page'    => 1,
+                    'lines_per_page'  => 50,
+                    'error_message'   => null,
+                ], 'admin_layout');
+                return; // Selesai
+            }
+
+            // --- Jika nama file log DIPILIH ---
+
+            // Validasi nama file untuk mencegah directory traversal
+            if (!in_array($logFileName, $logFiles)) {
+                throw new Exception("File log tidak valid atau tidak ditemukan.");
+            }
+
+            $logFilePath = realpath($baseLogPath . $logFileName);
+
+            // Baca N baris terakhir dari file untuk efisiensi memori
+            $linesToTail = 1000;
+            $logContentArray = $this->tailFile($logFilePath, $linesToTail);
+
+            if ($logContentArray === false) {
+                throw new Exception("Gagal membaca isi file log: " . htmlspecialchars($logFileName));
+            }
+
+            // Paginasi pada hasil N baris terakhir
+            $totalLines = count($logContentArray);
+            $linesPerPage = isset($_GET['lines']) ? (int)$_GET['lines'] : 50;
+            $linesPerPage = max(1, min($linesPerPage, 500));
+
+            $totalPages = (int) ceil($totalLines / $linesPerPage);
+            $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $currentPage = max(1, min($currentPage, $totalPages));
+
+            $offset = ($currentPage - 1) * $linesPerPage;
+            $paginatedLines = array_slice($logContentArray, $offset, $linesPerPage);
+
+            $this->view('admin/logs/file_log', [
+                'page_title'      => 'File Log: ' . htmlspecialchars($logFileName),
+                'log_files'       => $logFiles, // Tetap kirim daftar file
+                'log_file_name'   => $logFileName,
+                'raw_log_content' => implode("\n", $paginatedLines),
+                'total_pages'     => $totalPages,
+                'current_page'    => $currentPage,
+                'lines_per_page'  => $linesPerPage,
+                'error_message'   => $totalLines >= $linesToTail ? "Menampilkan {$linesToTail} baris terakhir." : null,
+            ], 'admin_layout');
+
         } catch (Exception $e) {
             $logger->error('Error in LogController/viewFileLog: ' . $e->getMessage());
-
-            $this->view(
-                'admin/error',
-                [
-                    'page_title'    => 'Error',
-                    'error_message' => 'An error occurred while loading the file log: ' . $e->getMessage(),
-                ],
-                'admin_layout'
-            );
+            $this->view('admin/error', [
+                'page_title'    => 'Error',
+                'error_message' => 'Terjadi kesalahan saat memuat log file: ' . $e->getMessage(),
+            ], 'admin_layout');
         }
+    }
+
+    /**
+     * Efficiently reads the last N lines of a large file.
+     *
+     * @param string $filepath The path to the file.
+     * @param int $lines The number of lines to read from the end.
+     * @param int $buffer The buffer size to use when reading chunks.
+     * @return array|false An array of lines, or false on failure.
+     */
+    private function tailFile(string $filepath, int $lines, int $buffer = 4096): array|false
+    {
+        $f = @fopen($filepath, "rb");
+        if ($f === false) {
+            return false;
+        }
+
+        try {
+            fseek($f, -1, SEEK_END);
+            if (fread($f, 1) != "\n") {
+                $lines -= 1;
+            }
+
+            $output = '';
+            $chunk = '';
+
+            while (ftell($f) > 0 && $lines >= 0) {
+                $seek = min(ftell($f), $buffer);
+                fseek($f, -$seek, SEEK_CUR);
+                $chunk = fread($f, $seek);
+                $output = $chunk . $output;
+                fseek($f, -mb_strlen($chunk, '8bit'), SEEK_CUR);
+                $lines -= substr_count($chunk, "\n");
+            }
+
+            while ($lines++ < 0) {
+                $output = substr($output, strpos($output, "\n") + 1);
+            }
+        } finally {
+            fclose($f);
+        }
+        
+        // Memecah menjadi baris dan membalik urutannya agar kronologis
+        $result = preg_split('/\R/', trim($output));
+        return array_reverse($result);
     }
 
     
