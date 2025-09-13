@@ -79,9 +79,11 @@ class Router
         }
 
         foreach ($this->routes[$requestType] as $route => $controller) {
-            // Allow numbers in placeholder names
-            $routeRegex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '(?<$1>[^/]+)', $route);
-            $routeRegex = '#^' . $routeRegex . '$#';
+            // Handle optional parameters: {param?}
+            $routeRegex = preg_replace('/\{([a-zA-Z0-9_]+)\?\}/', '(?:/(?<$1>[^/]+))?', $route);
+            // Handle mandatory parameters: {param}
+            $routeRegex = preg_replace('/\{([a-zA-Z0-9_]+)\}/', '/(?<$1>[^/]+)', $routeRegex);
+            $routeRegex = '#^' . trim($routeRegex, '/') . '$#';
 
             if (preg_match($routeRegex, $uri, $matches)) {
                 try {
