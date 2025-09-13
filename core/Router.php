@@ -173,6 +173,8 @@ class Router
                     $args[] = $routeParams[$paramName];
                 } elseif ($param->isDefaultValueAvailable()) {
                     $args[] = $param->getDefaultValue();
+                } elseif ($param->isOptional()) { // Check if optional (e.g., ?string $param)
+                    $args[] = null; // Assign null for optional parameters without default value
                 } else {
                     throw new Exception("Missing required parameter '{$paramName}' for action '{$action}'.");
                 }
