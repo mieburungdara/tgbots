@@ -74,12 +74,32 @@
       ]
     },
     {
+      "name": "listFileLogs",
+      "description": "Lists all available log files in the logs/ directory.",
+      "routes": [
+        {
+          "method": "GET",
+          "path": "xoradmin/file_logs"
+        }
+      ]
+    },
+    {
       "name": "viewFileLog",
-      "description": "Displays the content of a specified log file from the logs/ directory.",
+      "description": "Displays the paginated content of a specified log file from the logs/ directory.",
       "routes": [
         {
           "method": "GET",
           "path": "xoradmin/file_logs/{log_file_name}"
+        }
+      ]
+    },
+    {
+      "name": "clearFileLog",
+      "description": "Clears the content of a specified log file from the logs/ directory.",
+      "routes": [
+        {
+          "method": "POST",
+          "path": "xoradmin/file_logs/clear/{log_file_name}"
         }
       ]
     },

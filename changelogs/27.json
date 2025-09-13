@@ -1,0 +1,35 @@
+{
+  "version": "1.0.0",
+  "date": "2025-09-13",
+  "changes": [
+    {
+      "type": "added",
+      "description": "Menambahkan halaman daftar file log di panel admin untuk melihat semua file log di direktori 'logs/'.",
+      "files": [
+        "routes.php",
+        "src/Controllers/Admin/LogController.php",
+        "src/Views/admin/logs/file_log_list.php",
+        "json/controllers/Admin/LogController.json"
+      ]
+    },
+    {
+      "type": "added",
+      "description": "Menambahkan fitur untuk membersihkan isi file log generik dari panel admin.",
+      "files": [
+        "routes.php",
+        "src/Controllers/Admin/LogController.php",
+        "src/Views/admin/logs/file_log.php",
+        "json/controllers/Admin/LogController.json"
+      ]
+    },
+    {
+      "type": "changed",
+      "description": "Mengimplementasikan paginasi dan batasan baris untuk penampil log file generik.",
+      "files": [
+        "src/Controllers/Admin/LogController.php",
+        "src/Views/admin/logs/file_log.php",
+        "json/controllers/Admin/LogController.json"
+      ]
+    }
+  ]
+}

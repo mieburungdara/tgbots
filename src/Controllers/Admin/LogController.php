@@ -327,18 +327,32 @@ class LogController extends BaseController
             }
 
             $errorMessage = null;
-            $logContent = $this->readLogFile($logFilePath, $errorMessage);
+            $logContentArray = file($logFilePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+            if ($logContentArray === false) {
+                throw new Exception("Gagal membaca isi file log: " . htmlspecialchars($logFileName));
+            }
+
+            $totalLines = count($logContentArray);
+            $linesPerPage = isset($_GET['lines']) ? (int)$_GET['lines'] : 50;
+            $linesPerPage = max(1, min($linesPerPage, 500)); // Limit lines per page between 1 and 500
+
+            $totalPages = (int) ceil($totalLines / $linesPerPage);
+            $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $currentPage = max(1, min($currentPage, $totalPages));
+
+            $offset = ($currentPage - 1) * $linesPerPage;
+            $paginatedLines = array_slice($logContentArray, $offset, $linesPerPage);
 
             $viewData = [
                 'page_title'      => 'File Log Viewer: ' . htmlspecialchars($logFileName),
                 'error_message'   => $errorMessage,
-                'raw_log_content' => null,
-                'log_file_name'   => $logFileName, // Pass the file name to the view
+                'raw_log_content' => implode("\n", $paginatedLines),
+                'log_file_name'   => $logFileName,
+                'total_pages'     => $totalPages,
+                'current_page'    => $currentPage,
+                'lines_per_page'  => $linesPerPage,
             ];
-
-            if ($logContent !== false) {
-                $viewData['raw_log_content'] = htmlspecialchars($logContent);
-            }
 
             $this->view('admin/logs/file_log', $viewData, 'admin_layout');
         } catch (Exception $e) {
@@ -349,6 +363,45 @@ class LogController extends BaseController
                 [
                     'page_title'    => 'Error',
                     'error_message' => 'An error occurred while loading the file log: ' . $e->getMessage(),
+                ],
+                'admin_layout'
+            );
+        }
+    }
+
+    public function listFileLogs(): void
+    {
+        $logger = App::getLogger();
+
+        try {
+            $logDirectory = __DIR__ . '/../../../logs/';
+            $logFiles = [];
+
+            if (is_dir($logDirectory)) {
+                $files = scandir($logDirectory);
+                foreach ($files as $file) {
+                    if (preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $file)) {
+                        $logFiles[] = $file;
+                    }
+                }
+            }
+
+            $this->view(
+                'admin/logs/file_log_list',
+                [
+                    'page_title' => 'Daftar File Log',
+                    'log_files'  => $logFiles,
+                ],
+                'admin_layout'
+            );
+        } catch (Exception $e) {
+            $logger->error('Error in LogController/listFileLogs: ' . $e->getMessage());
+
+            $this->view(
+                'admin/error',
+                [
+                    'page_title'    => 'Error',
+                    'error_message' => 'Terjadi kesalahan saat memuat daftar file log.',
                 ],
                 'admin_layout'
             );
@@ -410,6 +463,48 @@ class LogController extends BaseController
         }
 
         header("Location: /xoradmin/public_error_log");
+        exit;
+    }
+
+    public function clearFileLog(string $logFileName): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /xoradmin/file_logs/' . $logFileName);
+            exit();
+        }
+
+        $logger = App::getLogger();
+
+        try {
+            // Validate log file name to prevent directory traversal
+            if (!preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $logFileName)) {
+                throw new Exception("Nama file log tidak valid.");
+            }
+
+            $baseLogPath = __DIR__ . '/../../../logs/';
+            $logFilePath = realpath($baseLogPath . $logFileName);
+
+            // Ensure the resolved path is within the intended logs directory
+            if ($logFilePath === false || strpos($logFilePath, realpath($baseLogPath)) !== 0) {
+                throw new Exception("Akses ke file log tidak diizinkan.");
+            }
+
+            if (file_exists($logFilePath)) {
+                if (file_put_contents($logFilePath, '') !== false) {
+                    $_SESSION['flash_message'] = "Log file '{$logFileName}' berhasil dibersihkan.";
+                    $logger->info("Log file '{$logFileName}' berhasil dibersihkan oleh admin.");
+                } else {
+                    throw new Exception("Gagal membersihkan isi file log '{$logFileName}'.");
+                }
+            } else {
+                throw new Exception("File log '{$logFileName}' tidak ditemukan.");
+            }
+        } catch (Exception $e) {
+            $_SESSION['flash_message'] = "Gagal membersihkan log file: " . $e->getMessage();
+            $logger->error("Gagal membersihkan log file '{$logFileName}': " . $e->getMessage());
+        }
+
+        header("Location: /xoradmin/file_logs/" . $logFileName);
         exit;
     }
 }
