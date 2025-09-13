@@ -548,5 +548,3 @@ class LogController extends BaseController
         exit;
     }
 }
-    }
-}
