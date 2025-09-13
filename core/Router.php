@@ -153,10 +153,21 @@ class Router
 
         // Reflection untuk handle parameter action
         $reflection = new ReflectionMethod($controllerInstance, $action);
-        if ($reflection->getNumberOfParameters() === 0) {
-            return $controllerInstance->$action();
+        $methodParameters = $reflection->getParameters();
+
+        $args = [];
+        foreach ($methodParameters as $param) {
+            $paramName = $param->getName();
+            if (isset($params[$paramName])) {
+                $args[] = $params[$paramName];
+            } elseif ($param->isDefaultValueAvailable()) {
+                $args[] = $param->getDefaultValue();
+            } else {
+                // Handle missing required parameters, e.g., throw an exception
+                throw new Exception("Missing required parameter '{$paramName}' for action '{$action}'.");
+            }
         }
 
-        return $controllerInstance->$action($params);
+        return $controllerInstance->$action(...$args);
     }
 }
