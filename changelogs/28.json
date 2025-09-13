@@ -1,0 +1,20 @@
+{
+  "version": "1.0.0",
+  "date": "2025-09-13",
+  "changes": [
+    {
+      "type": "changed",
+      "description": "Meningkatkan tampilan UI/UX untuk penampil log file individu (file_log.php) dengan penyorotan sintaks, pesan yang lebih baik, dan tata letak yang ditingkatkan.",
+      "files": [
+        "src/Views/admin/logs/file_log.php"
+      ]
+    },
+    {
+      "type": "changed",
+      "description": "Meningkatkan tampilan UI/UX untuk daftar file log (file_log_list.php) dengan tata letak berbasis grid dan styling yang lebih menarik.",
+      "files": [
+        "src/Views/admin/logs/file_log_list.php"
+      ]
+    }
+  ]
+}
