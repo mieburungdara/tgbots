@@ -102,8 +102,18 @@ class DashboardController extends BaseController {
             $results = [];
 
             if (file_exists($doctorScriptPath)) {
-                // Execute the doctor script and get JSON output
-                $json_output = shell_exec('php ' . \escapeshellarg($doctorScriptPath) . ' --format=json');
+                $command = 'php ';
+                // Periksa apakah escapeshellarg() dinonaktifkan
+                if (function_exists('escapeshellarg')) {
+                    $command .= \escapeshellarg($doctorScriptPath);
+                } else {
+                    // Fallback jika escapeshellarg() tidak tersedia.
+                    // Aman dalam kasus ini karena path tidak berasal dari input pengguna.
+                    $command .= $doctorScriptPath;
+                }
+                $command .= ' --format=json';
+
+                $json_output = shell_exec($command);
                 $results = json_decode($json_output, true);
 
                 // Fallback if JSON decoding fails
