@@ -314,11 +314,12 @@ class LogController extends BaseController
         $baseLogPath = __DIR__ . '/../../../logs/';
 
         try {
-            // Selalu dapatkan daftar semua file log untuk ditampilkan di navigasi
-            $logFiles = [];
+            // Defensively check for scandir issues
             if (!function_exists('scandir')) {
                 throw new Exception('Fungsi scandir() dinonaktifkan di server ini. Tidak dapat menampilkan daftar file log.');
             }
+            
+            $logFiles = [];
             if (is_dir($baseLogPath)) {
                 $files = scandir($baseLogPath);
                 if ($files === false) {
@@ -333,7 +334,7 @@ class LogController extends BaseController
                 rsort($logFiles); // Tampilkan file terbaru di atas
             }
 
-            // Jika tidak ada nama file log yang dipilih, tampilkan halaman daftar saja
+            // If no log file name is selected, just show the list page
             if ($logFileName === null) {
                 $this->view('admin/logs/file_log', [
                     'page_title'      => 'Daftar File Log',
@@ -345,27 +346,19 @@ class LogController extends BaseController
                     'lines_per_page'  => 50,
                     'error_message'   => null,
                 ], 'admin_layout');
-                return; // Selesai
+                return; // Done
             }
 
-            // --- Jika nama file log DIPILIH ---
+            // --- If a log file name IS selected ---
 
-            echo "<pre>";
-            echo "--- DEBUGGING LOG CONTROLLER ---\\n";
-            echo "Value of \$logFileName: ";
-            var_dump($logFileName);
-            echo "\\nFiles found in logs/ directory (\$logFiles): ";
-            var_dump($logFiles);
-            die("---" . "END DEBUG ---");
-
-            // Validasi nama file untuk mencegah directory traversal
+            // Validate the file name to prevent directory traversal
             if (!in_array($logFileName, $logFiles)) {
                 throw new Exception("File log tidak valid atau tidak ditemukan.");
             }
 
             $logFilePath = realpath($baseLogPath . $logFileName);
 
-            // Baca N baris terakhir dari file untuk efisiensi memori
+            // Read the last N lines of the file for memory efficiency
             $linesToTail = 1000;
             $logContentArray = $this->tailFile($logFilePath, $linesToTail);
 
@@ -373,7 +366,7 @@ class LogController extends BaseController
                 throw new Exception("Gagal membaca isi file log: " . htmlspecialchars($logFileName));
             }
 
-            // Paginasi pada hasil N baris terakhir
+            // Paginate the result of the last N lines
             $totalLines = count($logContentArray);
             $linesPerPage = isset($_GET['lines']) ? (int)$_GET['lines'] : 50;
             $linesPerPage = max(1, min($linesPerPage, 500));
@@ -387,7 +380,7 @@ class LogController extends BaseController
 
             $this->view('admin/logs/file_log', [
                 'page_title'      => 'File Log: ' . htmlspecialchars($logFileName),
-                'log_files'       => $logFiles, // Tetap kirim daftar file
+                'log_files'       => $logFiles, // Always pass the file list
                 'log_file_name'   => $logFileName,
                 'raw_log_content' => implode("\n", $paginatedLines),
                 'total_pages'     => $totalPages,
