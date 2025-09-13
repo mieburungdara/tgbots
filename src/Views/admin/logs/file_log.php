@@ -125,7 +125,7 @@ $current_log_file = $data['log_file_name'] ?? null;
             <ul>
                 <?php foreach ($data['log_files'] as $logFile): ?>
                     <li>
-                        <a href="<?= BASE_URL ?>xoradmin/file_logs/view/<?= htmlspecialchars($logFile) ?>"
+                        <a href="<?= BASE_URL ?>xoradmin/file_logs/view/<?= htmlspecialchars(pathinfo($logFile, PATHINFO_FILENAME)) ?>"
                            class="<?= ($logFile === $current_log_file) ? 'active' : '' ?>"
                            title="<?= htmlspecialchars($logFile) ?>">
                             <?= htmlspecialchars($logFile) ?>
@@ -170,8 +170,11 @@ $current_log_file = $data['log_file_name'] ?? null;
                         </form>
 
                         <nav class="inline-flex rounded-md shadow">
-                            <?php for ($i = 1; $i <= $data['total_pages']; $i++): ?>
-                                <a href="<?= BASE_URL ?>xoradmin/file_logs/view/<?= base64_encode($current_log_file) ?>?page=<?= $i ?>&lines=<?= $data['lines_per_page'] ?>"
+                            <?php
+                            $logFileNameWithoutExt = htmlspecialchars(pathinfo($current_log_file, PATHINFO_FILENAME));
+                            for ($i = 1; $i <= $data['total_pages']; $i++):
+                            ?>
+                                <a href="<?= BASE_URL ?>xoradmin/file_logs/view/<?= $logFileNameWithoutExt ?>?page=<?= $i ?>&lines=<?= $data['lines_per_page'] ?>"
                                    class="px-4 py-2 text-sm font-medium <?= ($i == $data['current_page']) ? 'bg-blue-600 text-white' : 'bg-white text-gray-700' ?> border border-gray-300 hover:bg-gray-50">
                                     <?= $i ?>
                                 </a>
