@@ -8,11 +8,13 @@ require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../core/helpers.php';
 
 // Muat konfigurasi. Jika tidak ada, skrip akan berhenti.
-if (file_exists(__DIR__ . '/../config.php')) {
-    require_once __DIR__ . '/../config.php';
-} else {
-    die("File config.php tidak ditemukan.\n");
+$configFile = __DIR__ . '/../config.php';
+if (!file_exists($configFile)) {
+    // Gunakan error_log untuk cron job agar tidak mengirim email error yang tidak perlu
+    error_log('CRON ERROR: config.php tidak ditemukan. Skrip notify_error.php tidak bisa berjalan.');
+    exit;
 }
+require_once $configFile;
 
 use TGBot\TelegramAPI;
 use TGBot\App;

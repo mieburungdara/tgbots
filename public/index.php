@@ -6,7 +6,23 @@ use TGBot\LoggerFactory;
 
 // Bootstrap the application
 require_once __DIR__ . '/../vendor/autoload.php';
-require_once __DIR__ . '/../config.php'; // Include configuration file
+
+// --- Load Configuration ---
+$configFile = __DIR__ . '/../config.php';
+if (!file_exists($configFile)) {
+    http_response_code(503); // Service Unavailable
+    $errorTemplate = __DIR__ . '/../core/templates/setup_error.php';
+    if (file_exists($errorTemplate)) {
+        // Pass a specific message to the template
+        $errorMessage = '<strong>Error:</strong> File konfigurasi <code>config.php</code> tidak ditemukan di root proyek. Harap salin dari <code>config.php.example</code> dan isi kredensial yang diperlukan.';
+        include $errorTemplate;
+    } else {
+        die('<strong>Error:</strong> Konfigurasi aplikasi (config.php) tidak ditemukan. Harap salin dari <code>config.php.example</code> dan isi kredensial yang diperlukan.');
+    }
+    exit;
+}
+require_once $configFile;
+
 require_once __DIR__ . '/../core/database.php'; // Include database connection functions
 
 // Initialize and set the centralized logger
