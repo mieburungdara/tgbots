@@ -351,12 +351,15 @@ class LogController extends BaseController
 
             // --- If a log file name IS selected ---
 
+            // Append the .log extension to the filename from the URL
+            $fullLogFileName = $logFileName . '.log';
+
             // Validate the file name to prevent directory traversal
-            if (!in_array($logFileName, $logFiles)) {
-                throw new Exception("File log tidak valid atau tidak ditemukan.");
+            if (!in_array($fullLogFileName, $logFiles)) {
+                throw new Exception("File log tidak valid atau tidak ditemukan: " . htmlspecialchars($fullLogFileName));
             }
 
-            $logFilePath = realpath($baseLogPath . $logFileName);
+            $logFilePath = realpath($baseLogPath . $fullLogFileName);
 
             // Read the last N lines of the file for memory efficiency
             $linesToTail = 1000;
@@ -379,9 +382,9 @@ class LogController extends BaseController
             $paginatedLines = array_slice($logContentArray, $offset, $linesPerPage);
 
             $this->view('admin/logs/file_log', [
-                'page_title'      => 'File Log: ' . htmlspecialchars($logFileName),
+                'page_title'      => 'File Log: ' . htmlspecialchars($fullLogFileName),
                 'log_files'       => $logFiles, // Always pass the file list
-                'log_file_name'   => $logFileName,
+                'log_file_name'   => $fullLogFileName,
                 'raw_log_content' => implode("\n", $paginatedLines),
                 'total_pages'     => $totalPages,
                 'current_page'    => $currentPage,
