@@ -17,6 +17,8 @@ abstract class BaseController extends AppController {
         }
 
         // This check protects all admin controllers that extend BaseController.
+        var_dump($_SESSION);
+        die('--- DEBUGGING SESSION STATE ---');
         if (!isset($_SESSION['admin_logged_in']) || $_SESSION['admin_logged_in'] !== true) {
             header("Location: /xoradmin/login");
             exit();
