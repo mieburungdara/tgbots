@@ -1,0 +1,17 @@
+{
+  "version": "1.0.0",
+  "date": "2025-09-13",
+  "changes": [
+    {
+      "type": "changed",
+      "description": "Menggabungkan fungsionalitas daftar file log dan penampil log file individu ke dalam satu view (file_log.php).",
+      "files": [
+        "src/Controllers/Admin/LogController.php",
+        "routes.php",
+        "src/Views/admin/logs/file_log.php",
+        "src/Views/admin/logs/file_log_list.php",
+        "json/controllers/Admin/LogController.json"
+      ]
+    }
+  ]
+}

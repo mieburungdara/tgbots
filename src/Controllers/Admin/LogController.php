@@ -308,53 +308,86 @@ class LogController extends BaseController
         }
     }
 
-    public function viewFileLog(string $logFileName): void
+    public function viewFileLog(?string $logFileName = null): void // Make logFileName optional
     {
         $logger = App::getLogger();
 
         try {
-            // Validate log file name to prevent directory traversal
-            if (!preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $logFileName)) {
-                throw new Exception("Nama file log tidak valid.");
-            }
-
             $baseLogPath = __DIR__ . '/../../../logs/';
-            $logFilePath = realpath($baseLogPath . $logFileName);
 
-            // Ensure the resolved path is within the intended logs directory
-            if ($logFilePath === false || strpos($logFilePath, realpath($baseLogPath)) !== 0) {
-                throw new Exception("Akses ke file log tidak diizinkan.");
+            if ($logFileName === null) {
+                // Display list of log files
+                $logFiles = [];
+                if (is_dir($baseLogPath)) {
+                    $files = scandir($baseLogPath);
+                    foreach ($files as $file) {
+                        if (preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $file)) {
+                            $logFiles[] = $file;
+                        }
+                    }
+                }
+
+                $this->view(
+                    'admin/logs/file_log', // Render file_log.php
+                    [
+                        'page_title' => 'Daftar File Log',
+                        'log_files'  => $logFiles, // Pass log files list
+                        'raw_log_content' => null, // No content to display initially
+                        'error_message' => null,
+                        'log_file_name' => null,
+                        'total_pages' => 0,
+                        'current_page' => 0,
+                        'lines_per_page' => 0,
+                    ],
+                    'admin_layout'
+                );
+            } else {
+                // Display content of a specific log file
+                // Validate log file name to prevent directory traversal
+                if (!preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $logFileName)) {
+                    throw new Exception("Nama file log tidak valid.");
+                }
+
+                $logFilePath = realpath($baseLogPath . $logFileName);
+
+                // Ensure the resolved path is within the intended logs directory
+                if ($logFilePath === false || strpos($logFilePath, realpath($baseLogPath)) !== 0) {
+                    throw new Exception("Akses ke file log tidak diizinkan.");
+                }
+
+                $errorMessage = null;
+                $logContentArray = file($logFilePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+
+                if ($logContentArray === false) {
+                    throw new Exception("Gagal membaca isi file log: " . htmlspecialchars($logFileName));
+                }
+
+                $totalLines = count($logContentArray);
+                $linesPerPage = isset($_GET['lines']) ? (int)$_GET['lines'] : 50;
+                $linesPerPage = max(1, min($linesPerPage, 500)); // Limit lines per page between 1 and 500
+
+                $totalPages = (int) ceil($totalLines / $linesPerPage);
+                $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+                $currentPage = max(1, min($currentPage, $totalPages));
+
+                $offset = ($currentPage - 1) * $linesPerPage;
+                $paginatedLines = array_slice($logContentArray, $offset, $linesPerPage);
+
+                $this->view(
+                    'admin/logs/file_log',
+                    [
+                        'page_title'      => 'File Log Viewer: ' . htmlspecialchars($logFileName),
+                        'error_message'   => $errorMessage,
+                        'raw_log_content' => implode("\n", $paginatedLines),
+                        'log_file_name'   => $logFileName,
+                        'total_pages'     => $totalPages,
+                        'current_page'    => $currentPage,
+                        'lines_per_page'  => $linesPerPage,
+                        'log_files' => null, // Not listing files when viewing a single log
+                    ],
+                    'admin_layout'
+                );
             }
-
-            $errorMessage = null;
-            $logContentArray = file($logFilePath, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-
-            if ($logContentArray === false) {
-                throw new Exception("Gagal membaca isi file log: " . htmlspecialchars($logFileName));
-            }
-
-            $totalLines = count($logContentArray);
-            $linesPerPage = isset($_GET['lines']) ? (int)$_GET['lines'] : 50;
-            $linesPerPage = max(1, min($linesPerPage, 500)); // Limit lines per page between 1 and 500
-
-            $totalPages = (int) ceil($totalLines / $linesPerPage);
-            $currentPage = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-            $currentPage = max(1, min($currentPage, $totalPages));
-
-            $offset = ($currentPage - 1) * $linesPerPage;
-            $paginatedLines = array_slice($logContentArray, $offset, $linesPerPage);
-
-            $viewData = [
-                'page_title'      => 'File Log Viewer: ' . htmlspecialchars($logFileName),
-                'error_message'   => $errorMessage,
-                'raw_log_content' => implode("\n", $paginatedLines),
-                'log_file_name'   => $logFileName,
-                'total_pages'     => $totalPages,
-                'current_page'    => $currentPage,
-                'lines_per_page'  => $linesPerPage,
-            ];
-
-            $this->view('admin/logs/file_log', $viewData, 'admin_layout');
         } catch (Exception $e) {
             $logger->error('Error in LogController/viewFileLog: ' . $e->getMessage());
 
@@ -369,44 +402,7 @@ class LogController extends BaseController
         }
     }
 
-    public function listFileLogs(): void
-    {
-        $logger = App::getLogger();
-
-        try {
-            $logDirectory = __DIR__ . '/../../../logs/';
-            $logFiles = [];
-
-            if (is_dir($logDirectory)) {
-                $files = scandir($logDirectory);
-                foreach ($files as $file) {
-                    if (preg_match('/^[a-zA-Z0-9_.-]+\.log$/', $file)) {
-                        $logFiles[] = $file;
-                    }
-                }
-            }
-
-            $this->view(
-                'admin/logs/file_log_list',
-                [
-                    'page_title' => 'Daftar File Log',
-                    'log_files'  => $logFiles,
-                ],
-                'admin_layout'
-            );
-        } catch (Exception $e) {
-            $logger->error('Error in LogController/listFileLogs: ' . $e->getMessage());
-
-            $this->view(
-                'admin/error',
-                [
-                    'page_title'    => 'Error',
-                    'error_message' => 'Terjadi kesalahan saat memuat daftar file log.',
-                ],
-                'admin_layout'
-            );
-        }
-    }
+    
 
     private function getPublicLogFilePath(): string
     {

@@ -53,30 +53,84 @@
         padding-top: 1rem;
         border-top: 1px solid #e0e0e0;
     }
+    /* Custom styles for log file list */
+    .log-file-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+    }
+    .log-file-card {
+        background-color: #fff;
+        border: 1px solid #e0e0e0;
+        border-radius: 0.5rem;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        transition: all 0.2s ease-in-out;
+    }
+    .log-file-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        transform: translateY(-2px);
+    }
+    .log-file-card h3 {
+        font-size: 1.125rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #333;
+    }
+    .log-file-card .btn-view {
+        display: inline-block;
+        margin-top: 1rem;
+        padding: 0.5rem 1rem;
+        background-color: #007bff;
+        color: white;
+        border-radius: 0.25rem;
+        text-decoration: none;
+        text-align: center;
+        transition: background-color 0.2s ease;
+    }
+    .log-file-card .btn-view:hover {
+        background-color: #0056b3;
+    }
 </style>
 
 <div class="container mx-auto p-4">
-    <h1 class="text-2xl font-bold mb-4"><?= htmlspecialchars($data['page_title']) ?></h1>
+    <h1 class="text-2xl font-bold mb-4">{htmlspecialchars($data['page_title'])}</h1>
 
     <?php if ($data['error_message']): ?>
-        <div class="alert-custom alert-danger"><?= htmlspecialchars($data['error_message']) ?></div>
+        <div class="alert-custom alert-danger">{htmlspecialchars($data['error_message'])}</div>
     <?php endif; ?>
 
     <?php if (isset($_SESSION['flash_message'])): ?>
-        <div class="alert-custom alert-success"><?= htmlspecialchars($_SESSION['flash_message']) ?></div>
+        <div class="alert-custom alert-success">{htmlspecialchars($_SESSION['flash_message'])}</div>
         <?php unset($_SESSION['flash_message']); ?>
     <?php endif; ?>
 
-    <div class="log-viewer-header flex justify-between items-center">
-        <a href="/xoradmin/file_logs" class="btn">Kembali ke Daftar Log</a>
-        <?php if ($data['raw_log_content']): ?>
-            <form action="/xoradmin/file_logs/clear/<?= htmlspecialchars($data['log_file_name']) ?>" method="post" style="display:inline;" onsubmit="return confirm('Anda yakin ingin MENGHAPUS SEMUA isi log file <?= htmlspecialchars($data['log_file_name']) ?>? Aksi ini tidak dapat diurungkan.');">
-                <button type="submit" class="btn btn-delete">Clear Log File</button>
-            </form>
-        <?php endif; ?>
-    </div>
+    <?php if ($data['log_files']): // Display list of log files ?>
+        <div class="log-file-grid">
+            <?php foreach ($data['log_files'] as $logFile):
+                // Check if $logFile is not null or empty before using htmlspecialchars
+                $safeLogFile = !empty($logFile) ? htmlspecialchars($logFile) : 'N/A';
+            ?>
+                <div class="log-file-card">
+                    <h3><?= $safeLogFile ?></h3>
+                    <a href="/xoradmin/file_logs/<?= $safeLogFile ?>" class="btn-view">Lihat Log</a>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    <?php elseif ($data['raw_log_content'] !== null): // Display content of a single log file ?>
+        <div class="log-viewer-header flex justify-between items-center">
+            <a href="/xoradmin/file_logs" class="btn">Kembali ke Daftar Log</a>
+            <?php if ($data['raw_log_content'] !== ''): // Check if raw_log_content is not empty
+            ?>
+                <form action="/xoradmin/file_logs/clear/<?= htmlspecialchars($data['log_file_name']) ?>" method="post" style="display:inline;" onsubmit="return confirm('Anda yakin ingin MENGHAPUS SEMUA isi log file <?= htmlspecialchars($data['log_file_name']) ?>? Aksi ini tidak dapat diurungkan.');">
+                    <button type="submit" class="btn btn-delete">Clear Log File</button>
+                </form>
+            <?php endif; ?>
+        </div>
 
-    <?php if ($data['raw_log_content']): ?>
         <div class="log-content-wrapper">
             <pre><code class="language-log"><?= $data['raw_log_content'] ?></code></pre>
         </div>
@@ -124,7 +178,7 @@
                 ?>
             </nav>
         </div>
-    <?php else: ?>
+    <?php else: // No log content and no log files (should not happen if log_files is checked first) ?>
         <div class="alert-custom alert-info">No log content available.</div>
     <?php endif; ?>
 </div>
