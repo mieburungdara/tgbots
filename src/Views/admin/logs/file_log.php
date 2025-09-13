@@ -125,7 +125,7 @@ $current_log_file = $data['log_file_name'] ?? null;
             <ul>
                 <?php foreach ($data['log_files'] as $logFile): ?>
                     <li>
-                        <a href="/xoradmin/file_logs/<?= htmlspecialchars($logFile) ?>" 
+                        <a href="/xoradmin/file_logs/view/<?= htmlspecialchars($logFile) ?>"
                            class="<?= ($logFile === $current_log_file) ? 'active' : '' ?>"
                            title="<?= htmlspecialchars($logFile) ?>">
                             <?= htmlspecialchars($logFile) ?>
