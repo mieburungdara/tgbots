@@ -1,108 +1,83 @@
 {
-  "class": "LogController",
-  "namespace": "TGBot\Controllers\Admin",
-  "description": "Controller for handling various log viewing and management operations in the admin panel.",
+  "class": "TGBot\\Controllers\\Admin\\LogController",
+  "description": "Manages viewing and clearing of various application logs from the admin panel.",
   "methods": [
     {
       "name": "app",
-      "description": "Displays application logs from the database with filtering and pagination.",
-      "routes": [
-        {
-          "method": "GET",
-          "path": "xoradmin/logs"
-        }
-      ]
+      "description": "Displays paginated logs from the 'app_logs' database table.",
+      "parameters": [],
+      "return_type": "void"
     },
     {
       "name": "clearAppLogs",
-      "description": "Clears all application logs from the database.",
-      "routes": [
-        {
-          "method": "POST",
-          "path": "xoradmin/logs/clear"
-        }
-      ]
+      "description": "Clears all entries from the 'app_logs' database table.",
+      "parameters": [],
+      "return_type": "void"
     },
     {
       "name": "media",
-      "description": "Displays media-related logs, grouping them by media group ID.",
-      "routes": [
-        {
-          "method": "GET",
-          "path": "xoradmin/media_logs"
-        }
-      ]
+      "description": "Displays a log of media files sent through the bots.",
+      "parameters": [],
+      "return_type": "void"
     },
     {
       "name": "telegram",
-      "description": "Displays Telegram error logs with pagination.",
-      "routes": [
-        {
-          "method": "GET",
-          "path": "xoradmin/telegram_logs"
-        }
-      ]
+      "description": "Displays paginated logs from the 'telegram_error_logs' database table.",
+      "parameters": [],
+      "return_type": "void"
     },
     {
       "name": "deleteTelegramLog",
-      "description": "Deletes a specific Telegram error log by ID.",
-      "routes": [
-        {
-          "method": "POST",
-          "path": "xoradmin/telegram_logs/delete"
-        }
-      ]
+      "description": "Deletes a specific entry from the Telegram error log.",
+      "parameters": [],
+      "return_type": "void"
     },
     {
       "name": "clearAllTelegramLogs",
-      "description": "Clears all Telegram error logs.",
-      "routes": [
-        {
-          "method": "POST",
-          "path": "xoradmin/telegram_logs/clear_all"
-        }
-      ]
+      "description": "Clears all entries from the 'telegram_error_logs' table.",
+      "parameters": [],
+      "return_type": "void"
     },
     {
       "name": "publicErrorLog",
-      "description": "Displays the content of the public error log file (public/error_log.txt).",
-      "routes": [
-        {
-          "method": "GET",
-          "path": "xoradmin/public_error_log"
-        }
-      ]
-    },
-    
-    {
-      "name": "viewFileLog",
-      "description": "Displays the paginated content of a specified log file from the logs/ directory.",
-      "routes": [
-        {
-          "method": "GET",
-          "path": "xoradmin/file_logs/{log_file_name}"
-        }
-      ]
-    },
-    {
-      "name": "clearFileLog",
-      "description": "Clears the content of a specified log file from the logs/ directory.",
-      "routes": [
-        {
-          "method": "POST",
-          "path": "xoradmin/file_logs/clear/{log_file_name}"
-        }
-      ]
+      "description": "Displays the content of the public error log file.",
+      "parameters": [],
+      "return_type": "void"
     },
     {
       "name": "clearPublicErrorLog",
-      "description": "Clears the content of the public error log file (public/error_log.txt).",
-      "routes": [
+      "description": "Clears the content of the public error log file.",
+      "parameters": [],
+      "return_type": "void"
+    },
+    {
+      "name": "viewFileLog",
+      "description": "Displays a list of log files from the '/logs' directory or the content of a specific log file with pagination.",
+      "parameters": [
         {
-          "method": "POST",
-          "path": "xoradmin/public_error_log/clear"
+          "name": "$logFileName",
+          "type": "?string",
+          "description": "The name of the log file to view. If null, a list of files is shown."
         }
-      ]
+      ],
+      "return_type": "void"
+    },
+    {
+      "name": "clearFileLog",
+      "description": "Clears the content of a specific log file in the '/logs' directory.",
+      "parameters": [
+        {
+          "name": "$logFileName",
+          "type": "string",
+          "description": "The name of the log file to clear."
+        }
+      ],
+      "return_type": "void"
     }
+  ],
+  "dependencies": [
+    "BaseController",
+    "App",
+    "TelegramErrorLogRepository"
   ]
 }
