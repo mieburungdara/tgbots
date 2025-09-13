@@ -381,7 +381,7 @@ class LogController extends BaseController
             $offset = ($currentPage - 1) * $linesPerPage;
             $paginatedLines = array_slice($logContentArray, $offset, $linesPerPage);
 
-            $this->view('admin/logs/file_log', [
+            $viewData = [
                 'page_title'      => 'File Log: ' . htmlspecialchars($fullLogFileName),
                 'log_files'       => $logFiles, // Always pass the file list
                 'log_file_name'   => $fullLogFileName,
@@ -390,7 +390,18 @@ class LogController extends BaseController
                 'current_page'    => $currentPage,
                 'lines_per_page'  => $linesPerPage,
                 'error_message'   => $totalLines >= $linesToTail ? "Menampilkan {$linesToTail} baris terakhir." : null,
-            ], 'admin_layout');
+            ];
+
+            // Check if the request is an AJAX request
+            $isAjax = !empty($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) == 'xmlhttprequest';
+
+            if ($isAjax) {
+                // For AJAX, render only the partial view without the layout
+                $this->view('admin/logs/file_log', $viewData);
+            } else {
+                // For regular requests, render with the full layout
+                $this->view('admin/logs/file_log', $viewData, 'admin_layout');
+            }
 
         } catch (Exception $e) {
             $logger->error('Error in LogController/viewFileLog: ' . $e->getMessage());
